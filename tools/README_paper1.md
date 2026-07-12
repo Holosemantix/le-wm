@@ -9,7 +9,16 @@ python -m tools.check_paper1_consistency
 cd paper1 && bash build.sh --clean
 ```
 
-`check_paper1_consistency.py` 是提交前的主检查入口。它验证必需 artifact 是否存在、旧口径字符串是否消失、LeWM/PLDM/blur/ACPC-basin canonical JSON 结构是否完整、正文引用的关键相关系数和 bootstrap CI 是否能从 artifact 复算到相同数值。Paper 1 当前主 corrupted endpoint 是 `pixels_std0.08`：只扰动 observation pixels，goal 保持 clean；`pixels_goal_std0.08` 只作为更强 stress condition。
+Public-v1 checkpoint audits must use the bounded serial runner rather than direct multi-process `eval.py` launches:
+
+```bash
+PAPER1_DIAGNOSTIC_GPU=0 PAPER1_DIAGNOSTIC_THREADS=2 \
+RUN_REMEDIATION_AUDITS=1 bash paper1/scripts/run_all_paper1_diagnostics.sh
+```
+
+The runner executes one task/seed shard at a time, validates and skips completed shards, and applies per-shard timeouts. `RUN_EXTERNAL_AUDITS=1` selects the E3/E4 recomputation path. With neither flag, the command is CPU-only and rebuilds the release manifest before running the consistency checker.
+
+`check_paper1_consistency.py` 是提交前的主检查入口。除 legacy canonical checks 外，它还验证 frozen protocol hash、E1--E4 无重调结果、matched baselines、sharp certificate、SMPR controls、JVP/linearization row contracts，以及 `DATA_MANIFEST.md` 中的 artifact hashes。Paper 1 当前主 corrupted endpoint 是 `pixels_std0.08`：只扰动 observation pixels，goal 保持 clean；`pixels_goal_std0.08` 只作为更强 stress condition。
 
 `paper1/build.sh --clean` 用 `latexmk` 重建 PDF。构建后建议检查 log：
 

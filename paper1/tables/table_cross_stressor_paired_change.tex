@@ -1,0 +1,19 @@
+\begin{table}[H]
+\centering
+\caption{Absolute screening and paired comparison are distinct uses. The absolute row applies the LeWM Gaussian-frozen joint gate to all LeWM blur/resize endpoints. Paired rows use one untuned rule, $\Delta$joint score $>0$, for both stressors. PLDM contains one training family and is exploratory. $\rho_s$ correlates continuous diagnostic and stressed-success changes.}
+\label{tab:cross-stressor-paired-change}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{llrrrrrr}
+\toprule
+Use & scope & $n$ & BA & AUPRC & precision & recall & $\rho_s$ \\
+\midrule
+absolute & LeWM blur+resize & 24 & 0.733 & 0.856 & 1.000 & 0.467 & 0.530 \\
+\midrule
+paired $\Delta>0$ & LeWM blur+resize & 24 & 0.889 & 0.974 & 0.882 & 1.000 & 0.864 \\
+paired $\Delta>0$ & LeWM blur & 12 & 0.875 & 0.953 & 0.889 & 1.000 & 0.860 \\
+paired $\Delta>0$ & LeWM resize & 12 & 0.900 & 1.000 & 0.875 & 1.000 & 0.762 \\
+paired $\Delta>0$ & PLDM blur+resize & 8 & 0.833 & 1.000 & 0.500 & 1.000 & 0.667 \\
+\bottomrule
+\end{tabular}
+\end{table}

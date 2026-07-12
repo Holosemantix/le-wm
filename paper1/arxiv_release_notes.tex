@@ -1,2 +1,13 @@
+\section*{Public-v1 release note}
+
+The diagnostic protocol was frozen on 10 July 2026 at 09:33 UTC using only the LeWM seed-3072 Gaussian calibration split. The immutable protocol file has SHA-256
+\codebrk{edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21}.
+All held-out LeWM, PLDM, blur/resize, and failed target-view results were evaluated without threshold retuning.
+
+This release reports three independently trained LeWM seeds. The PLDM external validation contains one independently trained four-task checkpoint family; its three evaluation seeds quantify conditional evaluation variability and are not independent training runs. Blur/resize results are a fixed-strength strongest-severity boundary test, not a corruption benchmark. The sharp certificate applies to one sampled ordered candidate pool, and the JVP analysis is local. Component and SMPR controls do not establish that a long horizon, correct-action conditioning, task labels, or four-task oracle semantics are empirically necessary.
+
+The repository contains code, aggregate evaluation files, rendering scripts, and data/checkpoint pointers for this revision. Artifact hashes and statistical-unit semantics are recorded in \code{DATA\_MANIFEST.md}; the release does not claim that every raw training dataset or checkpoint is redistributed.
+
 \section*{Acknowledgements}
-The public repository contains code, aggregate evaluation files, rendering scripts, and data/checkpoint pointers for this revision; JSON hashes are listed in the data manifest. We thank the LeWM authors for releasing the baseline framework on which this study builds.
+
+We thank the LeWM authors for releasing the baseline framework on which this study builds.

@@ -2076,3 +2076,64 @@ bash paper1/docs/check_blind_ready.sh
 - **最终成败主要取决于**：ACPC 相对 encoder/H1/action-shuffled 的增量、SMPR 是否拒绝 collapse、radius–cost–decision 是否定量闭环，以及与 ATM/MWM/Delta-JEPA/ACID 等并发工作的差异是否清楚。
 
 Codex 应将所有结果按本计划的 frozen protocol、failure rules 和 release gates 执行，不得根据期望结论选择性修改实验。
+
+---
+
+# 23. Execution log（2026-07-11）
+
+## 23.1 ArXiv v1 执行状态
+
+Phase 0--5 的技术工作已经完成；Phase 6--7 按本计划的先后关系保留到 public-v1 正式 release 之后，不在本次结果中伪装为已完成。
+
+- Phase 0：checkpoint/loadability、target-view、blur/resize、smoke runtime/GPU memory 和 missing/error contracts 已审计；最终无残留 `eval.py`、diagnostic、pytest 或 LaTeX 进程。
+- Phase 1：canonical horizon-v2 metric、matched weighted-stacked JVP map、两种 kappa 定义和 synthetic tests 已完成。完整 JVP v2 为 36 checkpoint rows / 288 probes，全部 `ok`。
+- Phase 2：CAL/E1/E2/E3/E4 已完成并保持 frozen no-retuning。E1 balanced accuracy/AUPRC 为 `0.945/0.965`；E2 为 `0.684/0.541`；E3 fixed-rho 为 `0.563/0.737` 且 recall `0.375`；E4 保留 target-view failure 和 full-sequence false-pass boundary。
+- Phase 3：272-row matched baselines、Gaussian-only rho confound、108-checkpoint/10,800-history sharp certificate、K sensitivity、risk--coverage、12-block bootstrap、912-row SMPR sensitivity、44-row controls 和 TwoRoom+PushT four-row state-derived MVE 已完成。结果要求删除 long-horizon/correct-action necessity，并将 SMPR 收缩到 proxy-level guard correctness。
+- Phase 4：标题、摘要、contributions、theory/probability-space、direct comparison、六篇 2026 references、ATM feasibility boundary、图表和 captions 已按真实结果重写。
+- Phase 5：`DATA_MANIFEST.md`、diagnostic manifest builder、release notes、runner、checker、main/blind/arXiv builds 已更新。旧 monolithic checkpoint path 已退休；所有 checkpoint shards 串行、带 timeout、默认单 GPU/2 native threads、完成 shard 可校验续跑。默认 Paper1 runner 为 CPU-only；通用 `run_trainer.sh` 另以 `eval_max_concurrency=1` 为默认并发上限，并保留显式提高能力。
+
+## 23.2 Frozen protocol 与主要产物
+
+Frozen protocol 自冻结后未改变：
+
+```text
+paper1/config/frozen_diagnostic_protocol_v1.json
+SHA-256 edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21
+frozen_at_utc 2026-07-10T09:33:21.985570+00:00
+calibration_commit c943fdf75cd71bc08e5466e1700676069728b7d2
+```
+
+主要新增 full artifacts 的 SHA-256 已写入 `DATA_MANIFEST.md` 并由 `tools/check_paper1_consistency.py` 逐一复核，包括 E1--E4、matched baselines、rho confound、JVP v2、linearization/H-q、sharp certificate 和 SMPR v2 三个 artifacts。
+
+最终 author-placeholder release candidate 记录：
+
+```text
+paper1/main.tex                         2995095dd3f8b99067de22af72e07231f5a64dc267675d21459ef1ff1b987ed1
+paper1/main.pdf                         ad141a75be6e3330cc07891d95471525988a427ab2b254dc567349cb2d336f5f
+/tmp/paper1_arxiv_v1_src.tar.gz         bdd54b914485fe84515c17659900549402f9a2a4ada7551e7cc29bcd448ae8c5
+/tmp/paper1_blind_src.tar.gz            642d665795022428139e48c5b6e3e3bd8690e4ce177e9805a1078501ad91d941
+```
+
+作者写入后 `main.tex`、PDF 和 bundles 的 hashes 必然变化，必须重跑 release gates 并以新值替换上述 RC 记录。
+
+## 23.3 验收结果
+
+```text
+python -m tools.check_paper1_consistency              PASS
+pytest -q                                             131 passed
+bash paper1/scripts/run_all_paper1_diagnostics.sh     PASS (CPU-only default)
+cd paper1 && bash build.sh --clean                    PASS, 30 pages
+bash paper1/docs/check_blind_ready.sh                  PASS, isolated bundle
+ALLOW_AUTHOR_PLACEHOLDER=1 bash paper1/check_arxiv_ready.sh
+                                                      PASS, isolated bundle
+git diff --check                                      PASS
+bash -n release/runner scripts                        PASS
+```
+
+最终 `main.log` 与两个 isolated bundle logs 均无 undefined citation/reference、fatal、Overfull 或 Underfull diagnostics。关键页（title/abstract、concurrent comparison、frozen external table、certificate/JVP figures）已做 PDF raster visual inspection，未发现裁切或重叠。
+
+## 23.4 唯一剩余 release blocker
+
+`paper1/arxiv_metadata.tex` 仍含 `Author names to be supplied for arXiv v1`。真实作者不可由 Codex 推断，因此正式（不设置 `ALLOW_AUTHOR_PLACEHOLDER=1`）arXiv gate 会继续失败，这是预期保护。`paper1-arxiv-v1-lockbox` tag 也未创建：在作者信息写入、最终 source commit 形成之前打 tag 会把占位作者和不完整 commit 锁成 public-v1，违反本计划。
+
+解除 blocker 后的唯一正确顺序是：写入真实 author list → 重跑 checker/tests/main/blind/arXiv gates → 记录新的 PDF/bundle hashes → 创建最终 release commit → 在该 commit 上创建 `paper1-arxiv-v1-lockbox`。随后才能按 Phase 6 启动两个 prospective PLDM training seeds，且不得更改 protocol v1。

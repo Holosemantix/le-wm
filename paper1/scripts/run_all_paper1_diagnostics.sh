@@ -1,40 +1,48 @@
 #!/usr/bin/env bash
-# Rebuild Paper1 training-free diagnostic remediation artifacts.
+# Rebuild/verify Paper1 diagnostic artifacts without concurrent checkpoint jobs.
 set -euo pipefail
 
-python -m paper1.scripts.build_diagnostic_manifest
-python -m paper1.scripts.build_full_sweep_diagnostics
-python -m paper1.scripts.plot_full_sweep_diagnostics
-python -m paper1.scripts.plot_endpoint_atr_smpr
-python -m paper1.scripts.fixed_pool_tail_audit
-python -m paper1.scripts.heldout_diagnostic_validation
-python -m paper1.scripts.threshold_quantile_sensitivity
+export PAPER1_DIAGNOSTIC_THREADS="${PAPER1_DIAGNOSTIC_THREADS:-2}"
+export PAPER1_DIAGNOSTIC_GPU="${PAPER1_DIAGNOSTIC_GPU:-0}"
 
-if [[ "${RUN_CHECKPOINT_AUDITS:-0}" == "1" ]]; then
-  python -m tools.paper1_sample_level_certificate \
-    --tasks TwoRoom PushT Reacher Cube \
-    --seeds 3072 3073 3074 \
-    --std-keys 0.0 0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 \
-    --n-sequences 100 \
-    --include-samples \
-    --out-json paper1/results/sample_level_certificate_full_sweep_audit.json \
-    --out-csv paper1/results/sample_level_certificate_full_sweep_audit.csv \
-    --sample-csv paper1/results/sample_level_certificate_full_sweep_samples.csv
-  python -m paper1.scripts.full_sweep_sample_level_certificate_summary
-  python -m paper1.scripts.sample_level_event_rate_ci
-  python -m tools.paper1_gaussian_sensitivity_audit \
-    --tasks TwoRoom PushT Reacher Cube \
-    --seeds 3072 3073 3074 \
-    --n-sequences 100 \
-    --num-noise-draws 5 \
-    --small-sigmas 0.005 0.01 0.02
-  python -m tools.paper1_jvp_hutchinson_sensitivity_audit \
-    --tasks TwoRoom PushT Reacher Cube \
-    --seeds 3072 3073 3074 \
-    --n-sequences 100 \
-    --hutchinson-probes 8
-  python -m paper1.scripts.joint_guard_side_validation
+if ! [[ "$PAPER1_DIAGNOSTIC_THREADS" =~ ^[0-9]+$ ]] || (( PAPER1_DIAGNOSTIC_THREADS < 1 )); then
+  echo "PAPER1_DIAGNOSTIC_THREADS must be a positive integer" >&2
+  exit 2
 fi
 
-python -m paper1.scripts.plot_fixed_pool_event_rates
-python -m paper1.scripts.plot_gaussian_sensitivity_mechanism
+# The default path is CPU-only and safe for release checks.  Historical
+# aggregate regeneration is opt-in because it can overwrite archived figures.
+python -m paper1.scripts.build_diagnostic_manifest
+
+if [[ "${REBUILD_LEGACY_AGGREGATES:-0}" == "1" ]]; then
+  python -m paper1.scripts.build_full_sweep_diagnostics
+  python -m paper1.scripts.plot_full_sweep_diagnostics
+  python -m paper1.scripts.plot_endpoint_atr_smpr
+  python -m paper1.scripts.fixed_pool_tail_audit
+  python -m paper1.scripts.heldout_diagnostic_validation
+  python -m paper1.scripts.threshold_quantile_sensitivity
+  python -m paper1.scripts.plot_fixed_pool_event_rates
+  python -m paper1.scripts.plot_gaussian_sensitivity_mechanism
+fi
+
+# Compatibility: the old flag now selects the bounded serial remediation path;
+# it no longer launches the retired monolithic checkpoint commands.
+run_checkpoint_audits="${RUN_REMEDIATION_AUDITS:-${RUN_CHECKPOINT_AUDITS:-0}}"
+if [[ "$run_checkpoint_audits" == "1" ]]; then
+  echo "[paper1] checkpoint audits run serially on GPU ${PAPER1_DIAGNOSTIC_GPU} with ${PAPER1_DIAGNOSTIC_THREADS} native threads"
+  bash paper1/scripts/run_jvp_hutchinson_shards.sh
+  bash paper1/scripts/run_diagnostic_baseline_shards.sh
+  bash paper1/scripts/run_fixed_pool_certificate_shards.sh
+  bash paper1/scripts/run_smpr_controls_mve.sh
+  bash paper1/scripts/run_linearization_horizon_shards.sh
+fi
+
+if [[ "${RUN_EXTERNAL_AUDITS:-0}" == "1" ]]; then
+  echo "[paper1] external checkpoint audits run serially on GPU ${PAPER1_DIAGNOSTIC_GPU} with ${PAPER1_DIAGNOSTIC_THREADS} native threads"
+  bash paper1/scripts/run_cross_stressor_lewm_atr_shards.sh
+  bash paper1/scripts/run_cross_stressor_smpr_shards.sh
+  bash paper1/scripts/run_pldm_cross_stressor_atr_shards.sh
+  bash paper1/scripts/run_target_view_diagnostic_shards.sh
+fi
+
+python -m tools.check_paper1_consistency

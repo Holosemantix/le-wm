@@ -14,8 +14,10 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import math
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -31,10 +33,35 @@ DEFAULT_CSV = ROOT / 'paper1' / 'results' / 'sample_level_certificate_audit.csv'
 DEFAULT_SAMPLE_CSV = ROOT / 'paper1' / 'results' / 'sample_level_certificate_samples.csv'
 STD_KEYS = ('0.0', '0.01', '0.02', '0.03', '0.04', '0.05', '0.06', '0.07', '0.08')
 EPS_QUANTILES = (0.90, 0.95, 0.99, 0.995, 0.999)
+K_VALUES = (8, 16, 32, 65)
+SCHEMA_VERSION = 'paper1-sample-level-certificate-0.2'
 
 
 def _load(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text())
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open('rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _git_commit() -> str:
+    try:
+        result = subprocess.run(
+            ['git', 'rev-parse', 'HEAD'],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return 'unknown'
+    return result.stdout.strip() if result.returncode == 0 else 'unknown'
 
 
 def _jsonable(obj: Any) -> Any:
@@ -61,6 +88,124 @@ def _mean(x: torch.Tensor) -> float:
     if x.numel() == 0:
         return float('nan')
     return float(x.detach().float().mean().cpu().item())
+
+
+def _wilson_lower_one_sided95(successes: int, total: int) -> float:
+    if total <= 0:
+        return float('nan')
+    z = 1.6448536269514722
+    p = successes / total
+    denominator = 1.0 + z * z / total
+    center = (p + z * z / (2.0 * total)) / denominator
+    half_width = (
+        z
+        * math.sqrt(p * (1.0 - p) / total + z * z / (4.0 * total * total))
+        / denominator
+    )
+    return max(0.0, center - half_width)
+
+
+def _certificate_for_pool(
+    clean: torch.Tensor,
+    noisy: torch.Tensor,
+) -> dict[str, torch.Tensor]:
+    if clean.ndim != 2 or noisy.shape != clean.shape or clean.size(1) < 2:
+        raise ValueError('candidate cost tensors must share shape (B,K), K>=2')
+    drift = (clean - noisy).abs()
+    clean_best = torch.argmin(clean, dim=1)
+    noisy_best = torch.argmin(noisy, dim=1)
+    gather_index = clean_best.unsqueeze(1)
+    winner_cost = clean.gather(1, gather_index)
+    winner_drift = drift.gather(1, gather_index).squeeze(1)
+    candidate_margin = clean - winner_cost
+    sharp_candidate_slack = candidate_margin - drift - winner_drift.unsqueeze(1)
+    sharp_candidate_slack.scatter_(1, gather_index, float('inf'))
+    sharp_slack = sharp_candidate_slack.min(dim=1).values
+    sharp_pass = sharp_slack > 0.0
+    drift_sum = drift + winner_drift.unsqueeze(1)
+    normalized_candidate_score = torch.full_like(
+        candidate_margin,
+        torch.finfo(candidate_margin.dtype).max,
+    )
+    positive_margin = candidate_margin > 0.0
+    normalized_candidate_score[positive_margin] = (
+        drift_sum[positive_margin] / candidate_margin[positive_margin]
+    )
+    normalized_candidate_score.scatter_(1, gather_index, float('-inf'))
+    sharp_normalized_score = normalized_candidate_score.max(dim=1).values
+    if not torch.equal(sharp_normalized_score < 1.0, sharp_pass):
+        raise RuntimeError('normalized sharp score is not equivalent to positive slack')
+    sorted_clean = torch.sort(clean, dim=1).values
+    top2_margin = sorted_clean[:, 1] - sorted_clean[:, 0]
+    max_drift = drift.max(dim=1).values
+    coarse_pass = max_drift < (top2_margin / 2.0)
+    flips = clean_best != noisy_best
+    if bool(flips[sharp_pass].any()):
+        raise RuntimeError('sharp certificate invariant violated: flip with positive slack')
+    return {
+        'drift': drift,
+        'clean_best': clean_best,
+        'noisy_best': noisy_best,
+        'flips': flips,
+        'top2_margin': top2_margin,
+        'max_drift': max_drift,
+        'mean_drift': drift.mean(dim=1),
+        'coarse_pass': coarse_pass,
+        'sharp_slack': sharp_slack,
+        'sharp_normalized_score': sharp_normalized_score,
+        'sharp_pass': sharp_pass,
+    }
+
+
+def _risk_coverage_rows(
+    slack: torch.Tensor,
+    flips: torch.Tensor,
+) -> list[dict[str, float | int]]:
+    finite = slack.detach().float().cpu()
+    minimum = float(finite.min().item())
+    thresholds = [
+        minimum - max(1.0, abs(minimum)) * 1e-6,
+        *[_q(finite, q) for q in (0.10, 0.25, 0.50, 0.75, 0.90)],
+        0.0,
+    ]
+    unique = sorted(set(thresholds))
+    rows: list[dict[str, float | int]] = []
+    for threshold in unique:
+        selected = finite > threshold
+        selected_n = int(selected.sum().item())
+        flip_n = int(flips.detach().cpu()[selected].sum().item()) if selected_n else 0
+        rows.append(
+            {
+                'sharp_slack_threshold': threshold,
+                'selected_n': selected_n,
+                'coverage': selected_n / int(finite.numel()),
+                'observed_flip_rate': flip_n / selected_n if selected_n else float('nan'),
+                'observed_flip_n': flip_n,
+            }
+        )
+    return rows
+
+
+def _aurc(rows: Sequence[Mapping[str, float | int]]) -> float:
+    points = sorted(
+        (
+            float(row['coverage']),
+            float(row['observed_flip_rate']),
+        )
+        for row in rows
+        if math.isfinite(float(row['observed_flip_rate']))
+    )
+    if len(points) < 2:
+        return float('nan')
+    area = 0.0
+    for (left_coverage, left_risk), (right_coverage, right_risk) in zip(
+        points,
+        points[1:],
+    ):
+        area += (
+            right_coverage - left_coverage
+        ) * (left_risk + right_risk) / 2.0
+    return area
 
 
 def _costs_for_branch(model, batch: Mapping[str, torch.Tensor], candidates: torch.Tensor, *, history_size: int) -> torch.Tensor:
@@ -126,16 +271,47 @@ def run_checkpoint(*, seed: int, task: str, std_key: str, entry: Mapping[str, An
 
     clean = clean_costs.detach().float().cpu()
     noisy = noisy_costs.detach().float().cpu()
-    abs_diff = (clean - noisy).abs()
-    clean_sorted = torch.sort(clean, dim=1).values
-    margins = clean_sorted[:, 1] - clean_sorted[:, 0]
-    max_drift = abs_diff.max(dim=1).values
-    mean_drift = abs_diff.mean(dim=1)
+    canonical = _certificate_for_pool(clean, noisy)
+    abs_diff = canonical['drift']
+    margins = canonical['top2_margin']
+    max_drift = canonical['max_drift']
+    mean_drift = canonical['mean_drift']
     flat_drift = abs_diff.reshape(-1)
-    clean_best = torch.argmin(clean, dim=1)
-    noisy_best = torch.argmin(noisy, dim=1)
-    flips = clean_best != noisy_best
-    cert_pass = max_drift < (margins / 2.0)
+    clean_best = canonical['clean_best']
+    noisy_best = canonical['noisy_best']
+    flips = canonical['flips']
+    coarse_pass = canonical['coarse_pass']
+    sharp_slack = canonical['sharp_slack']
+    sharp_normalized_score = canonical['sharp_normalized_score']
+    sharp_pass = canonical['sharp_pass']
+
+    coverage_by_k: dict[str, dict[str, float | int]] = {}
+    for candidate_count in args.k_values:
+        metrics = _certificate_for_pool(
+            clean[:, :candidate_count],
+            noisy[:, :candidate_count],
+        )
+        pass_n = int(metrics['sharp_pass'].sum().item())
+        lower = _wilson_lower_one_sided95(pass_n, int(clean.size(0)))
+        k_risk_coverage = _risk_coverage_rows(
+            metrics['sharp_slack'],
+            metrics['flips'],
+        )
+        coverage_by_k[str(candidate_count)] = {
+            'candidate_count': int(candidate_count),
+            'sharp_cert_pass_rate': _mean(metrics['sharp_pass'].float()),
+            'sharp_cert_pass_n': pass_n,
+            'sharp_cert_pass_lower95_wilson': lower,
+            'flip_risk_upper95_from_coverage': 1.0 - lower,
+            'observed_flip_rate': _mean(metrics['flips'].float()),
+            'flip_when_sharp_cert_fail_rate': (
+                _mean(metrics['flips'][~metrics['sharp_pass']].float())
+                if bool((~metrics['sharp_pass']).any())
+                else float('nan')
+            ),
+            'risk_coverage_aurc': _aurc(k_risk_coverage),
+        }
+    risk_coverage = _risk_coverage_rows(sharp_slack, flips)
 
     eps_rows: dict[str, dict[str, float]] = {}
     for q in args.eps_quantiles:
@@ -171,12 +347,39 @@ def run_checkpoint(*, seed: int, task: str, std_key: str, entry: Mapping[str, An
         'clean_margin_q90': _q(margins, 0.90),
         'certificate_gap_q10_q95': _q(margins, 0.10) - 2.0 * _q(max_drift, 0.95),
         'certificate_gap_q50_q95': _q(margins, 0.50) - 2.0 * _q(max_drift, 0.95),
-        'sample_cert_pass_rate': _mean(cert_pass.float()),
+        'coarse_cert_pass_rate': _mean(coarse_pass.float()),
+        'sample_cert_pass_rate': _mean(coarse_pass.float()),
+        'sharp_cert_pass_rate': _mean(sharp_pass.float()),
+        'sharp_cert_pass_n': int(sharp_pass.sum().item()),
+        'sharp_cert_pass_lower95_wilson': _wilson_lower_one_sided95(
+            int(sharp_pass.sum().item()),
+            int(sharp_pass.numel()),
+        ),
+        'flip_risk_upper95_from_sharp_coverage': 1.0
+        - _wilson_lower_one_sided95(
+            int(sharp_pass.sum().item()),
+            int(sharp_pass.numel()),
+        ),
+        'sharp_cert_slack_q10': _q(sharp_slack, 0.10),
+        'sharp_cert_slack_q50': _q(sharp_slack, 0.50),
+        'sharp_cert_slack_q90': _q(sharp_slack, 0.90),
+        'sharp_normalized_score_q10': _q(sharp_normalized_score, 0.10),
+        'sharp_normalized_score_q50': _q(sharp_normalized_score, 0.50),
+        'sharp_normalized_score_q90': _q(sharp_normalized_score, 0.90),
+        'sharp_normalized_score_cert_pass_rate': _mean(
+            (sharp_normalized_score < 1.0).float()
+        ),
         'sample_top1_flip_rate': _mean(flips.float()),
-        'flip_when_cert_pass_rate': _mean(flips[cert_pass].float()) if bool(cert_pass.any()) else float('nan'),
-        'flip_when_cert_fail_rate': _mean(flips[~cert_pass].float()) if bool((~cert_pass).any()) else float('nan'),
+        'flip_when_coarse_cert_pass_rate': _mean(flips[coarse_pass].float()) if bool(coarse_pass.any()) else float('nan'),
+        'flip_when_coarse_cert_fail_rate': _mean(flips[~coarse_pass].float()) if bool((~coarse_pass).any()) else float('nan'),
+        'flip_when_sharp_cert_pass_rate': _mean(flips[sharp_pass].float()) if bool(sharp_pass.any()) else float('nan'),
+        'flip_when_sharp_cert_fail_rate': _mean(flips[~sharp_pass].float()) if bool((~sharp_pass).any()) else float('nan'),
+        'sharp_cert_invariant_flip_count': int(flips[sharp_pass].sum().item()),
+        'coverage_by_K': coverage_by_k,
+        'risk_coverage': risk_coverage,
+        'risk_coverage_aurc': _aurc(risk_coverage),
         'epsilon_tail_rows': eps_rows,
-        'notes': 'sample-level fixed-pool sufficient-event audit; not adaptive CEM or closed-loop guarantee',
+        'notes': 'candidate-wise sharp and legacy coarse fixed-pool sufficient-event audit; not adaptive CEM or closed-loop guarantee',
     }
 
     sample_rows: list[dict[str, Any]] = []
@@ -191,7 +394,13 @@ def run_checkpoint(*, seed: int, task: str, std_key: str, entry: Mapping[str, An
                 'clean_margin': float(margins[i].item()),
                 'sample_max_drift': float(max_drift[i].item()),
                 'sample_mean_drift': float(mean_drift[i].item()),
-                'cert_pass': bool(cert_pass[i].item()),
+                'coarse_cert_pass': bool(coarse_pass[i].item()),
+                'cert_pass': bool(coarse_pass[i].item()),
+                'sharp_cert_pass': bool(sharp_pass[i].item()),
+                'sharp_cert_slack': float(sharp_slack[i].item()),
+                'sharp_normalized_score': float(
+                    sharp_normalized_score[i].item()
+                ),
                 'top1_flip': bool(flips[i].item()),
                 'clean_best': int(clean_best[i].item()),
                 'noisy_best': int(noisy_best[i].item()),
@@ -204,8 +413,9 @@ def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
     if not rows:
         path.write_text('')
         return
-    fields = [k for k in rows[0].keys() if k not in {'model_search_dirs', 'epsilon_tail_rows'}]
-    for key in sorted({k for r in rows for k in r.keys() if k not in fields and k not in {'model_search_dirs', 'epsilon_tail_rows'}}):
+    nested = {'model_search_dirs', 'epsilon_tail_rows', 'coverage_by_K', 'risk_coverage'}
+    fields = [k for k in rows[0].keys() if k not in nested]
+    for key in sorted({k for r in rows for k in r.keys() if k not in fields and k not in nested}):
         fields.append(key)
     with path.open('w', newline='', encoding='utf-8') as f:
         w = csv.DictWriter(f, fieldnames=fields, lineterminator='\n')
@@ -236,12 +446,25 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument('--frameskip', type=int, default=5)
     p.add_argument('--img-size', type=int, default=224)
     p.add_argument('--eps-quantiles', type=float, nargs='+', default=list(EPS_QUANTILES))
+    p.add_argument('--k-values', type=int, nargs='+', default=list(K_VALUES))
     p.add_argument('--device', default=None)
     return p
 
 
 def main() -> int:
     args = build_parser().parse_args()
+    canonical_candidate_count = int(args.random_action_trials) + 1
+    if (
+        not args.k_values
+        or len(set(args.k_values)) != len(args.k_values)
+        or min(args.k_values) < 2
+        or max(args.k_values) > canonical_candidate_count
+        or canonical_candidate_count not in args.k_values
+    ):
+        raise ValueError(
+            'k-values must be unique, in [2,candidate_count], and include the '
+            'canonical candidate count'
+        )
     rows: list[dict[str, Any]] = []
     samples: list[dict[str, Any]] = []
     specs: list[tuple[int, str, str, Mapping[str, Any]]] = []
@@ -264,17 +487,61 @@ def main() -> int:
             row, sample_rows = {'status': 'error', 'training_seed': seed, 'task': task, 'std_key': std_key, 'error': repr(exc)}, []
         rows.append(row)
         samples.extend(sample_rows)
+    counts: dict[str, int] = {}
+    for row in rows:
+        counts[str(row.get('status'))] = counts.get(str(row.get('status')), 0) + 1
+    script_path = Path(__file__).resolve()
+    manifest_paths = {
+        f'lewm_seed{seed}_evals': args.eval_manifest_dir / f'lewm_seed{seed}_evals.json'
+        for seed in args.seeds
+    }
     payload = {
         'metadata': {
-            'schema_version': 'paper1-sample-level-certificate-0.1',
+            'schema_version': SCHEMA_VERSION,
             'created_utc': datetime.now(timezone.utc).isoformat(),
+            'code_commit': _git_commit(),
+            'script_path': str(script_path.relative_to(ROOT)),
+            'script_sha256': _sha256(script_path),
+            'source_paths': {
+                name: str(path) for name, path in manifest_paths.items()
+            },
+            'source_hashes': {
+                name: _sha256(path) for name, path in manifest_paths.items()
+            },
             'seeds': list(args.seeds),
+            'training_seed_semantics': 'independently trained checkpoint seeds',
+            'evaluation_seed_semantics': 'not applicable; fixed checkpoint-local candidate pools',
             'tasks': list(args.tasks),
             'std_keys': list(args.std_keys),
             'n_sequences': int(args.n_sequences),
-            'candidate_count': int(args.random_action_trials) + 1,
+            'candidate_count': canonical_candidate_count,
+            'k_values': list(args.k_values),
             'noise_std': float(args.noise_std),
-            'note': 'Fixed-pool sample-level sufficient-event audit; closed-loop evaluation is not run.',
+            'status': 'complete' if counts and set(counts) == {'ok'} else 'partial',
+            'status_counts': counts,
+            'missing_rows': [
+                {
+                    'training_seed': row.get('training_seed'),
+                    'task': row.get('task'),
+                    'std_key': row.get('std_key'),
+                    'status': row.get('status'),
+                }
+                for row in rows
+                if str(row.get('status', '')).startswith('skipped_')
+            ],
+            'errors': [
+                {
+                    'training_seed': row.get('training_seed'),
+                    'task': row.get('task'),
+                    'std_key': row.get('std_key'),
+                    'error': row.get('error'),
+                }
+                for row in rows
+                if row.get('status') == 'error'
+            ],
+            'sharp_certificate': 'min_{j!=j*}[Delta_j-d_j-d_{j*}] > 0',
+            'coverage_interval': 'one-sided 95% Wilson lower bound',
+            'note': 'Candidate-wise sharp and legacy coarse fixed-pool audit; closed-loop evaluation is not run.',
         },
         'rows': rows,
     }
@@ -285,15 +552,12 @@ def main() -> int:
     _write_csv(args.out_csv, rows)
     if args.include_samples:
         _write_csv(args.sample_csv, samples)
-    counts: dict[str, int] = {}
-    for row in rows:
-        counts[str(row.get('status'))] = counts.get(str(row.get('status')), 0) + 1
     print(f'wrote {args.out_json}')
     print(f'wrote {args.out_csv}')
     if args.include_samples:
         print(f'wrote {args.sample_csv}')
     print('status counts:', counts)
-    return 0
+    return 0 if counts and set(counts) == {'ok'} else 1
 
 
 if __name__ == '__main__':

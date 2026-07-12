@@ -1,0 +1,20 @@
+\begin{table}[H]
+\centering
+\caption{CAL-frozen diagnostic baselines on the combined E1+E2 external rows. Thresholds are never selected on external behavior; clean score is not training-free.}
+\label{tab:diagnostic-baselines}
+\begin{tabular}{lcc}
+\toprule
+Diagnostic & Balanced accuracy & AUPRC \\
+\midrule
+encoder\_q90 & 0.793 & 0.792 \\
+h1\_q90 & 0.793 & 0.816 \\
+action\_shuffled\_h8\_q90 & 0.780 & 0.838 \\
+action\_zeroed\_h8\_q90 & 0.805 & 0.841 \\
+time\_shuffled\_h8\_q90 & 0.756 & 0.831 \\
+atr\_h8\_q90 & 0.756 & 0.828 \\
+clean\_score & 0.630 & 0.816 \\
+smpr & 0.785 & 0.809 \\
+atr\_smpr\_joint & 0.822 & 0.811 \\
+\bottomrule
+\end{tabular}
+\end{table}

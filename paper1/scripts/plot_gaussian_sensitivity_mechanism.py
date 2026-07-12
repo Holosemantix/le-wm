@@ -38,6 +38,14 @@ def _contrast_text_color(image: object, value: float) -> str:
     return "white" if luminance < 0.52 else "#1a1a1a"
 
 
+def _kappa_relative_isotropic_vs_base(row: dict[str, str]) -> float:
+    """Read the canonical kappa ratio, falling back to the legacy alias."""
+    value = row.get("kappa_relative_isotropic_vs_base")
+    if value is None or value == "":
+        value = row.get("alignment_coefficient_vs_base")
+    return fnum(value)
+
+
 def plot_main(fd_rows: list[dict[str, str]], jvp_rows: list[dict[str, str]], out_fig: Path) -> None:
     out_fig.parent.mkdir(parents=True, exist_ok=True)
     fig, axes = plt.subplots(1, 2, figsize=(6.7, 2.75), sharey=True)
@@ -51,7 +59,7 @@ def plot_main(fd_rows: list[dict[str, str]], jvp_rows: list[dict[str, str]], out
         (
             axes[1],
             [fnum(_row(jvp_rows, task, "endpoint")["composed_trace_per_pixel_dim_vs_base"]) for task in TASKS],
-            "(b) JVP/Hutchinson composed trace",
+            "(b) JVP/Hutchinson raw composed trace",
         ),
     ]
     for ax, vals, title in panels:
@@ -92,7 +100,7 @@ def plot_main(fd_rows: list[dict[str, str]], jvp_rows: list[dict[str, str]], out
 
 def plot_decomposition(jvp_rows: list[dict[str, str]], out_fig: Path) -> None:
     out_fig.parent.mkdir(parents=True, exist_ok=True)
-    fig, (ax_heat, ax_align) = plt.subplots(
+    fig, (ax_heat, ax_kappa) = plt.subplots(
         1, 2, figsize=(6.7, 3.05), gridspec_kw={"width_ratios": [1.6, 1.0]}, constrained_layout=True
     )
     y = list(range(len(TASKS)))
@@ -103,19 +111,19 @@ def plot_decomposition(jvp_rows: list[dict[str, str]], out_fig: Path) -> None:
     ]
     matrix = []
     labels = []
-    align_vals = []
+    kappa_vals = []
     for task in TASKS:
         row = _row(jvp_rows, task, "endpoint")
         matrix.append([_log10_ratio(fnum(row[key])) for _label, key in trace_cols])
         labels.append([fnum(row[key]) for _label, key in trace_cols])
-        align_vals.append(fnum(row["alignment_coefficient_vs_base"]))
+        kappa_vals.append(_kappa_relative_isotropic_vs_base(row))
 
     im = ax_heat.imshow(matrix, cmap="coolwarm", norm=TwoSlopeNorm(vmin=-3.0, vcenter=0.0, vmax=0.5), aspect="auto")
     ax_heat.set_xticks(range(len(trace_cols)))
     ax_heat.set_xticklabels([label.title() for label, _key in trace_cols], fontsize=8.2)
     ax_heat.set_yticks(y)
     ax_heat.set_yticklabels(TASKS, fontsize=8.2)
-    ax_heat.set_title("(a) Trace decomposition ratios", fontsize=9.2, pad=7)
+    ax_heat.set_title("(a) Raw trace decomposition ratios", fontsize=9.2, pad=7)
     ax_heat.tick_params(length=0)
     for i, row in enumerate(labels):
         for j, val in enumerate(row):
@@ -125,35 +133,35 @@ def plot_decomposition(jvp_rows: list[dict[str, str]], out_fig: Path) -> None:
     cbar.set_ticks([-3.0, -2.0, -1.0, 0.0])
     cbar.set_ticklabels(["0.001", "0.01", "0.1", "1"])
     cbar.ax.tick_params(labelsize=8.0, length=2.5, pad=2)
-    cbar.set_label("Endpoint / base trace ratio (log color scale)", fontsize=8.0, labelpad=3)
+    cbar.set_label("Endpoint / base raw-trace ratio (log color scale)", fontsize=8.0, labelpad=3)
     cbar.outline.set_linewidth(0.6)
 
-    ax_align.hlines(y, 1.0, align_vals, color="#b4a8c7", lw=1.4, zorder=1)
-    ax_align.scatter([1.0] * len(y), y, s=24, facecolor="white", edgecolor="#7b8794", lw=0.9, zorder=2)
-    ax_align.scatter(align_vals, y, s=42, color="#6f5aa8", edgecolor="white", lw=0.7, zorder=3)
-    ax_align.axvline(1.0, color="#68737d", lw=1.0, ls=(0, (3, 2)), zorder=0)
-    ax_align.set_yticks(y)
-    ax_align.set_yticklabels([])
-    ax_align.set_ylim(len(TASKS) - 0.5, -0.5)
-    ax_align.set_title("(b) Alignment coefficient ratio", fontsize=9.2, pad=7)
-    ax_align.set_xlabel("Endpoint / base (diagnostic)", fontsize=8.1, labelpad=5)
-    ax_align.grid(True, axis="x", color="#d9dfe5", lw=0.7)
-    ax_align.tick_params(axis="x", labelsize=8.0)
-    ax_align.tick_params(axis="y", length=0)
-    ax_align.spines[["top", "right", "left"]].set_visible(False)
-    ax_align.spines["bottom"].set_color("#a6adb4")
-    ax_align.text(
-        1.0, 0.76, "base = 1", transform=ax_align.get_xaxis_transform(), ha="right", va="center",
+    ax_kappa.hlines(y, 1.0, kappa_vals, color="#b4a8c7", lw=1.4, zorder=1)
+    ax_kappa.scatter([1.0] * len(y), y, s=24, facecolor="white", edgecolor="#7b8794", lw=0.9, zorder=2)
+    ax_kappa.scatter(kappa_vals, y, s=42, color="#6f5aa8", edgecolor="white", lw=0.7, zorder=3)
+    ax_kappa.axvline(1.0, color="#68737d", lw=1.0, ls=(0, (3, 2)), zorder=0)
+    ax_kappa.set_yticks(y)
+    ax_kappa.set_yticklabels([])
+    ax_kappa.set_ylim(len(TASKS) - 0.5, -0.5)
+    ax_kappa.set_title("(b) Relative isotropic alignment gain", fontsize=9.2, pad=7)
+    ax_kappa.set_xlabel(r"Endpoint / base $\kappa_{\rm rel}$ ratio (can exceed 1)", fontsize=8.1, labelpad=5)
+    ax_kappa.grid(True, axis="x", color="#d9dfe5", lw=0.7)
+    ax_kappa.tick_params(axis="x", labelsize=8.0)
+    ax_kappa.tick_params(axis="y", length=0)
+    ax_kappa.spines[["top", "right", "left"]].set_visible(False)
+    ax_kappa.spines["bottom"].set_color("#a6adb4")
+    ax_kappa.text(
+        1.0, 0.76, "base = 1", transform=ax_kappa.get_xaxis_transform(), ha="right", va="center",
         fontsize=8.0, color="#59636d",
         bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.86, "pad": 0.4},
     )
-    for yi, val in zip(y, align_vals):
+    for yi, val in zip(y, kappa_vals):
         x_offset = 5 if val >= 1.0 else -5
-        ax_align.annotate(
+        ax_kappa.annotate(
             f"{val:.2f}\u00d7", (val, yi), xytext=(x_offset, 0), textcoords="offset points",
             ha="left" if val >= 1.0 else "right", va="center", fontsize=8.0, color="#493b70",
         )
-    ax_align.set_xlim(0.4, max(2.45, max(align_vals) * 1.1))
+    ax_kappa.set_xlim(0.4, max(2.45, max(kappa_vals) * 1.1))
 
     fig.savefig(out_fig, dpi=240)
     plt.close(fig)

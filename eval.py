@@ -128,12 +128,29 @@ def img_transform(cfg, target: str):
 def get_episodes_length(dataset, episodes):
     col_name = "episode_idx" if "episode_idx" in dataset.column_names else "ep_idx"
 
-    episode_idx = dataset.get_col_data(col_name)
-    step_idx = dataset.get_col_data("step_idx")
-    lengths = []
-    for ep_id in episodes:
-        lengths.append(np.max(step_idx[episode_idx == ep_id]) + 1)
-    return np.array(lengths)
+    episode_idx = np.asarray(dataset.get_col_data(col_name))
+    step_idx = np.asarray(dataset.get_col_data("step_idx"))
+    requested = np.asarray(episodes)
+
+    # The previous implementation rescanned the full row array once per
+    # episode (O(num_episodes * num_rows)). Cube has millions of rows, so
+    # several concurrent evals could spend hours here without emitting any
+    # progress. Group once and reduce all episode maxima in linear time.
+    unique_episodes, inverse = np.unique(episode_idx, return_inverse=True)
+    max_step = np.full(unique_episodes.shape, -1, dtype=step_idx.dtype)
+    np.maximum.at(max_step, inverse, step_idx)
+
+    positions = np.searchsorted(unique_episodes, requested)
+    valid = positions < len(unique_episodes)
+    if np.any(valid):
+        valid_indices = np.nonzero(valid)[0]
+        valid[valid_indices] = (
+            unique_episodes[positions[valid_indices]] == requested[valid_indices]
+        )
+    if not np.all(valid):
+        missing = requested[~valid].tolist()
+        raise ValueError(f"Unknown episode ids while computing lengths: {missing[:8]}")
+    return max_step[positions] + 1
 
 
 def get_dataset(cfg, dataset_name):
@@ -275,7 +292,12 @@ def run(cfg: DictConfig):
     )
 
     # sample the episodes and the starting indices
+    print(
+        f"[eval] computing lengths for {len(ep_indices)} episodes",
+        flush=True,
+    )
     episode_len = get_episodes_length(dataset, ep_indices)
+    print("[eval] episode lengths ready", flush=True)
     max_start_idx = episode_len - cfg.eval.goal_offset_steps - 1
     max_start_idx_dict = {ep_id: max_start_idx[i] for i, ep_id in enumerate(ep_indices)}
     # Map each dataset row’s episode_idx to its max_start_idx
@@ -310,6 +332,12 @@ def run(cfg: DictConfig):
     start_time = time.time()
     num_eval = cfg.eval.num_eval
     batch_size = world.num_envs
+    save_video = bool(cfg.eval.get("save_video", False))
+    print(
+        f"[eval] num_eval={num_eval} batch_size={batch_size} "
+        f"save_video={save_video}",
+        flush=True,
+    )
 
     if num_eval > batch_size:
         # Batch evaluation to avoid creating too many parallel envs
@@ -327,8 +355,15 @@ def run(cfg: DictConfig):
                 batch_episodes = batch_episodes + batch_episodes[-1:] * pad
                 batch_start_idx = batch_start_idx + batch_start_idx[-1:] * pad
 
-            batch_video_path = results_path / f"batch_{batch_start}"
-            batch_video_path.mkdir(parents=True, exist_ok=True)
+            batch_video_path = None
+            if save_video:
+                batch_video_path = results_path / f"batch_{batch_start}"
+                batch_video_path.mkdir(parents=True, exist_ok=True)
+
+            print(
+                f"[eval] batch {batch_start}:{batch_end}/{num_eval} starting",
+                flush=True,
+            )
 
             batch_metrics = _world_evaluate_compat(
                 world,
@@ -344,6 +379,10 @@ def run(cfg: DictConfig):
             batch_seeds = batch_metrics.get("seeds")
             if batch_seeds is not None:
                 all_seeds.extend(batch_seeds[:actual_bs])
+            print(
+                f"[eval] batch {batch_start}:{batch_end}/{num_eval} done",
+                flush=True,
+            )
 
         metrics = {
             "success_rate": float(np.sum(all_successes)) / num_eval * 100.0,
@@ -351,6 +390,7 @@ def run(cfg: DictConfig):
             "seeds": np.array(all_seeds) if all_seeds else None,
         }
     else:
+        print(f"[eval] batch 0:{num_eval}/{num_eval} starting", flush=True)
         metrics = _world_evaluate_compat(
             world,
             dataset=dataset,
@@ -359,11 +399,12 @@ def run(cfg: DictConfig):
             eval_budget=cfg.eval.eval_budget,
             episodes_idx=eval_episodes.tolist(),
             callables=OmegaConf.to_container(cfg.eval.get("callables"), resolve=True),
-            video=results_path,
+            video=results_path if save_video else None,
         )
+        print(f"[eval] batch 0:{num_eval}/{num_eval} done", flush=True)
     end_time = time.time()
 
-    print(metrics)
+    print(metrics, flush=True)
 
     results_path = results_path / cfg.output.filename
     results_path.parent.mkdir(parents=True, exist_ok=True)

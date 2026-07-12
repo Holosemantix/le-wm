@@ -1,0 +1,678 @@
+{
+  "metadata": {
+    "code_commit": "c943fdf75cd71bc08e5466e1700676069728b7d2",
+    "created_utc": "2026-07-10T09:14:06.340917+00:00",
+    "errors": [],
+    "evaluation_seed_semantics": "conditional closed-loop evaluation replicates, not training seeds",
+    "evaluation_seeds": [
+      42,
+      43,
+      44
+    ],
+    "implementation_hashes": {
+      "acpc_runtime": "1f4f65590e7f91852467c6f3a0970dda15bf0b58dbf561e8c24a8a32659193ee",
+      "canonical_metric": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
+      "semantic_margin": "83893f10d41f8d602aa32245792ff8ea75800106b46810c18b9cd34bd7a4cc54"
+    },
+    "implementation_paths": {
+      "acpc_runtime": "tools/paper1_phase0_acpc.py",
+      "canonical_metric": "tools/paper1_acpc_metrics.py",
+      "semantic_margin": "tools/paper1_semantic_margin.py"
+    },
+    "missing_rows": [],
+    "model_family": "LeWM",
+    "protocol": {
+      "anchor_seed": 9101,
+      "corruption": "observation_only_gaussian_std0.08_clean_goal",
+      "horizon_weights": "uniform_1_over_H",
+      "label_binning": "task_specific_median_bins",
+      "local_state_quantile": 0.35,
+      "margin_delta_normalized": 0.1,
+      "n_sequences": 16,
+      "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_radius_quantile",
+      "noise_draw_seed_rule": "anchor_seed+1009+7919*draw_index",
+      "normalization": "per_anchor_observed_clean_transition_l2_q50_including_history_future_boundary",
+      "num_noise_draws": 2,
+      "pair_action_policy": "anchor recorded action sequence shared by both clean states",
+      "pair_rule": "task_grounded_near_boundary_v2",
+      "radius_metric": "horizon_weighted_stacked_l2_v2",
+      "radius_quantile": 0.9,
+      "rollout_horizon": 8
+    },
+    "protocol_hash": null,
+    "protocol_hash_status": "calibration_input_pre_freeze",
+    "reference_atr_metadata": {},
+    "schema_version": "paper1-smpr-v2-1.0",
+    "script_path": "paper1/scripts/smpr_sensitivity.py",
+    "script_sha256": "8f42f49fa4ab847437cec097cff6472a756342017dfdd4ce223051a7018c76fd",
+    "source_hashes": {
+      "evals": "0f34532e78bf228eaa3f470b5728fb28fc88d34f47b40e728c7aadab6b4397c4"
+    },
+    "source_paths": {
+      "evals": "assets/paper1_data/training_seed_eval_manifests/lewm_seed3072_evals.json"
+    },
+    "status": "complete",
+    "status_counts": {
+      "ok": 2
+    },
+    "training_family_id": "lewm_seed3072",
+    "training_seed": 3072,
+    "training_seed_semantics": "independently trained checkpoint seed when available; family identity remains distinct across model classes"
+  },
+  "rows": [
+    {
+      "anchor_seed": 9101,
+      "atr_reference_abs_error": null,
+      "atr_reference_match": null,
+      "clean_success": 86.33333333333333,
+      "corrupt_goal": false,
+      "corruption_type": "gaussian_noise",
+      "data_io_time": 17.211386458948255,
+      "different_state_distance_distribution": {
+        "count": 16,
+        "mean": 3.466904878616333,
+        "q10": 2.4950203895568848,
+        "q50": 2.9531378746032715,
+        "q90": 5.54395866394043
+      },
+      "different_state_distance_per_pair": [
+        2.828490972518921,
+        3.3739840984344482,
+        2.9475152492523193,
+        2.0229427814483643,
+        2.53428053855896,
+        3.1719841957092285,
+        3.57914662361145,
+        2.8118937015533447,
+        5.458155632019043,
+        2.4557600021362305,
+        3.652451753616333,
+        6.332255840301514,
+        2.9078569412231445,
+        2.80523943901062,
+        2.9587607383728027,
+        5.629761219024658
+      ],
+      "embedding_space": "normalized",
+      "fixed_pool_time": null,
+      "history_size": 3,
+      "horizon_weights": [
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125
+      ],
+      "jvp_time": null,
+      "label_binning": "task_specific_median_bins",
+      "local_state_quantile": 0.35,
+      "margin_delta_norm": 0.1,
+      "model_family": "LeWM",
+      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_lewm_20260430/pusht_lewm_20260430_epoch_10_object.ckpt",
+      "model_load_time": 0.19868209213018417,
+      "model_search_dirs": [
+        "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_lewm_20260430"
+      ],
+      "n_sequences": 16,
+      "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_radius_quantile",
+      "noise_draw_seed_rule": "anchor_seed+1009+7919*draw_index",
+      "noise_draw_seeds": [
+        10110,
+        18029
+      ],
+      "noise_std": 0.08,
+      "normalization": "per_anchor_observed_clean_transition_l2_q50_including_history_future_boundary",
+      "num_noise_draws": 2,
+      "pair_action_policy": "anchor recorded action sequence shared by both clean states",
+      "pair_anchor_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "pair_neighbor_indices": [
+        5,
+        3,
+        5,
+        1,
+        5,
+        4,
+        3,
+        13,
+        10,
+        12,
+        5,
+        13,
+        13,
+        7,
+        15,
+        14
+      ],
+      "pair_pass": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+        true
+      ],
+      "pair_rule": "task_grounded_near_boundary_v2",
+      "peak_gpu_memory": 1332188672,
+      "peak_gpu_memory_unit": "bytes",
+      "pixels_std0.08_success": 4.333333333333333,
+      "radius_metric": "horizon_weighted_stacked_l2_v2",
+      "radius_quantile": 0.9,
+      "raw_margin_to_anchor_radius_distribution": {
+        "count": 16,
+        "mean": 0.8888893723487854,
+        "q10": -0.2511470317840576,
+        "q50": 0.7463608384132385,
+        "q90": 2.1532700061798096
+      },
+      "raw_margin_to_anchor_radius_per_pair": [
+        0.3781583309173584,
+        0.2547612190246582,
+        0.9035346508026123,
+        0.5891870260238647,
+        0.13162636756896973,
+        1.2382577657699585,
+        -0.3443484306335449,
+        0.9367196559906006,
+        2.5589399337768555,
+        -0.28847289085388184,
+        1.4019277095794678,
+        3.67055606842041,
+        1.0274821519851685,
+        0.23012208938598633,
+        -0.2138211727142334,
+        1.7476000785827637
+      ],
+      "raw_margin_to_tube_distribution": {
+        "count": 16,
+        "mean": -0.060466423630714417,
+        "q10": -1.0323511362075806,
+        "q50": -0.5742334127426147,
+        "q90": 2.016587018966675
+      },
+      "raw_margin_to_tube_per_pair": [
+        -0.6988804340362549,
+        -0.15338730812072754,
+        -0.5798561573028564,
+        -1.5044286251068115,
+        -0.9930908679962158,
+        -0.35538721084594727,
+        0.051775217056274414,
+        -0.715477705001831,
+        1.9307842254638672,
+        -1.0716114044189453,
+        0.12508034706115723,
+        2.804884433746338,
+        -0.6195144653320312,
+        -0.7221319675445557,
+        -0.568610668182373,
+        2.1023898124694824
+      ],
+      "reference_atr_horizon_v2_q90": null,
+      "rollout_horizon_actual": 8,
+      "run_path": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_lewm_20260430",
+      "runtime_dependency_setup_time": 21.475743416696787,
+      "same_state_radius_distribution": {
+        "count": 16,
+        "mean": 2.5780155658721924,
+        "q10": 1.8777744770050049,
+        "q50": 2.5127248764038086,
+        "q90": 3.527371406555176
+      },
+      "same_state_radius_per_anchor": [
+        2.4503326416015625,
+        3.11922287940979,
+        2.043980598449707,
+        1.4337557554244995,
+        2.4026541709899902,
+        1.93372642993927,
+        3.923495054244995,
+        1.8751740455627441,
+        2.8992156982421875,
+        2.7442328929901123,
+        2.2505240440368652,
+        2.6616997718811035,
+        1.880374789237976,
+        2.575117349624634,
+        3.172581911087036,
+        3.8821611404418945
+      ],
+      "same_state_radius_per_noise_draw": [
+        [
+          2.3910908699035645,
+          2.5095741748809814
+        ],
+        [
+          3.0830085277557373,
+          3.1554372310638428
+        ],
+        [
+          1.7317910194396973,
+          2.356170415878296
+        ],
+        [
+          1.482541561126709,
+          1.38496994972229
+        ],
+        [
+          2.4419848918914795,
+          2.363323211669922
+        ],
+        [
+          1.9175091981887817,
+          1.9499436616897583
+        ],
+        [
+          3.6512112617492676,
+          4.195778846740723
+        ],
+        [
+          2.027433156967163,
+          1.7229150533676147
+        ],
+        [
+          2.510383129119873,
+          3.288048505783081
+        ],
+        [
+          2.7142205238342285,
+          2.774245262145996
+        ],
+        [
+          2.0435116291046143,
+          2.4575366973876953
+        ],
+        [
+          3.3517680168151855,
+          1.971631407737732
+        ],
+        [
+          1.876582384109497,
+          1.884167194366455
+        ],
+        [
+          2.5469865798950195,
+          2.603248119354248
+        ],
+        [
+          3.252450466156006,
+          3.0927133560180664
+        ],
+        [
+          3.210611581802368,
+          4.553710460662842
+        ]
+      ],
+      "same_state_tube_radius": 3.527371406555176,
+      "selected_feature_distance_distribution": {
+        "count": 16,
+        "mean": 0.9423586130142212,
+        "q10": 0.47211211919784546,
+        "q50": 0.8003660440444946,
+        "q90": 1.403418779373169
+      },
+      "selected_state_distance_distribution": {
+        "count": 16,
+        "mean": 1.6166110038757324,
+        "q10": 0.9576919078826904,
+        "q50": 1.5845694541931152,
+        "q90": 2.3863649368286133
+      },
+      "semantic_distance_threshold": 2.533541679382324,
+      "semantic_label_count": 8,
+      "semantic_label_rule": "T-block pose cell from x/y/theta median splits",
+      "semantic_pair_count": 16,
+      "semantic_skip_rate": 0.0,
+      "semantic_skipped_anchor_count": 0,
+      "semantic_state_key": "state",
+      "smpr": 0.25,
+      "smpr_time": 1.4639297034591436,
+      "status": "ok",
+      "std_key": "0.0",
+      "subdir": "pusht_lewm_20260430",
+      "task": "PushT",
+      "task_home": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht",
+      "timing_unit": "seconds",
+      "training_family_id": "lewm_seed3072",
+      "training_rho": 0.0,
+      "training_seed": 3072,
+      "wall_time_per_row": 40.6588965523988
+    },
+    {
+      "anchor_seed": 9101,
+      "atr_reference_abs_error": null,
+      "atr_reference_match": null,
+      "clean_success": 88.33333333333333,
+      "corrupt_goal": false,
+      "corruption_type": "gaussian_noise",
+      "data_io_time": 10.041265374049544,
+      "different_state_distance_distribution": {
+        "count": 16,
+        "mean": 3.525001287460327,
+        "q10": 2.469902753829956,
+        "q50": 3.1579222679138184,
+        "q90": 5.391341209411621
+      },
+      "different_state_distance_per_pair": [
+        3.0162453651428223,
+        3.5012431144714355,
+        3.235121965408325,
+        1.9395252466201782,
+        2.5354528427124023,
+        3.33365797996521,
+        4.197021484375,
+        2.8575356006622314,
+        5.129940986633301,
+        2.7219181060791016,
+        3.7929232120513916,
+        6.113241672515869,
+        2.888371467590332,
+        3.0807228088378906,
+        2.4043526649475098,
+        5.652741432189941
+      ],
+      "embedding_space": "normalized",
+      "fixed_pool_time": null,
+      "history_size": 3,
+      "horizon_weights": [
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125,
+        0.125
+      ],
+      "jvp_time": null,
+      "label_binning": "task_specific_median_bins",
+      "local_state_quantile": 0.35,
+      "margin_delta_norm": 0.1,
+      "model_family": "LeWM",
+      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_lewm_noise_0to008_p1/pusht_lewm_noise_0to008_p1_epoch_10_object.ckpt",
+      "model_load_time": 0.1874033808708191,
+      "model_search_dirs": [
+        "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_lewm_noise_0to008_p1"
+      ],
+      "n_sequences": 16,
+      "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_radius_quantile",
+      "noise_draw_seed_rule": "anchor_seed+1009+7919*draw_index",
+      "noise_draw_seeds": [
+        10110,
+        18029
+      ],
+      "noise_std": 0.08,
+      "normalization": "per_anchor_observed_clean_transition_l2_q50_including_history_future_boundary",
+      "num_noise_draws": 2,
+      "pair_action_policy": "anchor recorded action sequence shared by both clean states",
+      "pair_anchor_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "pair_neighbor_indices": [
+        5,
+        3,
+        5,
+        1,
+        5,
+        4,
+        3,
+        13,
+        10,
+        12,
+        5,
+        13,
+        13,
+        7,
+        15,
+        14
+      ],
+      "pair_pass": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "pair_rule": "task_grounded_near_boundary_v2",
+      "peak_gpu_memory": 2101864960,
+      "peak_gpu_memory_unit": "bytes",
+      "pixels_std0.08_success": 89.0,
+      "radius_metric": "horizon_weighted_stacked_l2_v2",
+      "radius_quantile": 0.9,
+      "raw_margin_to_anchor_radius_distribution": {
+        "count": 16,
+        "mean": 3.3576600551605225,
+        "q10": 2.2344095706939697,
+        "q50": 2.9421043395996094,
+        "q90": 5.203311920166016
+      },
+      "raw_margin_to_anchor_radius_per_pair": [
+        2.873026132583618,
+        3.3388917446136475,
+        2.989737033843994,
+        1.8845069408416748,
+        2.2694735527038574,
+        3.2613770961761475,
+        4.077272891998291,
+        2.7857882976531982,
+        4.981907367706299,
+        2.199345588684082,
+        3.6926417350769043,
+        5.897495269775391,
+        2.800992250442505,
+        2.8944716453552246,
+        2.3509163856506348,
+        5.424716949462891
+      ],
+      "raw_margin_to_tube_distribution": {
+        "count": 16,
+        "mean": 3.2693188190460205,
+        "q10": 2.2142205238342285,
+        "q50": 2.90224027633667,
+        "q90": 5.135659217834473
+      },
+      "raw_margin_to_tube_per_pair": [
+        2.7605631351470947,
+        3.245560884475708,
+        2.9794397354125977,
+        1.6838431358337402,
+        2.279770612716675,
+        3.0779757499694824,
+        3.9413392543792725,
+        2.601853370666504,
+        4.874258995056152,
+        2.466235876083374,
+        3.537240982055664,
+        5.857559680938721,
+        2.6326892375946045,
+        2.825040578842163,
+        2.1486704349517822,
+        5.397059440612793
+      ],
+      "reference_atr_horizon_v2_q90": null,
+      "rollout_horizon_actual": 8,
+      "run_path": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_lewm_noise_0to008_p1",
+      "runtime_dependency_setup_time": 1.017935574054718e-05,
+      "same_state_radius_distribution": {
+        "count": 16,
+        "mean": 0.1673409640789032,
+        "q10": 0.06338274478912354,
+        "q50": 0.14562642574310303,
+        "q90": 0.25568217039108276
+      },
+      "same_state_radius_per_anchor": [
+        0.14321927726268768,
+        0.16235139966011047,
+        0.24538497626781464,
+        0.055018261075019836,
+        0.2659793794155121,
+        0.07228077948093414,
+        0.11974852532148361,
+        0.07174722105264664,
+        0.14803355932235718,
+        0.52257239818573,
+        0.10028144717216492,
+        0.21574661135673523,
+        0.08737929910421371,
+        0.18625116348266602,
+        0.05343637615442276,
+        0.2280246615409851
+      ],
+      "same_state_radius_per_noise_draw": [
+        [
+          0.05634806677699089,
+          0.23009049892425537
+        ],
+        [
+          0.09581435471773148,
+          0.22888845205307007
+        ],
+        [
+          0.19278371334075928,
+          0.29798623919487
+        ],
+        [
+          0.06450027227401733,
+          0.04553624615073204
+        ],
+        [
+          0.24662286043167114,
+          0.285335898399353
+        ],
+        [
+          0.040556542575359344,
+          0.10400500893592834
+        ],
+        [
+          0.09026829898357391,
+          0.1492287516593933
+        ],
+        [
+          0.035578999668359756,
+          0.10791543871164322
+        ],
+        [
+          0.1593315452337265,
+          0.13673555850982666
+        ],
+        [
+          0.5926842093467712,
+          0.45246055722236633
+        ],
+        [
+          0.08064945787191391,
+          0.11991343647241592
+        ],
+        [
+          0.1690039485692978,
+          0.26248928904533386
+        ],
+        [
+          0.1051083505153656,
+          0.06965024769306183
+        ],
+        [
+          0.1671006977558136,
+          0.20540161430835724
+        ],
+        [
+          0.02814372628927231,
+          0.07872902601957321
+        ],
+        [
+          0.26240381598472595,
+          0.19364549219608307
+        ]
+      ],
+      "same_state_tube_radius": 0.25568217039108276,
+      "selected_feature_distance_distribution": {
+        "count": 16,
+        "mean": 0.9423586130142212,
+        "q10": 0.47211211919784546,
+        "q50": 0.8003660440444946,
+        "q90": 1.403418779373169
+      },
+      "selected_state_distance_distribution": {
+        "count": 16,
+        "mean": 1.6166110038757324,
+        "q10": 0.9576919078826904,
+        "q50": 1.5845694541931152,
+        "q90": 2.3863649368286133
+      },
+      "semantic_distance_threshold": 2.533541679382324,
+      "semantic_label_count": 8,
+      "semantic_label_rule": "T-block pose cell from x/y/theta median splits",
+      "semantic_pair_count": 16,
+      "semantic_skip_rate": 0.0,
+      "semantic_skipped_anchor_count": 0,
+      "semantic_state_key": "state",
+      "smpr": 1.0,
+      "smpr_time": 0.11539864912629128,
+      "status": "ok",
+      "std_key": "0.08",
+      "subdir": "pusht_lewm_noise_0to008_p1",
+      "task": "PushT",
+      "task_home": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht",
+      "timing_unit": "seconds",
+      "training_family_id": "lewm_seed3072",
+      "training_rho": 0.08,
+      "training_seed": 3072,
+      "wall_time_per_row": 10.389031512662768
+    }
+  ]
+}

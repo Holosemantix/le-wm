@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -11,25 +12,71 @@ from .utils_paper1_io import ROOT, RHO_GRID, SEEDS, TASKS
 
 DEFAULT_OUT = ROOT / "paper1" / "results" / "diagnostic_manifest.json"
 
+FROZEN_PROTOCOL = "paper1/config/frozen_diagnostic_protocol_v1.json"
+PUBLIC_V1_ARTIFACTS = (
+    FROZEN_PROTOCOL,
+    "paper1/results/frozen_external_validation_summary_v3.json",
+    "paper1/results/external_validation/pldm_frozen_summary_v2.json",
+    "paper1/results/external_validation/cross_stressor_fixed_rho_summary.json",
+    "paper1/results/external_validation/target_view_frozen_summary.json",
+    "paper1/results/diagnostic_baselines/diagnostic_baseline_all_v1.json",
+    "paper1/results/diagnostic_baselines/gaussian_rho_confound_summary.json",
+    "paper1/results/jvp_hutchinson_sensitivity_audit_v2.json",
+    "paper1/results/linearization_horizon_sensitivity_v1.json",
+    "paper1/results/fixed_pool_candidatewise_certificate_summary.json",
+    "assets/paper1_data/smpr_sensitivity_v2.json",
+    "assets/paper1_data/smpr_controls_v2.json",
+    "assets/paper1_data/smpr_oracle_guard_v2.json",
+)
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     args = parser.parse_args()
+    artifact_hashes = {
+        rel: sha256_file(ROOT / rel)
+        for rel in PUBLIC_V1_ARTIFACTS
+    }
+    protocol_hash = artifact_hashes[FROZEN_PROTOCOL]
     data = {
+        "schema_version": "paper1-diagnostic-manifest-2.0",
         "tasks": TASKS,
         "training_seeds": SEEDS,
         "eval_seeds": [42, 43, 44],
         "rho_grid": [float(x) for x in RHO_GRID],
         "eval_noise_sigmas": [0.00, 0.03, 0.05, 0.08],
         "checkpoint_epoch": 10,
+        "frozen_protocol_source": FROZEN_PROTOCOL,
+        "frozen_protocol_sha256": protocol_hash,
+        "protocol_development_split": "CAL: LeWM training seed 3072 Gaussian sweep only",
+        "external_threshold_search": False,
         "closed_loop_eval_source": "assets/paper1_data/three_seed_gaussian_sweep_summary_20260706.json",
+        "canonical_horizon_v2_source": "assets/paper1_data/acpc_horizon_v2_lewm.json",
         "diagnostic_source": "paper1/results/prospective_diagnostic/diagnostics_all_ckpts.csv",
-        "smpr_label_source": "assets/paper1_data/semantic_task_grounded_margin_lewm_full_sweep_20260708.json",
+        "smpr_sensitivity_source": "assets/paper1_data/smpr_sensitivity_v2.json",
+        "smpr_control_source": "assets/paper1_data/smpr_controls_v2.json",
+        "smpr_oracle_mve_source": "assets/paper1_data/smpr_oracle_guard_v2.json",
         "fixed_pool_summary_source": "assets/paper1_data/acpc_phase0_lewm_three_seed.json",
-        "raw_fixed_pool_source": "full-sweep recomputation implemented: paper1/results/sample_level_certificate_full_sweep_audit.json; retained summaries are still used for the q50/q90 proxy overlay",
-        "jacobian_audit_source": "finite-difference checkpoint audit: paper1/results/gaussian_sensitivity_audit.json; exact-autograd JVP/Hutchinson decomposition: paper1/results/jvp_hutchinson_sensitivity_audit.json",
-        "stronger_smpr_guard_source": "joint guard-side validation: paper1/results/joint_guard_side_validation.csv; SMPR and fixed-pool top1 flip are interpreted only with ATR",
+        "raw_fixed_pool_source": "paper1/results/fixed_pool_candidatewise_certificate_summary.json",
+        "jacobian_audit_source": "exact-autograd matched-map audit: paper1/results/jvp_hutchinson_sensitivity_audit_v2.json; covariance-aware finite-difference calibration: paper1/results/linearization_horizon_sensitivity_v1.json",
+        "component_baseline_source": "paper1/results/diagnostic_baselines/diagnostic_baseline_all_v1.json",
+        "public_v1_artifact_sha256": artifact_hashes,
+        "external_validation": {
+            "E1_heldout_lewm": "paper1/results/frozen_external_validation_summary_v3.json",
+            "E2_pldm_one_training_family": "paper1/results/external_validation/pldm_frozen_summary_v2.json",
+            "E3_fixed_rho_blur_resize": "paper1/results/external_validation/cross_stressor_fixed_rho_summary.json",
+            "E4_failed_target_view": "paper1/results/external_validation/target_view_frozen_summary.json",
+            "pldm_eval_seed_semantics": "conditional evaluation replicates, not independent training seeds",
+        },
         "generated_outputs": [
             "paper1/results/full_sweep_diagnostics.csv",
             "paper1/results/full_sweep_diagnostics_summary.csv",
@@ -74,6 +121,34 @@ def main() -> int:
             "paper1/tables/table_theory_evidence_map.tex",
             "paper1/results/joint_guard_side_validation.csv",
             "paper1/tables/table_joint_guard_side_validation.tex",
+            "paper1/results/frozen_external_validation_summary_v3.json",
+            "paper1/results/external_validation/pldm_frozen_summary_v2.json",
+            "paper1/results/external_validation/cross_stressor_fixed_rho_summary.json",
+            "paper1/results/external_validation/cross_stressor_fixed_rho_rows.csv",
+            "paper1/results/external_validation/cross_stressor_all_pairs.csv",
+            "paper1/tables/table_cross_stressor_paired_change.tex",
+            "assets/paper1_figs/fig_cross_stressor_fixed_rho.png",
+            "paper1/results/external_validation/target_view_frozen_summary.json",
+            "paper1/results/diagnostic_baselines/diagnostic_baseline_all_v1.json",
+            "paper1/results/diagnostic_baselines/gaussian_rho_confound_summary.json",
+            "paper1/results/jvp_hutchinson_sensitivity_audit_v2.json",
+            "paper1/results/jvp_hutchinson_sensitivity_summary_v2.csv",
+            "paper1/results/linearization_horizon_sensitivity_v1.json",
+            "paper1/results/linearization_calibration_summary.csv",
+            "paper1/results/horizon_quantile_sensitivity_summary.csv",
+            "paper1/results/fixed_pool_candidatewise_certificate_summary.json",
+            "paper1/results/fixed_pool_certificate_coverage_by_block.csv",
+            "paper1/results/fixed_pool_risk_coverage.csv",
+            "paper1/tables/table_diagnostic_baselines.tex",
+            "paper1/tables/table_fixed_pool_certificate_coverage.tex",
+            "paper1/tables/table_linearization_calibration.tex",
+            "paper1/tables/table_horizon_quantile_sensitivity.tex",
+            "paper1/tables/table_smpr_sensitivity.tex",
+            "paper1/tables/table_smpr_controls.tex",
+            "assets/paper1_figs/fig_diagnostic_baseline_external.png",
+            "assets/paper1_figs/fig_fixed_pool_certificate_calibration.png",
+            "assets/paper1_figs/fig_linearization_calibration.png",
+            "assets/paper1_figs/fig_smpr_radius_margin_decomposition.png",
         ],
         "sample_level_certificate_audit": {
             "scope": "full Gaussian sweep for four tasks and training seeds 3072/3073/3074",
@@ -99,16 +174,35 @@ def main() -> int:
         },
         "joint_guard_side_validation": {
             "result_csv": "paper1/results/joint_guard_side_validation.csv",
-            "interpretation": "ATR is the radius term; SMPR and fixed-pool top1 flip are guard-side checks, not standalone robustness metrics",
+            "interpretation": "legacy proxy view retained for provenance; public-v1 claim decisions use the v2 SMPR sensitivity/control/MVE artifacts",
+        },
+        "public_v1_claim_boundaries": {
+            "long_horizon_empirically_necessary": False,
+            "correct_action_increment_established": False,
+            "smpr_task_label_increment_established": False,
+            "smpr_constant_collapse_rejected": True,
+            "pldm_training_runs": 1,
+            "fixed_pool_only": True,
+            "adaptive_cem_guarantee": False,
+            "analysis_interface_portability": ["LeWM", "PLDM"],
+            "absolute_calibration_scope": "model-family-specific",
+            "cross_stressor_transfer_claim": "within-LeWM paired comparison across fixed blur/resize; absolute screening is conservative",
+            "paired_change_reference_required": True,
+            "paired_change_shared_zero_threshold_within_lewm": True,
+            "shared_cross_model_absolute_threshold": False,
         },
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "notes": [
             "No retraining or closed-loop re-evaluation is performed by this remediation.",
             "Full-sweep sample-level fixed-pool event rates are recomputed from checkpoints; strict q10/q95 gaps remain negative and are not calibrated probability bounds.",
+            "E3 separates family-calibrated absolute screening from a reference-based zero-threshold paired comparison shared across fixed LeWM blur/resize stressors.",
             "Wilson intervals quantify sample event-rate estimation uncertainty, not theorem-calibrated probabilities.",
             "Held-out gates are calibrated on calibration rows only; held-out labels are used only for evaluation.",
             "SMPR and fixed-pool top1 flip are guard-side checks interpreted jointly with ATR, not standalone robustness metrics.",
             "Exact-autograd JVP/Hutchinson traces decompose local encoder, rollout, and composed sensitivity but do not materialize a full Jacobian or prove closed-loop robustness.",
+            "Matched component and horizon baselines do not establish empirical necessity for H=8 or correct-action conditioning.",
+            "The sharp certificate is deterministic for the sampled ordered candidate pool; zero certified flips are an invariant check.",
+            "SMPR rejects complete collapse but does not establish incremental task-label, action, progressive-collapse, or four-task oracle relevance.",
         ],
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

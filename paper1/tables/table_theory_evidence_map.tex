@@ -1,6 +1,6 @@
 \begin{table}[H]
 \centering
-\caption{Theory-to-evidence map for the matched-Gaussian diagnostic. Each empirical audit is interpreted within the fixed-checkpoint, matched-stressor scope of the paper.}
+\caption{Claim-to-evidence map for the paired robustness analysis. Mathematical interface portability, family calibration, and within-family paired comparison are distinct claims.}
 \label{tab:theory-evidence-map}
 \footnotesize
 \setlength{\tabcolsep}{3pt}
@@ -10,11 +10,13 @@
 Theoretical quantity & Empirical audit & Main observation & Scope \\
 \midrule
 $R_\sigma$ radius tail & ATR q90 and normalized ATR & Recovered rows occupy low-ATR regions; endpoint ATR falls on all tasks. & q90 is a fixed diagnostic tail summary, not the theorem's calibrated $\alpha$. \\
-$J_{G_{\mathbf a}}J_E$ local sensitivity & Finite-difference slopes and exact-autograd JVP/Hutchinson traces & Both audits show endpoint/base reductions relative to each task's own base: finite-difference ratios are $0.002$--$0.008$ and composed-trace ratios are $0.003/0.010/0.006/0.026$. & The estimators need not match numerically and are not cross-task calibrated; no full Jacobian matrix, SVD, or global guarantee. \\
-$\Delta_{\mathcal A}>2\eta$ sufficient condition & Fixed-pool cert-pass event & Median cert-pass rises from $0.06$ on fragile rows to $0.61$ on recovered rows, with Wilson intervals reported in \Cref{tab:sample-level-event-rate-ci}. & Fixed 65-candidate pool; strict q10/q95 gaps remain negative. \\
-Candidate instability & Fixed-pool top-1 flip & Median top-1 flip falls from $0.54$ on fragile rows to $0.04$ on recovered rows, with Wilson intervals reported in \Cref{tab:sample-level-event-rate-ci}. & Fixed-pool disagreement, not adaptive CEM or closed-loop trajectory stability. \\
-Collapse / task discriminability & SMPR and joint guard-side validation & Median SMPR rises from $0.86$ on fragile rows to $1.00$ on recovered rows. & Programmatic proxy labels; stronger oracle semantic labels remain outside this study. \\
-Held-out diagnostic separation & Held-out seed/task recovery-onset validation & Mean absolute onset errors are $0.007$ for held-out seeds and $0.008$ for held-out tasks; maximum error is $0.020$. & Small task/seed count under the matched Gaussian stressor; not a universal checkpoint ranker. \\
+Covariance-aware $J_{G_{\mathbf a}}J_E$ trace & Matched-map finite differences and exact JVP/Hutchinson & Endpoint/base trace ratios are $0.0027/0.0087/0.0065/0.0287$ across the four tasks. & Finite-range calibration is nonlinear for base Reacher/Cube; no global or closed-loop guarantee. \\
+Candidate-wise sharp slack & 10,800-history fixed-pool audit & Sharp coverage is $0.700$ versus coarse coverage $0.478$; observed overall flip rate is $0.208$. & Exact only for the evaluated ordered pool; certified-zero flips are an invariant, not independent evidence. \\
+Candidate instability & Sharp-slack risk--coverage curve & Observed flip rate falls to $0.022$ at $75\%$ coverage and zero at exact sharp-pass coverage. & Descriptive selection by slack, not probability calibration or adaptive CEM. \\
+Complete proxy collapse & Positive-margin SMPR controls & Constant collapse is rejected in $4/4$ MVE rows; the identical clean/noisy positive control passes $4/4$. & Action permutation has zero effect and task-label increment is not established. \\
+Analysis-interface portability & Identical paired-radius/guard pipeline on LeWM and PLDM & Both architectures produce complete paired diagnostic artifacts without retraining a probe. & Requires inspectable representations/predictions; PLDM has one training family. \\
+Family-calibrated absolute screening & E1/E2 and unchanged LeWM blur/resize gate & E1 reaches $0.945/0.965$; LeWM blur/resize precision/recall are $1.000/0.467$; PLDM shared calibration is weak. & Thresholds are not claimed to be cross-family constants. \\
+Within-family paired comparison & All 24 LeWM blur/resize base-to-endpoint pairs & One $\Delta S>0$ rule reaches $0.889/0.974$ and Spearman $0.864$. & Requires a reference checkpoint; two stressors at one severity, not universal corruption transfer. \\
 \bottomrule
 \end{tabularx}
 \end{table}

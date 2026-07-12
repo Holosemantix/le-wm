@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering
+\caption{Matched-map Gaussian linearization calibration. Ratios compare measured $\mathbb{E}[R^2]/\sigma^2$ with the covariance-aware exact-JVP/Hutchinson trace at $\sigma=0.0025$; relative error averages all four small-$\sigma$ probes. Values are medians or means over three training seeds. The remainder order is descriptive and no global guarantee is implied.}
+\label{tab:linearization-calibration}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\toprule
+Task & base ratio & endpoint ratio & mean rel. error (base/end) \\
+\midrule
+TwoRoom & 0.94 & 1.93 & 0.35/0.46 \\
+PushT & 0.85 & 1.22 & 0.30/0.13 \\
+Reacher & 1.35 & 1.18 & 5.23/0.16 \\
+Cube & 1.28 & 1.16 & 2.89/0.07 \\
+\bottomrule
+\end{tabular}
+\end{table}

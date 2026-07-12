@@ -63,17 +63,20 @@ cp main.tex arxiv_metadata.tex arxiv_release_notes.tex references.bib main.bbl /
 # Copy exactly the figures referenced by main.tex. The helper expands simple
 # \input{...} files and resolves the configured \graphicspath entries.
 python scripts/collect_tex_figures.py --tex main.tex --base-dir . --out-dir /tmp/paper1_arxiv_src/figures
-cp tables/table_heldout_diagnostic_validation.tex /tmp/paper1_arxiv_src/tables/
-cp tables/table_endpoint_atr_smpr.tex /tmp/paper1_arxiv_src/tables/
-cp tables/table_theory_evidence_map.tex /tmp/paper1_arxiv_src/tables/
-cp tables/table_fixed_pool_tail_audit.tex /tmp/paper1_arxiv_src/tables/
-cp tables/table_sample_level_certificate_full_sweep.tex /tmp/paper1_arxiv_src/tables/
-cp tables/table_sample_level_event_rate_ci.tex /tmp/paper1_arxiv_src/tables/
-cp tables/table_sample_level_certificate_endpoint.tex /tmp/paper1_arxiv_src/tables/
-cp tables/table_joint_guard_side_validation.tex /tmp/paper1_arxiv_src/tables/
-cp tables/table_gaussian_sensitivity_audit.tex /tmp/paper1_arxiv_src/tables/
-cp tables/table_jvp_hutchinson_sensitivity_audit.tex /tmp/paper1_arxiv_src/tables/
-cp tables/table_threshold_quantile_sensitivity.tex /tmp/paper1_arxiv_src/tables/
+mapfile -t referenced_tables < <(
+  sed -n 's/^[[:space:]]*\\input{\(tables\/[^}]*\)}.*/\1/p' main.tex
+)
+[[ "${#referenced_tables[@]}" -gt 0 ]] || fail "main.tex has no collected table inputs"
+for table in "${referenced_tables[@]}"; do
+  if [[ -f "$table" ]]; then
+    table_source="$table"
+  elif [[ -f "${table}.tex" ]]; then
+    table_source="${table}.tex"
+  else
+    fail "referenced table is missing: $table[.tex]"
+  fi
+  cp "$table_source" /tmp/paper1_arxiv_src/tables/
+done
 
 tar -czf /tmp/paper1_arxiv_v1_src.tar.gz -C /tmp/paper1_arxiv_src .
 

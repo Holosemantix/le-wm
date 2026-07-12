@@ -1,0 +1,27 @@
+\begin{table}[H]
+\centering
+\caption{SMPR V1 sensitivity summaries. Distribution parameters use all 36 CAL checkpoints; pair-selection parameters use the two-task four-checkpoint MVE.}
+\label{tab:smpr-sensitivity}
+\begin{tabular}{llcc}
+\toprule
+Factor & Level & Mean SMPR & Mean pair count \\
+\midrule
+noise\_draws & 1 & 0.866 & 89.8 \\
+noise\_draws & 5 & 0.872 & 89.8 \\
+radius\_quantile & 0.8 & 0.899 & 89.8 \\
+radius\_quantile & 0.9 & 0.872 & 89.8 \\
+radius\_quantile & 0.95 & 0.838 & 89.8 \\
+margin\_delta\_norm & 0.0 & 0.882 & 89.8 \\
+margin\_delta\_norm & 0.05 & 0.876 & 89.8 \\
+margin\_delta\_norm & 0.1 & 0.872 & 89.8 \\
+margin\_delta\_norm & 0.25 & 0.852 & 89.8 \\
+local\_state\_quantile & 0.1 & 0.570 & 14.0 \\
+local\_state\_quantile & 0.25 & 0.616 & 21.0 \\
+local\_state\_quantile & 0.35 & 0.639 & 24.0 \\
+local\_state\_quantile & 0.5 & 0.640 & 26.0 \\
+label\_binning & median & 0.639 & 24.0 \\
+label\_binning & quartile & 0.618 & 29.5 \\
+label\_binning & fixed\_physical & 0.621 & 31.0 \\
+\bottomrule
+\end{tabular}
+\end{table}

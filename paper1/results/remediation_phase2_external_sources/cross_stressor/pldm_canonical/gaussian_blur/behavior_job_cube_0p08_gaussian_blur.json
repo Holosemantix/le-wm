@@ -1,0 +1,60 @@
+{
+  "jobs": [
+    {
+      "apply_to": "1",
+      "checkpoint_exists": true,
+      "checkpoint_rel": "lewm-cube/ckpt/cube_pldm_noise_0to008_p1/cube_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+      "checkpoint_resolution": "canonical_model_file",
+      "command_template": "STABLEWM_HOME=$DATA_ROOT ckpt_override=$DATA_ROOT/lewm-cube/ckpt/cube_pldm_noise_0to008_p1/cube_pldm_noise_0to008_p1_epoch_10_object.ckpt config=pldm dataset_name=cube diagnostic_corruption_type=gaussian_blur diagnostic_dataset_name=ogbench/cube_single_expert eval_base_seed=42 eval_batch_size=100 eval_blur_kernel_sizes=15 eval_corruption_apply_to=1 eval_corruption_type=gaussian_blur eval_epoch=10 eval_gpus=3 eval_resume=1 eval_save_video=0 eval_seeds=3 eval_timeout_seconds=7200 num_eval=300 output_model_name=paper1_cross_stressor_pldm_blur_endpoint_gaussian_blur_std0p08 post_train_eval_mode=full seed=3072 skip_diagnostics=1 skip_train=1 trainer_file=train_pldm.py bash run_trainer.sh",
+      "complete": false,
+      "diagnostics_dir_rel": "lewm-cube/ckpt/cube_paper1_cross_stressor_pldm_blur_endpoint_gaussian_blur_std0p08/eval_results/diagnostics_gaussian_blur",
+      "diagnostics_enabled": false,
+      "eval_base_seed": 42,
+      "eval_seeds": 3,
+      "eval_summary_rel": "lewm-cube/ckpt/cube_paper1_cross_stressor_pldm_blur_endpoint_gaussian_blur_std0p08/eval_results/eval_summary.csv",
+      "family": "gaussian_blur",
+      "final_output_model_name": "cube_paper1_cross_stressor_pldm_blur_endpoint_gaussian_blur_std0p08",
+      "magnitudes": [
+        "15"
+      ],
+      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to008_p1/cube_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+      "model_sha256": "d32f09ead199e86ff315db8da82d7435bb3cab4ad024f4151841036392eebed5",
+      "num_eval": 300,
+      "output_model_name_arg": "paper1_cross_stressor_pldm_blur_endpoint_gaussian_blur_std0p08",
+      "result_dir_rel": "lewm-cube/ckpt/cube_paper1_cross_stressor_pldm_blur_endpoint_gaussian_blur_std0p08/eval_results",
+      "std_key": "0.08",
+      "subdir": "cube_pldm_noise_0to008_p1",
+      "task": "Cube"
+    }
+  ],
+  "metadata": {
+    "canonical_artifact": "assets/paper1_data/canonical_evals_pldm_v2.json",
+    "checkpoint_binding": "entry.model_file is authoritative when present; legacy entries require exactly one *epoch_<epoch>_object.ckpt candidate",
+    "diagnostics_enabled": false,
+    "epoch": 10,
+    "eval_base_seed": 42,
+    "eval_only_default": true,
+    "eval_seeds": 3,
+    "families": [
+      "gaussian_blur"
+    ],
+    "launcher": "tools.paper1_unseen_eval_grid",
+    "num_eval": 300,
+    "output_prefix": "paper1_cross_stressor_pldm_blur_endpoint",
+    "root": null,
+    "root_env_order": [
+      "PAPER1_DATA_ROOT",
+      "DATA_ROOT",
+      "STABLEWM_HOME"
+    ],
+    "root_note": "Set --root or DATA_ROOT/PAPER1_DATA_ROOT/STABLEWM_HOME on each machine.",
+    "schema_version": "paper1-unseen-eval-grid-manifest-1.1",
+    "std_keys": [
+      "0.08"
+    ],
+    "tasks": [
+      "Cube"
+    ],
+    "train_seed": 3072
+  }
+}

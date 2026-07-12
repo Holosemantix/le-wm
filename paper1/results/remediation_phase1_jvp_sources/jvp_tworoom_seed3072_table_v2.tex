@@ -1,0 +1,17 @@
+\begin{table}[H]
+\centering
+\caption{Exact-JVP/Hutchinson local sensitivity decomposition. Every entry is an endpoint/base ratio, using 16 sampled sequences and 8 Rademacher probes per checkpoint, then taking medians over training seeds when multiple seeds are present. The first three columns are ratios of the raw encoder, rollout, and composed Frobenius-trace estimates; the constant per-input-dimension normalizers cancel within each endpoint/base comparison. The final column reports \texttt{kappa\_relative\_isotropic}, the relative isotropic alignment gain $\kappa_{\mathrm{rel}}=d_z\lVert J_GJ_E\rVert_F^2/(\lVert J_G\rVert_F^2\lVert J_E\rVert_F^2+\varepsilon)$. This diagnostic can exceed 1 and is not an angle, cosine, or certificate. Exact autograd JVPs with math/eager attention estimate local traces, not a full Jacobian matrix or a closed-loop guarantee.}
+\label{tab:jvp-hutchinson-sensitivity-audit}
+\small
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lcccc}
+\toprule
+Task & \shortstack{raw encoder\\trace} & \shortstack{raw rollout\\trace} & \shortstack{raw composed\\trace} & \shortstack{relative isotropic\\gain} \\
+\midrule
+TwoRoom & 0.003 & 1.092 & 0.002 & 0.585 \\
+PushT & -- & -- & -- & -- \\
+Reacher & -- & -- & -- & -- \\
+Cube & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}

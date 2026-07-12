@@ -122,6 +122,8 @@
 #                              pixels_goal / "pixels,pixels+goal"。
 #   frameskip                 数据加载 frameskip；默认 5（与训练 data config 一致）
 #   eval_gpus                 GPU id 列表，空格分隔；默认自动探测全部
+#   eval_max_concurrency      同时运行的 eval.py 进程上限；默认 1。
+#                              显式提高时也不会超过 eval_gpus 数量。
 #   noise_table_stds          诊断扫的 std；默认 0.0~0.10 一组（仍由本字段控制）
 #   diagnostic_rollout_steps  predictor 自回归 rollout 步数；默认 "1 2 4 8"
 #   skip_eval_sweep           设 1 跳过 eval sweep
@@ -141,6 +143,12 @@
 #   eval_epoch                用于 eval 的 epoch 编号；默认读取训练 config 的 trainer.max_epochs
 #   eval_seeds                eval sweep 的 seed 数量；默认 3。每个 seed 跑 num_eval/eval_seeds 次
 #   eval_base_seed            首 seed；不传则读取 config/eval/<dataset_name>.yaml 顶层 seed；后续 seed = base+1, base+2, ...
+#   eval_batch_size           每个 eval.py 同时创建的 env 数；留空保持旧行为。
+#                              CEM sampling can depend on batch dimension, so
+#                              comparable rows must freeze the same value.
+#   eval_save_video           设 1 保存视频；默认 0，Paper 1 数值评估不编码视频
+#   eval_resume               设 1 时逐 seed 校验 metrics+log 并跳过完整结果
+#   eval_timeout_seconds      单个 seed 的 watchdog 秒数；0 表示不设 timeout
 #
 # 用法示例：
 #   dataset_name=tworoom trainer_file=train_swm.py config=swm \
@@ -475,10 +483,20 @@ if [ "${post_train_eval_mode}" != "none" ]; then
     fi
     read -ra gpu_array <<< "${eval_gpus}"
     n_gpus=${#gpu_array[@]}
-    echo "[gpu] using GPUs: ${gpu_array[*]} (count=${n_gpus})"
+    eval_max_concurrency="${eval_max_concurrency:-1}"
+    if ! [[ "${eval_max_concurrency}" =~ ^[0-9]+$ ]] || [ "${eval_max_concurrency}" -lt 1 ]; then
+        echo "[eval] eval_max_concurrency 必须是 >=1 的整数，got '${eval_max_concurrency}'"
+        exit 1
+    fi
+    eval_concurrency="${eval_max_concurrency}"
+    if [ "${eval_concurrency}" -gt "${n_gpus}" ]; then
+        eval_concurrency="${n_gpus}"
+    fi
+    echo "[gpu] visible eval GPUs: ${gpu_array[*]} (count=${n_gpus}); max_concurrency=${eval_concurrency}"
 else
     gpu_array=()
     n_gpus=0
+    eval_concurrency=0
     echo "[eval] GPU detection skipped (post_train_eval_mode=none)"
 fi
 
@@ -557,7 +575,52 @@ if [ $(( per_seed_num_eval * eval_seeds )) -ne "${num_eval}" ]; then
     echo "[eval][warn]   每个 seed 跑 ${per_seed_num_eval} 次，余数 $(( num_eval - per_seed_num_eval * eval_seeds )) 被丢弃。"
 fi
 echo "[eval] seeds=${eval_seeds} (base=${eval_base_seed})  per-seed num_eval=${per_seed_num_eval}"
+
+eval_batch_size="${eval_batch_size:-}"
+if [ -n "${eval_batch_size}" ]; then
+    if ! [[ "${eval_batch_size}" =~ ^[0-9]+$ ]] || [ "${eval_batch_size}" -lt 1 ]; then
+        echo "[eval] eval_batch_size 必须是 >=1 的整数，got '${eval_batch_size}'"
+        exit 1
+    fi
+    if [ "${eval_batch_size}" -gt "${per_seed_num_eval}" ]; then
+        echo "[eval] eval_batch_size=${eval_batch_size} 不能大于 per-seed num_eval=${per_seed_num_eval}"
+        exit 1
+    fi
 fi
+
+eval_resume="${eval_resume:-0}"
+eval_save_video="${eval_save_video:-0}"
+eval_timeout_seconds="${eval_timeout_seconds:-0}"
+if [[ "${eval_resume}" != "0" && "${eval_resume}" != "1" ]]; then
+    echo "[eval] eval_resume 必须是 0 或 1，got '${eval_resume}'"
+    exit 1
+fi
+if [[ "${eval_save_video}" != "0" && "${eval_save_video}" != "1" ]]; then
+    echo "[eval] eval_save_video 必须是 0 或 1，got '${eval_save_video}'"
+    exit 1
+fi
+if ! [[ "${eval_timeout_seconds}" =~ ^[0-9]+$ ]]; then
+    echo "[eval] eval_timeout_seconds 必须是非负整数，got '${eval_timeout_seconds}'"
+    exit 1
+fi
+if [ "${eval_save_video}" = "1" ]; then
+    eval_save_video_bool=true
+else
+    eval_save_video_bool=false
+fi
+echo "[eval] controls: batch_size=${eval_batch_size:-all} save_video=${eval_save_video_bool} resume=${eval_resume} timeout_seconds=${eval_timeout_seconds}"
+fi
+
+eval_artifact_complete() {
+    local label="$1"
+    local metrics_file="${results_dir}/${label}_metrics.txt"
+    local log_file="${results_dir}/${label}.log"
+    [ -s "${metrics_file}" ] &&
+        [ -s "${log_file}" ] &&
+        grep -qF "==== RESULTS ====" "${metrics_file}" &&
+        grep -qF "evaluation_time:" "${metrics_file}" &&
+        grep -qF "'success_rate':" "${log_file}"
+}
 
 run_one_eval() {
     local job="$1"
@@ -571,14 +634,39 @@ run_one_eval() {
     local mode="${parts[2]}"
     local seed="${parts[3]}"
     local ctype="${parts[4]:-gaussian_noise}"
+    local metrics_file="${results_dir}/${label}_metrics.txt"
+    local log_file="${results_dir}/${label}.log"
+
+    if [ "${eval_resume}" = "1" ] && eval_artifact_complete "${label}"; then
+        echo "[eval] skip   gpu=${gpu} label=${label} (complete seed artifact)"
+        return 0
+    fi
+
+    # Preserve interrupted evidence and ensure eval.py cannot append a new
+    # result block to an incomplete file.
+    if [ "${eval_resume}" = "1" ] && { [ -e "${metrics_file}" ] || [ -e "${log_file}" ]; }; then
+        local interrupted_at
+        interrupted_at="$(date -u +%Y%m%dT%H%M%SZ)"
+        if [ -e "${metrics_file}" ]; then
+            mv -- "${metrics_file}" "${metrics_file}.interrupted_${interrupted_at}"
+        fi
+        if [ -e "${log_file}" ]; then
+            mv -- "${log_file}" "${log_file}.interrupted_${interrupted_at}"
+        fi
+        echo "[eval] archived incomplete artifact(s) for label=${label} at ${interrupted_at}"
+    fi
 
     local args=(
         "--config-name=${dataset_name}.yaml"
         "policy=${ckpt_rel}"
         "seed=${seed}"
         "eval.num_eval=${per_seed_num_eval}"
-        "output.filename=${results_dir}/${label}_metrics.txt"
+        "eval.save_video=${eval_save_video_bool}"
+        "output.filename=${metrics_file}"
     )
+    if [ -n "${eval_batch_size}" ]; then
+        args+=("world.num_envs=${eval_batch_size}")
+    fi
     if [ "$mode" != "none" ]; then
         args+=("eval.corruption.type=${ctype}")
         case "$ctype" in
@@ -592,9 +680,19 @@ run_one_eval() {
     fi
 
     echo "[eval] start  gpu=${gpu} label=${label} ctype=${ctype} mag=${mag} mode=${mode} seed=${seed}"
-    CUDA_VISIBLE_DEVICES=${gpu} python eval.py "${args[@]}" \
-        > "${results_dir}/${label}.log" 2>&1
+    if [ "${eval_timeout_seconds}" -gt 0 ]; then
+        CUDA_VISIBLE_DEVICES="${gpu}" timeout --signal=TERM --kill-after=60s \
+            "${eval_timeout_seconds}s" python -u eval.py "${args[@]}" \
+            > "${log_file}" 2>&1
+    else
+        CUDA_VISIBLE_DEVICES="${gpu}" python -u eval.py "${args[@]}" \
+            > "${log_file}" 2>&1
+    fi
     local rc=$?
+    if [ "${rc}" -eq 0 ] && ! eval_artifact_complete "${label}"; then
+        echo "[eval] FAIL   gpu=${gpu} label=${label} (process exited 0 but artifact is incomplete)"
+        rc=65
+    fi
     if [ $rc -eq 0 ]; then
         echo "[eval] done   gpu=${gpu} label=${label}"
     else
@@ -661,13 +759,13 @@ if [ "${run_eval_sweep}" = "1" ]; then
 
     total=${#jobs[@]}
     echo "==================================================="
-    echo "[eval sweep] ${total} jobs across ${n_gpus} GPUs"
+    echo "[eval sweep] ${total} jobs; concurrency=${eval_concurrency}; visible_gpus=${n_gpus}"
     echo "==================================================="
 
     i=0
     while [ $i -lt $total ]; do
         pids=()
-        for ((k=0; k<n_gpus && i<total; k++)); do
+        for ((k=0; k<eval_concurrency && i<total; k++)); do
             run_one_eval "${jobs[$i]}" "${gpu_array[$k]}" &
             pids+=($!)
             ((i++))

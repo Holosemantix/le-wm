@@ -18,6 +18,10 @@ from typing import Any, Iterable, Mapping, Sequence
 import torch
 
 from tools import paper1_phase0_acpc as phase0
+from tools.paper1_acpc_metrics import (
+    horizon_weighted_stacked_l2,
+    uniform_horizon_weights,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "assets" / "paper1_data"
@@ -68,6 +72,168 @@ def _safe_quantile(x: torch.Tensor, q: float) -> float:
     if x.numel() == 0:
         return float("nan")
     return float(torch.quantile(x.detach().float().cpu(), q))
+
+
+def compute_smpr_v2_from_rollouts(
+    *,
+    clean_rollout: torch.Tensor,
+    noisy_rollout: torch.Tensor,
+    different_state_rollout: torch.Tensor,
+    pair_anchor_indices: torch.Tensor,
+    clean_transition_scale: torch.Tensor,
+    radius_quantile: float = 0.90,
+    margin_delta_norm: float = 0.10,
+    weights: torch.Tensor | Sequence[float] | None = None,
+    eps: float = 1e-8,
+) -> dict[str, Any]:
+    """Compute task-grounded SMPR v2 from aligned canonical rollouts.
+
+    clean_rollout has shape (B,H,D). noisy_rollout has shape (B,M,H,D)
+    and is aggregated by a within-anchor mean, matching ATR. Each row in
+    different_state_rollout uses the action sequence of the corresponding
+    anchor named by pair_anchor_indices. Different-state distances and the
+    positive margin use the same per-anchor clean-transition units.
+    """
+
+    if clean_rollout.ndim != 3:
+        raise ValueError("clean_rollout must have shape (B,H,D)")
+    if noisy_rollout.ndim != 4:
+        raise ValueError("noisy_rollout must have shape (B,M,H,D)")
+    if different_state_rollout.ndim != 3:
+        raise ValueError("different_state_rollout must have shape (P,H,D)")
+    if pair_anchor_indices.ndim != 1:
+        raise ValueError("pair_anchor_indices must have shape (P,)")
+    if clean_transition_scale.ndim != 1:
+        raise ValueError("clean_transition_scale must have shape (B,)")
+    batch, horizon, feature_dim = clean_rollout.shape
+    if noisy_rollout.shape[0] != batch or noisy_rollout.shape[2:] != (
+        horizon,
+        feature_dim,
+    ):
+        raise ValueError("noisy_rollout must match clean rollout B/H/D")
+    if noisy_rollout.shape[1] < 1:
+        raise ValueError("noisy_rollout must contain at least one draw")
+    if different_state_rollout.shape[1:] != (horizon, feature_dim):
+        raise ValueError("different_state_rollout must match clean rollout H/D")
+    if different_state_rollout.shape[0] != pair_anchor_indices.numel():
+        raise ValueError("one pair anchor index is required per different rollout")
+    if clean_transition_scale.shape != (batch,):
+        raise ValueError("clean_transition_scale must contain one value per anchor")
+    if pair_anchor_indices.dtype == torch.bool or pair_anchor_indices.dtype not in (
+        torch.int8,
+        torch.int16,
+        torch.int32,
+        torch.int64,
+        torch.uint8,
+    ):
+        raise TypeError("pair_anchor_indices must have an integer dtype")
+    if pair_anchor_indices.numel() and (
+        int(pair_anchor_indices.min()) < 0
+        or int(pair_anchor_indices.max()) >= batch
+    ):
+        raise ValueError("pair_anchor_indices contains an out-of-range anchor")
+    for name, value in (
+        ("radius_quantile", radius_quantile),
+        ("margin_delta_norm", margin_delta_norm),
+        ("eps", eps),
+    ):
+        if isinstance(value, bool) or not math.isfinite(float(value)):
+            raise ValueError(f"{name} must be finite")
+    if not 0.0 <= float(radius_quantile) <= 1.0:
+        raise ValueError("radius_quantile must be in [0,1]")
+    if float(margin_delta_norm) < 0.0:
+        raise ValueError("margin_delta_norm must be non-negative")
+    if float(eps) <= 0.0:
+        raise ValueError("eps must be positive")
+    for name, value in (
+        ("clean_rollout", clean_rollout),
+        ("noisy_rollout", noisy_rollout),
+        ("different_state_rollout", different_state_rollout),
+        ("clean_transition_scale", clean_transition_scale),
+    ):
+        if not value.is_floating_point():
+            raise TypeError(f"{name} must have a floating-point dtype")
+        if not bool(torch.isfinite(value).all()):
+            raise ValueError(f"{name} contains NaN or infinity")
+    if bool((clean_transition_scale < 0).any()):
+        raise ValueError("clean_transition_scale must be non-negative")
+    if (
+        noisy_rollout.device != clean_rollout.device
+        or different_state_rollout.device != clean_rollout.device
+        or pair_anchor_indices.device != clean_rollout.device
+        or clean_transition_scale.device != clean_rollout.device
+    ):
+        raise ValueError("all SMPR tensors must share one device")
+
+    alpha = (
+        uniform_horizon_weights(
+            horizon,
+            dtype=clean_rollout.dtype,
+            device=clean_rollout.device,
+        )
+        if weights is None
+        else torch.as_tensor(
+            weights,
+            dtype=clean_rollout.dtype,
+            device=clean_rollout.device,
+        )
+    )
+    repeated_clean = clean_rollout.unsqueeze(1).expand_as(noisy_rollout)
+    same_raw_per_draw = horizon_weighted_stacked_l2(
+        repeated_clean,
+        noisy_rollout,
+        weights=alpha,
+    )
+    same_norm_per_draw = same_raw_per_draw / (
+        clean_transition_scale.unsqueeze(1) + float(eps)
+    )
+    same_norm_per_anchor = same_norm_per_draw.mean(dim=1)
+    quantile_work = (
+        same_norm_per_anchor.float()
+        if same_norm_per_anchor.dtype in (torch.float16, torch.bfloat16)
+        else same_norm_per_anchor
+    )
+    tube_radius = torch.quantile(quantile_work, float(radius_quantile))
+
+    anchor_indices = pair_anchor_indices.to(dtype=torch.long)
+    pair_clean = clean_rollout.index_select(0, anchor_indices)
+    different_raw = horizon_weighted_stacked_l2(
+        pair_clean,
+        different_state_rollout,
+        weights=alpha,
+    )
+    pair_scale = clean_transition_scale.index_select(0, anchor_indices)
+    different_norm = different_raw / (pair_scale + float(eps))
+    margins_to_tube = different_norm - tube_radius
+    passes = margins_to_tube > float(margin_delta_norm)
+    aligned_same_radius = same_norm_per_anchor.index_select(0, anchor_indices)
+    margins_to_anchor_radius = different_norm - aligned_same_radius
+    smpr = (
+        passes.float().mean()
+        if passes.numel()
+        else torch.full(
+            (),
+            float("nan"),
+            dtype=clean_rollout.dtype,
+            device=clean_rollout.device,
+        )
+    )
+    return {
+        "radius_metric": "horizon_weighted_stacked_l2_v2",
+        "rollout_horizon": horizon,
+        "horizon_weights": alpha,
+        "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_radius_quantile",
+        "radius_quantile": float(radius_quantile),
+        "margin_delta_norm": float(margin_delta_norm),
+        "same_state_radius_per_noise_draw": same_norm_per_draw,
+        "same_state_radius_per_anchor": same_norm_per_anchor,
+        "same_state_tube_radius": tube_radius,
+        "different_state_distance_per_pair": different_norm,
+        "raw_margin_to_tube_per_pair": margins_to_tube,
+        "raw_margin_to_anchor_radius_per_pair": margins_to_anchor_radius,
+        "pair_pass": passes,
+        "smpr": smpr,
+    }
 
 
 def _mean(values: Sequence[float]) -> float:

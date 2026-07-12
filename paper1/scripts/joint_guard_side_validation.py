@@ -123,7 +123,7 @@ def write_table(path: Path, rows: list[dict[str, Any]]) -> None:
     lines = [
         r"\begin{table}[H]",
         r"\centering",
-        r"\caption{Joint ATR plus guard-side validation across the Gaussian sweep. Rows are split by the closed-loop recovery-band label. ATR is the radius term; SMPR and fixed-pool top-1 flip are guard-side criteria against task or action-candidate collapse and are not interpreted as standalone robustness metrics.}",
+        r"\caption{ATR, proxy SMPR, and fixed-pool top-1 flip co-movement across the Gaussian sweep. Rows are split by the closed-loop recovery-band label. SMPR is a positive-margin state-proxy guard; controls do not establish incremental task-label or action relevance.}",
         r"\label{tab:joint-guard-side-validation}",
         r"\small",
         r"\setlength{\tabcolsep}{4pt}",

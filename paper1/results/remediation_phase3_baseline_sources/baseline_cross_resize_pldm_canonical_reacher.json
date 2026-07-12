@@ -1,0 +1,459 @@
+{
+  "metadata": {
+    "behavior_blind": true,
+    "branch": "",
+    "code_commit": "c943fdf75cd71bc08e5466e1700676069728b7d2",
+    "created_utc": "2026-07-11T05:08:17.098373+00:00",
+    "errors": [],
+    "implementation_hashes": {
+      "canonical_metric": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
+      "phase0_runtime": "1f4f65590e7f91852467c6f3a0970dda15bf0b58dbf561e8c24a8a32659193ee",
+      "runner": "97938c15e1904abbcd7ea72106286baf6d49a17989cd5bd4e184e338ee9fbca6"
+    },
+    "implementation_paths": {
+      "canonical_metric": "tools/paper1_acpc_metrics.py",
+      "phase0_runtime": "tools/paper1_phase0_acpc.py",
+      "runner": "paper1/scripts/diagnostic_baseline_benchmark.py"
+    },
+    "missing_rows": [],
+    "model_family": "PLDM",
+    "protocol": {
+      "anchor_seed": 9101,
+      "n_sequences": 100,
+      "num_noise_draws": 5,
+      "radius_quantile": 0.9,
+      "rollout_horizon": 8,
+      "same_anchor_draw_normalization_for_all_baselines": true
+    },
+    "protocol_hash": "edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21",
+    "reference_atr_metadata": {
+      "artifact_role": "cross_stressor_external_atr",
+      "behavior_blind": true,
+      "code_commit": "c943fdf75cd71bc08e5466e1700676069728b7d2",
+      "corruption_type": "resize",
+      "created_utc": "2026-07-11T01:40:26.783991+00:00",
+      "errors": [],
+      "implementation_hashes": {
+        "acpc_runner": "1f4f65590e7f91852467c6f3a0970dda15bf0b58dbf561e8c24a8a32659193ee",
+        "canonical_metric": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b"
+      },
+      "implementation_paths": {
+        "acpc_runner": "tools/paper1_phase0_acpc.py",
+        "canonical_metric": "tools/paper1_acpc_metrics.py"
+      },
+      "missing_rows": [],
+      "model_family": "PLDM",
+      "protocol": {
+        "anchor_seed": 9101,
+        "atr_quantile": 0.9,
+        "corrupt_goal": false,
+        "corruption_type": "resize",
+        "horizon_weights": "uniform_1_over_H",
+        "n_sequences": 100,
+        "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_quantile",
+        "normalization": "per_anchor_observed_clean_transition_l2_q50_including_history_future_boundary",
+        "num_noise_draws": 5,
+        "radius_metric": "horizon_weighted_stacked_l2_v2",
+        "rollout_horizon": 8,
+        "severity": 0.25,
+        "severity_parameter": "scale_factor"
+      },
+      "protocol_hash": "edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21",
+      "protocol_hash_status": "E3_cross_stressor_bound_to_immutable_protocol",
+      "protocol_sha256": "edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21",
+      "raw_source_commit": "c943fdf75cd71bc08e5466e1700676069728b7d2",
+      "schema_version": "paper1-acpc-horizon-v2-1.0",
+      "script_path": "paper1/scripts/build_cross_stressor_atr_artifact.py",
+      "script_sha256": "0654e938529e31f9598d04b92d40960becbe31dd503ab82357d86ee43e2171dc",
+      "severity": 0.25,
+      "severity_parameter": "scale_factor",
+      "source_hashes": {
+        "atr_source_Cube": "84f863570a839195834b1aaaad9fc5729b344961019417219da92ade86857b61",
+        "atr_source_PushT": "bca996922bdfa46f4c53d29112afa9c75a92a863922dab11d70f58c5815f8a2d",
+        "atr_source_Reacher": "362dcd0fba0278a7d61875ffd7507d459d1fe264510aff8c58cc3ee39768956e",
+        "atr_source_TwoRoom": "ba7efc322eac3ecd84d3950d8f99d9e77df3eb7d75c4cf1bf716de678cc629d7",
+        "checkpoint_Cube_0.0": "03cc460cf9721fa1779b9ccb7f5bab3d8fafa5edd4e7fd2392dea23d63d70949",
+        "checkpoint_Cube_0.08": "d32f09ead199e86ff315db8da82d7435bb3cab4ad024f4151841036392eebed5",
+        "checkpoint_PushT_0.0": "43ba5c201115c420cc90fe00935bb3dfc69afeb02478b28fec9256537500a3e9",
+        "checkpoint_PushT_0.08": "74b2c86ec307c3cc948819e2a3ccd25b24b31f7602d665bb5b6aa47a42a55525",
+        "checkpoint_Reacher_0.0": "bc2f9afa600439aaee82802463c6a922fe5167dc702b15f3acdece9af451e5e4",
+        "checkpoint_Reacher_0.08": "53ac0a3949ceac55bca170e5936ae2a447e0e85ad171d734fd1498be2b9f61ce",
+        "checkpoint_TwoRoom_0.0": "e4642da78e64be0d8f66e51676430c6d919bdc7b78aca05d9deb95f3421f9ec6",
+        "checkpoint_TwoRoom_0.08": "95a8f2fffe35eda283c48c3bd830535e0b4236fbbe5ad2d92ab63901a50ad223",
+        "config_Cube_0.0": "ab55c7a3b3ef93d30dda09ba28e4fe0a7601d5dee480ab2a53556b7e4de7175c",
+        "config_Cube_0.08": "6fca5622ca07f785bf8e06033975b7b1d5c2eb64d31b2b5dfa643e4be0145c6d",
+        "config_PushT_0.0": "26a0589f25766246731746a53b198afb08bf0b2ec2148f7c1e1e33278c10dab6",
+        "config_PushT_0.08": "22fdbcbeb66a9cdd10172880a3875081df4939096d8cfc46eb7512361b2a86c3",
+        "config_Reacher_0.0": "7d598c0103d1ff1e8b3bf3a7a5c05bf2cbebb14b17753f140d63164337e6267f",
+        "config_Reacher_0.08": "76c29a55eb783820f71fafe253305cd8d471cb4a360263905aa59ddaa251b08a",
+        "config_TwoRoom_0.0": "f70eea3473b22012a3f6acf7780dd52083b67bbe3ea95c222f89841f47eaa0b9",
+        "config_TwoRoom_0.08": "4dd3253829648f6dfa8cc0bb942b0bf2356c6a6aa42a534854994c9aba4be755",
+        "manifest": "cb7b19df27ed62b601f2b7808b4d8ea6f1c8449c13780bf6d67ad314021605e7",
+        "protocol": "edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21"
+      },
+      "source_metadata": {
+        "Cube": {
+          "code_commit": "c943fdf75cd71bc08e5466e1700676069728b7d2",
+          "created_utc": "2026-07-11T01:39:46.681739+00:00",
+          "dry_run": false,
+          "errors": [],
+          "methods": [
+            "PLDM"
+          ],
+          "metric_implementation_path": "tools/paper1_acpc_metrics.py",
+          "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
+          "missing_rows": [],
+          "model_roots": [
+            "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube"
+          ],
+          "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
+          "protocol": {
+            "anchor_seed": 9101,
+            "atr_quantile": 0.9,
+            "fixed_pool_candidate_seed_rule": "seed+2027",
+            "horizon_weights": "uniform_1_over_H",
+            "legacy_stepwise_field": "stepwise_rollout_q90",
+            "legacy_stepwise_field_is_atr": false,
+            "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_quantile",
+            "normalization": "per_anchor_observed_clean_transition_l2_q50_including_history_future_boundary",
+            "num_noise_draws": 5,
+            "radius_metric": "horizon_weighted_stacked_l2_v2",
+            "rollout_horizon": 8
+          },
+          "schema_version": "paper1-acpc-phase0-0.2",
+          "script_path": "tools/paper1_phase0_acpc.py",
+          "script_sha256": "1f4f65590e7f91852467c6f3a0970dda15bf0b58dbf561e8c24a8a32659193ee",
+          "source_hashes": {
+            "LeWM": "394c21142311e628232e510d0087b17828ab78d973727cff6b049cb50ed98e1a",
+            "PLDM": "cb7b19df27ed62b601f2b7808b4d8ea6f1c8449c13780bf6d67ad314021605e7"
+          },
+          "source_paths": {
+            "LeWM": "assets/paper1_data/canonical_evals_20260517.json",
+            "PLDM": "assets/paper1_data/canonical_evals_pldm_v2.json"
+          },
+          "status_counts": {
+            "ok": 2
+          },
+          "std_keys": [
+            "0.0",
+            "0.08"
+          ],
+          "tasks": [
+            "Cube"
+          ]
+        },
+        "PushT": {
+          "code_commit": "c943fdf75cd71bc08e5466e1700676069728b7d2",
+          "created_utc": "2026-07-11T01:37:48.862109+00:00",
+          "dry_run": false,
+          "errors": [],
+          "methods": [
+            "PLDM"
+          ],
+          "metric_implementation_path": "tools/paper1_acpc_metrics.py",
+          "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
+          "missing_rows": [],
+          "model_roots": [
+            "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht"
+          ],
+          "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
+          "protocol": {
+            "anchor_seed": 9101,
+            "atr_quantile": 0.9,
+            "fixed_pool_candidate_seed_rule": "seed+2027",
+            "horizon_weights": "uniform_1_over_H",
+            "legacy_stepwise_field": "stepwise_rollout_q90",
+            "legacy_stepwise_field_is_atr": false,
+            "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_quantile",
+            "normalization": "per_anchor_observed_clean_transition_l2_q50_including_history_future_boundary",
+            "num_noise_draws": 5,
+            "radius_metric": "horizon_weighted_stacked_l2_v2",
+            "rollout_horizon": 8
+          },
+          "schema_version": "paper1-acpc-phase0-0.2",
+          "script_path": "tools/paper1_phase0_acpc.py",
+          "script_sha256": "1f4f65590e7f91852467c6f3a0970dda15bf0b58dbf561e8c24a8a32659193ee",
+          "source_hashes": {
+            "LeWM": "394c21142311e628232e510d0087b17828ab78d973727cff6b049cb50ed98e1a",
+            "PLDM": "cb7b19df27ed62b601f2b7808b4d8ea6f1c8449c13780bf6d67ad314021605e7"
+          },
+          "source_paths": {
+            "LeWM": "assets/paper1_data/canonical_evals_20260517.json",
+            "PLDM": "assets/paper1_data/canonical_evals_pldm_v2.json"
+          },
+          "status_counts": {
+            "ok": 2
+          },
+          "std_keys": [
+            "0.0",
+            "0.08"
+          ],
+          "tasks": [
+            "PushT"
+          ]
+        },
+        "Reacher": {
+          "code_commit": "c943fdf75cd71bc08e5466e1700676069728b7d2",
+          "created_utc": "2026-07-11T01:38:45.812184+00:00",
+          "dry_run": false,
+          "errors": [],
+          "methods": [
+            "PLDM"
+          ],
+          "metric_implementation_path": "tools/paper1_acpc_metrics.py",
+          "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
+          "missing_rows": [],
+          "model_roots": [
+            "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher"
+          ],
+          "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
+          "protocol": {
+            "anchor_seed": 9101,
+            "atr_quantile": 0.9,
+            "fixed_pool_candidate_seed_rule": "seed+2027",
+            "horizon_weights": "uniform_1_over_H",
+            "legacy_stepwise_field": "stepwise_rollout_q90",
+            "legacy_stepwise_field_is_atr": false,
+            "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_quantile",
+            "normalization": "per_anchor_observed_clean_transition_l2_q50_including_history_future_boundary",
+            "num_noise_draws": 5,
+            "radius_metric": "horizon_weighted_stacked_l2_v2",
+            "rollout_horizon": 8
+          },
+          "schema_version": "paper1-acpc-phase0-0.2",
+          "script_path": "tools/paper1_phase0_acpc.py",
+          "script_sha256": "1f4f65590e7f91852467c6f3a0970dda15bf0b58dbf561e8c24a8a32659193ee",
+          "source_hashes": {
+            "LeWM": "394c21142311e628232e510d0087b17828ab78d973727cff6b049cb50ed98e1a",
+            "PLDM": "cb7b19df27ed62b601f2b7808b4d8ea6f1c8449c13780bf6d67ad314021605e7"
+          },
+          "source_paths": {
+            "LeWM": "assets/paper1_data/canonical_evals_20260517.json",
+            "PLDM": "assets/paper1_data/canonical_evals_pldm_v2.json"
+          },
+          "status_counts": {
+            "ok": 2
+          },
+          "std_keys": [
+            "0.0",
+            "0.08"
+          ],
+          "tasks": [
+            "Reacher"
+          ]
+        },
+        "TwoRoom": {
+          "code_commit": "c943fdf75cd71bc08e5466e1700676069728b7d2",
+          "created_utc": "2026-07-11T01:36:50.551972+00:00",
+          "dry_run": false,
+          "errors": [],
+          "methods": [
+            "PLDM"
+          ],
+          "metric_implementation_path": "tools/paper1_acpc_metrics.py",
+          "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
+          "missing_rows": [],
+          "model_roots": [
+            "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms"
+          ],
+          "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
+          "protocol": {
+            "anchor_seed": 9101,
+            "atr_quantile": 0.9,
+            "fixed_pool_candidate_seed_rule": "seed+2027",
+            "horizon_weights": "uniform_1_over_H",
+            "legacy_stepwise_field": "stepwise_rollout_q90",
+            "legacy_stepwise_field_is_atr": false,
+            "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_quantile",
+            "normalization": "per_anchor_observed_clean_transition_l2_q50_including_history_future_boundary",
+            "num_noise_draws": 5,
+            "radius_metric": "horizon_weighted_stacked_l2_v2",
+            "rollout_horizon": 8
+          },
+          "schema_version": "paper1-acpc-phase0-0.2",
+          "script_path": "tools/paper1_phase0_acpc.py",
+          "script_sha256": "1f4f65590e7f91852467c6f3a0970dda15bf0b58dbf561e8c24a8a32659193ee",
+          "source_hashes": {
+            "LeWM": "394c21142311e628232e510d0087b17828ab78d973727cff6b049cb50ed98e1a",
+            "PLDM": "cb7b19df27ed62b601f2b7808b4d8ea6f1c8449c13780bf6d67ad314021605e7"
+          },
+          "source_paths": {
+            "LeWM": "assets/paper1_data/canonical_evals_20260517.json",
+            "PLDM": "assets/paper1_data/canonical_evals_pldm_v2.json"
+          },
+          "status_counts": {
+            "ok": 2
+          },
+          "std_keys": [
+            "0.0",
+            "0.08"
+          ],
+          "tasks": [
+            "TwoRoom"
+          ]
+        }
+      },
+      "source_paths": {
+        "atr_source_Cube": "paper1/results/remediation_phase2_external_sources/cross_stressor/pldm_canonical/resize/acpc_cube_v2.json",
+        "atr_source_PushT": "paper1/results/remediation_phase2_external_sources/cross_stressor/pldm_canonical/resize/acpc_pusht_v2.json",
+        "atr_source_Reacher": "paper1/results/remediation_phase2_external_sources/cross_stressor/pldm_canonical/resize/acpc_reacher_v2.json",
+        "atr_source_TwoRoom": "paper1/results/remediation_phase2_external_sources/cross_stressor/pldm_canonical/resize/acpc_tworoom_v2.json",
+        "checkpoint_Cube_0.0": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_baseline/cube_pldm_baseline_epoch_10_object.ckpt",
+        "checkpoint_Cube_0.08": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to008_p1/cube_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+        "checkpoint_PushT_0.0": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_baseline/pusht_pldm_baseline_epoch_10_object.ckpt",
+        "checkpoint_PushT_0.08": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to008_p1/pusht_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+        "checkpoint_Reacher_0.0": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_baseline/reacher_pldm_baseline_epoch_10_object.ckpt",
+        "checkpoint_Reacher_0.08": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to008_p1/reacher_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+        "checkpoint_TwoRoom_0.0": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_baseline/tworoom_pldm_baseline_20260522_epoch_10_object.ckpt",
+        "checkpoint_TwoRoom_0.08": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to008_p1/tworoom_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+        "config_Cube_0.0": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_baseline/config.yaml",
+        "config_Cube_0.08": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to008_p1/config.yaml",
+        "config_PushT_0.0": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_baseline/config.yaml",
+        "config_PushT_0.08": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to008_p1/config.yaml",
+        "config_Reacher_0.0": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_baseline/config.yaml",
+        "config_Reacher_0.08": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to008_p1/config.yaml",
+        "config_TwoRoom_0.0": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_baseline/config.yaml",
+        "config_TwoRoom_0.08": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to008_p1/config.yaml",
+        "manifest": "assets/paper1_data/canonical_evals_pldm_v2.json",
+        "protocol": "paper1/config/frozen_diagnostic_protocol_v1.json"
+      },
+      "split_name": "E3-P",
+      "status": "complete",
+      "status_counts": {
+        "ok": 8
+      },
+      "stressor_family": "resize",
+      "threshold_search_allowed": false,
+      "training_family_id": "pldm_canonical_seed3072",
+      "training_seed": 3072,
+      "training_seed_semantics": "one independently trained PLDM checkpoint family"
+    },
+    "schema_version": "paper1-diagnostic-baseline-raw-1.0",
+    "source_hashes": {
+      "evals": "cb7b19df27ed62b601f2b7808b4d8ea6f1c8449c13780bf6d67ad314021605e7",
+      "protocol": "edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21",
+      "reference_atr": "0a4502cfa17198428f44154399826cadd63bb1a5b169f424bbd62b41ffdd8f98"
+    },
+    "source_paths": {
+      "evals": "assets/paper1_data/canonical_evals_pldm_v2.json",
+      "protocol": "/opt/workspace/explorer-env/dataset/ag_data/code/wm_exp/paper1/config/frozen_diagnostic_protocol_v1.json",
+      "reference_atr": "paper1/results/remediation_phase2_external_sources/cross_stressor/pldm_canonical/resize/acpc_horizon_v2_checkpoint_bound.json"
+    },
+    "split_name": "E3-P",
+    "status": "complete",
+    "status_counts": {
+      "ok": 2
+    },
+    "std_keys": [
+      "0.0",
+      "0.08"
+    ],
+    "stressor_family": "resize",
+    "stressor_severity": 0.25,
+    "tasks": [
+      "Reacher"
+    ],
+    "threshold_search_available": false,
+    "training_family_id": "pldm_canonical_seed3072",
+    "training_seed": 3072,
+    "training_seed_semantics": "one independently trained PLDM checkpoint family"
+  },
+  "rows": [
+    {
+      "action_shuffled_h8_q90": 0.6062435507774353,
+      "action_shuffled_policy": "cyclic batch permutation of recorded action embeddings",
+      "action_zeroed_h8_q90": 0.5826566219329834,
+      "action_zeroed_policy": "raw zero actions passed through the checkpoint action encoder",
+      "anchor_seed": 9101,
+      "atr_h8_q90": 0.5939655303955078,
+      "branch": "",
+      "checkpoint_sha256": "bc2f9afa600439aaee82802463c6a922fe5167dc702b15f3acdece9af451e5e4",
+      "clean_transition_scale_min": 6.293492317199707,
+      "clean_transition_scale_zero_count": 0,
+      "corrupt_goal": false,
+      "corruption_type": "resize",
+      "embedding_space": "normalized",
+      "encoder_map": "last_history_embedding",
+      "encoder_q90": 0.6781421303749084,
+      "h1_map": "first_correct_action_predictive_step",
+      "h1_q90": 0.592751681804657,
+      "model_family": "PLDM",
+      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_baseline/reacher_pldm_baseline_epoch_10_object.ckpt",
+      "n_sequences": 100,
+      "noise_draw_seeds": [
+        10110,
+        18029,
+        25948,
+        33867,
+        41786
+      ],
+      "normalization": "same per-anchor observed-clean H8 transition q50 including history/future boundary for every baseline",
+      "num_noise_draws": 5,
+      "reference_atr_h8_q90": 0.5939655303955078,
+      "reference_atr_match": true,
+      "reference_checkpoint_hash_source": "checkpoint_sha256",
+      "rollout_horizon_actual": 8,
+      "split_name": "E3-P",
+      "status": "ok",
+      "std_key": "0.0",
+      "stressor_family": "resize",
+      "stressor_severity": 0.25,
+      "task": "Reacher",
+      "time_shuffled_h8_q90": 0.6410147547721863,
+      "time_shuffled_policy": "one deterministic temporal permutation shared by clean/noisy histories",
+      "training_family_id": "pldm_canonical_seed3072",
+      "training_rho": 0.0,
+      "training_seed": 3072,
+      "training_seed_semantics": "one independently trained PLDM checkpoint family",
+      "wall_time_per_row": 36.612213192507625
+    },
+    {
+      "action_shuffled_h8_q90": 0.4936774671077728,
+      "action_shuffled_policy": "cyclic batch permutation of recorded action embeddings",
+      "action_zeroed_h8_q90": 0.4418744742870331,
+      "action_zeroed_policy": "raw zero actions passed through the checkpoint action encoder",
+      "anchor_seed": 9101,
+      "atr_h8_q90": 0.46831202507019043,
+      "branch": "",
+      "checkpoint_sha256": "53ac0a3949ceac55bca170e5936ae2a447e0e85ad171d734fd1498be2b9f61ce",
+      "clean_transition_scale_min": 5.551324844360352,
+      "clean_transition_scale_zero_count": 0,
+      "corrupt_goal": false,
+      "corruption_type": "resize",
+      "embedding_space": "normalized",
+      "encoder_map": "last_history_embedding",
+      "encoder_q90": 0.5885826349258423,
+      "h1_map": "first_correct_action_predictive_step",
+      "h1_q90": 0.43034908175468445,
+      "model_family": "PLDM",
+      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to008_p1/reacher_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+      "n_sequences": 100,
+      "noise_draw_seeds": [
+        10110,
+        18029,
+        25948,
+        33867,
+        41786
+      ],
+      "normalization": "same per-anchor observed-clean H8 transition q50 including history/future boundary for every baseline",
+      "num_noise_draws": 5,
+      "reference_atr_h8_q90": 0.46831202507019043,
+      "reference_atr_match": true,
+      "reference_checkpoint_hash_source": "checkpoint_sha256",
+      "rollout_horizon_actual": 8,
+      "split_name": "E3-P",
+      "status": "ok",
+      "std_key": "0.08",
+      "stressor_family": "resize",
+      "stressor_severity": 0.25,
+      "task": "Reacher",
+      "time_shuffled_h8_q90": 0.4520837366580963,
+      "time_shuffled_policy": "one deterministic temporal permutation shared by clean/noisy histories",
+      "training_family_id": "pldm_canonical_seed3072",
+      "training_rho": 0.08,
+      "training_seed": 3072,
+      "training_seed_semantics": "one independently trained PLDM checkpoint family",
+      "wall_time_per_row": 12.526962950825691
+    }
+  ]
+}

@@ -1,5 +1,44 @@
 # Reference Audit
 
+## 2026-07-11 concurrent-work remediation
+
+Six concurrent papers named in the remediation plan were checked directly
+against their official arXiv abstract records and added to
+`paper1/references.bib`.  The audit uses only claims supported by those records
+and by the ATM method section on the official arXiv HTML page.
+
+| Key | Official source | Verified scope used in Paper 1 |
+|---|---|---|
+| `yan2026mwm` | https://arxiv.org/abs/2603.07799 | MWM trains an action-conditioned consistency objective and few-step diffusion distillation for image-goal navigation; it is a method, not a post-hoc Gaussian checkpoint audit. |
+| `chen2026atm` | https://arxiv.org/abs/2606.09028 | ATM trains fresh inverse probes on real-encoded and model-predicted transition domains and evaluates their transfer matrix; it diagnoses action identifiability rather than paired visual-perturbation radius. |
+| `zhang2026deltajepa` | https://arxiv.org/abs/2606.31232 | Delta-JEPA adds latent-difference action decoding during training to make transition geometry action-sensitive and collapse-resistant. |
+| `seo2026acid` | https://arxiv.org/abs/2607.02403 | ACID adds inverse-dynamics cycle action consistency to the decision-time planning cost; it changes planning rather than auditing frozen perturbation pairs. |
+| `ruan2026futurecompatible` | https://arxiv.org/abs/2605.07514 | Action-state compatibility is used to diagnose and select generated World Action Model rollouts; the paper explicitly identifies static/background-collapse failures. |
+| `schaefer2026kinematic` | https://arxiv.org/abs/2607.05966 | iKCE diagnoses a kinematic-versus-dynamic long-horizon failure on a DreamerV3 walker checkpoint; it targets physical regime sensitivity rather than visual-noise invariance. |
+
+The direct-comparison matrix in `paper1/main.tex` now separates four axes:
+training objective vs post-hoc diagnostic, paired same-state visual stress,
+action-identifiability/dynamic-consistency signal, and whether the planner is
+modified.  Consequently Paper 1 claims a narrow paired-radius and fixed-pool
+calibration study, not priority over action consistency in general.
+
+### ATM feasibility record
+
+The official ATM method requires, for every checkpoint, two freshly trained
+two-layer inverse probes over a fixed offline train/validation split: one on
+real encoded transition features and one on model-predicted transition
+features.  The full transfer matrix then evaluates both probes in both domains;
+its screening score additionally fits task-specific coefficients on candidate
+models.  As of this audit, the arXiv page says code *will* be released, and the
+linked repository does not form part of this frozen release.  Paper 1 therefore
+does **not** label encoder/H1/action-shuffle baselines as ATM.  Reproducing ATM
+would introduce a new probe-training protocol and, for its screening score,
+behavior-linked coefficient fitting after the public-v1 gate was frozen.  It is
+recorded as a prospective method-comparison experiment rather than silently
+approximated.  The current behavior-blind baseline table instead reports exactly
+what was run: encoder-only, H1, H8, action-zeroed/shuffled, time-shuffled, SMPR,
+and the frozen joint gate.
+
 Date: 2026-07-04
 
 2026-06-22 release-readiness pass: bibliography count rechecked after the submission-readiness review. `paper1/references.bib` contains 44 entries, and the README no longer hard-codes a count.
