@@ -347,3 +347,37 @@ training jobs; summarize every result without changing thresholds; then rewrite
 theory, figures, tables, main text, and appendix only from claim-eligible
 evidence. Failed repair/PLDM/JVP branches stay excluded, while the qualitative
 t-SNE remains in the appendix with an explicitly non-quantitative caption.
+
+### Live execution and numerical-correction checkpoint (2026-07-13 17:40 UTC)
+
+- Pre-result commit `a933c3bdbbdc11fbb78870f0a79783db62740c5f` is on both
+  `origin/ag/dev` and `holo/ag/dev`.
+- Four fully prospective seed3075 baseline trainings are active under the
+  frozen commands: TwoRoom/GPU4, PushT/GPU5, Reacher/GPU6, and Cube/GPU7.
+  All four passed data/model initialization and entered optimization; TwoRoom
+  had already completed two checkpoint callbacks at the latest poll.
+- The entire planner v1 panel executed. All 16 adaptive shards completed:
+  eight K64 x 8-step shards have 400/400 rows and eight K300 x 30-step shards
+  have 32/32 rows. All eight fixed-pool shards retained their 100 identity rows
+  but rejected each of the three nonzero severities with the same
+  `signed perturbed-gap identity mismatch`, producing 100/400 rows.
+- Root cause is numerical rather than outcome-dependent: the exact identity
+  `(c'_j-c'_w)=(c_j-c_w)+(delta_j-delta_w)` was evaluated through separately
+  rounded float32 differences. A deterministic 512 x 64 regression tensor
+  produces a `0.0078125` v1 residual despite the expressions being identical.
+- Never overwrite or relabel v1. Its 24 JSON artifacts are bound by path and
+  SHA-256 into `acpc_planner_stability_protocol_v2.json` as the superseded
+  attempt. The only v2 change is to evaluate the signed-gap algebra and derived
+  differences in float64 after the original float32 candidate costs are
+  computed; pools, checkpoints, severities, seeds, estimands, thresholds, and
+  claim gates are unchanged.
+- v2 is frozen before its result directory exists:
+  `paper1/config/acpc_planner_stability_protocol_v2.json` and
+  `paper1/config/acpc_planner_stability_execution_v2.json`. It authorizes all
+  24 shards again so one manifest and one untouched summary path cover the
+  complete panel. Fixed shards use
+  `tools/paper1_acpc_planner_stability_audit_v2.py`; adaptive shards retain the
+  original runner.
+- The v2 cancellation regression and protocol/source-hash tests pass (7/7 in
+  the combined v1/v2 freeze check). The next safe action is to commit and push
+  this correction freeze before launching any v2 shard.
