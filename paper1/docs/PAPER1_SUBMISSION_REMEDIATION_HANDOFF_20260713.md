@@ -4,6 +4,13 @@ This file is the durable resume point for the current Paper1 submission pass.
 It records decisions, completed work, active commands, and the exact remaining
 workflow so a new session does not repeat the audit or rerun completed jobs.
 
+**Scientific-remediation continuation:** the corrected post-submission plan is
+recorded in PAPER1_ACPC_SCIENTIFIC_REMEDIATION_PLAN_20260713.md. In
+particular, P1 shows a large ACPC-H8 advantage over H1 and
+structure-destroyed controls; it must not be summarized as a simple baseline
+catching up. Only strong planner-linked theory, strong evidence, and
+claim-bearing figures/tables are eligible for restoration.
+
 ## Objective and authorization
 
 - Bring `paper1/main.tex` and its figures/tables to top-conference submission
@@ -300,3 +307,43 @@ calibration across held-out training seeds; and (iii) a fixed-strength paired
 ordering result across blur and resize. It does not support universal raw
 thresholds, unseen-task generalization, adaptive-CEM guarantees, a
 single-frame safety certificate, or absolute cross-stressor robustness.
+
+## Scientific-remediation execution checkpoint (2026-07-13)
+
+This is the resume point for the strengthened ACPC mainline described in
+`PAPER1_ACPC_SCIENTIFIC_REMEDIATION_PLAN_20260713.md`.
+
+- New fixed-pool runner:
+  `tools/paper1_acpc_planner_stability_audit.py`. It records same-pool
+  candidate-conditioned H1/H5 ACPC, the exact squared-distance cost bound,
+  top-1/elite certificates, and observed fixed-pool stability.
+- New adaptive runner:
+  `tools/paper1_acpc_adaptive_cem_audit.py`. It uses a common zero initial
+  proposal and common random numbers, records the valid aligned-pool induction,
+  final first-action RMS, and clean-history decision regret.
+- Real-checkpoint TwoRoom smoke passed for both runners: fixed 4/4 rows
+  complete with zero identity violations; adaptive 4/4 rows complete with
+  identity first-action RMS 0 and identical updates at every CEM step.
+- Frozen planner protocol:
+  `paper1/config/acpc_planner_stability_protocol_v1.json` plus
+  `acpc_planner_stability_execution_v1.json`. It binds eight seed3074
+  base/endpoint checkpoints and 24 shards: eight K64 fixed-pool, eight K64 x
+  8-step adaptive, and eight K300 x 30-step adaptive transfer shards.
+- Frozen prospective-training protocol:
+  `paper1/config/p1_prospective_seed3075_protocol_v1.json`. All four seed3075
+  output directories were absent at freeze. The protocol trains four
+  noise-free LeWM bases with seed3075 and evaluates the unchanged 16-block,
+  four-severity, two-draw P1 design. Online loggers are disabled but the model,
+  data, optimizer, epochs, and loss remain the seed3074 baseline contract.
+- Provenance is explicit: seed3075 is fully prospective; seed3074 is a
+  protocol-frozen replication; seed3073 has development-era provenance;
+  seed3072 remains a retrospective completeness check.
+- Validation at this checkpoint: 60/60 ACPC protocol, runner, summary, and
+  target-aligned P1 tests passed (one third-party Gym warning only).
+
+The next executable steps are: commit and push this frozen pre-result state to
+both remotes; run the 24 authorized planner shards and four authorized seed3075
+training jobs; summarize every result without changing thresholds; then rewrite
+theory, figures, tables, main text, and appendix only from claim-eligible
+evidence. Failed repair/PLDM/JVP branches stay excluded, while the qualitative
+t-SNE remains in the appendix with an explicitly non-quantitative caption.

@@ -21,7 +21,7 @@ from typing import Any, Mapping
 import numpy as np
 
 
-SCHEMA = "paper1-target-aligned-acpc-four-task-meta-0.2"
+SCHEMA = "paper1-target-aligned-acpc-four-task-meta-0.3"
 TASKS = ("TwoRoom", "PushT", "Reacher", "Cube")
 PRIMARY_MODELS = (
     "plus_correct_h8",
@@ -291,6 +291,19 @@ def _primary_uncertainty(
     seed: int = 20260713,
 ) -> dict[str, Any]:
     arrays = _primary_block_arrays(artifacts, target=target)
+    training_seeds = sorted(arrays[TASKS[0]])
+    known_provenance = {
+        3072: "retrospective completeness check",
+        3073: "development-era held-out model seed",
+        3074: "protocol-frozen replication",
+        3075: "prospectively frozen training seed",
+    }
+    provenance = {
+        str(training_seed): known_provenance.get(
+            training_seed, "reported model seed"
+        )
+        for training_seed in training_seeds
+    }
     canonical_blocks: dict[str, np.ndarray] = {}
     for task in TASKS:
         first_seed = min(arrays[task])
@@ -349,7 +362,7 @@ def _primary_uncertainty(
             "repetitions": repetitions,
             "seed": seed,
             "cluster": (
-                "task x trajectory-block index; both held-out training seeds "
+                "task x trajectory-block index; all listed training seeds "
                 "are retained inside each resampled cluster"
             ),
             "equal_task_mean_reduction_vs_h1_ci95": [
@@ -360,10 +373,11 @@ def _primary_uncertainty(
                 float(np.quantile(samples_control, 0.025)),
                 float(np.quantile(samples_control, 0.975)),
             ],
+            "training_seeds": training_seeds,
+            "training_seed_provenance": provenance,
             "training_seed_scope": (
-                "conditional on two non-CAL model seeds; seed3073 includes "
-                "DEV provenance and seed3074 is the fully frozen replication; "
-                "trajectory bootstrap is not a population CI over model seeds"
+                "conditional on the listed model seeds; the trajectory bootstrap "
+                "is not a population CI over model-training randomness"
             ),
         },
         "paired_block_direction": {
