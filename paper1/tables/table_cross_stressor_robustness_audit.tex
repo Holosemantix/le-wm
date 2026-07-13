@@ -1,0 +1,21 @@
+\begin{table}[H]
+\centering
+\caption{Cross-stressor component comparison on all 24 LeWM blur/resize pairs. Choice accuracy selects the endpoint iff the oriented diagnostic change is positive; regret is stressed-success loss against the better of base and endpoint. The exact 12-block sign-flip test gives one-sided $p=0.0002$. Remaining-set Spearman ranges after deleting one task and one training seed are [0.748,0.897] and [0.753,0.940]. Competitive component rows show that paired ordering transfers without establishing a unique action-specific mechanism.}
+\label{tab:cross-stressor-robustness-audit}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrrrrr}
+\toprule
+Diagnostic & BA & AUPRC & $\rho_s$ & choice acc. & regret (pp) \\
+\midrule
+Encoder q90 & 0.778 & 0.992 & 0.887 & 0.917 & 0.917 \\
+H1 q90 & 0.778 & 0.957 & 0.763 & 0.917 & 0.917 \\
+Correct-action H8 q90 & 0.889 & 0.988 & 0.868 & 0.917 & 0.139 \\
+Action-shuffled H8 q90 & 0.833 & 0.981 & 0.832 & 0.875 & 0.958 \\
+Action-zeroed H8 q90 & 0.833 & 0.988 & 0.870 & 0.875 & 0.958 \\
+Time-shuffled H8 q90 & 0.889 & 0.992 & 0.875 & 0.917 & 0.139 \\
+SMPR & 0.911 & 0.992 & 0.913 & 0.833 & 0.750 \\
+Joint score & 0.889 & 0.974 & 0.864 & 0.917 & 0.139 \\
+\bottomrule
+\end{tabular}
+\end{table}

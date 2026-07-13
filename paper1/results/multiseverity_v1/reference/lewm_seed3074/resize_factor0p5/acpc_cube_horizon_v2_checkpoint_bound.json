@@ -1,0 +1,46 @@
+{
+  "metadata": {
+    "artifact_role": "paired_multiseverity_atr_reference",
+    "base_protocol_sha256": "edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21",
+    "corruption_type": "resize",
+    "implementation_hashes": {
+      "acpc_runner": "1f4f65590e7f91852467c6f3a0970dda15bf0b58dbf561e8c24a8a32659193ee",
+      "canonical_metric": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b"
+    },
+    "model_family": "LeWM",
+    "protocol_sha256": "6712b4f595444d751d9c327262c288e37dbd80be7ddde9bb4fd336ed41119622",
+    "schema_version": "paper1-acpc-horizon-v2-1.0",
+    "source_path": "paper1/results/multiseverity_v1/raw/lewm_seed3074/resize_factor0p5/acpc_cube_v2.json",
+    "source_sha256": "5556e3d0e5995174573d840f8943a9b295823190473ef0f5b70ea1aa4ea98f51",
+    "status": "complete",
+    "stressor_severity": 0.5,
+    "task": "Cube",
+    "training_seed": 3074
+  },
+  "rows": [
+    {
+      "atr_horizon_v2_q90": 0.8591414093971252,
+      "corruption_type": "resize",
+      "model_family": "LeWM",
+      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_lewm_baseline_seed3074/cube_lewm_baseline_seed3074_epoch_10_object.ckpt",
+      "status": "ok",
+      "std_key": "0.0",
+      "stressor_severity": 0.5,
+      "subdir": "cube_lewm_baseline_seed3074",
+      "task": "Cube",
+      "training_seed": 3074
+    },
+    {
+      "atr_horizon_v2_q90": 0.551491916179657,
+      "corruption_type": "resize",
+      "model_family": "LeWM",
+      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_lewm_noise_0to008_p1_seed3074/cube_lewm_noise_0to008_p1_seed3074_epoch_10_object.ckpt",
+      "status": "ok",
+      "std_key": "0.08",
+      "stressor_severity": 0.5,
+      "subdir": "cube_lewm_noise_0to008_p1_seed3074",
+      "task": "Cube",
+      "training_seed": 3074
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+\begin{table}[t]
+\centering
+\caption{Held-out future-drift prediction on fragile no-noise LeWM checkpoints. Entries are positive MAE reductions (\%) after adding correct-action H8 to common encoder+H1 covariates; destroyed H8 is the best action/time-destroyed variant. Seed 3074 is the fully frozen replication. Intervals resample task$\times$trajectory blocks conditional on both trained checkpoints.}
+\label{tab:target-aligned-acpc}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrr}
+\toprule
+Task / aggregation & \multicolumn{2}{c}{Absolute drift} & \multicolumn{2}{c}{Adverse drift} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+& vs H1 & vs destroyed H8 & vs H1 & vs destroyed H8 \\
+\midrule
+TwoRoom & 57.5 & 52.6 & 57.3 & 52.4 \\
+PushT   & 29.0 & 28.3 & 25.1 & 23.6 \\
+Reacher & 81.8 & 73.6 & 81.8 & 73.6 \\
+Cube    & 57.5 & 53.0 & 57.5 & 53.0 \\
+\midrule
+Seed 3073, equal-task mean & 60.8 & 54.8 & 60.4 & 54.4 \\
+Seed 3074, equal-task mean & 51.4 & 47.7 & 49.6 & 45.7 \\
+Two-seed mean [95\% CI] & 56.5 [51.1,61.2] & 51.9 [45.0,56.6] & 55.5 [50.1,60.2] & 50.6 [44.0,55.3] \\
+\bottomrule
+\end{tabular}
+\end{table}

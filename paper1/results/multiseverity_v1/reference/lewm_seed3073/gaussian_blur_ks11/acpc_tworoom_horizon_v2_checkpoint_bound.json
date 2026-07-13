@@ -1,0 +1,46 @@
+{
+  "metadata": {
+    "artifact_role": "paired_multiseverity_atr_reference",
+    "base_protocol_sha256": "edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21",
+    "corruption_type": "gaussian_blur",
+    "implementation_hashes": {
+      "acpc_runner": "1f4f65590e7f91852467c6f3a0970dda15bf0b58dbf561e8c24a8a32659193ee",
+      "canonical_metric": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b"
+    },
+    "model_family": "LeWM",
+    "protocol_sha256": "6712b4f595444d751d9c327262c288e37dbd80be7ddde9bb4fd336ed41119622",
+    "schema_version": "paper1-acpc-horizon-v2-1.0",
+    "source_path": "paper1/results/multiseverity_v1/raw/lewm_seed3073/gaussian_blur_ks11/acpc_tworoom_v2.json",
+    "source_sha256": "b813c7e912857d3a517b061e65162047b67d4ebd86874bff1aeebe48ee9cde33",
+    "status": "complete",
+    "stressor_severity": 11.0,
+    "task": "TwoRoom",
+    "training_seed": 3073
+  },
+  "rows": [
+    {
+      "atr_horizon_v2_q90": 1.966902256011963,
+      "corruption_type": "gaussian_blur",
+      "model_family": "LeWM",
+      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_lewm_baseline_seed3073/tworoom_lewm_baseline_seed3073_epoch_10_object.ckpt",
+      "status": "ok",
+      "std_key": "0.0",
+      "stressor_severity": 11.0,
+      "subdir": "tworoom_lewm_baseline_seed3073",
+      "task": "TwoRoom",
+      "training_seed": 3073
+    },
+    {
+      "atr_horizon_v2_q90": 1.3759759664535522,
+      "corruption_type": "gaussian_blur",
+      "model_family": "LeWM",
+      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_lewm_noise_0to008_p1_seed3073/tworoom_lewm_noise_0to008_p1_seed3073_epoch_10_object.ckpt",
+      "status": "ok",
+      "std_key": "0.08",
+      "stressor_severity": 11.0,
+      "subdir": "tworoom_lewm_noise_0to008_p1_seed3073",
+      "task": "TwoRoom",
+      "training_seed": 3073
+    }
+  ]
+}

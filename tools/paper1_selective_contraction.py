@@ -1456,8 +1456,15 @@ def render_cluster_task(
                 zorder=4,
             )
 
-        title = f"{label_by_spec[label]}: {feature_by_name[feature]}"
-        if not paper_facing:
+        if paper_facing:
+            checkpoint_name = {
+                "base": "No-noise checkpoint",
+                "fullseq_robust": "Noise-trained checkpoint",
+            }[label]
+            feature_name = {"encoder": "Encoder", "predictor": "8-step rollout"}[feature]
+            title = f"({chr(97 + panel_idx)}) {checkpoint_name} · {feature_name}"
+        else:
+            title = f"{label_by_spec[label]}: {feature_by_name[feature]}"
             title = f"{title}\nhigh-D: {_cluster_stats_title(stats)}"
         ax.set_title(title, fontsize=7.8, pad=4)
         ax.set_xlim(*xlim)
@@ -1490,7 +1497,32 @@ def render_cluster_task(
                     zorder=8,
                 )
     if paper_facing:
-        pass
+        from matplotlib.lines import Line2D
+
+        legend_color = "#4C78A8"
+        legend_handles = [
+            Line2D([], [], marker="o", linestyle="none", markersize=4.2, markerfacecolor="#999999", markeredgecolor="none", label="Unselected states/views"),
+            Line2D([], [], marker="o", linestyle="none", markersize=6.2, markerfacecolor=legend_color, markeredgecolor="#111111", markeredgewidth=0.6, label="Selected anchor"),
+            Line2D([], [], marker="o", linestyle="none", markersize=4.2, markerfacecolor=legend_color, markeredgecolor="white", markeredgewidth=0.35, label="Perturbed view"),
+        ]
+        envelope_label = {
+            "ellipse": f"{100.0 * envelope_coverage:.0f}% covariance envelope",
+            "hull": "Convex hull",
+            "circle": "Max-distance envelope",
+            "none": None,
+        }[envelope]
+        if envelope_label:
+            legend_handles.append(Line2D([], [], color=legend_color, linewidth=1.2, label=envelope_label))
+        fig.legend(
+            handles=legend_handles,
+            loc="lower center",
+            ncol=len(legend_handles),
+            frameon=False,
+            fontsize=6.5,
+            columnspacing=1.0,
+            handletextpad=0.4,
+            bbox_to_anchor=(0.5, 0.008),
+        )
     else:
         fig.suptitle(
             f"{task}: same-state perturbation clusters in encoder and ACPC rollout-readout spaces",
@@ -1516,7 +1548,7 @@ def render_cluster_task(
             fontsize=6.6,
             linespacing=1.18,
         )
-    layout_rect = (0, 0.02, 1, 0.985) if paper_facing else (0, 0.075, 1, 0.945)
+    layout_rect = (0, 0.055, 1, 0.985) if paper_facing else (0, 0.075, 1, 0.945)
     fig.tight_layout(rect=layout_rect, h_pad=2.0, w_pad=0.9)
     out_dir.mkdir(parents=True, exist_ok=True)
     if paper_facing:

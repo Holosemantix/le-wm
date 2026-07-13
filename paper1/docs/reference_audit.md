@@ -58,7 +58,17 @@ Date: 2026-07-04
 2026-07-04 targeted top-conference pass: rechecked key temporally unstable JEPA/world-model and robustness references against primary arXiv/OpenReview/Nature/PMLR sources. Added `murlabadia2026vjepa21` for V-JEPA 2.1 after checking arXiv:2603.14482; text-use is bounded to V-JEPA-family dense physical-world representations and does not imply a competing baseline.
 2026-07-04 correction pass: rechecked ReOI against arXiv:2506.16565 and corrected the bib title/author metadata from an earlier wrong record to Chen, Wei, Xu, Li, Tomizuka, Bajcsy, and Tian.
 
-Scope: all 45 citation keys used in `paper1/main.tex`. Unused BibTeX entries were removed from `paper1/references.bib`, so every remaining entry is cited.
+2026-07-13 submission-remediation spot check: re-opened the official arXiv
+records for the six recent action-consistency papers cited in the compressed
+Related Work paragraph: `yan2026mwm`, `chen2026atm`, `zhang2026deltajepa`,
+`seo2026acid`, `ruan2026futurecompatible`, and
+`schaefer2026kinematic`. Their current abstracts support the manuscript's
+bounded distinctions among consistency-aware training, post-hoc action probes,
+latent action decoding, decision-time cycle consistency, generated-future
+compatibility, and kinematic-failure diagnostics. No metadata or claim-text
+change was required.
+
+Scope: all 51 citation keys used in `paper1/main.tex`. Unused BibTeX entries were removed from `paper1/references.bib`, so every remaining entry is cited.
 
 | Key | Official source checked | Metadata conclusion | Text-use conclusion |
 |---|---|---|---|

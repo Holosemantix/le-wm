@@ -1,6 +1,6 @@
 # Paper1 Diagnostic Remediation Scripts
 
-These scripts rebuild the training-free diagnostic artifacts added for the Paper1 experiment remediation. They do not retrain models or rerun closed-loop evaluation.
+The public-v1 remediation scripts rebuild training-free diagnostics and do not retrain models. The explicitly named paired_multiseverity runners are a separate prospective extension: they reuse fixed checkpoints, rerun bounded closed-loop evaluation, and never train.
 
 Run the CPU-only manifest/checker path from repository root:
 
@@ -24,8 +24,9 @@ PAPER1_DIAGNOSTIC_GPU=0 PAPER1_DIAGNOSTIC_THREADS=2 \
 RUN_EXTERNAL_AUDITS=1 bash paper1/scripts/run_all_paper1_diagnostics.sh
 ```
 
-Rebuild the E3 aggregate, paired-change uncertainty, main table, and scatter
-from completed diagnostic/evaluation artifacts (no training or evaluation):
+Rebuild the E3 aggregate, paired-change uncertainty, exact/deletion/selection
+robustness audit, generated tables, and scatter from completed
+diagnostic/evaluation artifacts (no training or evaluation):
 
 ```bash
 python -m paper1.scripts.build_cross_stressor_external_validation \
@@ -65,9 +66,43 @@ python -m paper1.scripts.joint_guard_side_validation
 python -m paper1.scripts.plot_gaussian_sensitivity_mechanism
 ```
 
+Frozen prospective multi-severity extension (all commands are serial,
+resumable, hash-gated, and watchdog-bounded):
+
+~~~bash
+# No eval: inspect checkpoint binding and pending behavior artifacts.
+bash paper1/scripts/run_paired_multiseverity_behavior.sh plan
+
+# One frozen seed/task/stressor/severity smoke.
+bash paper1/scripts/run_paired_multiseverity_atr.sh smoke
+bash paper1/scripts/run_paired_multiseverity_behavior.sh smoke
+bash paper1/scripts/run_paired_multiseverity_smpr_v2.sh smoke
+
+# Complete LeWM diagnostics first, then closed-loop behavior.
+bash paper1/scripts/run_paired_multiseverity_atr.sh full
+bash paper1/scripts/run_paired_multiseverity_smpr_v2.sh full
+bash paper1/scripts/run_paired_multiseverity_behavior.sh full
+
+# This refuses partial coverage; success requires all 72 paired rows.
+python -m paper1.scripts.build_paired_multiseverity_summary
+~~~
+
+The parent protocol is paper1/config/paired_multiseverity_protocol_v1.json
+(SHA-256 6712b4f595444d751d9c327262c288e37dbd80be7ddde9bb4fd336ed41119622).
+The SMPR execution addendum transparently records that its wrapper/reference
+adapter was connected after the behavior/ATR smoke had been inspected; it does
+not alter the zero threshold, severity grid, sampling, or analysis. A smoke is
+never primary-claim eligible, and PLDM must not start before the complete LeWM
+72-row aggregate is locked.
+
+The original `run_paired_multiseverity_smpr.sh` is retained as v1 provenance.
+Its reference key omitted task; the v2 addendum records the stopped run and the
+v2 runner binds every reference by seed, task, stressor, and severity.
+
 Plot output notes:
 
-- `plot_full_sweep_diagnostics` writes a main figure with separate behavior and direct ATR/SMPR axes per task, the diagnostic-region scatter, and a compact four-across appendix planner-guard figure; recovery shading is rendered as continuous majority-recovered ranges.
+- `plot_full_sweep_diagnostics` writes vector PDF figures by default: a main figure with separate behavior and direct ATR/SMPR axes per task, the diagnostic-region scatter, and a compact four-across appendix planner-guard figure; recovery shading is rendered as continuous majority-recovered ranges.
+- `plot_cross_stressor_submission` reads the locked all-pairs CSV and writes the 24-pair LeWM submission scatter as a vector PDF; it does not rerun diagnostics or evaluation.
 - `plot_endpoint_atr_smpr` writes the two-panel endpoint dumbbell figure with base-to-noise-trained movement arrows.
 - `plot_gaussian_sensitivity_mechanism` writes a two-panel endpoint/base lollipop figure for the main text and the trace-decomposition heatmap plus separate alignment panel for the appendix.
 - `plot_fixed_pool_event_rates` writes the two-panel paired event-rate figure; conditional flip-given-cert-pass rates remain in the appendix table.

@@ -1,0 +1,63 @@
+{
+  "jobs": [
+    {
+      "apply_to": "1",
+      "checkpoint_exists": true,
+      "checkpoint_rel": "lewm-tworooms/ckpt/tworoom_lewm_20260430/tworoom_lewm_20260430_epoch_10_object.ckpt",
+      "checkpoint_resolution": "legacy_unique_epoch_match",
+      "command_template": "STABLEWM_HOME=$DATA_ROOT ckpt_override=$DATA_ROOT/lewm-tworooms/ckpt/tworoom_lewm_20260430/tworoom_lewm_20260430_epoch_10_object.ckpt config=lewm dataset_name=tworoom diagnostic_corruption_type=gaussian_blur diagnostic_dataset_name=tworoom eval_base_seed=42 eval_blur_kernel_sizes='1 7 11 15' eval_corruption_apply_to=1 eval_corruption_type=gaussian_blur eval_epoch=10 eval_gpus=0 eval_max_concurrency=1 eval_resume=1 eval_save_video=0 eval_seeds=3 eval_timeout_seconds=7200 num_eval=300 output_model_name=paper1_unseen_origin_vs_std008_s3072_strongest_gaussian_blur_std0p0 post_train_eval_mode=full seed=3072 skip_diagnostics=1 skip_train=1 trainer_file=train.py bash run_trainer.sh",
+      "complete": true,
+      "diagnostics_dir_rel": "lewm-tworooms/ckpt/tworoom_paper1_unseen_origin_vs_std008_s3072_strongest_gaussian_blur_std0p0/eval_results/diagnostics_gaussian_blur",
+      "diagnostics_enabled": false,
+      "eval_base_seed": 42,
+      "eval_seeds": 3,
+      "eval_summary_rel": "lewm-tworooms/ckpt/tworoom_paper1_unseen_origin_vs_std008_s3072_strongest_gaussian_blur_std0p0/eval_results/eval_summary.csv",
+      "family": "gaussian_blur",
+      "final_output_model_name": "tworoom_paper1_unseen_origin_vs_std008_s3072_strongest_gaussian_blur_std0p0",
+      "magnitudes": [
+        "1",
+        "7",
+        "11",
+        "15"
+      ],
+      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_lewm_20260430/tworoom_lewm_20260430_epoch_10_object.ckpt",
+      "model_sha256": "81a8ad466420eeec7d79d59338c8da2e3b551c56e8ff154ae8409efade6bad02",
+      "num_eval": 300,
+      "output_model_name_arg": "paper1_unseen_origin_vs_std008_s3072_strongest_gaussian_blur_std0p0",
+      "result_dir_rel": "lewm-tworooms/ckpt/tworoom_paper1_unseen_origin_vs_std008_s3072_strongest_gaussian_blur_std0p0/eval_results",
+      "std_key": "0.0",
+      "subdir": "tworoom_lewm_20260430",
+      "task": "TwoRoom"
+    }
+  ],
+  "metadata": {
+    "canonical_artifact": "assets/paper1_data/training_seed_eval_manifests/lewm_seed3072_evals.json",
+    "checkpoint_binding": "entry.model_file is authoritative when present; legacy entries require exactly one *epoch_<epoch>_object.ckpt candidate",
+    "diagnostics_enabled": false,
+    "epoch": 10,
+    "eval_base_seed": 42,
+    "eval_only_default": true,
+    "eval_seeds": 3,
+    "families": [
+      "gaussian_blur"
+    ],
+    "launcher": "tools.paper1_unseen_eval_grid",
+    "num_eval": 300,
+    "output_prefix": "paper1_unseen_origin_vs_std008_s3072_strongest",
+    "root": null,
+    "root_env_order": [
+      "PAPER1_DATA_ROOT",
+      "DATA_ROOT",
+      "STABLEWM_HOME"
+    ],
+    "root_note": "Set --root or DATA_ROOT/PAPER1_DATA_ROOT/STABLEWM_HOME on each machine.",
+    "schema_version": "paper1-unseen-eval-grid-manifest-1.1",
+    "std_keys": [
+      "0.0"
+    ],
+    "tasks": [
+      "TwoRoom"
+    ],
+    "train_seed": 3072
+  }
+}

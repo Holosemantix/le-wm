@@ -26,6 +26,23 @@ RELEASE_FILES = [
 ]
 
 REQUIRED_ARTIFACTS = [
+    ROOT / "paper1" / "config" / "paired_multiseverity_protocol_v1.json",
+    ROOT / "paper1" / "config" / "paired_multiseverity_protocol_v1.sha256",
+    ROOT / "paper1" / "config" / "paired_multiseverity_execution_addendum_v1.json",
+    ROOT / "paper1" / "config" / "paired_multiseverity_execution_addendum_v1.sha256",
+    ROOT / "paper1" / "config" / "paired_multiseverity_execution_addendum_v2.json",
+    ROOT / "paper1" / "config" / "paired_multiseverity_execution_addendum_v2.sha256",
+    ROOT / "paper1" / "scripts" / "run_paired_multiseverity_smpr_v2.sh",
+    ROOT / "paper1" / "scripts" / "run_paired_multiseverity_behavior.sh",
+    ROOT / "paper1" / "scripts" / "run_paired_multiseverity_atr.sh",
+    ROOT / "paper1" / "scripts" / "build_paired_multiseverity_atr_reference.py",
+    ROOT / "paper1" / "scripts" / "run_paired_multiseverity_smpr.sh",
+    ROOT / "paper1" / "results" / "multiseverity_v1" / "raw" / "lewm_seed3072" / "gaussian_blur_ks7" / "acpc_tworoom_v2.json",
+    ROOT / "paper1" / "results" / "multiseverity_v1" / "raw" / "lewm_seed3072" / "gaussian_blur_ks7" / "smpr_tworoom_v2.json",
+    ROOT / "paper1" / "results" / "multiseverity_v1" / "reference" / "lewm_seed3072" / "gaussian_blur_ks7" / "acpc_horizon_v2_checkpoint_bound.json",
+    ROOT / "paper1" / "results" / "multiseverity_v1" / "reference" / "lewm_seed3072" / "gaussian_blur_ks7" / "acpc_tworoom_horizon_v2_checkpoint_bound.json",
+    ROOT / "paper1" / "results" / "multiseverity_v1" / "manifests" / "behavior_s3072_tworoom_std0p0_gaussian_blur.json",
+    ROOT / "paper1" / "results" / "multiseverity_v1" / "manifests" / "behavior_s3072_tworoom_std0p08_gaussian_blur.json",
     ROOT / "assets" / "paper1_data" / "canonical_evals_20260517.json",
     ROOT / "assets" / "paper1_data" / "canonical_evals_20260517.schema.json",
     ROOT / "assets" / "paper1_data" / "canonical_diagnostics_20260517.json",
@@ -228,6 +245,7 @@ REQUIRED_ARTIFACTS = [
     ROOT / "assets" / "paper1_figs" / "fig_smpr_radius_margin_decomposition.png",
     ROOT / "paper1" / "tables" / "table_diagnostic_baselines.tex",
     ROOT / "paper1" / "tables" / "table_cross_stressor_paired_change.tex",
+    ROOT / "paper1" / "tables" / "table_cross_stressor_robustness_audit.tex",
     ROOT / "paper1" / "tables" / "table_fixed_pool_certificate_coverage.tex",
     ROOT / "paper1" / "tables" / "table_linearization_calibration.tex",
     ROOT / "paper1" / "tables" / "table_horizon_quantile_sensitivity.tex",
@@ -352,43 +370,34 @@ LEGACY_REQUIRED_MAIN_TEXT_SNIPPETS = [
 # Public-v1 gates are structural and claim-oriented.  The longer list above is
 # retained only to document the pre-remediation wording contract.
 REQUIRED_MAIN_TEXT_SNIPPETS = [
-    "Paired Latent Robustness Diagnostics",
-    "Analysis-interface portability",
-    "Calibration portability",
-    "family-calibrated absolute screening",
-    "The natural rule $\\Delta S>0$",
-    "one untuned $\\Delta S>0$ rule is shared across blur and resize",
-    "12 task--training-seed blocks 5,000 times",
-    "not a shared cross-family calibration",
-    "ACPC Tail Risk (ATR)",
+    "This is a diagnostic study of frozen checkpoints, not a new robust-training method",
+    "same-state visual perturbation",
+    "Target-free prediction-error-drift bound",
     "Selective Margin Pass Rate (SMPR)",
-    "same underlying state",
-    "canonical weighted-stacked vectorization",
-    "sharp candidate-wise condition",
-    "not an adaptive-planning guarantee",
-    "one PLDM training family",
-    "conditional measurement replicates, not independent training runs",
-    "Hence neither long-horizon rollout nor correct-action conditioning is empirically necessary",
-    "The sharp condition has zero certified flips by construction",
-    "local composed-sensitivity reduction while rejecting a claim",
-    "TwoRoom uses an environment-geometry proxy and PushT a sequence-goal state-derived proxy",
-    "current baselines are not relabeled as ATM",
+    "not a candidate-distribution probability",
+    "do not establish semantic or action faithfulness",
+    "the rule requires the reference and does not imply",
+    "raw thresholds are not assumed to transfer across model architectures",
+    "does not cover adaptive sampling or replanning",
+    "Evaluation seeds are conditional measurement replicates",
+    "receive no stressor-specific retuning",
+    "does not establish unseen-task, cross-family, or universal numerical calibration",
+    "not an absolute stability detector or population safety guarantee",
+    "retrospective completeness check",
+    "t-SNE does not preserve metric geometry",
+    "not counted as separate validation evidence",
+    "not a uniquely action-specific mechanism",
 ]
 
 MAIN_TEXT_FIGURES = {
-    "fig2_sweep.png",
-    "fig_cross_stressor_fixed_rho.png",
-    "fig_endpoint_atr_smpr.png",
-    "fig_full_sweep_diagnostics.png",
-    "fig_fixed_pool_certificate_calibration.png",
-    "fig_linearization_calibration.png",
+    "fig_full_sweep_diagnostics.pdf",
+    "fig_cross_stressor_submission.pdf",
 }
 
 APPENDIX_FIGURES = {
     "fig_acpc_basin_tsne.png",
-    "fig_full_sweep_planner_guard.png",
-    "fig_radius_margin_overlap.png",
-    "fig_jvp_trace_decomposition_heatmap.png",
+    "fig_fixed_pool_certificate_calibration.pdf",
+    "fig_linearization_calibration.pdf",
 }
 
 
@@ -489,11 +498,16 @@ THREE_SEED_SWEEP_METRICS = {
 REQUIRED_DIAG_TASKS = EXPECTED_TASKS
 EXPECTED_METHODS = {"LeWM", "PLDM"}
 FROZEN_PROTOCOL_SHA256 = "edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21"
+PAIRED_MULTISEVERITY_PROTOCOL_SHA256 = "6712b4f595444d751d9c327262c288e37dbd80be7ddde9bb4fd336ed41119622"
+PAIRED_MULTISEVERITY_ADDENDUM_SHA256 = "70ca8cb9a361f144ca047235ae5844e0859394dd350cb021eb8c5720845d44c2"
+PAIRED_MULTISEVERITY_ADDENDUM_V2_SHA256 = "ac89c6c69ae67e123c90205a9de532f9a0bb9709ad91c5404c1f43dc23ea5afb"
+PAIRED_MULTISEVERITY_REFERENCE_SMOKE_SHA256 = "6c7622ae2f78899b5e2f8e6ea5f2c4ae6455ae342aef1f64bfa080b8ced4a8e1"
+PAIRED_MULTISEVERITY_SMPR_SMOKE_SHA256 = "eb41ff0d6a23db0e15ea5f48540f91f5d834831d13dff7e6bb8ba8c6fbcffdbe"
 PUBLIC_V1_ARTIFACT_HASHES = {
     "paper1/config/frozen_diagnostic_protocol_v1.json": FROZEN_PROTOCOL_SHA256,
     "paper1/results/frozen_external_validation_summary_v3.json": "ec485a7026c1d2ff80295f4dc85dd3753ca12f2ede7d7c0137a13796070dfeba",
     "paper1/results/external_validation/pldm_frozen_summary_v2.json": "edf14d47a6b5e72097220e2b606f43a422e06ae9d832805cd2311f147e6b9387",
-    "paper1/results/external_validation/cross_stressor_fixed_rho_summary.json": "e4acc7a45b22f15e304d63d17ffaa27a6fec696ac6b10cd63056b173c9a78de8",
+    "paper1/results/external_validation/cross_stressor_fixed_rho_summary.json": "94077f772e8dd7641b47e161a17d4ec67cea695dc044cb9a0229857efc157453",
     "paper1/results/external_validation/target_view_frozen_summary.json": "dba255daf282d1dbea7a102839e054cdd39b159a08a9ea9b1d3def7767477870",
     "paper1/results/diagnostic_baselines/diagnostic_baseline_all_v1.json": "df43cfd80b0387bde31426a37445149646a247724c1b2dd61f801a97d6c4f3c8",
     "paper1/results/diagnostic_baselines/gaussian_rho_confound_summary.json": "3079d357d7dcca2643dc0a4ef9bb3297bf1de49cfcfae51ae632bdc272ed3591",
@@ -583,6 +597,318 @@ def check_artifacts() -> None:
         fail(f"Missing release artifacts: {', '.join(missing)}")
 
 
+def check_paired_multiseverity_protocol() -> None:
+    protocol_rel = "paper1/config/paired_multiseverity_protocol_v1.json"
+    protocol_path = ROOT / protocol_rel
+    got_hash = _sha256_file(protocol_path)
+    if got_hash != PAIRED_MULTISEVERITY_PROTOCOL_SHA256:
+        fail(
+            "paired multi-severity protocol hash changed: "
+            f"got {got_hash}, want {PAIRED_MULTISEVERITY_PROTOCOL_SHA256}"
+        )
+
+    sidecar = (
+        ROOT / "paper1/config/paired_multiseverity_protocol_v1.sha256"
+    ).read_text(encoding="utf-8").split()
+    if sidecar != [PAIRED_MULTISEVERITY_PROTOCOL_SHA256, protocol_rel]:
+        fail("paired multi-severity protocol hash sidecar changed")
+
+    protocol = _load_strict_json(protocol_path)
+    scope = protocol.get("scope", {})
+    stressors = protocol.get("stressors", {})
+    diagnostic = protocol.get("diagnostic", {})
+    analysis = protocol.get("primary_analysis", {})
+    execution = protocol.get("execution", {})
+    if (
+        protocol.get("schema_version") != "paper1-paired-multiseverity-protocol-1.0"
+        or protocol.get("status") != "frozen_pre_execution"
+        or scope.get("primary_model_family") != "LeWM"
+        or scope.get("training_seeds") != [3072, 3073, 3074]
+        or scope.get("tasks") != ["TwoRoom", "PushT", "Reacher", "Cube"]
+    ):
+        fail("paired multi-severity frozen scope changed")
+    if (
+        stressors.get("gaussian_blur", {}).get("primary_nonidentity") != [7, 11, 15]
+        or stressors.get("resize", {}).get("primary_nonidentity")
+        != [0.75, 0.5, 0.25]
+    ):
+        fail("paired multi-severity severity grid changed")
+    expected_pairs = (
+        len(scope["training_seeds"])
+        * len(scope["tasks"])
+        * len(stressors)
+        * 3
+    )
+    if analysis.get("expected_pairs") != expected_pairs or expected_pairs != 72:
+        fail("paired multi-severity 72-pair count contract changed")
+    if (
+        diagnostic.get("decision_threshold") != 0
+        or diagnostic.get("threshold_search_allowed") is not False
+        or diagnostic.get("severity_search_allowed") is not False
+        or analysis.get("block_count") != 12
+        or analysis.get("block_bootstrap_seed") != 20260712
+        or "2^12" not in analysis.get("exact_randomization", "")
+    ):
+        fail("paired multi-severity preregistered analysis rule changed")
+    if (
+        execution.get("max_concurrent_eval_jobs") != 1
+        or execution.get("max_concurrent_diagnostic_jobs") != 1
+        or execution.get("smoke_first", {}).get("severity") != 7
+    ):
+        fail("paired multi-severity bounded serial execution contract changed")
+
+    source_paths = protocol.get("source_paths", {})
+    source_hashes = protocol.get("source_hashes", {})
+    if source_paths.keys() != source_hashes.keys():
+        fail("paired multi-severity source hash map is incomplete")
+    for name, rel in source_paths.items():
+        if _sha256_file(ROOT / rel) != source_hashes[name]:
+            fail(f"paired multi-severity bound source changed: {name}")
+
+    addendum_rel = "paper1/config/paired_multiseverity_execution_addendum_v1.json"
+    addendum_path = ROOT / addendum_rel
+    if _sha256_file(addendum_path) != PAIRED_MULTISEVERITY_ADDENDUM_SHA256:
+        fail("paired multi-severity execution addendum hash changed")
+    addendum_sidecar = (
+        ROOT / "paper1/config/paired_multiseverity_execution_addendum_v1.sha256"
+    ).read_text(encoding="utf-8").split()
+    if addendum_sidecar != [PAIRED_MULTISEVERITY_ADDENDUM_SHA256, addendum_rel]:
+        fail("paired multi-severity addendum hash sidecar changed")
+    addendum = _load_strict_json(addendum_path)
+    disclosure = addendum.get("non_blind_disclosure", {})
+    revision = addendum.get("pre_smpr_revision", {})
+    science = addendum.get("scientific_contract", {})
+    if (
+        addendum.get("schema_version")
+        != "paper1-paired-multiseverity-execution-addendum-1.0"
+        or addendum.get("status")
+        != "frozen_after_adapter_validation_fix_before_smpr"
+        or addendum.get("parent_protocol", {}).get("sha256")
+        != PAIRED_MULTISEVERITY_PROTOCOL_SHA256
+        or disclosure.get("created_after_behavior_and_atr_smoke") is not True
+        or disclosure.get("behavior_outcomes_were_inspected_before_this_addendum")
+        is not True
+        or disclosure.get("analysis_threshold_or_severity_changed") is not False
+        or revision.get("reference_or_smpr_output_created_before_fix") is not False
+        or science.get("decision_threshold") != 0
+        or science.get("threshold_search_allowed") is not False
+        or science.get("severity_search_allowed") is not False
+    ):
+        fail("paired multi-severity addendum disclosure/scientific boundary changed")
+    for section in ("execution_only_sources", "bound_measurement_sources"):
+        for name, entry in addendum.get(section, {}).items():
+            if _sha256_file(ROOT / entry["path"]) != entry["sha256"]:
+                fail(f"paired multi-severity addendum source changed: {name}")
+    disclosed_artifacts = {
+        "atr_smoke": (
+            "paper1/results/multiseverity_v1/raw/lewm_seed3072/"
+            "gaussian_blur_ks7/acpc_tworoom_v2.json"
+        ),
+        "behavior_manifest_reference": (
+            "paper1/results/multiseverity_v1/manifests/"
+            "behavior_s3072_tworoom_std0p0_gaussian_blur.json"
+        ),
+        "behavior_manifest_endpoint": (
+            "paper1/results/multiseverity_v1/manifests/"
+            "behavior_s3072_tworoom_std0p08_gaussian_blur.json"
+        ),
+    }
+    disclosed_hashes = disclosure.get("pre_addendum_artifact_hashes", {})
+    for name, rel in disclosed_artifacts.items():
+        if _sha256_file(ROOT / rel) != disclosed_hashes.get(name):
+            fail(f"paired multi-severity pre-addendum disclosure hash changed: {name}")
+
+    addendum_v2_rel = "paper1/config/paired_multiseverity_execution_addendum_v2.json"
+    addendum_v2_path = ROOT / addendum_v2_rel
+    if _sha256_file(addendum_v2_path) != PAIRED_MULTISEVERITY_ADDENDUM_V2_SHA256:
+        fail("paired multi-severity execution addendum v2 hash changed")
+    addendum_v2_sidecar = (
+        ROOT / "paper1/config/paired_multiseverity_execution_addendum_v2.sha256"
+    ).read_text(encoding="utf-8").split()
+    if addendum_v2_sidecar != [
+        PAIRED_MULTISEVERITY_ADDENDUM_V2_SHA256,
+        addendum_v2_rel,
+    ]:
+        fail("paired multi-severity addendum v2 hash sidecar changed")
+    addendum_v2 = _load_strict_json(addendum_v2_path)
+    failure_v2 = addendum_v2.get("failure_disclosure", {})
+    unchanged_v2 = addendum_v2.get("scientific_contract_unchanged", {})
+    if (
+        addendum_v2.get("schema_version")
+        != "paper1-paired-multiseverity-execution-addendum-2.0"
+        or addendum_v2.get("parent_protocol", {}).get("sha256")
+        != PAIRED_MULTISEVERITY_PROTOCOL_SHA256
+        or addendum_v2.get("parent_execution_addendum", {}).get("sha256")
+        != PAIRED_MULTISEVERITY_ADDENDUM_SHA256
+        or failure_v2.get("reference_binding_failed") is not True
+        or failure_v2.get("threshold_or_severity_changed") is not False
+        or failure_v2.get("v1_outputs_before_failure")
+        != {
+            "valid_tworoom_shards": 4,
+            "unmatched_pusht_shards": 1,
+            "remaining_unattempted_shards": 43,
+        }
+        or unchanged_v2.get("decision_threshold") != 0
+        or unchanged_v2.get("threshold_search_allowed") is not False
+        or unchanged_v2.get("severity_search_allowed") is not False
+    ):
+        fail("paired multi-severity addendum v2 disclosure/scientific boundary changed")
+    for section in ("execution_sources", "bound_measurement_sources"):
+        for name, entry in addendum_v2.get(section, {}).items():
+            if _sha256_file(ROOT / entry["path"]) != entry["sha256"]:
+                fail(f"paired multi-severity addendum v2 source changed: {name}")
+
+    v1_archive_dir = (
+        ROOT
+        / "paper1/results/multiseverity_v1/raw/lewm_seed3072/gaussian_blur_ks7"
+    )
+    archived_tworoom = sorted(
+        v1_archive_dir.glob("smpr_tworoom_v2.json.pre_v2_or_invalid_*")
+    )
+    archived_pusht = sorted(
+        v1_archive_dir.glob("smpr_pusht_v2.json.pre_v2_or_invalid_*")
+    )
+    if (
+        len(archived_tworoom) != 1
+        or len(archived_pusht) != 1
+        or _sha256_file(archived_tworoom[0])
+        != "73da06004db247d38d5330b51bc55d348529c836547065dc334010b791ca5bc3"
+        or _sha256_file(archived_pusht[0])
+        != "a15b7292d5b7c15d293729bfdd7c1eabf6e2c516153e07289079fca3ba5f4762"
+    ):
+        fail("paired multi-severity v1 SMPR failure archives changed")
+
+    behavior = (ROOT / execution["behavior_runner"]).read_text(encoding="utf-8")
+    atr = (ROOT / execution["atr_runner"]).read_text(encoding="utf-8")
+    for token in (
+        "plan|smoke|full",
+        "--only-missing",
+        "eval_max_concurrency=1",
+        "eval_resume=1",
+        "eval_save_video=0",
+        "timeout --signal=TERM --kill-after=60s",
+        "frozen protocol hash mismatch",
+    ):
+        if token not in behavior:
+            fail(f"multi-severity behavior runner lost control: {token}")
+    for token in (
+        "valid_shard",
+        "status_counts",
+        "timeout --signal=TERM --kill-after=60s",
+        "PAPER1_DIAGNOSTIC_THREADS",
+        "frozen protocol hash mismatch",
+    ):
+        if token not in atr:
+            fail(f"multi-severity ATR runner lost control: {token}")
+
+    reference_smoke = (
+        ROOT
+        / "paper1/results/multiseverity_v1/reference/lewm_seed3072"
+        / "gaussian_blur_ks7/acpc_tworoom_horizon_v2_checkpoint_bound.json"
+    )
+    smpr_smoke_path = (
+        ROOT
+        / "paper1/results/multiseverity_v1/raw/lewm_seed3072"
+        / "gaussian_blur_ks7/smpr_tworoom_v2.json"
+    )
+    if _sha256_file(reference_smoke) != PAIRED_MULTISEVERITY_REFERENCE_SMOKE_SHA256:
+        fail("paired multi-severity ATR reference smoke hash changed")
+    if _sha256_file(smpr_smoke_path) != PAIRED_MULTISEVERITY_SMPR_SMOKE_SHA256:
+        fail("paired multi-severity SMPR smoke hash changed")
+    smpr_smoke = _load_strict_json(smpr_smoke_path)
+    smpr_meta = smpr_smoke.get("metadata", {})
+    smpr_rows = smpr_smoke.get("rows", [])
+    if (
+        smpr_meta.get("status") != "complete"
+        or smpr_meta.get("status_counts") != {"ok": 2}
+        or smpr_meta.get("missing_rows") != []
+        or smpr_meta.get("errors") != []
+        or len(smpr_rows) != 2
+    ):
+        fail("paired multi-severity SMPR smoke is incomplete")
+    smpr_by_std = {str(row.get("std_key")): row for row in smpr_rows}
+    if set(smpr_by_std) != {"0.0", "0.08"}:
+        fail("paired multi-severity SMPR smoke checkpoint pair changed")
+    expected_smoke = {
+        "0.0": (2.0391573905944824, 0.016393441706895828),
+        "0.08": (0.6844772100448608, 0.9672130346298218),
+    }
+    for std_key, (expected_atr, expected_smpr) in expected_smoke.items():
+        row = smpr_by_std[std_key]
+        if (
+            row.get("status") != "ok"
+            or row.get("atr_reference_match") is not True
+            or row.get("atr_reference_abs_error") != 0
+            or not math.isclose(row["same_state_tube_radius"], expected_atr, abs_tol=1e-12)
+            or not math.isclose(row["smpr"], expected_smpr, abs_tol=1e-12)
+        ):
+            fail(f"paired multi-severity SMPR smoke row changed: {std_key}")
+    base_protocol = _load_strict_json(ROOT / "paper1/config/frozen_diagnostic_protocol_v1.json")
+    tau_atr = float(base_protocol["tau_atr"])
+    tau_smpr = float(base_protocol["tau_smpr"])
+    joint_scores = {}
+    for std_key, row in smpr_by_std.items():
+        atr_margin = (tau_atr - float(row["same_state_tube_radius"])) / abs(tau_atr)
+        smpr_margin = (float(row["smpr"]) - tau_smpr) / abs(tau_smpr)
+        joint_scores[std_key] = min(atr_margin, smpr_margin)
+    if not math.isclose(
+        joint_scores["0.08"] - joint_scores["0.0"],
+        0.9999999804090585,
+        abs_tol=1e-12,
+    ):
+        fail("paired multi-severity smoke delta joint score changed")
+
+    smpr_runner = (ROOT / "paper1/scripts/run_paired_multiseverity_smpr.sh").read_text(
+        encoding="utf-8"
+    )
+    for token in (
+        "valid_reference",
+        "valid_smpr",
+        "atr_reference_match == true",
+        "timeout --signal=TERM --kill-after=60s",
+        'verify_frozen_file "$addendum"',
+    ):
+        if token not in smpr_runner:
+            fail(f"multi-severity SMPR runner lost control: {token}")
+
+    smpr_runner_v2 = (
+        ROOT / "paper1/scripts/run_paired_multiseverity_smpr_v2.sh"
+    ).read_text(encoding="utf-8")
+    for token in (
+        'acpc_${task_slug}_horizon_v2_checkpoint_bound.json',
+        ".metadata.task == $task",
+        ".metadata.source_sha256 == $raw_sha",
+        ".metadata.source_hashes.reference_atr == $reference_sha",
+        ".atr_reference_match == true",
+        'verify_frozen_file "$addendum_v2"',
+    ):
+        if token not in smpr_runner_v2:
+            fail(f"multi-severity SMPR v2 runner lost control: {token}")
+
+    manifest = _load_strict_json(ROOT / "paper1/results/diagnostic_manifest.json")
+    prospective = manifest.get("prospective_multiseverity_extension", {})
+    if prospective != {
+        "completed_primary_pairs": 0,
+        "evidence_status": "protocol-only; not public-v1 completed evidence",
+        "execution_addendum_sha256": PAIRED_MULTISEVERITY_ADDENDUM_V2_SHA256,
+        "execution_addendum_source": addendum_v2_rel,
+        "expected_primary_pairs": 72,
+        "parent_execution_addendum_sha256": PAIRED_MULTISEVERITY_ADDENDUM_SHA256,
+        "parent_execution_addendum_source": addendum_rel,
+        "protocol_sha256": PAIRED_MULTISEVERITY_PROTOCOL_SHA256,
+        "protocol_source": protocol_rel,
+        "smoke_validation": {
+            "completed_behavior_atr_smpr_triplets": 1,
+            "primary_claim_eligible": False,
+            "scope": "LeWM seed3072 TwoRoom gaussian_blur kernel_size=7",
+            "zero_rule_direction_agreement": True,
+        },
+        "status": "frozen_protocol_with_v2_task_bound_smoke",
+        "v1_reference_path_failure_disclosed": True,
+    }:
+        fail("diagnostic manifest misstates prospective multi-severity status")
+
+
 def check_forbidden_text() -> None:
     hits: list[str] = []
     for path in RELEASE_FILES:
@@ -660,9 +986,12 @@ def check_visual_text_structure() -> None:
     body, appendix = main_tex.split(marker, 1)
 
     required_headings = (
-        "\\subsection{Paired rollout consistency and discriminability}",
-        "\\subsection{Predictive tubes and planner margins}",
-        "\\subsubsection{Full-sweep and held-out validation}",
+        "\\subsection{Action-matched rollout radius}",
+        "\\subsection{Radius, discriminability guard, and calibration}",
+        "\\subsection{Behavioral recovery and diagnostic co-movement}",
+        "\\subsection{Action-matched rollouts predict future drift}",
+        "\\subsection{Calibration transfers across training seeds}",
+        "\\subsection{Gaussian calibration transfers to blur and resize}",
     )
     for heading in required_headings:
         if heading not in body:
@@ -3012,6 +3341,169 @@ def check_radius_margin_certificate_outputs() -> None:
             fail(f"paper1 figure looks too small: {rel}")
 
 
+def check_claim_aligned_three_pillar_evidence() -> None:
+    """Validate the target-aligned P1/P2/P3 extension and claim boundaries."""
+
+    summary = _load_strict_json(
+        ROOT / "paper1/results/three_pillar_evidence_summary.json"
+    )
+    metadata = summary.get("metadata", {})
+    if metadata.get("schema_version") != "paper1-three-pillar-evidence-1.0":
+        fail("three-pillar evidence schema changed")
+    if (
+        metadata.get("threshold_search_allowed") is not False
+        or metadata.get("model_evaluation_performed") is not False
+    ):
+        fail("three-pillar builder must not fit thresholds or run model eval")
+
+    p1 = summary["P1"]
+    if p1["metadata"].get("schema_version") != (
+        "paper1-target-aligned-acpc-four-task-meta-0.2"
+    ):
+        fail("P1 four-task meta schema changed")
+    primary = p1["primary_logged_fragile_base"]
+    if not primary.get("all_available_seeds_pass_all_four_tasks"):
+        fail("P1 logged fragile/base result must pass four tasks in both seeds")
+    if p1["candidate_fragile_base_bridge"].get(
+        "all_available_seeds_meet_three_task_gate"
+    ):
+        fail("P1 must retain the task-dependent candidate-bridge boundary")
+    if not (
+        p1["certificate"].get("candidate_zero_violation_all_rows")
+        and p1["certificate"].get("logged_zero_violation_all_rows")
+    ):
+        fail("P1 reverse-triangle implementation audit changed")
+
+    absolute = primary["uncertainty"]["absolute"]
+    adverse = primary["uncertainty"]["adverse"]
+    for block, expected_h1, expected_control in (
+        (absolute, 0.5647927738475621, 0.5186090940019519),
+        (adverse, 0.5545170295060298, 0.5064272048684091),
+    ):
+        observed = block["observed"]
+        if not math.isclose(
+            observed["equal_task_mean_reduction_vs_h1"],
+            expected_h1,
+            abs_tol=1e-12,
+        ):
+            fail("P1 reduction versus H1 changed")
+        if not math.isclose(
+            observed["equal_task_mean_reduction_vs_best_destroyed"],
+            expected_control,
+            abs_tol=1e-12,
+        ):
+            fail("P1 reduction versus destroyed-H8 changed")
+        bootstrap = block["cluster_bootstrap"]
+        if bootstrap.get("repetitions") != 5000 or bootstrap.get("seed") != 20260713:
+            fail("P1 cluster-bootstrap contract changed")
+        if bootstrap["equal_task_mean_reduction_vs_h1_ci95"][0] <= 0.50:
+            fail("P1 lower confidence limit versus H1 unexpectedly changed")
+        direction = block["paired_block_direction"]
+        if direction.get("both_win_count") != 57 or direction.get("cluster_count") != 64:
+            fail("P1 paired block-direction count changed")
+
+    p2 = summary["P2"]
+    if p2.get("threshold_search_allowed") is not False:
+        fail("P2 must keep the seed3072 thresholds frozen")
+    p2_metrics = p2["overall"]
+    if p2_metrics.get("n") != 72:
+        fail("P2 must contain 72 held-out rows")
+    if not math.isclose(
+        p2_metrics["balanced_accuracy"], 0.9445454545454546, abs_tol=1e-12
+    ) or not math.isclose(
+        p2_metrics["auprc"], 0.9654813594276511, abs_tol=1e-12
+    ):
+        fail("P2 frozen cross-seed metrics changed")
+    p2_bootstrap = p2["block_bootstrap"]
+    if (
+        p2_bootstrap.get("block_count") != 8
+        or p2_bootstrap.get("repetitions") != 5000
+        or p2_bootstrap.get("seed") != 20260713
+    ):
+        fail("P2 block-bootstrap contract changed")
+    task_ba_range = p2["deletion_stability"]["leave_one_task_out"][
+        "remaining_metric_range"
+    ]["balanced_accuracy"]
+    if any(
+        not math.isclose(value, expected, abs_tol=1e-12)
+        for value, expected in zip(
+            task_ba_range, [0.924342105263158, 0.955592105263158]
+        )
+    ):
+        fail("P2 leave-one-task-out range changed")
+
+    p3 = summary["P3"]
+    if p3.get("threshold_search_allowed") is not False:
+        fail("P3 must keep Gaussian calibration frozen")
+    absolute_screen = p3["absolute_single_checkpoint_screen"]
+    if absolute_screen.get("n") != 24 or not math.isclose(
+        absolute_screen["precision"], 1.0, abs_tol=1e-12
+    ) or not math.isclose(
+        absolute_screen["recall"], 0.4666666666666667, abs_tol=1e-12
+    ):
+        fail("P3 conservative absolute-screen boundary changed")
+    coverage = absolute_screen["coverage"]
+    selective_risk = absolute_screen["selective_false_pass_risk"]
+    if coverage.get("pass_count") != 7 or not math.isclose(
+        coverage["observed"], 7 / 24, abs_tol=1e-12
+    ):
+        fail("P3 absolute-screen coverage changed")
+    if selective_risk.get("false_pass_count") != 0 or not math.isclose(
+        selective_risk["exact_one_sided_95_upper"],
+        0.34816365513116077,
+        abs_tol=1e-12,
+    ):
+        fail("P3 selective false-pass uncertainty changed")
+    if "pair-derived positive transfer" not in absolute_screen.get(
+        "evaluation_target", ""
+    ) or "not an absolute stability label" not in p3.get("boundary", ""):
+        fail("P3 endpoint-score outcome boundary changed")
+    p3_bootstrap = absolute_screen["block_bootstrap"]
+    if (
+        p3_bootstrap.get("block_count") != 12
+        or p3_bootstrap.get("repetitions") != 5000
+        or p3_bootstrap.get("seed") != 20260713
+    ):
+        fail("P3 absolute block-bootstrap contract changed")
+    paired = p3["paired_reference_rule"]["overall"]
+    if not math.isclose(
+        paired["balanced_accuracy"], 0.8888888888888888, abs_tol=1e-12
+    ) or not math.isclose(
+        paired["spearman_delta_behavior_vs_oriented_delta_score"],
+        0.8641009119252958,
+        abs_tol=1e-12,
+    ):
+        fail("P3 paired frozen-transfer result changed")
+
+    manifest = _load_strict_json(ROOT / "paper1/results/diagnostic_manifest.json")
+    extension = manifest.get("claim_aligned_three_pillar_extension", {})
+    if extension.get("threshold_search_allowed") is not False:
+        fail("diagnostic manifest does not freeze the three-pillar extension")
+    if "fully frozen four-task replication" not in extension.get(
+        "p1_provenance", ""
+    ):
+        fail("diagnostic manifest omits P1 DEV/replication provenance")
+    for rel, expected_hash in extension.get("artifact_sha256", {}).items():
+        if _sha256_file(ROOT / rel) != expected_hash:
+            fail(f"claim-aligned manifest hash changed for {rel}")
+
+    main_text = (ROOT / "paper1/main.tex").read_text(encoding="utf-8")
+    for token in (
+        "thm:target-free-error-drift",
+        "eq:candidate-cost",
+        "tables/table_target_aligned_acpc",
+        "tables/table_seed_transfer_audit",
+        "tables/table_cross_stressor_transfer",
+        "Leave-one-block-out ridge models",
+        "seed 3074 is the fully frozen four-task replication",
+        "false-pass upper bound of $0.348$",
+        "evaluation label remains pair-derived improvement",
+        "retrospective completeness check",
+    ):
+        if token not in main_text:
+            fail(f"Paper1 mainline is missing claim-boundary token: {token}")
+
+
 def check_public_v1_remediation_artifacts() -> None:
     """Validate the frozen V1 evidence and its deliberately weak claim scope."""
 
@@ -3067,14 +3559,16 @@ def check_public_v1_remediation_artifacts() -> None:
 
     e3 = checked_external("paper1/results/external_validation/cross_stressor_fixed_rho_summary.json")
     e3_meta = e3["metadata"]
-    if e3_meta.get("schema_version") != "paper1-cross-stressor-fixed-rho-1.1":
+    if e3_meta.get("schema_version") != "paper1-cross-stressor-fixed-rho-1.2":
         fail("E3 does not contain the paired-change schema")
     if (
         e3_meta.get("paired_change_threshold_search_allowed") is not False
         or e3_meta.get("paired_change_zero_threshold") != 0.0
+        or e3_meta.get("robustness_audit_post_freeze") is not True
+        or e3_meta.get("robustness_audit_threshold_search_allowed") is not False
         or e3_meta.get("absolute_calibration_scope") != "model-family-specific"
     ):
-        fail("E3 paired-change/family-calibration contract changed")
+        fail("E3 paired-change/robustness-audit/family-calibration contract changed")
 
     if e3_meta.get("severity_search_allowed") is not False or e3_meta.get("rho_unique_values") != [0.08]:
         fail("E3 must be a fixed-rho, no-severity-search boundary test")
@@ -3155,6 +3649,75 @@ def check_public_v1_remediation_artifacts() -> None:
             for value, target in zip(observed, expected)
         ):
             fail(f"E3 paired-change bootstrap interval changed: {field}")
+
+
+    audit = paired["lewm_robustness_audit"]
+    exact = audit["exact_randomization"]
+    if (
+        exact.get("block_count") != 12
+        or exact.get("enumerated_assignments") != 4096
+        or not math.isclose(exact["observed_spearman"], 0.8641009119252958, abs_tol=1e-12)
+        or not math.isclose(exact["one_sided_p_value"], 0.000244140625, abs_tol=1e-15)
+        or not math.isclose(exact["two_sided_p_value"], 0.00048828125, abs_tol=1e-15)
+    ):
+        fail("E3 exact block sign-flip audit changed")
+    row_agreement = exact["row_level_signed_agreement"]
+    if row_agreement.get("successes") != 22 or row_agreement.get("trials") != 24:
+        fail("E3 signed-agreement count changed")
+
+    expected_deletion_spearman = {
+        "leave_one_task_out": [0.74754785387991, 0.8972639295879029],
+        "leave_one_training_seed_out": [0.7529411764705882, 0.9403976055841533],
+    }
+    for key, expected in expected_deletion_spearman.items():
+        observed = audit["deletion_stability"][key]["remaining_metric_range"][
+            "spearman"
+        ]
+        if any(
+            not math.isclose(float(value), target, abs_tol=1e-12)
+            for value, target in zip(observed, expected)
+        ):
+            fail(f"E3 deletion-stability Spearman range changed: {key}")
+
+    joint_selection = audit["selection_by_diagnostic"]["joint_score"]
+    for field, expected in (
+        ("choice_accuracy", 0.9166666666666666),
+        ("material_choice_accuracy", 1.0),
+        ("mean_regret_pp", 0.13888887500000013),
+        ("max_regret_pp", 2.333333000000003),
+    ):
+        if not math.isclose(float(joint_selection[field]), expected, abs_tol=1e-12):
+            fail(f"E3 joint selection audit changed: {field}")
+    failure_map = audit["joint_failure_map"]
+    if (
+        failure_map.get("count") != 2
+        or any(row.get("behavior_class") != "neutral" for row in failure_map["rows"])
+        or any(not math.isclose(row.get("delta_behavior"), 4.0, abs_tol=1e-12) for row in failure_map["rows"])
+        or any(not math.isclose(row.get("selection_regret_pp"), 0.0, abs_tol=1e-12) for row in failure_map["rows"])
+    ):
+        fail("E3 joint failure map changed")
+
+    incremental = audit["incremental_block_bootstrap"]
+    if (
+        incremental.get("block_count") != 12
+        or incremental.get("repetitions") != 5000
+        or incremental.get("seed") != 20260712
+    ):
+        fail("E3 incremental bootstrap contract changed")
+    for diagnostic in (
+        "encoder_q90",
+        "h1_q90",
+        "atr_h8_q90",
+        "time_shuffled_h8_q90",
+    ):
+        interval = incremental["comparisons"][diagnostic]["metrics"][
+            "delta_spearman_joint_minus_comparator"
+        ]["ci95"]
+        if not (float(interval[0]) <= 0.0 <= float(interval[1])):
+            fail(
+                "E3 must retain the no-unique-joint-increment boundary for "
+                f"{diagnostic}"
+            )
 
     e4 = checked_external("paper1/results/external_validation/target_view_frozen_summary.json")
     e4_meta = e4["metadata"]
@@ -3301,7 +3864,9 @@ def check_public_v1_remediation_artifacts() -> None:
 def main() -> int:
     checks = [
         ("artifacts", check_artifacts),
+        ("paired multi-severity protocol", check_paired_multiseverity_protocol),
         ("public-v1 remediation artifacts", check_public_v1_remediation_artifacts),
+        ("claim-aligned three-pillar evidence", check_claim_aligned_three_pillar_evidence),
         ("forbidden text", check_forbidden_text),
         ("appendix internal heading gate", check_appendix_internal_heading_gate),
         ("visual and text structure", check_visual_text_structure),

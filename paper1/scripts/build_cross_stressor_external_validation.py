@@ -81,6 +81,7 @@ PAIRED_CHANGE_DIAGNOSTICS = (
 )
 PAIRED_CHANGE_BOOTSTRAP_SEED = 20260711
 PAIRED_CHANGE_BOOTSTRAP_REPETITIONS = 5000
+PAIRED_CHANGE_INCREMENTAL_BOOTSTRAP_SEED = 20260712
 FIXED_FIELDS = (
     "model_family",
     "training_seed_or_family_id",
@@ -1217,6 +1218,272 @@ def _paired_change_diagnostics(
     return result
 
 
+def _paired_blocks(
+    rows: Sequence[Mapping[str, Any]],
+) -> dict[tuple[str, str], list[Mapping[str, Any]]]:
+    _require(bool(rows), "paired audit requires at least one row")
+    _require(
+        all(row["model_family"] == "LeWM" for row in rows),
+        "paired block audit is defined on the LeWM replication set",
+    )
+    groups: dict[tuple[str, str], list[Mapping[str, Any]]] = defaultdict(list)
+    for row in rows:
+        groups[(str(row["task"]), str(row["training_seed_or_family_id"]))].append(row)
+    _require(
+        all(
+            len(group) == 2
+            and {str(row["stressor_family"]) for row in group} == set(STRESSORS)
+            for group in groups.values()
+        ),
+        "each paired block must contain exactly one blur and one resize row",
+    )
+    return groups
+
+
+def _selection_summary(
+    rows: Sequence[Mapping[str, Any]],
+    *,
+    field: str,
+    direction: float,
+) -> dict[str, Any]:
+    """Evaluate reference-versus-endpoint checkpoint choice without fitting."""
+    _require(bool(rows), "selection audit requires at least one row")
+    _require(direction in {-1.0, 1.0}, "selection direction must be +/-1")
+    scores = [direction * float(row[field]) for row in rows]
+    choose_endpoint = [score > 0.0 for score in scores]
+    behavior = [float(row["delta_behavior"]) for row in rows]
+    regrets: list[float] = []
+    selected_scores: list[float] = []
+    oracle_scores: list[float] = []
+    for row, endpoint_selected in zip(rows, choose_endpoint):
+        base = float(row["base_stressed_score"])
+        endpoint = float(row["endpoint_stressed_score"])
+        selected = endpoint if endpoint_selected else base
+        oracle = max(base, endpoint)
+        selected_scores.append(selected)
+        oracle_scores.append(oracle)
+        regrets.append(oracle - selected)
+
+    comparable = [
+        (delta, selected)
+        for delta, selected in zip(behavior, choose_endpoint)
+        if delta != 0.0
+    ]
+    material = [
+        (delta, selected)
+        for delta, selected in comparable
+        if abs(delta) >= 5.0
+    ]
+
+    def choice_accuracy(items: Sequence[tuple[float, bool]]) -> float | None:
+        if not items:
+            return None
+        return sum((delta > 0.0) == selected for delta, selected in items) / len(items)
+
+    return {
+        "n": len(rows),
+        "decision_rule": "select endpoint iff oriented diagnostic change > 0",
+        "comparable_n": len(comparable),
+        "choice_accuracy": choice_accuracy(comparable),
+        "material_change_threshold_pp": 5.0,
+        "material_comparable_n": len(material),
+        "material_choice_accuracy": choice_accuracy(material),
+        "zero_regret_rate": sum(regret == 0.0 for regret in regrets) / len(regrets),
+        "mean_regret_pp": _mean(regrets),
+        "median_regret_pp": statistics.median(regrets),
+        "q90_regret_pp": _quantile(regrets, 0.90),
+        "max_regret_pp": max(regrets),
+        "selected_mean_stressed_score": _mean(selected_scores),
+        "oracle_mean_stressed_score": _mean(oracle_scores),
+    }
+
+
+def _joint_failure_map(
+    rows: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    failures: list[dict[str, Any]] = []
+    for row in rows:
+        prediction = float(row["delta_joint_score"]) > 0.0
+        truth = bool(row["positive_transfer_label"])
+        if prediction == truth:
+            continue
+        base = float(row["base_stressed_score"])
+        endpoint = float(row["endpoint_stressed_score"])
+        selected = endpoint if prediction else base
+        failures.append(
+            {
+                "error_type": "false_positive" if prediction else "false_negative",
+                "task": row["task"],
+                "training_seed_or_family_id": row["training_seed_or_family_id"],
+                "stressor_family": row["stressor_family"],
+                "behavior_class": row["behavior_class"],
+                "delta_behavior": float(row["delta_behavior"]),
+                "clean_score_drop": float(row["clean_score_drop"]),
+                "delta_joint_score": float(row["delta_joint_score"]),
+                "selection_regret_pp": max(base, endpoint) - selected,
+            }
+        )
+    return failures
+
+
+def _deletion_stability(
+    rows: Sequence[Mapping[str, Any]],
+    *,
+    group_field: str,
+) -> dict[str, Any]:
+    """Report deletion sensitivity; no model or threshold is fitted in a fold."""
+
+    def compact(group: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+        metrics = _delta_metric_summary(
+            group,
+            field="delta_joint_score",
+            direction=1.0,
+        )
+        selection = _selection_summary(
+            group,
+            field="delta_joint_score",
+            direction=1.0,
+        )
+        return {
+            "n": len(group),
+            "balanced_accuracy": metrics["balanced_accuracy"],
+            "auprc": metrics["auprc"],
+            "spearman": metrics[
+                "spearman_delta_behavior_vs_oriented_delta_score"
+            ],
+            "signed_agreement": metrics[
+                "signed_agreement_delta_behavior_vs_oriented_delta_score"
+            ],
+            "choice_accuracy": selection["choice_accuracy"],
+            "mean_regret_pp": selection["mean_regret_pp"],
+        }
+
+    values = sorted({str(row[group_field]) for row in rows})
+    folds: list[dict[str, Any]] = []
+    for value in values:
+        held_out = [row for row in rows if str(row[group_field]) == value]
+        remaining = [row for row in rows if str(row[group_field]) != value]
+        folds.append(
+            {
+                "held_out_value": value,
+                "held_out": compact(held_out),
+                "remaining_after_deletion": compact(remaining),
+            }
+        )
+
+    range_fields = (
+        "balanced_accuracy",
+        "auprc",
+        "spearman",
+        "signed_agreement",
+        "choice_accuracy",
+        "mean_regret_pp",
+    )
+    ranges: dict[str, list[float] | None] = {}
+    for field in range_fields:
+        samples = [
+            float(fold["remaining_after_deletion"][field])
+            for fold in folds
+            if fold["remaining_after_deletion"][field] is not None
+        ]
+        ranges[field] = [min(samples), max(samples)] if samples else None
+    return {
+        "interpretation": (
+            "deletion stability of the fixed zero-threshold rule; not fitted "
+            "cross-validation"
+        ),
+        "group_field": group_field,
+        "folds": folds,
+        "remaining_metric_range": ranges,
+    }
+
+
+def _exact_binomial_upper_tail(successes: int, trials: int) -> float:
+    _require(0 <= successes <= trials, "invalid binomial counts")
+    _require(trials > 0, "binomial test requires trials")
+    return sum(math.comb(trials, k) for k in range(successes, trials + 1)) / (
+        2**trials
+    )
+
+
+def _exact_randomization_audit(
+    rows: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Exact block sign-flip test under a blockwise sign-symmetry null."""
+    groups = _paired_blocks(rows)
+    block_keys = sorted(groups)
+    ordered_groups = [
+        sorted(groups[key], key=lambda row: str(row["stressor_family"]))
+        for key in block_keys
+    ]
+    behavior = [
+        float(row["delta_behavior"])
+        for group in ordered_groups
+        for row in group
+    ]
+    oriented = [
+        float(row["delta_joint_score"])
+        for group in ordered_groups
+        for row in group
+    ]
+    observed = _spearman(behavior, oriented)
+    _require(observed is not None, "observed Spearman correlation is undefined")
+
+    null_statistics: list[float] = []
+    for mask in range(1 << len(block_keys)):
+        randomized: list[float] = []
+        for block_index, group in enumerate(ordered_groups):
+            sign = -1.0 if mask & (1 << block_index) else 1.0
+            randomized.extend(
+                sign * float(row["delta_joint_score"]) for row in group
+            )
+        statistic = _spearman(behavior, randomized)
+        _require(statistic is not None, "randomized Spearman correlation is undefined")
+        null_statistics.append(float(statistic))
+
+    tolerance = 1e-12
+    comparable = [
+        (left, right)
+        for left, right in zip(behavior, oriented)
+        if left != 0.0 and right != 0.0
+    ]
+    agreement_count = sum((left > 0.0) == (right > 0.0) for left, right in comparable)
+    return {
+        "primary_test": "exact task-x-training-seed block sign-flip test",
+        "null_hypothesis": (
+            "joint diagnostic-change signs are blockwise sign-symmetric relative "
+            "to behavior changes"
+        ),
+        "block_count": len(block_keys),
+        "enumerated_assignments": len(null_statistics),
+        "observed_spearman": observed,
+        "one_sided_p_value": sum(
+            value >= observed - tolerance for value in null_statistics
+        )
+        / len(null_statistics),
+        "two_sided_p_value": sum(
+            abs(value) >= abs(observed) - tolerance for value in null_statistics
+        )
+        / len(null_statistics),
+        "null_spearman_ci95": [
+            _quantile(null_statistics, 0.025),
+            _quantile(null_statistics, 0.975),
+        ],
+        "row_level_signed_agreement": {
+            "successes": agreement_count,
+            "trials": len(comparable),
+            "one_sided_exact_binomial_p_value": _exact_binomial_upper_tail(
+                agreement_count,
+                len(comparable),
+            ),
+            "dependence_warning": (
+                "row-level binomial calculation is descriptive; the block sign-"
+                "flip test is primary"
+            ),
+        },
+    }
+
+
 def _quantile(values: Sequence[float], probability: float) -> float:
     _require(bool(values), "cannot compute an empty quantile")
     _require(0.0 <= probability <= 1.0, "quantile probability must be in [0,1]")
@@ -1241,6 +1508,171 @@ def _bootstrap_interval(
         "bootstrap_median": _quantile(values, 0.50),
         "ci95": [_quantile(values, 0.025), _quantile(values, 0.975)],
         "valid_repetitions": len(values),
+    }
+
+
+def _paired_incremental_bootstrap(
+    rows: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Paired block-bootstrap contrasts between joint and component diagnostics."""
+    _require(len(rows) == 24, "incremental audit expects 24 LeWM rows")
+    groups = _paired_blocks(rows)
+    _require(len(groups) == 12, "incremental audit expects 12 LeWM blocks")
+    block_keys = sorted(groups)
+    comparators = [
+        (key, display_name, field, direction)
+        for key, display_name, field, direction in PAIRED_CHANGE_DIAGNOSTICS
+        if key != "joint_score"
+    ]
+
+    joint_observed = _delta_metric_summary(
+        rows,
+        field="delta_joint_score",
+        direction=1.0,
+    )
+    joint_selection = _selection_summary(
+        rows,
+        field="delta_joint_score",
+        direction=1.0,
+    )
+    observed: dict[str, dict[str, float | None]] = {}
+    samples: dict[str, dict[str, list[float]]] = {}
+    for key, _display_name, field, direction in comparators:
+        comparator = _delta_metric_summary(rows, field=field, direction=direction)
+        comparator_selection = _selection_summary(
+            rows,
+            field=field,
+            direction=direction,
+        )
+        observed[key] = {
+            "delta_spearman_joint_minus_comparator": (
+                float(
+                    joint_observed[
+                        "spearman_delta_behavior_vs_oriented_delta_score"
+                    ]
+                )
+                - float(
+                    comparator[
+                        "spearman_delta_behavior_vs_oriented_delta_score"
+                    ]
+                )
+            ),
+            "delta_balanced_accuracy_joint_minus_comparator": (
+                None
+                if joint_observed["balanced_accuracy"] is None
+                or comparator["balanced_accuracy"] is None
+                else float(joint_observed["balanced_accuracy"])
+                - float(comparator["balanced_accuracy"])
+            ),
+            "delta_choice_accuracy_joint_minus_comparator": (
+                None
+                if joint_selection["choice_accuracy"] is None
+                or comparator_selection["choice_accuracy"] is None
+                else float(joint_selection["choice_accuracy"])
+                - float(comparator_selection["choice_accuracy"])
+            ),
+            "mean_regret_reduction_pp_comparator_minus_joint": (
+                float(comparator_selection["mean_regret_pp"])
+                - float(joint_selection["mean_regret_pp"])
+            ),
+        }
+        samples[key] = {metric: [] for metric in observed[key]}
+
+    rng = random.Random(PAIRED_CHANGE_INCREMENTAL_BOOTSTRAP_SEED)
+    for _ in range(PAIRED_CHANGE_BOOTSTRAP_REPETITIONS):
+        sampled_rows: list[Mapping[str, Any]] = []
+        for _block in block_keys:
+            sampled_rows.extend(groups[block_keys[rng.randrange(len(block_keys))]])
+
+        joint_metric = _delta_metric_summary(
+            sampled_rows,
+            field="delta_joint_score",
+            direction=1.0,
+        )
+        joint_choice = _selection_summary(
+            sampled_rows,
+            field="delta_joint_score",
+            direction=1.0,
+        )
+        for key, _display_name, field, direction in comparators:
+            comparator_metric = _delta_metric_summary(
+                sampled_rows,
+                field=field,
+                direction=direction,
+            )
+            comparator_choice = _selection_summary(
+                sampled_rows,
+                field=field,
+                direction=direction,
+            )
+            bootstrap_values: dict[str, float | None] = {
+                "delta_spearman_joint_minus_comparator": (
+                    None
+                    if joint_metric[
+                        "spearman_delta_behavior_vs_oriented_delta_score"
+                    ]
+                    is None
+                    or comparator_metric[
+                        "spearman_delta_behavior_vs_oriented_delta_score"
+                    ]
+                    is None
+                    else float(
+                        joint_metric[
+                            "spearman_delta_behavior_vs_oriented_delta_score"
+                        ]
+                    )
+                    - float(
+                        comparator_metric[
+                            "spearman_delta_behavior_vs_oriented_delta_score"
+                        ]
+                    )
+                ),
+                "delta_balanced_accuracy_joint_minus_comparator": (
+                    None
+                    if joint_metric["balanced_accuracy"] is None
+                    or comparator_metric["balanced_accuracy"] is None
+                    else float(joint_metric["balanced_accuracy"])
+                    - float(comparator_metric["balanced_accuracy"])
+                ),
+                "delta_choice_accuracy_joint_minus_comparator": (
+                    None
+                    if joint_choice["choice_accuracy"] is None
+                    or comparator_choice["choice_accuracy"] is None
+                    else float(joint_choice["choice_accuracy"])
+                    - float(comparator_choice["choice_accuracy"])
+                ),
+                "mean_regret_reduction_pp_comparator_minus_joint": (
+                    float(comparator_choice["mean_regret_pp"])
+                    - float(joint_choice["mean_regret_pp"])
+                ),
+            }
+            for metric, value in bootstrap_values.items():
+                if value is not None:
+                    samples[key][metric].append(float(value))
+
+    return {
+        "estimand": (
+            "joint minus comparator for association/classification/choice; "
+            "comparator minus joint for regret so positive favors joint"
+        ),
+        "resampling_unit": "task x independently trained LeWM checkpoint seed",
+        "stressors_retained_within_block": sorted(STRESSORS),
+        "block_count": len(block_keys),
+        "repetitions": PAIRED_CHANGE_BOOTSTRAP_REPETITIONS,
+        "seed": PAIRED_CHANGE_INCREMENTAL_BOOTSTRAP_SEED,
+        "comparisons": {
+            key: {
+                "display_name": display_name,
+                "metrics": {
+                    metric: _bootstrap_interval(
+                        observed[key][metric],
+                        samples[key][metric],
+                    )
+                    for metric in observed[key]
+                },
+            }
+            for key, display_name, _field, _direction in comparators
+        },
     }
 
 
@@ -1308,6 +1740,46 @@ def _lewm_paired_change_bootstrap(
     }
 
 
+def _paired_robustness_audit(
+    rows: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    _require(len(rows) == 24, "paired robustness audit expects 24 LeWM rows")
+    _require(len(_paired_blocks(rows)) == 12, "paired robustness audit expects 12 blocks")
+    selection_by_diagnostic = {
+        key: {
+            "display_name": display_name,
+            **_selection_summary(rows, field=field, direction=direction),
+        }
+        for key, display_name, field, direction in PAIRED_CHANGE_DIAGNOSTICS
+    }
+    failures = _joint_failure_map(rows)
+    return {
+        "scope": (
+            "fixed zero-threshold LeWM paired comparison across blur and resize; "
+            "all analyses are post-freeze and fit no stressor-specific threshold"
+        ),
+        "row_count": len(rows),
+        "block_count": 12,
+        "exact_randomization": _exact_randomization_audit(rows),
+        "deletion_stability": {
+            "leave_one_task_out": _deletion_stability(
+                rows,
+                group_field="task",
+            ),
+            "leave_one_training_seed_out": _deletion_stability(
+                rows,
+                group_field="training_seed_or_family_id",
+            ),
+        },
+        "joint_failure_map": {
+            "count": len(failures),
+            "rows": failures,
+        },
+        "selection_by_diagnostic": selection_by_diagnostic,
+        "incremental_block_bootstrap": _paired_incremental_bootstrap(rows),
+    }
+
+
 def _paired_change_summary(
     rows: Sequence[Mapping[str, Any]],
 ) -> dict[str, Any]:
@@ -1349,6 +1821,9 @@ def _paired_change_summary(
         },
         "by_model_family": by_model_family,
         "lewm_block_bootstrap": _lewm_paired_change_bootstrap(
+            [row for row in rows if row["model_family"] == "LeWM"]
+        ),
+        "lewm_robustness_audit": _paired_robustness_audit(
             [row for row in rows if row["model_family"] == "LeWM"]
         ),
     }
@@ -1510,6 +1985,78 @@ def _write_paired_change_table(
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
+def _write_robustness_audit_table(
+    path: Path,
+    *,
+    paired_change: Mapping[str, Any],
+    force: bool,
+) -> None:
+    if path.exists() and not force:
+        raise FileExistsError(path)
+    lewm_metrics = paired_change["by_model_family"]["LeWM"]["diagnostics"]
+    audit = paired_change["lewm_robustness_audit"]
+    selection = audit["selection_by_diagnostic"]
+    exact = audit["exact_randomization"]
+    task_range = audit["deletion_stability"]["leave_one_task_out"][
+        "remaining_metric_range"
+    ]["spearman"]
+    seed_range = audit["deletion_stability"]["leave_one_training_seed_out"][
+        "remaining_metric_range"
+    ]["spearman"]
+
+    def table_row(key: str) -> str:
+        metrics = lewm_metrics[key]
+        selected = selection[key]
+        return (
+            f"{metrics['display_name']} & "
+            f"{_tex_metric(metrics['balanced_accuracy'])} & "
+            f"{_tex_metric(metrics['auprc'])} & "
+            f"{_tex_metric(metrics['spearman_delta_behavior_vs_oriented_delta_score'])} & "
+            f"{_tex_metric(selected['choice_accuracy'])} & "
+            f"{_tex_metric(selected['mean_regret_pp'])} \\\\"
+        )
+
+    task_text = (
+        "--"
+        if task_range is None
+        else f"[{float(task_range[0]):.3f},{float(task_range[1]):.3f}]"
+    )
+    seed_text = (
+        "--"
+        if seed_range is None
+        else f"[{float(seed_range[0]):.3f},{float(seed_range[1]):.3f}]"
+    )
+    lines = [
+        r"\begin{table}[H]",
+        r"\centering",
+        (
+            r"\caption{Cross-stressor component comparison on all 24 LeWM blur/resize "
+            r"pairs. Choice accuracy selects the endpoint iff the oriented "
+            r"diagnostic change is positive; regret is stressed-success loss "
+            r"against the better of base and endpoint. The exact 12-block "
+            f"sign-flip test gives one-sided $p={float(exact['one_sided_p_value']):.4f}$. "
+            f"Remaining-set Spearman ranges after deleting one task and one "
+            f"training seed are {task_text} and {seed_text}. "
+            r"Competitive component rows show that paired ordering transfers "
+            r"without establishing a unique action-specific mechanism.}"
+        ),
+        r"\label{tab:cross-stressor-robustness-audit}",
+        r"\footnotesize",
+        r"\setlength{\tabcolsep}{3pt}",
+        r"\begin{tabular}{lrrrrr}",
+        r"\toprule",
+        r"Diagnostic & BA & AUPRC & $\rho_s$ & choice acc. & regret (pp) \\",
+        r"\midrule",
+        *[table_row(key) for key, _name, _field, _direction in PAIRED_CHANGE_DIAGNOSTICS],
+        r"\bottomrule",
+        r"\end{tabular}",
+        r"\end{table}",
+        "",
+    ]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
 def _plot(path: Path, rows: Sequence[Mapping[str, Any]], *, force: bool) -> None:
     if path.exists() and not force:
         raise FileExistsError(path)
@@ -1644,6 +2191,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=ROOT / "paper1/tables/table_cross_stressor_paired_change.tex",
     )
     parser.add_argument(
+        "--audit-table",
+        type=Path,
+        default=ROOT / "paper1/tables/table_cross_stressor_robustness_audit.tex",
+    )
+    parser.add_argument(
         "--figure",
         type=Path,
         default=ROOT / "assets/paper1_figs/fig_cross_stressor_fixed_rho.png",
@@ -1709,7 +2261,7 @@ def main() -> int:
     source_hashes["builder"] = _sha256(script_path)
     summary = {
         "metadata": {
-            "schema_version": "paper1-cross-stressor-fixed-rho-1.1",
+            "schema_version": "paper1-cross-stressor-fixed-rho-1.2",
             "created_utc": datetime.now(timezone.utc).isoformat(),
             "code_commit": _git_commit(),
             "status": (
@@ -1722,6 +2274,8 @@ def main() -> int:
             "severity_search_allowed": False,
             "paired_change_threshold_search_allowed": False,
             "paired_change_zero_threshold": 0.0,
+            "robustness_audit_post_freeze": True,
+            "robustness_audit_threshold_search_allowed": False,
             "absolute_calibration_scope": "model-family-specific",
             "analysis_interface_portability": "LeWM and PLDM",
             "behavior_loaded_after_frozen_diagnostic_scoring": True,
@@ -1784,6 +2338,11 @@ def main() -> int:
     _write_paired_change_table(
         args.table,
         absolute_lewm=absolute_lewm,
+        paired_change=paired_change,
+        force=args.force,
+    )
+    _write_robustness_audit_table(
+        args.audit_table,
         paired_change=paired_change,
         force=args.force,
     )

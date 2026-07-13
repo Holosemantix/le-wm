@@ -1,22 +1,22 @@
 \begin{table}[H]
 \centering
-\caption{Claim-to-evidence map for the paired robustness analysis. Mathematical interface portability, family calibration, and within-family paired comparison are distinct claims.}
+\caption{Claim-to-evidence map for the three-pillar ACPC audit. Exact mathematical implications, empirical increment, numerical calibration, and behavior are separate evidence types.}
 \label{tab:theory-evidence-map}
 \footnotesize
 \setlength{\tabcolsep}{3pt}
 \renewcommand{\arraystretch}{1.08}
-\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.20\linewidth}>{\raggedright\arraybackslash}p{0.23\linewidth}>{\raggedright\arraybackslash}p{0.27\linewidth}>{\raggedright\arraybackslash}X}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.20\linewidth}>{\raggedright\arraybackslash}p{0.24\linewidth}>{\raggedright\arraybackslash}p{0.27\linewidth}>{\raggedright\arraybackslash}X}
 \toprule
-Theoretical quantity & Empirical audit & Main observation & Scope \\
+Object & Four-task audit & Main observation & Boundary \\
 \midrule
-$R_\sigma$ radius tail & ATR q90 and normalized ATR & Recovered rows occupy low-ATR regions; endpoint ATR falls on all tasks. & q90 is a fixed diagnostic tail summary, not the theorem's calibrated $\alpha$. \\
-Covariance-aware $J_{G_{\mathbf a}}J_E$ trace & Matched-map finite differences and exact JVP/Hutchinson & Endpoint/base trace ratios are $0.0027/0.0087/0.0065/0.0287$ across the four tasks. & Finite-range calibration is nonlinear for base Reacher/Cube; no global or closed-loop guarantee. \\
-Candidate-wise sharp slack & 10,800-history fixed-pool audit & Sharp coverage is $0.700$ versus coarse coverage $0.478$; observed overall flip rate is $0.208$. & Exact only for the evaluated ordered pool; certified-zero flips are an invariant, not independent evidence. \\
-Candidate instability & Sharp-slack risk--coverage curve & Observed flip rate falls to $0.022$ at $75\%$ coverage and zero at exact sharp-pass coverage. & Descriptive selection by slack, not probability calibration or adaptive CEM. \\
-Complete proxy collapse & Positive-margin SMPR controls & Constant collapse is rejected in $4/4$ MVE rows; the identical clean/noisy positive control passes $4/4$. & Action permutation has zero effect and task-label increment is not established. \\
-Analysis-interface portability & Identical paired-radius/guard pipeline on LeWM and PLDM & Both architectures produce complete paired diagnostic artifacts without retraining a probe. & Requires inspectable representations/predictions; PLDM has one training family. \\
-Family-calibrated absolute screening & E1/E2 and unchanged LeWM blur/resize gate & E1 reaches $0.945/0.965$; LeWM blur/resize precision/recall are $1.000/0.467$; PLDM shared calibration is weak. & Thresholds are not claimed to be cross-family constants. \\
-Within-family paired comparison & All 24 LeWM blur/resize base-to-endpoint pairs & One $\Delta S>0$ rule reaches $0.889/0.974$ and Spearman $0.864$. & Requires a reference checkpoint; two stressors at one severity, not universal corruption transfer. \\
+Target-free future-error bound, \Cref{thm:target-free-error-drift} & Action-matched held-out futures; logged H8 and candidate H5 & Zero numerical violations in all task$\times$seed$\times$role cells. & Mathematical invariant/implementation check, not an independent success count. \\
+Correct action/horizon information & Correct H8 versus H1 and zero/shuffle/time H8 under common covariates & Fragile logged track passes $4/4$ tasks in both non-CAL seeds; absolute reduction is $56.5\%$ versus H1 and $51.9\%$ versus best control. & Seed3073 includes DEV provenance; endpoint and candidate increment are not universal. \\
+Conditional radius-to-cost link & Same $K=16$ planner-query pool and simulator futures & Candidate H5 adds material information on TwoRoom/PushT, but not Reacher/Cube. & Lipschitz constant is not globally calibrated; conditional bridge only. \\
+Ordered-pool exact/sharp conditions & 10,800-history legacy fixed-pool audit & Sharp coverage is $0.700$; certified-pass flips are zero by deterministic implication. & Already evaluated ordered pool, not unseen/adaptive CEM or a cheap pre-screen. \\
+Composed local sensitivity & Matched finite differences and covariance-aware JVP/Hutchinson & Endpoint/base composed-trace ratios are $0.0027/0.0087/0.0065/0.0287$ across the four tasks. & Finite-range nonlinearity is material for base Reacher/Cube; no behavior guarantee. \\
+P2 family-calibrated region & Seed3072 CAL $\rightarrow$ seeds3073/3074 TEST & BA/AUPRC $0.945/0.965$; leave-one-task BA remains $0.924$--$0.956$. & Checkpoint/block screening, not a deterministic single-frame or cross-family threshold. \\
+P3 frozen stressor transfer & Gaussian-only CAL $\rightarrow$ all LeWM blur/resize pairs & Endpoint-gate precision/recall $1.000/0.467$; paired zero rule BA/AUPRC $0.889/0.974$. & Outcome is pair-derived positive transfer, not absolute stability; paired scoring requires a reference; two stressors at one severity. \\
+Collapse/behavior boundary & SMPR controls, failed repair, and closed-loop evaluation & Complete constant collapse is rejected; behavior supplies the stable/fragile labels. & Progressive collapse and stable-but-wrong behavior remain possible. \\
 \bottomrule
 \end{tabularx}
 \end{table}

@@ -92,22 +92,22 @@
   \newcommand{\paperauthors}{\arxivauthors}
 \fi
 
-\title{\textbf{Paired Latent Robustness Diagnostics\\Across Visual Stressors\\in World Models}}
+\title{\textbf{Target-Free Action-Conditioned Predictive Diagnostics\\for Visually Stressed World Models}}
 \author{\paperauthors}
 \date{July 2026}
 \hypersetup{
-  pdftitle={Paired Latent Robustness Diagnostics Across Visual Stressors in World Models},
-  pdfkeywords={visual world models, paired robustness diagnostics, model-family calibration, visual stressors, fixed-pool certificates}
+  pdftitle={Target-Free Action-Conditioned Predictive Diagnostics for Visually Stressed World Models},
+  pdfkeywords={visual world models, predictive stability, action-conditioned diagnostics, calibration transfer, visual corruption}
 }
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Latent prediction is not by itself a closed-loop robustness guarantee. We develop a paired latent robustness analysis for frozen world models: clean/corrupted histories are propagated through an inspectable predictive map, summarized by a rollout-radius tail (ATR) and positive-margin proxy guard (SMPR), and related to fixed-pool planner margins. The definitions and analysis interface do not assume a particular latent-world-model architecture, but numerical calibration need not transfer across model families. A joint gate calibrated on one LeWM Gaussian sweep reaches balanced accuracy/AUPRC $0.945/0.965$ on two held-out LeWM training seeds. Applied unchanged to all 24 LeWM blur/resize base-to-endpoint pairs, this absolute gate is conservative ($0.733/0.856$, precision $1.000$, recall $0.467$). For relative comparison, one untuned rule---endpoint-minus-base joint diagnostic change greater than zero---is shared across blur and resize and reaches $0.889/0.974$, with Spearman correlation $0.864$ between diagnostic and closed-loop robustness changes (12-block bootstrap 95\% interval $[0.641,0.932]$). The same pipeline is instantiated on one PLDM training family, but the LeWM absolute thresholds transfer weakly ($0.684/0.541$), supporting framework portability rather than shared calibration. A sharp candidate-wise condition covers $70.0\%$ of 10,800 sampled fixed-pool histories. Encoder, one-step, and action/time controls remain competitive, so the evidence supports family-calibrated absolute screening and within-family cross-stressor paired comparison, not a universal absolute selector or an empirically necessary long-horizon action mechanism.
+Visual world models can fail under visual corruption, yet a deployment-time diagnostic may have neither the true future nor a reliable planner cost. We introduce Action-Conditioned Predictive Consistency (ACPC), a post-hoc diagnostic that propagates nominal and perturbed histories under the same action sequence. The resulting rollout radius upper-bounds, sample by sample, the change in prediction error to any action-matched future. On four control tasks, correct-action eight-step features reduce held-out absolute future-drift mean absolute error by $56.5\%$ relative to one-step features (95\% cluster-bootstrap interval $[51.1,61.2]\%$) and by $51.9\%$ relative to the strongest action/time-destroyed control ($[45.0,56.6]\%$). A region calibrated on LeWM seed 3072 reaches $0.945$ balanced accuracy on two held-out training seeds; without stressor-specific refitting, a paired rule reaches $0.889$ balanced accuracy and $0.864$ Spearman correlation across blur and resize. ACPC therefore supports target-free mechanism analysis and family-local checkpoint calibration, but not universal thresholds, absolute robustness certification, or closed-loop guarantees.
 
 \smallskip
-\noindent\textbf{Keywords:} visual world models; paired robustness diagnostics; model-family calibration; visual stressors; fixed-pool certificates.
+\noindent\textbf{Keywords:} visual world models; predictive stability; action-conditioned diagnostics; calibration transfer; visual corruption.
 \end{abstract}
 
 \smallskip
@@ -120,589 +120,218 @@ Latent prediction is not by itself a closed-loop robustness guarantee. We develo
 %% ===========================================================================
 \section{Introduction}\label{sec:intro}
 
-JEPAs predict future representations instead of reconstructing pixels, which can reduce pressure to encode high-magnitude irrelevant visual detail~\cite{assran2023ijepa,bardes2024vjepa,vanassel2025jointembeddingreconstruction}. For control, however, ``irrelevant'' is action- and transition-dependent. A representation may ignore a background texture but must preserve a contact pose, doorway state, or object-goal relation if that distinction changes the next useful action. Encoder-level invariance is therefore an incomplete robustness target: planning uses the model's \emph{predictions}, so the robustness question should be asked after action-conditioned rollout.
+Latent-predictive world models avoid reconstructing every pixel, but this does not by itself make their predictions robust. For control, nuisance variation is action dependent: a texture may be irrelevant, whereas a contact pose, doorway state, or object--goal relation must remain distinguishable if it changes the useful action. Encoder invariance is therefore only an upstream signal. The operational question is whether a same-state visual perturbation remains small after the encoder shift is propagated through the action-conditioned predictor.
 
-We separate two questions that are often conflated. \emph{Analysis-interface portability} asks whether the same paired-radius/margin construction can be instantiated for another inspectable world model. \emph{Calibration portability} asks whether the same numerical threshold remains valid despite different latent scales, objectives, and predictor geometry. Given a clean history and a visually perturbed history for the same underlying state, we propagate both through the model's predictive interface under a shared recorded action sequence and ask whether their futures remain close enough to preserve decisions from a fixed candidate pool. The construction is architecture-agnostic under this interface, while its calibration may be model-family-specific. We use ``ACPC'' only as shorthand for the paired-rollout instantiation; our ablations do not establish that correct-action conditioning or a long rollout is empirically necessary for checkpoint discrimination.
+This is a diagnostic study of frozen checkpoints, not a new robust-training method. ACPC pairs a nominal history with a visually perturbed view of the same state, applies one shared action sequence, and measures projected-rollout disagreement. Its value depends on three questions. \emph{Mechanism:} does the disagreement control an action-matched future-facing error? \emph{Calibration:} do thresholds fitted on one training seed transfer within a model family? \emph{Stressor transfer:} does the calibrated score retain useful ordering beyond the calibration corruption? We evaluate these questions separately so checkpoint classification accuracy cannot stand in for action or horizon specificity.
 
-The selective tension matters because consistency alone can be misleading. A collapsed model can make clean and corrupted views agree while erasing distinctions needed for planning. Conversely, a large encoder shift can be harmless if subsequent prediction contracts it before a planner cost changes. We therefore pair a same-state predictive-stability metric with a positive-margin state-proxy guard, then audit that guard with constant-collapse, label, neighbor, and action controls. Those controls support proxy-level correctness only: they do not show an incremental advantage of the task-derived labels or action sequence over their controls.
+We instantiate ACPC on LeWM~\cite{maes2026lewm} under Gaussian observation noise across TwoRoom, PushT, Reacher, and Cube. No-noise checkpoints remain strong on clean observations yet lose up to $74.56\pm5.55$ success points at evaluation noise $\sigma=0.08$. Full-sequence Gaussian augmentation recovers much of this performance and provides a controlled family of fragile and recovered checkpoints. This family lets us test future-drift mechanism, held-out-seed calibration, and blur/resize transfer with distinct evidence units.
 
-We instantiate this diagnostic with a fixed Gaussian intervention. Across PushT, TwoRoom, Reacher, and Cube, we evaluate no-noise LeWM~\cite{maes2026lewm} checkpoints and full-sequence input-side Gaussian-noise checkpoints over \stdmax{} $\in \{0.01,\dots,0.08\}$. The primary endpoint is observation-only Gaussian evaluation noise with the goal image kept clean. Across three independent LeWM training seeds, the no-noise baseline remains strong on clean observations but loses $74.56 \pm 5.55$ points on PushT and $41.00 \pm 1.44$ points on Reacher at evaluation noise $\sigma=0.08$. Test-time visual fragility is not new~\cite{kostrikov2020drq,yarats2022drqv2,hansen2021soda,vigmo}; our focus is what it reveals about fixed JEPA world-model checkpoints.
-
-Within LeWM, the evidence separates the two uses. The Gaussian-frozen absolute gate transfers strongly across training seeds and conservatively across blur/resize: it makes no false passes on the 24 cross-stressor pairs but misses robust endpoints. The relative paired rule instead asks whether a checkpoint improves its diagnostic score over a reference checkpoint under the tested stressor. One zero threshold on that change is shared by blur and resize and tracks the corresponding closed-loop robustness changes across tasks and training seeds. PLDM shows that the same analysis pipeline can be executed on another latent world-model family, while its weaker absolute-gate result shows why framework portability should not be confused with shared calibration.
-
-This paper makes three contributions. First, it defines a reproducible paired-radius/guard analysis interface and separates family-calibrated absolute screening from reference-based paired comparison; the construction applies to inspectable latent world models, while numerical thresholds are not assumed to be architecture-invariant. Second, it freezes the protocol on one LeWM Gaussian training seed and evaluates held-out LeWM seeds, all fixed-strength LeWM blur/resize pairs, one PLDM training family, and a failed repair. The cross-stressor analysis reports the single zero-threshold paired rule, continuous association, diagnostic baselines, and task--training-seed block uncertainty without stressor-specific retuning. Third, it gives candidate-wise coarse and sharp fixed-pool conditions and audits their coverage over 10,800 histories, then aligns ATR with covariance-aware JVP/finite-difference sensitivity. Encoder/H1/action/time controls and SMPR counterfactuals delimit the mechanism: they support a paired diagnostic family and fixed-pool interpretation, not empirical necessity of a long horizon, correct actions, or oracle semantics.
-
-%% ===========================================================================
+The contributions are:
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{A target-free predictive bound with a matched empirical test.} ACPC upper-bounds samplewise error change to any action-matched future. On all four tasks and both primary test seeds, the correct-action $H=8$ response improves future-drift prediction beyond $H=1$ and structure-destroyed $H=8$ controls.
+  \item \textbf{Within-family cross-seed calibration.} A joint radius/guard region fitted only on LeWM seed 3072 reaches balanced accuracy/AUPRC $0.945/0.965$ on the same four-task grid from independently trained seeds 3073/3074, with no threshold refit.
+  \item \textbf{Transfer beyond the calibration corruption.} One paired improvement rule transfers without stressor-specific refitting from Gaussian calibration to fixed blur and resize, reaching balanced accuracy/AUPRC $0.889/0.974$ and Spearman correlation $0.864$.
+\end{enumerate}
 \section{Related Work}\label{sec:related}
 
-This diagnostic sits between latent-prediction representation learning and robust visual-control methods. The related work is organized around three questions: what latent prediction promises, where augmentation-based invariance is insufficient for control, and how control-relevant representation work treats downstream predictive consequences.
+\paragraph{Latent-predictive world models.}
+JEPA~\cite{lecun2022path}, I-JEPA~\cite{assran2023ijepa}, and V-JEPA~\cite{bardes2024vjepa,assran2025vjepa2} learn by predicting latent targets rather than reconstructing pixels. LeWM~\cite{maes2026lewm}, our model family, stabilizes an end-to-end JEPA world model with SIGReg~\cite{eppspulley1983}. Theory explains why latent prediction can suppress nuisance or noisy features~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures,klindt2026lejepaworldmodel}, but does not make a learned checkpoint robust to every action-relevant visual shift.
 
-\subsection{Latent prediction and JEPA world models}
-JEPA~\cite{lecun2022path} predicts in latent space rather than reconstructing pixels; I-JEPA~\cite{assran2023ijepa} and the V-JEPA family~\cite{bardes2024vjepa,assran2025vjepa2,murlabadia2026vjepa21} extend this idea to images, video, and dense physical-world representations. LeWM~\cite{maes2026lewm}, our baseline, stabilizes an end-to-end JEPA world model with SIGReg~\cite{eppspulley1983}. PLDM~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting}, via \code{stable-worldmodel}~\cite{maes2026stableworldmodel}, provides related latent-dynamics planning context. LeJEPA theory~\cite{klindt2026lejepaworldmodel} studies latent-variable recovery and latent planning; our diagnostic asks whether learned visual world-model checkpoints give paired clean/noised views consistent action-conditioned predictions.
+\paragraph{Visual robustness and control-relevant representations.}
+Data augmentation methods such as DrQ/DrQ-v2~\cite{kostrikov2020drq,yarats2022drqv2} and SODA~\cite{hansen2021soda} improve visual control by changing training. ACPC is instead a post-hoc diagnostic for a frozen checkpoint. Its selective-consistency motivation is related to bisimulation and value-aware models, which preserve distinctions with different downstream control consequences~\cite{gelada2019deepmdp,zhang2021dbc,grimm2020valueequivalence,voelcker2025calibratedvalueaware,toso2026bisimjepa}. Our narrower intervention asks whether two views of the same state remain close after one shared action sequence while a proxy guard rejects gross representational collapse.
 
-\subsection{Invariance, augmentation, and visual robustness}
-Augmentation and joint-embedding losses impose invariances only when their training signal identifies the right nuisance factors~\cite{wang2020alignuniform,tamkin2023featuredropout,zhang2022rethinkaug}. Recent theory clarifies why latent prediction can help with nuisance or noisy features but also why it is not enough for control. Van Assel et al.~\cite{vanassel2025jointembeddingreconstruction} and Littwin et al.~\cite{littwin2024jepaavoidsnoisyfeatures} analyze representation-level effects; they do not address closed-loop action-conditioned rollout, candidate-cost stability, or the need to keep action-distinct states separable. Seq-JEPA~\cite{ghaemi2025seqjepa} addresses a related invariance--equivariance tension architecturally.
+\paragraph{Action and dynamics consistency diagnostics.}
+Recent work uses inverse probes, latent action decoding, cycle consistency, or generated-future compatibility to test action semantics~\cite{chen2026atm,zhang2026deltajepa,seo2026acid,ruan2026futurecompatible,wang2026groupactions}. MWM incorporates action-conditioned consistency during training~\cite{yan2026mwm}, whereas iKCE diagnoses kinematic long-horizon failures~\cite{schaefer2026kinematic}. ACPC instead intervenes on paired visual views of the same state and connects rollout disagreement to action-matched future-error drift; we do not claim priority for action consistency in general.
+\section{Target-Free Predictive Diagnostic}\label{sec:acpc}
 
-We do not train robust visual-control systems as competing baselines. DrQ/DrQ-v2~\cite{kostrikov2020drq,yarats2022drqv2}, SODA/DMC-GB~\cite{hansen2021soda}, DreamerV3~\cite{hafner2025dreamerv3}, TD-MPC2~\cite{hansen2024tdmpc2}, and ViGMO~\cite{vigmo} define future method-comparison axes; noisy/video JEPA variants~\cite{njepa2025,huang2026vjepa,usjepa2025} are representation-level context. ACPC is complementary: it tests whether same-state visual perturbations become equivalent after a fixed action intervention while action-, transition-, or cost-distinct cases remain discriminable.
+\subsection{Action-matched rollout radius}\label{sec:acpc-def}
 
-\subsection{Control-relevant predictive representations}
-Bisimulation merges states with equivalent reward and transition behavior. DeepMDP~\cite{gelada2019deepmdp}, DBC~\cite{zhang2021dbc}, bisimulation-regularized MPC~\cite{bsmpc}, and Bisim-JEPA~\cite{toso2026bisimjepa} use this principle to learn control-relevant representations. Value-equivalent and value-aware models~\cite{grimm2020valueequivalence,voelcker2025calibratedvalueaware} and VIBR~\cite{dupuis2023vibr} likewise emphasize downstream control consequences. Wang et al.~\cite{wang2026groupactions} formalize action-conditioned video world modeling as a group action with identity, inverse, and composition-consistency metrics. ReOI~\cite{chen2025reoi} treats visual distractor robustness in visual MPC through observation interventions for world-model action-outcome prediction. These lines show that downstream predictive consequences are already central to control-representation work. Our diagnostic instantiates that view for paired clean/noised JEPA latent-world-model rollouts: same-state noised and unperturbed views should agree after the same action sequence, while action-distinct transitions remain separable.
-
-Our use of ACPC is therefore narrower than an identifiability theorem, a learned bisimulation metric, or a robust MPC intervention. LeJEPA-style results motivate latent prediction and planning under latent recovery assumptions; bisimulation and value-aware models define task abstractions; group-action metrics test action faithfulness; ReOI modifies observation handling for robust visual MPC. This paper instead audits additive Gaussian pixel-noise pairs in frozen checkpoints, calibrates a fixed-candidate sufficient condition, and reports when simpler representation and one-step diagnostics are equally predictive.
-
-\subsection{Concurrent action-consistency diagnostics and methods}
-
-Several concurrent papers make action or dynamics consistency central, so we do not claim priority for that general idea. MWM trains action-conditioned rollout consistency and inference-consistent diffusion distillation for image-goal navigation~\cite{yan2026mwm}. ATM trains fresh inverse probes on real encoded and predicted transition domains~\cite{chen2026atm}; Delta-JEPA adds latent-difference action decoding during world-model training~\cite{zhang2026deltajepa}; and ACID adds inverse-dynamics cycle consistency to the decision-time planning cost~\cite{seo2026acid}. Ruan et al. diagnose action--state compatibility in generated World Action Model futures and identify static/background collapse as a boundary~\cite{ruan2026futurecompatible}. Sch{\"a}fer et al. instead diagnose kinematic rather than dynamic long-horizon imagination under a physical-regime perturbation~\cite{schaefer2026kinematic}. \Cref{tab:concurrent-comparison} makes the distinctions explicit.
-
-\begin{table*}[t]
-\centering
-\caption{Direct comparison with concurrent action/dynamics-consistency work. ``Paired view'' means a clean/corrupted same-state visual intervention; ``post-hoc'' means the world model is frozen. Our scope is distinguished by the paired visual stress and fixed-pool calibration, not by action consistency in general.}
-\label{tab:concurrent-comparison}
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}Xccc>{\raggedright\arraybackslash}X}
-\toprule
-Work & Primary object & Paired view & Post-hoc & Changes planner & Main scope \\
-\midrule
-MWM~\cite{yan2026mwm} & ACC/ICSD training objectives & no & no & no & navigation video generation and planning \\
-ATM~\cite{chen2026atm} & inverse-probe transfer matrix & no & yes & no & action-identifiability and within-task screening \\
-Delta-JEPA~\cite{zhang2026deltajepa} & latent-difference action decoder & no & no & no & action-sensitive, collapse-resistant training \\
-ACID~\cite{seo2026acid} & inverse-dynamics cycle residual & no & yes & yes & decision-time trajectory realizability \\
-Future Compatible~\cite{ruan2026futurecompatible} & generated action--state compatibility & no & yes & selection & World Action Model rollout reliability \\
-iKCE~\cite{schaefer2026kinematic} & kinematic-null deviation & no & yes & no & physical long-horizon failure diagnosis \\
-This work & visual paired radius and fixed-pool slack & yes & yes & no & frozen-checkpoint Gaussian stress calibration \\
-\bottomrule
-\end{tabularx}
-\end{table*}
-
-%% ===========================================================================
-\section{Paired Robustness Diagnostics and Calibration}\label{sec:acpc}
-
-This section separates the portability of the analysis interface from the portability of fitted numerical thresholds, then derives the objects used in the experiments. The ideal selective criterion combines same-state perturbation agreement with different-state separation. The implemented SMPR is only a programmatic proxy for the second requirement. The fixed-pool planning link applies to the predictive-rollout instantiation; encoder and one-step quantities remain empirical component baselines rather than theorem-equivalent substitutes.
-
-
-\subsection{Analysis portability and two modes of use}\label{sec:acpc-portability}
-
-The analysis requires paired clean/corrupted histories, an inspectable representation or predictive map, and a common diagnostic projection and normalization within each comparison. It does not require LeWM-specific layers or training losses. For a model family $\mathcal F$, stressor $\upsilon$, and checkpoint $\theta$, define a higher-is-better joint diagnostic score from family-calibrated radius and guard thresholds $t_R,t_M$:
+Let $h$ be a nominal observation--action history and $\tilde h$ a visually probed view of the same underlying state. A frozen encoder $E_\theta$ maps the histories to $z=E_\theta(h)$ and $\tilde z=E_\theta(\tilde h)$. Both branches are propagated by the predictor $F_\theta$ under the \emph{same} action sequence $\mathbf a=(a_0,\ldots,a_{H-1})$. For a task-relevant projection $\Pi$ and nonnegative weights $\sum_{k=1}^H\alpha_k=1$, define
 \begin{equation}
-  S_{\mathcal F,\upsilon}(\theta)
-  =
-  \min\!\left\{
-    \frac{t_R-\mathrm{ATR}_{\upsilon}(\theta)}{|t_R|+\varepsilon},
-    \frac{\mathrm{SMPR}_{\upsilon}(\theta)-t_M}{|t_M|+\varepsilon}
-  \right\}.
-  \label{eq:joint-diagnostic-score}
-\end{equation}
-This yields two distinct uses.
-\paragraph{Absolute screening.}
-The rule $S_{\mathcal F,\upsilon}(\theta)\ge0$ asks whether a single checkpoint passes the fitted radius and guard thresholds. Because representation scale, training objective, and predictor geometry can change across architectures, $t_R,t_M$ are calibration parameters of $\mathcal F$ rather than universal constants. Holding them fixed across held-out training seeds or stressors within a family is an empirical transfer test.
-\paragraph{Paired comparison.}
-For an endpoint checkpoint $\theta_1$ and a reference checkpoint $\theta_0$ from the same family, define
-\begin{equation}
-  \Delta S_{\mathcal F,\upsilon}(\theta_1;\theta_0)
-  =
-  S_{\mathcal F,\upsilon}(\theta_1)
-  -
-  S_{\mathcal F,\upsilon}(\theta_0).
-  \label{eq:paired-diagnostic-change}
-\end{equation}
-The natural rule $\Delta S>0$ asks only whether the endpoint improves the paired diagnostic under stressor $\upsilon$. It introduces no stressor-specific threshold, but it requires a reference checkpoint and does not certify that either checkpoint is absolutely robust. The experiments test one LeWM-calibrated score and this same zero threshold across blur and resize. PLDM is used to test whether the analysis can be instantiated on a second architecture; its one-family evidence is not used to claim shared cross-family calibration.
-
-\subsection{Paired rollout consistency and discriminability}\label{sec:acpc-def}
-
-Let $o_t$ be an unperturbed observation and $\tilde o_t = \tau(o_t)$ a visually perturbed view of the \emph{same} underlying state ($\tau$ is additive Gaussian pixel noise here, but the definitions are perturbation-agnostic). Let $h_t$ and $\tilde h_t$ be the corresponding observation--action histories, $E_\theta$ the encoder, and $F_\theta$ the action-conditioned latent predictor. Fix an action sequence $\mathbf a^H_t = a_{t:t+H-1}$ that is \emph{identical} on both branches. For compact notation below, $\mathbf a_{0:k-1}$ denotes the length-$k$ prefix of this sequence after re-indexing time at $t$, and we write
-\begin{equation}
-  z_t = E_\theta(h_t), \quad \tilde z_t = E_\theta(\tilde h_t), \qquad
-  \hat z_{t+k} = F_\theta^{k}(z_t, \mathbf a_{0:k-1}), \quad
-  \hat{\tilde z}_{t+k} = F_\theta^{k}(\tilde z_t, \mathbf a_{0:k-1}).
-  \label{eq:acpc-objects}
-\end{equation}
-Let $\Pi$ denote a \emph{task-relevant predictive projection} --- the full latent, a transition delta, goal-distance or cost features, or a learned projection --- into a Euclidean diagnostic space.  For nonnegative horizon weights satisfying $\sum_{k=1}^{H}\alpha_k=1$, define the tuple-valued projected rollout and its canonical weighted-stacked vectorization as
-\[
-  G_{\mathbf a}(z)
-  =\big(\Pi(F_\theta^1(z,\mathbf a)),\ldots,\Pi(F_\theta^H(z,\mathbf a))\big),
-  \qquad
-  \bar G_{\mathbf a}(z)
-  =\begin{bmatrix}
-  \sqrt{\alpha_1}\,\Pi(F_\theta^1(z,\mathbf a));\ \cdots;\
-  \sqrt{\alpha_H}\,\Pi(F_\theta^H(z,\mathbf a))
-  \end{bmatrix}.
-\]
-
-\paragraph{Action-conditioned predictive consistency.} For a same-state perturbation pair under the shared action sequence,
-\begin{equation}
-  \mathrm{ACPC}_H(o_t, \tilde o_t, \mathbf a)
-  = \left\|\bar G_{\mathbf a}(z_t)-\bar G_{\mathbf a}(\tilde z_t)\right\|_2 .
-  \label{eq:acpc-h}
-\end{equation}
-For the theoretical statements below, we use the induced horizon metric
-\begin{equation}
-  \begin{aligned}
-  d_H\big((u_1,\ldots,u_H),(v_1,\ldots,v_H)\big)
-  &= \left\|
-  \begin{bmatrix}
-  \sqrt{\alpha_1}(u_1-v_1);\ \cdots;\ \sqrt{\alpha_H}(u_H-v_H)
-  \end{bmatrix}
-  \right\|_2 \\
-  &= \left(\sum_{k=1}^{H}\alpha_k\|u_k-v_k\|_2^2\right)^{1/2},
-  \qquad \alpha_k\ge0,\quad \sum_{k=1}^{H}\alpha_k=1.
-  \end{aligned}
-  \label{eq:acpc-horizon-metric}
-\end{equation}
-so that \Cref{eq:acpc-h} is exactly the clean/perturbed projected-rollout distance under the shared action sequence.
-In this diagnostic framing, robustness corresponds to small $\mathrm{ACPC}_H$ together with action-relevant discriminability, not to the encoder distance $d(z_t, \tilde z_t)$ alone. Encoder geometry remains an indispensable first-stage risk signal: noisy views should stay in the same-state predictive basin and avoid crossing into task-distinct neighborhoods. The narrower point is that raw encoder distance alone is not a complete robustness criterion, because the effect of an encoder shift depends on local action-conditioned rollout sensitivity and candidate margins.
-
-\paragraph{Action-relevant discriminability.} Consistency must be \emph{selective}. Let $Y^{H}(s,\mathbf a)$ denote a task-relevant future signal that is external to the learned predictor --- simulator state, cost-to-go, inverse-dynamics label, contact/keyframe tag, or another diagnostic proxy available in the dataset. For two genuinely different states $s_i, s_j$ (with latents $z_i, z_j$) that admit an action sequence under which this external future signal diverges,
-\begin{equation}
-  \Delta^{H}_{\mathrm{dyn}}(s_i, s_j, \mathbf a)
-  = d_Y\!\big(Y^{H}(s_i, \mathbf a),\, Y^{H}(s_j, \mathbf a)\big) > m,
-  \label{eq:acpc-disc-dyn}
-\end{equation}
-the representation and predictions should keep them separable,
-\begin{equation}
-  d\!\big(\Psi(z_i),\, \Psi(z_j)\big) > m',
-  \label{eq:acpc-disc}
-\end{equation}
-where $\Psi$ is a discriminability projection, possibly action-conditioned (latent, predicted delta under $\mathbf a$, inverse-dynamics feature, cost feature, or rollout embedding), and $m, m' > 0$ are margins. Equations~\eqref{eq:acpc-h}--\eqref{eq:acpc-disc} state the target: lower predictive disagreement for same-state visual perturbations must preserve discriminability among state/action/transition-distinct pairs. A method that drove $\mathrm{ACPC}_H \to 0$ by collapsing the latent would violate \eqref{eq:acpc-disc}, so the two conditions are inseparable.
-
-The ideal guard can also be posed over state--action pairs: if two pairs have external task-relevant futures that differ by more than a margin, their projected rollouts should remain separated. The reported SMPR does not validate this action-faithfulness condition: it uses programmatic label-crossing state pairs, and action permutation produces no SMPR change on the MVE.
-
-\subsection{Predictive tubes and planner margins}\label{sec:acpc-radius-margin}
-
-The selective condition can be written as a radius--margin event.  For anchor $i$, let $u^{\mathrm{obs}}_{i,0}$ be the projected representation of the last clean history observation and let $u^{\mathrm{obs}}_{i,1:H}$ be those of the clean observed future.  The per-anchor clean transition scale is
-\begin{equation}
-  s_i
-  =Q_{0.50}\!\left(
-  \left\{\left\|u^{\mathrm{obs}}_{i,k}-u^{\mathrm{obs}}_{i,k-1}\right\|_2
-  :k=1,\ldots,H\right\}\right),
-  \label{eq:clean-transition-scale}
-\end{equation}
-so the transition from the last history observation to the first clean future observation is included.  For noise draw $m$ at perturbation level $\sigma$, the canonical normalized horizon radius is
-\begin{equation}
-  \begin{aligned}
-  R_{\sigma}^{(i,m)}
-  &=\frac{1}{s_i+\varepsilon}\big\|
-    \bar G_{\mathbf a_i}(E_\theta(h_i)) \\
-  &\hspace{7.4em}{}-
-    \bar G_{\mathbf a_i}(E_\theta(\tilde h_{i,\sigma}^{(m)}))\big\|_2, \\
-  R_{\sigma}^{(i)}
-  &=\frac{1}{M}\sum_{m=1}^{M}R_{\sigma}^{(i,m)},
-  \qquad
-  \mathrm{ATR}_q(\sigma)=r_q(\sigma)
-  =Q_q\!\left(\left\{R_{\sigma}^{(i)}\right\}_{i=1}^{n}\right).
-  \end{aligned}
-  \label{eq:predictive-radius}
-\end{equation}
-Thus multiple draws are aggregated conditionally within each anchor before the checkpoint-level quantile.  The radius side asks whether a visual perturbation remains inside the same-state predictive tube under the recorded action sequence. The margin side asks whether planner and state-proxy distinctions remain outside that tube.  The cost-Lipschitz statements below use the corresponding unnormalized distance $D_{i,m}=(s_i+\varepsilon)R_{\sigma}^{(i,m)}$, so its units match the planner cost. For a fixed candidate pool $\mathcal A$, the clean planner margin is
-\begin{equation}
-  \Delta_{\mathcal A}(h,g)
-  = C_h(\mathbf a^{(2)},g)-C_h(\mathbf a^{(1)},g),
-  \label{eq:planner-margin}
-\end{equation}
-where lower cost is preferred and $\mathbf a^{(1)},\mathbf a^{(2)}$ are the clean top-1 and top-2 candidates. For programmatically selected different-state pairs, we write the proxy margin as
-\begin{equation}
-  M_{\mathrm{diff}}(i,j,\mathbf a)
-  = d\!\left(\Psi(z_i),\Psi(z_j)\right),
-  \label{eq:diff-margin}
-\end{equation}
-and track the failure event $M_{\mathrm{diff}}\le R_\sigma+\delta_m$ for a reporting margin $\delta_m\ge0$; when $R_\sigma$ is normalized, the different-state distance and $\delta_m$ use the same anchor scale. The public-v1 protocol fixes $\delta_m=0.10$. Small radius without margin is compatible with collapse, while large proxy margin without small radius is visually unstable planning. The proxy controls later prevent either side from being read as semantic sufficiency.
-
-\subsection{Fixed-pool radius--margin link to planning}\label{sec:acpc-planner-stability}
-
-ACPC is connected to planning through the candidate costs evaluated by model-predictive control. Let $h$ be a clean history, $\tilde h$ the corresponding perturbed history, and let both branches evaluate the same candidate action sequence $\mathbf a$. For a goal or task descriptor $g$, define
-\begin{equation}
-  C_h(\mathbf a, g)
-  = J\!\left(\Pi(\hat z_{t+1}), \ldots, \Pi(\hat z_{t+H}), g\right),
-  \label{eq:candidate-cost}
-\end{equation}
-where $J$ is the planner cost on the projected-rollout sequence. $C_{\tilde h}(\mathbf a,g)$ is defined analogously from the perturbed branch. The following statements are sufficient conditions for stability on a fixed candidate set; they do not prove stability of the full CEM sampling distribution or of the closed-loop trajectory over repeated replanning.
-
-Encoder geometry enters the planning link through the composed rollout map
-\[
-  G_{\mathbf a}(z)=\Pi(F_\theta^{1:H}(z,\mathbf a)).
-\]
-Smaller same-state encoder shifts and reduced neighborhood crossing lower upstream risk, but the planning-relevant quantity is the projected-rollout distance after the shift is passed through $G_{\mathbf a}$. The empirical diagnostic therefore reports action-conditioned rollout-disagreement tails rather than raw encoder distances alone.
-
-If the planner cost $J$ is locally $L_J$-Lipschitz on a fixed clean/perturbed projected-rollout neighborhood, then a paired rollout discrepancy at most $\epsilon$ implies candidate-cost drift at most $L_J\epsilon$:
-\[
- d_H\!\left(\Pi(F_\theta^{1:H}(E_\theta(h),\mathbf a)),
-             \Pi(F_\theta^{1:H}(E_\theta(\tilde h),\mathbf a))\right) \le \epsilon
- \quad\Rightarrow\quad
- |C_h(\mathbf a,g)-C_{\tilde h}(\mathbf a,g)| \le L_J\epsilon .
-\]
-For a shared candidate set, if every candidate cost moves by at most $\eta$ and the clean top-1/top-2 margin $\Delta$ is larger than $2\eta$, the top candidate is unchanged. Equivalently, the ACPC-cost condition gives fixed-candidate stability when $\Delta>2L_J\epsilon$. These are fixed-candidate statements only; adaptive sampling, repeated replanning, and environment feedback can still change the closed-loop trajectory. Formal statements and proofs are in Appendix~\ref{sec:appendix-acpc-proofs}.
-
-The sample-level audit also uses a sharper candidate-wise condition. Let $j^*$ be the clean top candidate, $\Delta_j=C_h(\mathbf a^j,g)-C_h(\mathbf a^{j^*},g)$, and $d_j=|C_{\tilde h}(\mathbf a^j,g)-C_h(\mathbf a^j,g)|$. If
-\begin{equation}
-  \min_{j\ne j^*}\bigl(\Delta_j-d_j-d_{j^*}\bigr)>0,
-  \label{eq:sharp-candidate-certificate}
-\end{equation}
-then every competitor remains more costly than $j^*$ on the perturbed branch. This implication is exact for the evaluated fixed pool and deterministic tie-breaking. Its empirical coverage is not a probability theorem for a newly sampled or adaptive pool.
-
-\begin{theorem}[Fixed-pool radius--margin bound]\label{thm:radius-margin-certificate}
-Let $\mathcal A=\{\mathbf a^1,\ldots,\mathbf a^K\}\sim q^K$ be a once-sampled candidate pool with deterministic tie-breaking. For a clean history $h$ and matched perturbed history $\tilde h$, define
-\[
-D_j=d_H\!\left(G_{\mathbf a^j}(E_\theta(h)),G_{\mathbf a^j}(E_\theta(\tilde h))\right).
-\]
-Assume the planner cost $J$ is locally $L_J$-Lipschitz on the evaluated projected-rollout neighborhood and that for a single sampled candidate
-\[
-\Pr_{\mathbf a\sim q}[D(\mathbf a)>\epsilon]\le \alpha.
-\]
-Let $\Delta_{\mathcal A}=C_h(\mathbf a^{(2)},g)-C_h(\mathbf a^{(1)},g)$ be the clean top-1/top-2 candidate margin. Then
-\[
-\Pr_{\mathcal A}\!\left[
-\arg\min_j C_h(\mathbf a^j,g)
-\ne
-\arg\min_j C_{\tilde h}(\mathbf a^j,g)
-\right]
-\le
-K\alpha + \Pr_{\mathcal A}[\Delta_{\mathcal A}\le 2L_J\epsilon].
-\]
-If the state-proxy discriminability failure event satisfies
-\[
-\Pr[M_{\mathrm{diff}}\le R_\sigma+\delta_m]\le \gamma,
-\]
-then the selective-ACPC diagnostic failure risk is controlled by
-\[
-\Pr[\mathrm{selective\ failure}]
-\le
-K\alpha + \Pr_{\mathcal A}[\Delta_{\mathcal A}\le 2L_J\epsilon] + \gamma.
-\]
-\end{theorem}
-
-This is a fixed-pool diagnostic bound for a matched perturbation distribution. It places a checkpoint in the bound's sufficient-condition regime only when the high-probability same-state predictive radius is below the relevant planner margin and the measured proxy separations remain outside the perturbation tube.
-
-\begin{definition}[Matched-perturbation diagnostic region]\label{def:robust-interval}
-For a checkpoint family indexed by training perturbation level $\rho$ and evaluated at observation noise $\sigma$, define the empirical radius--margin pass event
-\[
-\widehat{\mathcal G}_{\rho,\sigma}
+\bar G_{\mathbf a}(z)
 =
-\left\{\widehat Q_{1-\alpha}(R_\sigma) \le \widehat r_{\mathrm{margin}}\right\}
-\cap
-\left\{\widehat{\mathrm{SMPR}}_{\rho,\sigma}\ge 1-\widehat\gamma\right\}.
+\begin{bmatrix}
+\sqrt{\alpha_1}\Pi(F_\theta^1(z,a_0));\ \cdots;\
+\sqrt{\alpha_H}\Pi(F_\theta^H(z,\mathbf a))
+\end{bmatrix},
+\qquad
+\mathrm{ACPC}_H(h,\tilde h,\mathbf a)
+=
+\|\bar G_{\mathbf a}(z)-\bar G_{\mathbf a}(\tilde z)\|_2 .
+\label{eq:acpc-h}
+\end{equation}
+The encoder distance is identical for every candidate action sequence; ACPC can additionally expose action-dependent amplification of that displacement. Whether this extra information matters is an empirical question, tested against one-step and action/time-destroyed controls rather than assumed from the definition.
+
+\begin{theorem}[Target-free prediction-error-drift bound]\label{thm:target-free-error-drift}
+Let $Y_{\mathbf a}^H$ be any projected external future generated from the same state and action sequence as both prediction branches. With
+\[
+e_h=\|\bar G_{\mathbf a}(E_\theta(h))-Y_{\mathbf a}^H\|_2,
+\qquad
+e_{\tilde h}=\|\bar G_{\mathbf a}(E_\theta(\tilde h))-Y_{\mathbf a}^H\|_2,
 \]
-The matched-perturbation diagnostic region is the set of checkpoint indices $\rho$ for which $\widehat{\mathcal G}_{\rho,\sigma}$ holds. If planner-margin traces are unavailable, $\widehat r_{\mathrm{margin}}$ must be reported as a rollout-space proxy, not as a calibrated planner-margin bound. If diagnostics are available only at the no-noise and recovered endpoints, the evidence is endpoint mechanism evidence rather than interval identification.
+the following holds sample by sample:
+\begin{equation}
+|e_{\tilde h}-e_h|
+\le \mathrm{ACPC}_H(h,\tilde h,\mathbf a).
+\label{eq:target-free-error-drift}
+\end{equation}
+The adverse increase $(e_{\tilde h}-e_h)_+$ obeys the same bound, while the right-hand side requires no future target at diagnostic time.
+\end{theorem}
+\begin{proof}
+This is the reverse triangle inequality in the weighted-stacked projected-rollout space. The common action sequence is required because both errors must share the same target.
+\end{proof}
+
+\subsection{Radius, discriminability guard, and calibration}\label{sec:acpc-diag}
+
+For anchor $i$, let $s_i$ be the median norm of its clean observed transitions, including the history-to-future boundary:
+\begin{equation}
+s_i=Q_{0.50}\!\left(\{\|u^{\mathrm{obs}}_{i,k}-u^{\mathrm{obs}}_{i,k-1}\|_2\}_{k=1}^{H}\right).
+\label{eq:clean-transition-scale}
+\end{equation}
+For probe draw $m$, the normalized radius and checkpoint statistic are
+\begin{equation}
+R^{(i,m)}
+=
+\frac{\|\bar G_{\mathbf a_i}(E_\theta(h_i))-\bar G_{\mathbf a_i}(E_\theta(\tilde h_i^{(m)}))\|_2}
+{s_i+\varepsilon},
+\qquad
+\mathrm{ATR}_q
+=
+Q_q\!\left(\left\{\frac{1}{M}\sum_{m=1}^{M}R^{(i,m)}\right\}_{i=1}^{n}\right).
+\label{eq:predictive-radius}
+\end{equation}
+We use $H=8$, uniform horizon weights, and $q=0.90$. ATR is an empirical upper-tail summary, not a candidate-distribution probability.
+
+Low radius alone accepts a constant model. Selective Margin Pass Rate (SMPR) therefore measures how often programmatically selected different-state proxy pairs remain outside the same-state perturbation tube by a fixed normalized margin. The guard rejects complete collapse, but its controls do not establish semantic or action faithfulness; closed-loop behavior remains the authority.
+
+For model family $\mathcal F$ and stressor $\upsilon$, calibration thresholds $t_R,t_M$ define the higher-is-better score
+\begin{equation}
+S_{\mathcal F,\upsilon}(\theta)
+=
+\min\!\left\{
+\frac{t_R-\mathrm{ATR}_{\upsilon}(\theta)}{|t_R|+\varepsilon},
+\frac{\mathrm{SMPR}_{\upsilon}(\theta)-t_M}{|t_M|+\varepsilon}
+\right\}.
+\label{eq:joint-diagnostic-score}
+\end{equation}
+The endpoint rule $S\ge0$ uses only one checkpoint at scoring time, but its thresholds are family-calibrated. Given a reference checkpoint $\theta_0$, the paired rule
+\begin{equation}
+\Delta S_{\mathcal F,\upsilon}(\theta_1;\theta_0)
+=
+S_{\mathcal F,\upsilon}(\theta_1)-S_{\mathcal F,\upsilon}(\theta_0)>0
+\label{eq:paired-diagnostic-change}
+\end{equation}
+asks whether the endpoint improves under the same scoring map. Its zero threshold survives a common monotone rescaling within a pair, but the rule requires the reference and does not imply that either checkpoint is absolutely robust.
+
+\begin{definition}[Family-calibrated diagnostic region]\label{def:robust-interval}
+The diagnostic region is the set of checkpoints satisfying $\mathrm{ATR}\le t_R$ and $\mathrm{SMPR}\ge t_M$ under one frozen family/stressor calibration. Its meaning is established empirically on held-out training seeds; raw thresholds are not assumed to transfer across model architectures.
 \end{definition}
 
-\subsection{Sampled-pool tails and local Gaussian sensitivity}\label{sec:acpc-sampled-gaussian}
+Appendix~\ref{sec:appendix-fixed-pool-details} gives a conditional candidate-cost interpretation for already evaluated ordered pools; it does not cover adaptive sampling or replanning. Appendix~\ref{sec:appendix-local-sensitivity} relates ACPC to local encoder--predictor sensitivity.
 
-The fixed-candidate statements motivate the deterministic link from paired rollout agreement to candidate decisions. A once-sampled candidate pool adds a tail requirement: if a single candidate has $\Pr[D>\epsilon]\le\delta$, then a pool of size $K$ can still contain a bad clean/noisy rollout pair with probability up to $K\delta$. A flip can also occur when the clean top-1/top-2 margin is at most $2L_J\epsilon$. This is the reason ATR uses an upper-tail summary rather than a mean disagreement score, and it is also why ATR is not a closed-loop control guarantee. Appendix~\ref{sec:appendix-acpc-proofs} gives the proof.
-
-The Gaussian stressor also has a local sensitivity interpretation.  We use the same weighted-stacked map $\bar G_{\mathbf a}$ defined above and let $\tilde o=o+\xi$ with $\xi\sim\mathcal N(0,\sigma^2 I)$ in raw pixel coordinates. Here $E_\theta$ includes the deterministic ImageNet input normalization; equivalently, JVP tangents in model-input coordinates are scaled by the reciprocal per-channel ImageNet standard deviation.
-
-\begin{proposition}[Local Gaussian ACPC sensitivity]\label{prop:gaussian-sensitivity}
-If $E_\theta$ and $\bar G_{\mathbf a}$ are locally twice differentiable around $o$ and $E_\theta(o)$ with bounded second-order remainders, then for small $\sigma$,
-\[
-\bar G_{\mathbf a}(E_\theta(o+\xi))-\bar G_{\mathbf a}(E_\theta(o))
-=
-J_{\bar G_{\mathbf a}}(E_\theta(o))J_E(o)\xi + R_\xi,
-\]
-where the remainder contributes higher-order terms, and
-\[
-\mathbb E_\xi\!\left[
-\left\|\bar G_{\mathbf a}(E_\theta(o+\xi))-\bar G_{\mathbf a}(E_\theta(o))\right\|_2^2
-\right]
-=
-\sigma^2\left\|J_{\bar G_{\mathbf a}}(E_\theta(o))J_E(o)\right\|_F^2 + O(\sigma^3).
-\]
-\end{proposition}
-
-The same linearization gives the local tail interpretation used by ATR.
-
-\begin{corollary}[Local Gaussian ACPC radius quantile]\label{cor:gaussian-radius-quantile}
-Under the local linearization in Proposition~\ref{prop:gaussian-sensitivity}, condition on an anchor history $h$, its clean transition scale $s(h)$, and the shared action sequence, and let
-\[
-A_{h,\mathbf a}=J_{\bar G_{\mathbf a}}(E_\theta(o))J_E(o),
-\]
-and let $\lambda_1,\ldots,\lambda_r$ be the nonzero eigenvalues of
-$A_{h,\mathbf a}A_{h,\mathbf a}^\top$. For isotropic pixel noise
-$\xi\sim\mathcal N(0,\sigma^2 I)$,
-\[
-R_\sigma^2(h,\mathbf a)
-\approx
-\frac{\sigma^2}{(s(h)+\varepsilon)^2}\sum_{i=1}^r \lambda_i\chi_i^2,
-\]
-and therefore
-\[
-r_{1-\alpha}(\sigma;h,\mathbf a)
-=Q_{1-\alpha}(R_\sigma)
-\approx
-\frac{\sigma}{s(h)+\varepsilon}\sqrt{Q_{1-\alpha}\!\left(\sum_i \lambda_i\chi_i^2\right)}.
-\]
-\end{corollary}
-
-This corollary connects the empirical ATR quantile to the singular spectrum of the action-conditioned encoder--predictor Jacobian. ATR decreases when the composed map contracts along nuisance-noise directions, not necessarily when raw encoder distance alone is minimized. A useful diagnostic decomposition is
-\[
-S_{\mathrm{comp}}(h,\mathbf a)
-=\left\|J_{\bar G_{\mathbf a}}(E_\theta(o))J_E(o)\right\|_F^2
-=\operatorname{tr}\!\left(J_E^\top J_{\bar G_{\mathbf a}}^\top J_{\bar G_{\mathbf a}}J_E\right),
-\]
-with encoder-side and rollout-side reference scales
-\[
-S_E(o)=\|J_E(o)\|_F^2,
-\qquad
-S_{\bar G}(E_\theta(o),\mathbf a)=\|J_{\bar G_{\mathbf a}}(E_\theta(o))\|_F^2.
-\]
-The main mechanism analysis prioritizes the raw encoder, rollout, and composed traces $S_E$, $S_{\bar G}$, and $S_{\mathrm{comp}}$.  For a scale-relative appendix diagnostic, define both
-\[
-\kappa_{\mathrm{sub}}(h,\mathbf a)
-=
-\frac{\|J_{\bar G_{\mathbf a}}J_E\|_F^2}
-{\|J_{\bar G_{\mathbf a}}\|_F^2\|J_E\|_F^2+\varepsilon}
-\le 1,
-\qquad
-\kappa_{\mathrm{relative\ isotropic}}(h,\mathbf a)
-=d_z\,\kappa_{\mathrm{sub}}(h,\mathbf a),
-\]
-where the first inequality follows for exact maps from Frobenius-norm submultiplicativity, and $d_z$ is the full intermediate latent input dimension used by these Jacobian maps.  The relative isotropic gain can exceed one; neither ratio supersedes the raw-trace mechanism evidence.
-
-Combining the local radius quantile with the fixed-pool margin condition gives the diagnostic noise scale
-\[
-\sigma^*(h,\mathbf a,\mathcal A)
-=
-\frac{\Delta_{\mathcal A}}
-{2L_J\sqrt{Q_{1-\alpha}(\sum_i\lambda_i\chi_i^2)}}.
-\]
-This is a local diagnostic approximation, not a global robustness theorem. When $L_J$ or the weighted-chi-square tail is unavailable, the empirical cost-drift slope $\widehat s_C=\widehat Q_q(|C_h-C_{\tilde h}|)/\sigma$ gives only a proxy tolerance $\widehat\sigma^*_{\mathrm{cost}}=\widehat Q_{0.50}(\Delta_{\mathcal A})/(2\widehat s_C)$.
-
-Thus Gaussian ACPC measures composed encoder--predictor sensitivity under a recorded action sequence, not encoder invariance alone. Noise training can improve robustness by reducing same-state encoder neighborhood crossing, reducing rollout amplification along the resulting perturbation directions, or changing how encoder-sensitive directions feed rollout high-gain directions. It need not reduce the rollout-side Jacobian uniformly. Small encoder shifts can still be amplified by $J_{\bar G_{\mathbf a}}$, while large nuisance shifts can become harmless after rollout if the product $J_{\bar G_{\mathbf a}}J_E$ is small in those directions. The measured state-proxy margin pass event is
-\[
-M=\mathbf 1\!\left[d_{\mathrm{proxy\ diff}}>d_{\mathrm{same\ state\ noise}}+\delta_m\right],
-\]
-with $\delta_m=0.10$ in the frozen protocol. It is a finite state-proxy consistency criterion, not a full semantic-label or action-faithfulness guarantee.
-
-The theoretical statements in this section are intended as diagnostic orientation rather than as closed-loop control guarantees. They identify the failure modes that a paired clean/noisy diagnostic should measure: rollout-disagreement tails, clean candidate margins, and complete proxy collapse. They do not assert that a low empirical ATR is a uniform bound for adaptive planning, repeated replanning, environment-feedback stability, or preservation of task semantics.
-
-\subsection{Operational metrics}\label{sec:acpc-diag}
-
-The reported diagnostic uses two metrics matched to this radius--margin logic. ACPC Tail Risk (ATR) is the checkpoint quantile of the canonical per-anchor radius in \Cref{eq:predictive-radius}.  The default protocol uses $H=8$, uniform $\alpha_k=1/H$, the per-anchor clean observed-transition q50 scale in \Cref{eq:clean-transition-scale}, a mean over noise draws within each anchor, and then the checkpoint q90 over anchors; lower is better.  The q90 is a fixed empirical reporting choice, not a theoretical constant. Selective Margin Pass Rate (SMPR) is the pass rate of programmatic label-crossing pairs whose clean different-state rollout distance exceeds the q90 same-state noisy tube by normalized margin $0.10$; higher is better.
-
-The frozen gate is therefore not ATR alone. ATR tracks the radius side, while SMPR checks whether the selected proxy pairs remain outside the perturbation tube. Low ATR without high SMPR is not accepted because a constant encoder--predictor also makes clean and corrupted views agree. However, the MVE controls show that the selected labels and actions add no established increment over random-label or action-permuted controls. SMPR is consequently retained as a collapse/proxy guard, not evidence of semantic or action sufficiency.
-
-
-\paragraph{Collapse caveat.}
-Low same-state ACPC alone is insufficient. A constant encoder--predictor can make every clean and perturbed rollout identical while mapping all states to identical projected futures. The implemented positive-margin SMPR rejects this complete collapse in all four MVE rows. It does not respond before the final point of a scale-invariant progressive-collapse path, so stronger anti-collapse sensitivity remains open.
-
-%% ===========================================================================
 \section{Experimental Setup}\label{sec:bg}
 
-The protocol separates behavior endpoints from diagnostics. Closed-loop success under Gaussian evaluation noise establishes the behavioral phenomenon; ATR and SMPR are then computed on fixed checkpoints to localize whether recovered endpoints also satisfy the selective ACPC pattern. Training seed, checkpoint epoch, evaluation seeds, and trajectory counts are kept fixed across the main comparisons.
+\paragraph{Models, tasks, and stressors.}
+LeWM~\cite{maes2026lewm} is an end-to-end JEPA world model used for latent-space model-predictive control. TwoRoom, PushT, Reacher, and Cube span navigation, planar manipulation, arm control, and 3D manipulation. We train no-noise checkpoints and full-sequence Gaussian-augmentation checkpoints with $\stdmax{}\in\{0.01,\ldots,0.08\}$. The primary endpoint adds observation noise $\sigma=0.08$ while keeping the goal image clean. Off-axis tests use fixed Gaussian blur ($k=15$) and resize (scale $0.25$).
 
-\subsection{Models and noise intervention}\label{sec:bg-models}
+\paragraph{Behavior and diagnostic units.}
+For each task and LeWM training seed 3072/3073/3074, the nine-point Gaussian grid is evaluated with seeds 42/43/44 and 100 trajectories per evaluation seed. Evaluation seeds are conditional measurement replicates; training seed is the model-replication unit. ATR uses 100 anchors, five probe draws, $H=8$, uniform horizon weights, within-anchor draw averaging, and the checkpoint q90. SMPR uses the q90 tube, closest-35\% state-proxy neighborhood, and margin $0.10$. Protocol details are in Appendix~\ref{sec:appendix-A}.
 
-LeWM~\cite{maes2026lewm} is an end-to-end JEPA world model trained with a latent prediction loss and SIGReg regularization for latent-space model-predictive control. PushT (2D pushing), TwoRoom (2D navigation), Reacher (2D arm), and Cube (3D manipulation) form a heterogeneous stress panel spanning different nuisance/discriminability regimes. We add per-frame Gaussian noise to the input sequence as a full-sequence augmentation: each frame is independently noised with probability $p=1.0$, and the standard deviation is drawn from $\mathrm{Uniform}(0,\stdmax{})$. This is a full-sequence input-side augmentation. We sweep \stdmax{} $\in \{0.01,\dots,0.08\}$ and evaluate observation-only Gaussian noise with the goal image unperturbed as the primary robustness endpoint.
+\paragraph{Future-drift prediction.}
+The mechanism test uses 16 trajectory blocks per task, four probe severities, and two probe draws. Leave-one-block-out ridge models receive common severity, encoder, $H=1$, action-magnitude, and nominal-dynamics covariates; $H=8$ variants add the correct response or an action-zeroed, candidate-shuffled, or time-shuffled response. The held-out target is the corresponding observed future embedded by the frozen target encoder. Some seed 3073 task results preceded the final protocol freeze; seed 3074 is the fully frozen four-task replication. Reported cluster intervals are conditional on these two trained checkpoints.
 
-PLDM provides a second inspectable latent-predictive architecture with the same four task interfaces. We apply the same paired-history, projection, normalization, and frozen scoring code without retraining a probe or changing stressor-specific thresholds. Only one independently trained PLDM family is available, so this establishes implementation-level analysis portability and an exploratory relative check, not training-seed-replicated model-family generalization. The off-axis stressors are fixed Gaussian blur ($k=15$) and resize ($0.25$); both are evaluated for every base/endpoint task--training-seed block rather than selected per outcome.
-
-\subsection{Evaluation and diagnostics}\label{sec:bg-protocol}
-
-The canonical LeWM development grid contains 36 epoch-10 checkpoints for training seed 3072: four tasks and, for each task, a no-noise baseline plus eight noise-trained checkpoints. Each checkpoint is evaluated with three evaluation seeds (42/43/44) and 100 trajectories per seed; canonical tables report the population mean $\pm$ population std across those conditional evaluation replicates. Independent LeWM training seeds 3073 and 3074 use the same nine-point sweep. Together they provide three training seeds for the main Gaussian endpoint in \Cref{fig:sweep}.
-
-CAL contains only LeWM seed3072. It fixes $H=8$, uniform horizon weights, five paired noise draws over 100 anchors, ATR q90, the SMPR q90 tube/35\% neighborhood/margin-$0.10$ rule, and thresholds $\tau_{\mathrm{ATR}}=1.1783$, $\tau_{\mathrm{SMPR}}=0.9508$. The final protocol file is immutable with SHA-256 \codebrk{edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21}. E1 (LeWM seeds3073/3074), E2 (one PLDM training seed), E3 (fixed-$\rho$ blur/resize), and E4 (failed target-view repair) prohibit threshold search. Behavior is joined after frozen diagnostic scoring in the aggregate validation scripts; this is not claimed as operator blinding of every raw diagnostic run.
-
-E3 retains all 32 base-to-endpoint pairs: 24 LeWM rows (four tasks, three independently trained seeds, two stressors) and eight PLDM rows (four tasks, one training family, two stressors). The positive-transfer label is fixed before diagnostic results are joined: stressed success must improve by at least five percentage points while clean success drops by at most five. We report two estimands without stressor-specific tuning: the absolute Gaussian-frozen gate on each endpoint and the natural paired rule $\Delta S>0$. Uncertainty for the LeWM paired result resamples the 12 task--training-seed blocks 5,000 times while retaining blur and resize together inside each block. Evaluation seeds 42/43/44 remain conditional measurement replicates, not independent training runs.
-
-The results follow a three-layer evidence chain. Closed-loop evaluation remains the behavioral authority. Absolute screening tests whether a family-calibrated gate transfers to held-out seeds or stressors, while paired comparison tests whether diagnostic improvement tracks robustness improvement relative to a reference checkpoint. Fixed-pool certificates, local sensitivity, component baselines, and guard counterfactuals then determine what mechanism can be attached to those empirical associations.
-
-
-%% ===========================================================================
+\paragraph{Frozen calibration and stressor transfer.}
+The diagnostic region is fitted only on the 36 seed 3072 rows and applied unchanged to all 72 seed 3073/3074 rows. The stressor-transfer test scores every fixed-severity blur/resize base--endpoint pair before joining behavior: 24 pairs across four tasks, three training seeds, and two stressors. Positive transfer requires at least a five-point stressed-success gain and at most a five-point clean-success loss. The endpoint screen and paired $\Delta S>0$ rule receive no stressor-specific retuning. Bootstrap resampling uses task$\times$training-seed blocks and retains the two stressors together within each block.
 \section{Experiments}\label{sec:exp}
 
-The experiments use additive Gaussian pixel noise as the controlled development stressor. We first establish the behavioral failure and matched-stressor recovery, then test held-out LeWM calibration, analysis-interface portability to PLDM, and within-LeWM paired comparison across fixed blur/resize stressors. The study does not claim a cross-family absolute score, a black-box diagnostic, superiority over robust-training methods, or general corruption coverage beyond the two fixed off-axis stressors.
+Gaussian evaluation noise first creates a controlled fragile/recovered family. We then test action-matched future drift, calibration across training seeds, and transfer to blur/resize in that order. Closed-loop success supplies behavioral labels but is never an input to the diagnostic score.
 
-All results use the protocol in Section~\ref{sec:bg}: LeWM-base denotes the no-noise checkpoint, and LeWM+noise denotes the eight-level \stdmax{} sweep.
+\subsection{Behavioral recovery and diagnostic co-movement}\label{sec:exp-gaussian-panel}
 
-\subsection{Gaussian observation noise breaks no-noise checkpoints}\label{sec:exp-cliff}
+At evaluation noise $\sigma=0.08$, no-noise LeWM checkpoints lose $25.89\pm2.38$, $74.56\pm5.55$, $41.00\pm1.44$, and $22.11\pm2.78$ success points on TwoRoom, PushT, Reacher, and Cube, respectively. Full-sequence Gaussian augmentation recovers broad, task-dependent regions rather than one universal best training strength. Figure~\ref{fig:full-sweep-diagnostics} shows the observation-noise score together with the two frozen diagnostic components over all nine training levels and three training seeds.
 
-Observation-only Gaussian noise sharply degrades all four no-noise checkpoints, with the largest losses on PushT and Reacher. \Cref{tab:noise-cliff} reports the success rates: each training-seed value is first averaged over the three evaluation seeds, and the table then reports mean $\pm$ population std across the three training seeds. The goal image is kept clean in every column.
-
-\begin{table}[htbp]
+\begin{figure}[t]
 \centering
-\caption{Observation-only Gaussian noise sharply degrades no-noise LeWM checkpoints across all four tasks. Values are mean $\pm$ population std across training seeds 3072/3073/3074; each training-seed value averages evaluation seeds 42/43/44 with 100 trajectories per evaluation seed. The goal image is kept clean.}
-\label{tab:noise-cliff}
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lrrrr}
-\toprule
-Task & eval $\sigma=0$ & eval $\sigma=0.03$ & eval $\sigma=0.05$ & eval $\sigma=0.08$ \\
-\midrule
-TwoRoom & $94.67 \pm 0.72$ & $92.56 \pm 1.23$ & $81.33 \pm 6.77$ & $68.78 \pm 2.45$ \\
-PushT   & $81.78 \pm 4.89$ & $53.56 \pm 12.91$ & $19.22 \pm 9.12$ & $\phantom{0}7.22 \pm 5.81$ \\
-Reacher & $59.22 \pm 1.03$ & $42.56 \pm 2.99$ & $33.56 \pm 1.77$ & $18.22 \pm 0.42$ \\
-Cube    & $65.22 \pm 1.10$ & $63.00 \pm 1.19$ & $46.67 \pm 1.96$ & $43.11 \pm 3.27$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-LeWM-base is strong on unperturbed images, but observation noise alone produces large closed-loop losses at $\sigma=0.08$: PushT loses $74.56 \pm 5.55$ points, Reacher $41.00 \pm 1.44$ points, TwoRoom $25.89 \pm 2.38$ points, and Cube $22.11 \pm 2.78$ points between the first and last columns. The progression across noise levels is smooth enough to show that the endpoint is not an isolated artifact of one severity setting. PushT degrades most sharply, consistent with contact-heavy continuous control being sensitive to visual precision.
-
-\subsection{Full-sequence Gaussian augmentation yields task-dependent recovery bands}\label{sec:exp-sweep}
-
-Full-sequence Gaussian noise training produces broad, task-dependent recovery bands rather than a stable universal checkpoint ranking. \Cref{fig:sweep} shows the full sweep aggregated across training seeds 3072/3073/3074; each plotted point first averages evaluation seeds 42/43/44 within a training seed and then reports mean and population std across the three training seeds.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\linewidth]{fig2_sweep.png}
-\caption{Full-sequence Gaussian noise training produces broad, task-dependent recovery bands rather than a universal checkpoint ranking. Each point averages evaluation seeds 42/43/44 within each training seed and then reports mean across training seeds 3072/3073/3074; error bars show population std across training seeds. Blue circles show unperturbed evaluation; red squares show observation-only Gaussian noise $\sigma=0.08$ with an unperturbed goal.}
-\label{fig:sweep}
-\end{figure}
-
-Because \Cref{fig:sweep} already aggregates the full sweep across three training seeds, we do not report a separate endpoint leaderboard in the main text. The fixed \stdmax{} $=0.08$ endpoint substantially improves the observation-noise endpoint on TwoRoom, PushT, and Reacher, with a weaker positive Cube signal. Exact all-seed sweep values are reported in Appendix~\ref{sec:appendix-gaussian-evals} for reproducibility.
-
-A three-seed blur/resize evaluation later in this section serves as an auxiliary severe-stressor evaluation outside the matched-Gaussian endpoint. The next subsection asks whether the recovered Gaussian endpoints also move in the ATR/SMPR diagnostics.
-
-\subsection{Paired radius/guard co-movement and its limits}\label{sec:exp-acpc-diagnostics}
-
-Recovered checkpoints move in both frozen diagnostic components: the same-state predictive-radius tail contracts and the state-proxy guard pass rate rises. ATR is the q90 across per-anchor canonical weighted-stacked horizon radii after each anchor's noise draws are averaged; every radius is normalized by that anchor's clean observed-transition q50 scale. SMPR uses a q90 same-state tube, a closest-35\% state neighborhood, and positive normalized margin $0.10$. Both are computed without retraining on the fixed no-noise and \stdmax{} $=0.08$ checkpoints for training seeds 3072/3073/3074. \Cref{fig:endpoint-atr-smpr} shows the paired endpoint movement, with exact population mean/std values reported in Appendix~\ref{sec:appendix-supplementary-diagnostics}.
-
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\linewidth]{fig_endpoint_atr_smpr.png}
-\caption{Noise-trained endpoints contract the ATR radius tail and increase the positive-margin state-proxy SMPR on all four tasks. ATR is the q90 across per-anchor weighted-stacked same-state rollout radii, with per-anchor clean-transition q50 normalization and within-anchor mean aggregation over noise draws; SMPR uses normalized margin $0.10$. Points report means across training seeds 3072/3073/3074 and horizontal bars report population standard deviations. Co-movement does not establish that the proxy labels or action sequence are necessary; controls are reported in the text and appendix.}
-\label{fig:endpoint-atr-smpr}
-\end{figure}
-
-The two metrics move in the intended descriptive direction on all four tasks: recovered endpoints have much smaller same-state predictive tails and much higher proxy pass rates. A qualitative PushT neighborhood view is provided in Appendix~\ref{sec:appendix-qualitative-neighborhood} as intuition. We interpret post-rollout tightening as a lower composed response to the actual perturbation directions, not as evidence that the rollout-side Jacobian uniformly contracts. Cube remains a boundary case: ATR and SMPR improve strongly, but closed-loop recovery is weaker than PushT or Reacher, so behavior remains the authority.
-
-SMPR uses programmatic state proxies, not oracle semantic annotations: TwoRoom uses doorway/room-side labels, PushT uses T-block pose cells, Reacher uses target/end-effector relation bins, and Cube uses cube-pose/goal-relation cells. Controls on a TwoRoom+PushT base/endpoint MVE correctly reject a constant collapsed rollout in all $4/4$ rows and accept an identical clean/noisy positive control in $4/4$. They also give exactly zero SMPR change under action permutation, no pre-constant response along a scale-invariant progressive-collapse path, and only a $0.026$ mean advantage of task-derived over random labels that is not strict on all rows. Thus the guard establishes complete-collapse rejection and proxy-level consistency, not action relevance or semantic sufficiency. TwoRoom uses an environment-geometry proxy and PushT a sequence-goal state-derived proxy in the one-seed MVE, giving SMPR $0.156\to1.000$ and $0.276\to1.000$, respectively. PushT's HDF5 lacks the simulator goal state, so even this row is not called a simulator oracle.
-
-\subsubsection{Full-sweep and held-out validation}\label{sec:exp-full-sweep-diagnostics}
-
-Across all $4\times3\times9=108$ task--training-seed--checkpoint rows, recovered portions of the Gaussian sweep consistently occupy lower normalized ATR and higher SMPR than fragile rows. \Cref{fig:full-sweep-diagnostics} places the closed-loop observation-noise score above the two diagnostic traces so behavioral recovery and diagnostic movement remain visually distinct. Fixed-pool top-1 disagreement and proxy-gap traces are kept in Appendix~\ref{sec:appendix-fixed-pool-details}, where they support the planner-side radius--margin audit.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\linewidth]{fig_full_sweep_diagnostics.png}
-\caption{Recovered rows align with lower ATR and higher positive-margin proxy SMPR across the Gaussian training grid. Each task block averages training seeds 3072/3073/3074 at the same \stdmax{} value and separates the observation-noise score (upper axis) from normalized ATR and SMPR at margin $0.10$ (lower axes; ATR $\downarrow$, SMPR $\uparrow$). Continuous green bands mark training-noise ranges where a majority of seed rows meet the behavioral recovery criterion.}
+\includegraphics[width=\linewidth]{fig_full_sweep_diagnostics.pdf}
+\caption{Closed-loop success under observation noise and the two diagnostic components across the Gaussian training sweep. Solid lines first average evaluation replicates within each training seed and then average seeds3072/3073/3074; translucent envelopes span the three seed means. Green vertical bands mark training levels where a majority of seed rows meet the recovery criterion. Lower ATR and higher SMPR co-move with recovery on all four tasks, but this descriptive alignment alone does not establish action or semantic specificity.}
 \label{fig:full-sweep-diagnostics}
 \end{figure}
 
-\subsubsection{Frozen external validation and component baselines}\label{sec:exp-frozen-external}
+ATR contracts and SMPR rises through the recovery region on every task. Cube is the useful boundary case: its diagnostics improve strongly while behavioral recovery is weaker than on PushT or Reacher. The panel therefore motivates a calibrated two-component screen, but behavior remains the outcome authority.
 
-The public-v1 thresholds were selected only on the 36-row LeWM seed3072 Gaussian calibration split (CAL), then applied read-only with protocol SHA-256 \codebrk{edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21}. \Cref{tab:frozen-external} reports the \emph{absolute-screening} tests. E1 strongly confirms calibration portability to two held-out LeWM training seeds. E2 executes the same scoring pipeline on one PLDM training family, but 12 false positives and an all-positive Reacher branch show that LeWM numerical thresholds are not a shared cross-family calibration. E3 fixes training strength at $\rho=0.08$ and pre-fixes the strongest blur/resize mapping; its low recall shows that the absolute gate is conservative off-axis. The all-pairs relative E3 estimand is reported separately in \Cref{sec:exp-unseen-scope}. E4 is a falsification split: all 32 target-view rows are behavior-negative and rejected, while the paired full-sequence branch retains false-pass rate $0.727$.
 
-\begin{table}[t]
-\centering
-\caption{Read-only absolute-screening validation using the LeWM Gaussian-frozen gate. E2 tests shared numerical calibration on one PLDM training family, not whether the analysis interface can be executed. E3 contains 16 pre-mapped fixed endpoints; the 32-pair relative analysis is reported separately.}
-\label{tab:frozen-external}
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{llrrp{0.30\linewidth}}
-\toprule
-Split & rows & balanced acc. & AUPRC & boundary \\
-\midrule
-E1 held-out LeWM seeds & 72 & 0.945 & 0.965 & two independent training seeds \\
-E2 PLDM & 36 & 0.684 & 0.541 & one family; calibration not shared \\
-E3 fixed-$\rho$ blur/resize & 16 & 0.563 & 0.737 & conservative: recall 0.375 \\
-E4 failed repair & 64 & 0.907 & 0.587 & target branch has no positives \\
-\bottomrule
-\end{tabular}
-\end{table}
+\subsection{Action-matched rollouts predict future drift}\label{sec:exp-target-aligned}
 
-Component baselines prevent attributing the result to the eight-step, correctly action-conditioned map. On the combined E1+E2 rows, the joint gate has the highest balanced accuracy ($0.822$), but encoder-only and H1 both reach $0.793$, action-zeroed H8 reaches $0.805$, and correct-action H8 reaches only $0.756$. Their AUPRC values are $0.792$, $0.816$, $0.841$, and $0.828$, respectively. Action-shuffled H8 also reaches AUPRC $0.838$. Hence neither long-horizon rollout nor correct-action conditioning is empirically necessary in this benchmark. SMPR and the conjunction remain useful frozen features, but their increment is metric-dependent rather than a demonstrated causal mechanism.
+Theorem~\ref{thm:target-free-error-drift} guarantees a bound for the correct action-matched pair. We additionally ask whether the correct $H=8$ response adds held-out information after every comparator receives the same severity, encoder, $H=1$, action-magnitude, and nominal-dynamics covariates. The controls replace $H=8$ with responses whose action or temporal structure is destroyed.
 
-\input{tables/table_diagnostic_baselines}
+\input{tables/table_target_aligned_acpc}
 
-The Gaussian training strength $\rho$ is evaluated only in a privileged confound appendix and is excluded from external diagnostic leaderboards. ATM is also not approximated by these baselines: official ATM trains fresh inverse probes across real and predicted transition domains and fits within-task screening coefficients~\cite{chen2026atm}; reproducing it requires a new probe-training split outside this frozen release.
+Across the behaviorally fragile no-noise checkpoints, the two-seed equal-task reduction in absolute-drift MAE is $56.5\%$ versus $H=1$ and $51.9\%$ versus the strongest structure-destroyed $H=8$ control. Adverse drift gives reductions of $55.5\%$ and $50.6\%$. Correct $H=8$ beats $H=1$ and every destroyed control in $57/64$ seed-averaged task$\times$trajectory clusters; every task passes separately in both seeds. The fully frozen seed 3074 replication passes all four tasks for both targets.
 
-\subsection{Planner-side radius--margin audit}\label{sec:exp-radius-margin}
+These intervals resample task$\times$trajectory blocks while retaining the two trained checkpoints; they quantify conditional block uncertainty, not population uncertainty over training seeds. The result establishes action/horizon increment for logged futures in fragile regimes. Appendix~\ref{sec:appendix-p1-controls} reports range and candidate-query controls that delimit this interpretation.
 
-The candidate-wise audit recomputes all 108 LeWM checkpoints, 100 histories per checkpoint, and the same ordered pool of $K=65$ candidates on clean and corrupted branches. The legacy coarse condition uses the maximum drift and clean top-1/top-2 margin. The sharp condition in \Cref{eq:sharp-candidate-certificate} instead compares every competitor's clean gap with its own drift and the clean winner's drift; it directly matches the deterministic top-1 implication.
 
-Across 10,800 sampled histories, coarse coverage is $0.478$, sharp coverage is $0.700$, and the observed fixed-pool top-1 flip rate is $0.208$. Among sharp-certificate failures the flip rate is $0.694$. A hierarchical bootstrap over the 12 task--training-seed blocks gives 95\% intervals $[0.438,0.515]$, $[0.679,0.723]$, $[0.193,0.227]$, and $[0.664,0.727]$ for these four quantities. The sharp condition has zero certified flips by construction of the deterministic implication; this invariant check confirms implementation consistency but is not treated as independent statistical evidence.
+\subsection{Calibration transfers across training seeds}\label{sec:exp-frozen-external}
 
+Thresholds fitted only on the 36-row seed 3072 Gaussian calibration grid are applied unchanged to the corresponding 72 rows from independently trained seeds 3073/3074. The diagnostic region reaches balanced accuracy/AUPRC $0.945/0.965$, precision $0.961$, and recall $0.980$.
+
+\input{tables/table_seed_transfer_audit}
+
+A 5,000-repeat bootstrap over the eight task$\times$training-seed test blocks gives intervals $[0.893,0.991]$ for balanced accuracy and $[0.904,1.000]$ for AUPRC. Deleting any task without refitting leaves balanced accuracy in $[0.924,0.956]$, and the two test seeds reach $0.931$ and $0.958$. This is a same-task-family cross-seed replication: it does not establish unseen-task, cross-family, or universal numerical calibration.
+
+
+\subsection{Gaussian calibration transfers to blur and resize}\label{sec:exp-unseen-scope}
+
+The fixed-strength evaluation includes every LeWM base--endpoint pair under blur and resize: four tasks, three independently trained seeds, and two stressors. Neither the Gaussian-calibrated endpoint screen nor the paired rule $\Delta S>0$ is stressor-retuned.
+
+\input{tables/table_cross_stressor_transfer}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{fig_fixed_pool_certificate_calibration.png}
-\caption{Candidate-wise fixed-pool calibration over 108 checkpoints and 10,800 histories. The sharp slack produces a risk--coverage curve: observed flip rate is $0.208$ at full coverage, $0.022$ at $75\%$ coverage, and zero on the $70.0\%$ satisfying the exact sharp condition. Coverage/risk is for the sampled ordered pool and does not transfer automatically to adaptive CEM or repeated replanning.}
-\label{fig:fixed-pool-certificate-calibration}
-\end{figure}
-
-
-
-The curve is descriptive selection by sharp slack, not learned probability calibration. A $K$-sensitivity audit at $K\in\{8,16,32,65\}$ is retained in the artifact, and block-level coverage is reported in Appendix~\ref{sec:appendix-fixed-pool-risk-calibration}. Earlier q50/q90 recovery-band overlays remain historical mechanism views; the sharp candidate-wise condition is the paper's exact fixed-pool result.
-
-\subsection{Local calibration supports contraction but exposes nonlinearity}\label{sec:exp-gaussian-sensitivity}
-
-The matched-map audit covers every task/training-seed base, recovery-onset, and endpoint checkpoint (36 rows). It uses the same 16 fixed anchors and unnormalized $H=8$ weighted-stacked map for finite differences and exact-autograd JVPs. Eight Rademacher probes are scaled by reciprocal ImageNet channel standard deviation so their covariance matches raw pixel-space Gaussian noise; eight Gaussian draws are evaluated at $\sigma\in\{0.0025,0.005,0.01,0.02\}$. This corrects both the horizon-scale and input-coordinate mismatch that would arise from comparing an unweighted rollout norm or normalized-input isotropic trace with the pixel-space stressor.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.78\linewidth]{fig_linearization_calibration.png}
-\caption{Measured $\mathbb E[R^2]/\sigma^2$ versus the covariance-aware JVP/Hutchinson trace per sequence for all 36 checkpoints and four small noise levels. The dashed line is equality. Dispersion, especially for base Reacher/Cube at larger small-$\sigma$, is retained as a calibration limit rather than hidden behind endpoint/base direction.}
-\label{fig:linearization-calibration}
-\end{figure}
-
-The covariance-aware JVP trace falls at the endpoint to $0.0027$, $0.0087$, $0.0065$, and $0.0287$ of the within-task base median for TwoRoom, PushT, Reacher, and Cube. At the smallest $\sigma$, measured/JVP ratios are reasonably close to one for most aggregates, but the TwoRoom endpoint median is $1.93$ and mean relative error across the four probes reaches $5.23$ and $2.89$ for base Reacher and Cube. Descriptive log--log remainder slopes are not systematically three. Thus the audit supports a strong local composed-sensitivity reduction while rejecting a claim that the tested finite range uniformly validates the $O(\sigma^3)$ approximation.
-
-\input{tables/table_linearization_calibration}
-
-Horizon/quantile sensitivity reaches the same qualitative conclusion as the component baselines. At q90, endpoint/base ATR ratios for $H=1$ versus $H=8$ are $0.05/0.06$ (TwoRoom), $0.06/0.09$ (PushT), $0.02/0.02$ (Reacher), and $0.04/0.04$ (Cube). Varying q80/q90/q95 likewise changes magnitudes little. We therefore keep $H=8$ as the preregistered public-v1 definition but remove any claim that long-horizon rollout is empirically necessary here.
-
-\input{tables/table_horizon_quantile_sensitivity}
-
-Appendix~\ref{sec:appendix-local-sensitivity} retains the raw encoder, rollout, and composed JVP decomposition and both $\kappa$ definitions. The rollout-side trace is task-dependent rather than uniformly smaller, so no standalone predictor-Jacobian repair is claimed.
-
-\FloatBarrier
-\subsection{Within-family paired changes transfer across blur and resize}\label{sec:exp-unseen-scope}
-
-The fixed-strength E3 audit evaluates both blur and resize for every base/endpoint block: 24 LeWM pairs and eight exploratory PLDM pairs. Diagnostic artifacts are scored before behavior is joined, severity is fixed, and neither the Gaussian-frozen absolute gate nor the paired zero threshold is retuned. \Cref{tab:cross-stressor-paired-change} separates the two uses.
-
-\input{tables/table_cross_stressor_paired_change}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.86\linewidth]{fig_cross_stressor_fixed_rho.png}
-\caption{Paired diagnostic improvement tracks closed-loop robustness improvement across fixed blur and resize stressors. Each point is one base-to-endpoint task--training-family pair; circles are three LeWM training seeds and squares are one PLDM training family. Colors identify stressors, not outcome classes. The dashed axes show the single $\Delta S=0$ decision boundary and zero behavioral change; dotted horizontal lines show the pre-specified $\pm5$-point behavioral band.}
+\includegraphics[width=0.88\linewidth]{fig_cross_stressor_submission.pdf}
+\caption{LeWM endpoint-minus-base diagnostic change versus stressed-success change for all 24 fixed blur/resize pairs. Color and fill identify stressor; marker shape identifies task. Dashed lines mark zero change, and the shaded strip marks the predeclared $\pm5$-point behavioral neutral band. Positive-transfer labels additionally require a clean-success drop no larger than five points, which is not shown on this axis.}
 \label{fig:cross-stressor-paired-change}
 \end{figure}
 
-On all 24 LeWM pairs, the shared rule $\Delta S>0$ reaches balanced accuracy $0.889$, AUPRC $0.974$, precision $0.882$, and recall $1.000$. It remains consistent when split without retuning: balanced accuracy is $0.875$ for blur and $0.900$ for resize. Continuous diagnostic and stressed-success changes have Spearman correlation $0.864$ and signed agreement $0.917$. A 5,000-repeat bootstrap over the 12 task--training-seed blocks, retaining both stressors within each block, gives 95\% intervals $[0.700,1.000]$ for balanced accuracy, $[0.869,1.000]$ for AUPRC, $[0.641,0.932]$ for Spearman correlation, and $[0.792,1.000]$ for signed agreement.
+The shared paired rule reaches balanced accuracy $0.889$, AUPRC $0.974$, precision $0.882$, recall $1.000$, and Spearman correlation $0.864$. Block bootstrap intervals are $[0.700,1.000]$ for balanced accuracy, $[0.869,1.000]$ for AUPRC, and $[0.641,0.932]$ for Spearman correlation. Without retuning, balanced accuracy is $0.875$ on blur and $0.900$ on resize. A block sign-flip test gives one-sided $p=2.44\times10^{-4}$.
 
-Across all 32 rows, the paired association is $0.871$. The one-family PLDM slice gives balanced accuracy $0.833$ and Spearman correlation $0.667$, but it contains only eight rows and two positives. We therefore use PLDM to demonstrate that the analysis interface can be instantiated on another latent predictive model, not to claim training-seed-replicated cross-model performance or a shared absolute threshold.
-
-The paired signal is also not unique to correct-action H8. Across the 32 rows, Spearman correlations are $0.865$ for encoder change, $0.862$ for correct-action H8, $0.874$ for time-shuffled H8, and $0.871$ for the joint score. This supports a family of paired latent-sensitivity diagnostics; the rollout/candidate construction supplies the control-facing interpretation, not an empirical complexity advantage.
-
-Absolute screening answers a different question. On the 24 LeWM pairs, the unchanged Gaussian-frozen gate has balanced accuracy/AUPRC $0.733/0.856$, precision $1.000$, and recall $0.467$: a pass is reliable in this sample, but many behavior-positive endpoints are missed. Thus the supported cross-stressor result is reference-based relative comparison within a calibrated family, while single-checkpoint absolute screening remains conservative.
-
+The endpoint screen uses no base diagnostic at scoring time, but its evaluation label remains pair-derived improvement. It passes $7/24$ endpoints (coverage $0.292$), with no observed false pass, recall $0.467$, and an exact one-sided 95\% false-pass upper bound of $0.348$. It is therefore a conservative sample screen, not an absolute stability detector or population safety guarantee. Component comparisons in Appendix~\ref{sec:appendix-boundary-stressors} show that this checkpoint-change association is not uniquely action specific; the action/horizon increment is established only by the future-drift experiment.
 \FloatBarrier
-%% ===========================================================================
+
 \section{Discussion and limitations}\label{sec:disc}
 
-\paragraph{What the evidence supports.}
-The central result is a hierarchy rather than a universal score. The paired-radius/guard analysis interface is implemented for LeWM and PLDM without changing its mathematical objects. Within LeWM, an absolute gate calibrated on one Gaussian seed transfers strongly to two held-out training seeds and conservatively to blur/resize, while a single reference-based zero threshold tracks relative robustness changes across both off-axis stressors. The sharp candidate-wise condition gives exact sampled-pool implications and measured coverage; covariance-aware JVP/finite-difference calibration supports local composed-sensitivity contraction. Block uncertainty, failed repairs, and component controls are retained as part of the evidence rather than selected away.
+The future-drift experiment validates the object in Theorem~\ref{thm:target-free-error-drift}: correct-action $H=8$ contains information about action-matched latent future-error drift that $H=1$ and structure-destroyed controls miss in fragile regimes. Its target is a held-out future embedded by the frozen encoder, not behavior. The interval is conditional on two trained checkpoints: some seed 3073 task results preceded the final protocol freeze, whereas seed 3074 is a fully frozen four-task replication. Candidate-query increment remains task dependent.
 
-\paragraph{Scope.}
-Analysis-interface portability is conditional on access to paired views, the model representation/predictor, and compatible projections; it is not a black-box theorem for arbitrary agents. Absolute thresholds remain family-calibrated. The paired zero-threshold result requires a reference checkpoint and stressor-specific diagnostic recomputation, and it covers only blur and resize at one fixed severity. PLDM has one training family; evaluation seeds 42/43/44 are conditional measurement replicates. The sharp condition covers a once-sampled ordered pool; it is not an adaptive-planning guarantee for CEM resampling, repeated replanning, or environment feedback. Encoder/H1/action/time controls show no empirical necessity for a long horizon or correct-action conditioning. SMPR rejects complete collapse but does not establish task-label, action-relevance, progressive-collapse, or four-task oracle sufficiency. We do not claim superiority over robust-control training methods.
+Cross-seed calibration changes the independently trained model instance while holding the four tasks and training-noise grid fixed. It therefore supports family-local replication, not unseen-task generalization, cross-family numerical transfer, a deterministic single-frame verdict, or a universal latent threshold.
 
-\paragraph{What remains.}
-Broader empirical portability requires independently trained PLDM seeds or additional model families, more corruption families and severities, and stronger semantic/planner guards. An official ATM comparison requires fresh real/predicted transition probes and a preregistered probe split; current baselines are not relabeled as ATM. Adaptive-CEM guarantees require a separate analysis of resampling and feedback. These are extensions of the bounded claim, not missing premises silently assumed by the present result.
+Cross-stressor transfer concerns relative checkpoint improvement at one fixed blur and resize severity. The endpoint screen uses no base diagnostic at scoring time, yet its label is pair-derived and its $7/24$ coverage leaves a wide false-pass upper bound. The stronger paired result requires a reference checkpoint and is not action specific. Neither result is an absolute cross-stressor stability detector.
 
-%% ===========================================================================
+Across all three experiments, SMPR is a gross-collapse guard rather than a semantic proof, the fixed-pool analysis applies only after both candidate pools are evaluated, and stable-but-wrong predictions remain possible. Closed-loop evaluation is therefore the behavioral authority. The highest-value extensions are additional prospectively frozen training seeds for the future-drift test, absolute cross-stressor labels over multiple severities, and independently trained external-model families.
+
 \section{Conclusion}\label{sec:conc}
 
-This paper separates the portability of a paired latent robustness analysis from the portability of its numerical calibration. The same radius/guard interface is instantiated on LeWM and PLDM, but LeWM thresholds are not promoted to cross-family constants. Within LeWM, the absolute gate transfers strongly across training seeds and acts as a high-precision, low-recall blur/resize screen. More importantly for comparing checkpoints, one untuned $\Delta S>0$ rule is shared across blur and resize: it reaches balanced accuracy/AUPRC $0.889/0.974$ and tracks closed-loop robustness change with Spearman correlation $0.864$ across 24 pairs.
-
-The strongest exact result remains candidate-wise: positive sharp slack guarantees top-1 stability for the evaluated fixed pool and covers $70.0\%$ of 10,800 histories. Local JVP calibration supports composed-sensitivity contraction, while encoder/H1/action/time controls show that the empirical diagnostic signal is not uniquely long-horizon or action-specific. The resulting contribution is a portable analysis framework with family-calibrated absolute use, a strongly supported within-family paired cross-stressor use, and explicit fixed-pool and semantic boundaries.
-
-%% ===========================================================================
+ACPC converts a paired visual probe into a target-free bound on action-matched future-error drift. On four tasks, its action-conditioned long-horizon response adds held-out mechanism information in fragile checkpoints; a one-seed LeWM calibration replicates across two independent training seeds; and one paired rule retains useful ordering under fixed blur and resize. Keeping these claims separate yields a compact diagnostic with explicit statistical and operational boundaries rather than a universal robustness score.
 \bibliographystyle{plain}
 \bibliography{references}
 
 %% ===========================================================================
 \clearpage
 \appendix
-\section{Proofs}\label{sec:appendix-acpc-proofs}
+\section{Candidate-Cost and Fixed-Pool Analysis}\label{sec:appendix-acpc-proofs}
 
-These proofs support the diagnostic use of ATR and SMPR; they do not provide closed-loop control guarantees.
+These details connect the rollout radius to candidate-cost drift and fixed-pool top-1 stability; they do not provide closed-loop control guarantees. Let $h$ and $\tilde h$ be matched clean and corrupted histories, and let both branches evaluate the same ordered candidate pool $\mathcal A=\{\mathbf a^1,\ldots,\mathbf a^K\}$. For task descriptor $g$, define
+\begin{equation}
+C_h(\mathbf a,g)=J\!\left(\Pi(\hat z_{t+1}),\ldots,\Pi(\hat z_{t+H}),g\right),\label{eq:candidate-cost}
+\end{equation}
+with $C_{\tilde h}$ defined analogously. If $j^*$ is the clean winner, let $\Delta_j=C_h(\mathbf a^j,g)-C_h(\mathbf a^{j^*},g)$ and $d_j=|C_{\tilde h}(\mathbf a^j,g)-C_h(\mathbf a^j,g)|$. The candidate-wise sufficient condition used below is
+\begin{equation}
+\min_{j\ne j^*}\bigl(\Delta_j-d_j-d_{j^*}\bigr)>0.\label{eq:sharp-candidate-certificate}
+\end{equation}
 
 \begin{proposition}[ACPC controls candidate-cost drift]\label{prop:cost-drift}
-Assume that $J$ is locally $L_J$-Lipschitz on the clean/perturbed projected-rollout neighborhood evaluated by the fixed candidate set under metric $d_H$. If
+Assume that $J(\cdot,g)$ is locally $L_J$-Lipschitz on the paired projected-rollout neighborhood evaluated by the fixed candidate set. If
 \[
- d_H\!\left(\Pi(F_\theta^{1:H}(E_\theta(h),\mathbf a)),
-             \Pi(F_\theta^{1:H}(E_\theta(\tilde h),\mathbf a))\right) \le \epsilon,
+\|\bar G_{\mathbf a}(E_\theta(h))-\bar G_{\mathbf a}(E_\theta(\tilde h))\|_2 \le \epsilon,
 \]
 then
 \[
@@ -711,7 +340,7 @@ then
 \end{proposition}
 
 \begin{proof}
-The planner cost $J$ is $L_J$-Lipschitz on the projected-rollout sequence, so the cost difference is bounded by $L_J$ times the clean/perturbed projected-rollout distance.
+Apply the Lipschitz condition to the two arguments of $J$ and use the assumed bound.
 \end{proof}
 
 \begin{proposition}[Candidate top-1 stability]\label{prop:top1-stability}
@@ -745,29 +374,12 @@ C_{\tilde h}(\mathbf a^j,g)-C_{\tilde h}(\mathbf a^{j^*},g)
 \]
 Therefore positivity of the minimum in \Cref{eq:sharp-candidate-certificate} makes every perturbed competitor strictly more costly. This proves the deterministic fixed-pool implication without a common worst-case drift bound.
 
-\paragraph{Proof of \Cref{thm:radius-margin-certificate}.}
-\begin{proof}
-Let $\mathcal B=\{\max_{1\le j\le K} D_j\le\epsilon\}$. Since each candidate is drawn from $q$ and a single draw has tail probability at most $\alpha$, the union bound gives
-\[
-\Pr_{\mathcal A}(\mathcal B^c)
-\le
-\sum_{j=1}^K \Pr[D_j>\epsilon]
-\le K\alpha .
-\]
-On $\mathcal B$, local Lipschitzness of the planner cost gives $|C_h(\mathbf a^j,g)-C_{\tilde h}(\mathbf a^j,g)|\le L_J\epsilon$ for every candidate. By the top-1 stability proposition, the perturbed branch can choose a different top candidate on $\mathcal B$ only when $\Delta_{\mathcal A}\le 2L_J\epsilon$. Therefore the top-1 flip event is contained in
-\[
-\mathcal B^c \cup \{\Delta_{\mathcal A}\le 2L_J\epsilon\},
-\]
-which yields the fixed-pool instability bound without any independence assumption beyond the single-candidate tail statement.
-For the selective diagnostic statement, let $\mathcal D=\{M_{\mathrm{diff}}\le R_\sigma+\delta_m\}$. Selective failure is contained in the union of the fixed-pool planning-instability event and $\mathcal D$. Applying the union bound again and using $\Pr(\mathcal D)\le\gamma$ gives the final bound.
-\end{proof}
-
 \paragraph{Local Gaussian sensitivity.}
 For small Gaussian pixel noise $\xi$, a first-order expansion gives
 $E_\theta(o+\xi)=E_\theta(o)+J_E(o)\xi+\mathcal R(\xi)$ with $\|\mathcal R(\xi)\|=O(\|\xi\|^2)$.
 Composing the encoder with the action-conditioned rollout map shows that same-state rollout disagreement measures local sensitivity of the encoder--predictor composition, not encoder invariance alone. ATR reports a high-quantile version of that paired rollout disagreement.
 
-\section{Experimental Protocol and Artifacts}\label{sec:appendix-A}
+\section{Evaluation and Diagnostic Protocol}\label{sec:appendix-A}
 
 These details define the fixed evaluation and diagnostic protocol used by the main tables.
 
@@ -775,219 +387,57 @@ LeWM is evaluated on PushT, TwoRoom, Reacher, and Cube using the canonical three
 
 ATR is computed at each task--training-seed--checkpoint row from one canonical weighted-stacked horizon radius per anchor.  The default is $H=8$ with uniform $\alpha_k=1/H$.  Each radius is divided by that anchor's q50 clean observed-transition scale, including the transition from the last history observation to the first future observation; multiple noise draws are first averaged within the anchor, and q90 is then taken across anchors. SMPR uses programmatic label-crossing state pairs, q90 tube radius, closest-35\% neighborhood, and normalized margin $0.10$. The paper reports population mean/std across training seeds 3072/3073/3074.
 
-The legacy field \texttt{stepwise\_rollout\_q90} is retained only for compatibility in appendix artifacts.  It pools the $B\times H$ stepwise rollout distances before taking q90; it is not ATR and is not used as the canonical horizon-radius statistic.
+All summary figures and tables are rebuilt deterministically by the scripts documented in \codebrk{paper1/scripts/README.md}. Checkpoint-level diagnostics additionally require the released checkpoints and datasets. Machine-readable summaries record training seeds, evaluation seeds, and protocol hashes.
 
-\section{Additional Gaussian Evaluation Tables}\label{sec:appendix-gaussian-evals}
+\section{Future-Drift Scope and Controls}\label{sec:appendix-p1-controls}
 
-These tables report the full observation-only Gaussian evaluation columns available for the three-training-seed sweep behind \Cref{fig:sweep}. Each training-seed value first averages evaluation seeds 42/43/44; table cells report mean $\pm$ population std across training seeds 3072/3073/3074.
+The target-free inequality in \Cref{thm:target-free-error-drift} has zero numerical violations in every logged-H8 and candidate-H5 task$\times$seed$\times$checkpoint-role cell. This is an implementation invariant, not an independent statistical success count.
 
-\begin{table}[H]
-\centering
-\caption{Full three-training-seed LeWM observation-only Gaussian sweep evaluation table. Columns report clean evaluation and observation-only Gaussian evaluation at $\sigma=0.03/0.05/0.08$ with a clean goal image. Values are mean $\pm$ population std across training seeds 3072/3073/3074; each training-seed value first averages evaluation seeds 42/43/44 with 100 trajectories per evaluation seed.}
-\label{tab:appendix-gaussian-sweep}
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{0.90}
-\begin{tabular}{llrrrr}
-\toprule
-Task & training \stdmax{} & clean eval & obs-only $\sigma=0.03$ eval & obs-only $\sigma=0.05$ eval & obs-only $\sigma=0.08$ eval \\
-\midrule
-TwoRoom & $0.00$ & $94.67 \pm 0.72$ & $92.56 \pm 1.23$ & $81.33 \pm 6.77$ & $68.78 \pm 2.45$ \\
-TwoRoom & $0.01$ & $94.89 \pm 1.10$ & $95.00 \pm 0.82$ & $94.78 \pm 1.77$ & $93.44 \pm 2.08$ \\
-TwoRoom & $0.02$ & $95.78 \pm 1.10$ & $95.89 \pm 1.29$ & $95.22 \pm 1.29$ & $95.44 \pm 1.57$ \\
-TwoRoom & $0.03$ & $95.11 \pm 0.87$ & $95.00 \pm 0.82$ & $95.22 \pm 0.83$ & $95.11 \pm 1.34$ \\
-TwoRoom & $0.04$ & $95.89 \pm 0.42$ & $96.44 \pm 0.96$ & $95.78 \pm 0.31$ & $95.89 \pm 0.57$ \\
-TwoRoom & $0.05$ & $96.11 \pm 1.50$ & $96.00 \pm 1.91$ & $96.00 \pm 1.52$ & $95.89 \pm 1.55$ \\
-TwoRoom & $0.06$ & $96.00 \pm 1.70$ & $95.56 \pm 1.81$ & $95.56 \pm 1.40$ & $95.78 \pm 1.55$ \\
-TwoRoom & $0.07$ & $96.44 \pm 0.63$ & $96.33 \pm 0.54$ & $96.11 \pm 0.68$ & $96.44 \pm 0.31$ \\
-TwoRoom & $0.08$ & $97.22 \pm 0.83$ & $97.22 \pm 0.68$ & $97.33 \pm 0.72$ & $97.11 \pm 0.57$ \\
-\addlinespace[2pt]
-PushT & $0.00$ & $81.78 \pm 4.89$ & $53.56 \pm 12.91$ & $19.22 \pm 9.12$ & $7.22 \pm 5.81$ \\
-PushT & $0.01$ & $85.89 \pm 1.50$ & $82.22 \pm 3.03$ & $70.33 \pm 6.33$ & $37.89 \pm 12.37$ \\
-PushT & $0.02$ & $87.33 \pm 0.72$ & $85.11 \pm 1.13$ & $82.89 \pm 2.69$ & $62.67 \pm 11.98$ \\
-PushT & $0.03$ & $89.67 \pm 0.00$ & $89.67 \pm 0.27$ & $88.78 \pm 2.08$ & $82.44 \pm 1.66$ \\
-PushT & $0.04$ & $89.11 \pm 0.83$ & $88.22 \pm 1.13$ & $87.33 \pm 1.19$ & $86.56 \pm 0.16$ \\
-PushT & $0.05$ & $84.00 \pm 3.03$ & $84.22 \pm 2.53$ & $82.56 \pm 3.13$ & $81.11 \pm 3.03$ \\
-PushT & $0.06$ & $88.22 \pm 1.34$ & $88.89 \pm 1.03$ & $87.33 \pm 0.47$ & $86.78 \pm 0.63$ \\
-PushT & $0.07$ & $86.44 \pm 0.87$ & $86.00 \pm 1.19$ & $84.22 \pm 0.42$ & $84.00 \pm 0.27$ \\
-PushT & $0.08$ & $86.89 \pm 1.59$ & $86.56 \pm 2.20$ & $84.67 \pm 2.88$ & $85.78 \pm 3.45$ \\
-\addlinespace[2pt]
-Reacher & $0.00$ & $59.22 \pm 1.03$ & $42.56 \pm 2.99$ & $33.56 \pm 1.77$ & $18.22 \pm 0.42$ \\
-Reacher & $0.01$ & $62.67 \pm 1.19$ & $60.67 \pm 1.09$ & $56.00 \pm 0.72$ & $44.56 \pm 2.57$ \\
-Reacher & $0.02$ & $77.00 \pm 6.18$ & $76.44 \pm 8.17$ & $77.22 \pm 6.68$ & $70.33 \pm 9.46$ \\
-Reacher & $0.03$ & $78.22 \pm 1.66$ & $79.33 \pm 0.72$ & $79.11 \pm 1.10$ & $76.78 \pm 4.17$ \\
-Reacher & $0.04$ & $81.78 \pm 1.59$ & $82.00 \pm 1.52$ & $81.11 \pm 2.62$ & $80.56 \pm 1.03$ \\
-Reacher & $0.05$ & $76.44 \pm 4.57$ & $77.33 \pm 5.76$ & $77.56 \pm 4.01$ & $77.78 \pm 5.67$ \\
-Reacher & $0.06$ & $82.22 \pm 2.79$ & $79.33 \pm 2.42$ & $81.67 \pm 1.63$ & $80.67 \pm 1.19$ \\
-Reacher & $0.07$ & $82.11 \pm 2.20$ & $82.44 \pm 1.29$ & $81.44 \pm 1.85$ & $83.33 \pm 1.09$ \\
-Reacher & $0.08$ & $81.33 \pm 2.33$ & $82.56 \pm 2.08$ & $82.00 \pm 1.78$ & $81.56 \pm 0.87$ \\
-\addlinespace[2pt]
-Cube & $0.00$ & $65.22 \pm 1.10$ & $63.00 \pm 1.19$ & $46.67 \pm 1.96$ & $43.11 \pm 3.27$ \\
-Cube & $0.01$ & $66.78 \pm 1.81$ & $67.00 \pm 2.13$ & $67.56 \pm 2.27$ & $48.78 \pm 0.31$ \\
-Cube & $0.02$ & $63.67 \pm 2.62$ & $61.44 \pm 3.45$ & $63.33 \pm 1.96$ & $56.67 \pm 3.07$ \\
-Cube & $0.03$ & $64.56 \pm 1.66$ & $63.44 \pm 3.03$ & $65.33 \pm 0.94$ & $66.00 \pm 1.70$ \\
-Cube & $0.04$ & $68.11 \pm 1.03$ & $65.11 \pm 1.50$ & $65.44 \pm 0.57$ & $64.11 \pm 0.83$ \\
-Cube & $0.05$ & $62.67 \pm 3.40$ & $63.33 \pm 2.42$ & $60.67 \pm 3.09$ & $63.56 \pm 2.53$ \\
-Cube & $0.06$ & $66.00 \pm 1.19$ & $65.89 \pm 1.03$ & $64.67 \pm 1.09$ & $64.89 \pm 1.85$ \\
-Cube & $0.07$ & $64.67 \pm 2.16$ & $64.67 \pm 1.89$ & $65.44 \pm 2.57$ & $65.22 \pm 1.55$ \\
-Cube & $0.08$ & $61.67 \pm 3.57$ & $61.78 \pm 4.16$ & $61.89 \pm 2.45$ & $62.56 \pm 1.55$ \\
-\bottomrule
-\end{tabular}
-\end{table}
+Endpoint-only comparisons are range restricted, and earlier coarse checkpoint-label screens leave simple encoder or one-step diagnostics competitive. Those targets do not test the future-drift question: incremental prediction of an independent action-matched future after common covariates are supplied. On the candidate-$H=5$ query, the increment is also task dependent: seed 3073 clears it on TwoRoom and PushT but not Reacher or Cube; seed 3074 clears the absolute target on TwoRoom and PushT and the adverse target only on PushT. We therefore make no four-task candidate-query increment claim.
 
+These controls restrict the main claim to logged future-error drift in fragile regimes. The primary estimate keeps seeds 3073/3074: some seed 3073 task runs preceded the final protocol freeze, whereas seed 3074 is the fully frozen replication. After outcomes had been inspected, seed 3072 was run as a retrospective completeness check; it passes logged $H=8$ on all four tasks but is reported separately and is not pooled with the primary seeds.
 
-\section{Diagnostic Validation Details}\label{sec:appendix-supplementary-diagnostics}
+\section{Qualitative Neighborhood Visualization}\label{sec:appendix-supplementary-diagnostics}
 
-These details report endpoint values, the older matched-Gaussian direction checks, and the new SMPR sensitivity/controls. The endpoint and full-sweep co-movement is descriptive; the component and counterfactual tests in the main text determine which mechanism claims survive.
-
-\input{tables/table_endpoint_atr_smpr}
-
-\input{tables/table_theory_evidence_map}
-
-\input{tables/table_joint_guard_side_validation}
-
-\input{tables/table_threshold_quantile_sensitivity}
-
-\input{tables/table_smpr_sensitivity}
-
-\input{tables/table_smpr_controls}
-
-\subsection{Qualitative ACPC neighborhood view}\label{sec:appendix-qualitative-neighborhood}
+The two-dimensional view complements the quantitative analysis by showing how repeated perturbations of the same anchors are arranged before and after noise training. Because t-SNE does not preserve metric geometry, all reported evidence remains in the original projected-rollout space.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{fig_acpc_basin_tsne.png}
-\caption{The PushT t-SNE view provides qualitative intuition only and is not used for quantitative claims. The four panels compare LeWM-base with the \stdmax{} $=0.08$ noise-trained checkpoint in encoder features and 8-step rollout predicted features for repeated same-state perturbation views; colored clusters mark fixed random anchors. ATR and SMPR are computed in the original projected-rollout diagnostic space.}
+\caption{Qualitative PushT neighborhoods under matched visual perturbations. The panels embed the same fixed anchors and repeated views for the no-noise and \stdmax{} $=0.08$ checkpoints, in encoder and eight-step rollout spaces. Colored neighborhoods make the contraction after noise training visually accessible. The embedding protocol is fixed across panels, but t-SNE is not metric preserving: no displayed distance, area, or overlap enters a claim, and ATR/SMPR are computed in the original projected-rollout space.}
 \label{fig:acpc-basin-tsne}
 \end{figure}
 
-\section{Fixed-pool Planner Audit Details}\label{sec:appendix-fixed-pool-details}
+\section{Fixed-Pool Candidate Stability}\label{sec:appendix-fixed-pool-details}
 
-\subsection{Radius--margin parameter interpretation}\label{sec:appendix-radius-margin-params}
-
-\Cref{thm:radius-margin-certificate} separates the quantities needed for a numerical fixed-pool probability bound from the lower-sample diagnostic summaries reported in the experiments. In the fixed-pool diagnostic summaries used for \Cref{fig:full-sweep-diagnostics,fig:radius-margin-overlap}, the candidate count is $K=65$ for every task--checkpoint row. The theorem's single-candidate tail probability $\alpha$ is not fixed by the q90 reporting level used by ATR. A q90 summary descriptively leaves 10\% of measured same-state radii above the reported quantile, but that descriptive exceedance rate is not the $\alpha$ used in the theorem. If it were naively inserted into the union-bound term, the result would be $65\times0.1=6.5$, which is vacuous. A non-vacuous numerical candidate-flip bound would require a much smaller single-candidate tail probability or a different concentration argument. We therefore use q90 ATR and the available q50/q90 cost-margin overlap as diagnostic evidence for the radius--margin mechanism, not as a calibrated probability guarantee.
-
-\begin{table}[H]
-\centering
-\caption{Fixed-pool radius--margin interpretation used in the diagnostic analysis. The behavioral recovery band is defined from closed-loop observation-only $\sigma=0.08$ scores; the proxy-positive range uses $\widehat Q_{0.50}(\Delta_{\mathcal A})-2\widehat Q_{0.90}(|C_h-C_{\tilde h}|)>0$ on the available summary-level fixed-pool summaries. These ranges explain the recovery/proxy bands in \Cref{fig:full-sweep-diagnostics} and the overlap proxy in \Cref{fig:radius-margin-overlap}; they are not used to claim a calibrated flip-probability bound.}
-\label{tab:appendix-radius-margin-params}
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lccc p{0.31\linewidth}}
-\toprule
-Task & $K$ & recovery band & proxy-positive range & interpretation \\
-\midrule
-TwoRoom & 65 & $0.01$--$0.08$ & $0.02$--$0.08$ & proxy misses the first recovery-band checkpoint \\
-PushT & 65 & $0.03$--$0.08$ & $0.02$--$0.08$ & proxy includes one earlier checkpoint \\
-Reacher & 65 & $0.02$--$0.08$ & $0.04$--$0.08$ & proxy is conservative at low noise-training levels \\
-Cube & 65 & $0.03$--$0.08$ & $0.03$--$0.08$ & proxy and recovery-band ranges align \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The one-grid tolerance is $\tau_{\mathrm{grid}}=0.01$ in \stdmax{} units. Recovery-onset error is defined as $\rho^{\mathrm{diag}}_{\mathrm{start}}-\rho^{\mathrm{beh}}_{\mathrm{start}}$, so positive values mean the diagnostic proxy is later and negative values mean it fires earlier.
-
-\begin{table}[H]
-\centering
-\caption{Boundary-aware interpretation of the fixed-pool radius--margin proxy. Equal spacing in \stdmax{} is not equal spacing in task sensitivity, so these rows are interpreted as task-conditioned boundary comparisons rather than grid-point classifier scores.}
-\label{tab:appendix-boundary-aware-intervals}
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lccccp{0.31\linewidth}}
-\toprule
-Task & recovery band & proxy range & \shortstack{recovery-onset\\error} & within $\tau_{\mathrm{grid}}$? & interpretation \\
-\midrule
-TwoRoom & $0.01$--$0.08$ & $0.02$--$0.08$ & $+0.01$ & yes & proxy misses the first recovery-band checkpoint \\
-PushT & $0.03$--$0.08$ & $0.02$--$0.08$ & $-0.01$ & yes & proxy fires one grid step early \\
-Reacher & $0.02$--$0.08$ & $0.04$--$0.08$ & $+0.02$ & partial & fixed-pool cost-margin proxy is conservative \\
-Cube & $0.03$--$0.08$ & $0.03$--$0.08$ & $0.00$ & yes & proxy and recovery band align \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The measured fixed-pool flip rate is the clean/noisy top-1 disagreement rate under the same candidate set, so one minus this flip rate gives an empirical top-1 agreement analysis that is closer to the theorem's intermediate statement than closed-loop score. It still does not cover adaptive CEM resampling or repeated replanning. \Cref{fig:full-sweep-planner-guard} shows the full-sweep planner-side traces that were intentionally separated from the main full-sweep ACPC figure.
+The analysis evaluates the same ordered pool of $K=65$ actions on nominal and corrupted branches for 100 histories at each of 108 LeWM checkpoints (10,800 histories). Coarse coverage is $0.478$, candidate-wise sharp coverage is $0.700$, and the overall observed top-1 flip rate is $0.208$. Among sharp-condition failures the flip rate is $0.694$.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\linewidth]{fig_full_sweep_planner_guard.png}
-\caption{Planner-side fixed-pool traces are reported separately from the main ACPC full-sweep figure. Continuous green bands mark training-noise ranges where a majority of seed rows meet the behavioral recovery criterion; top-1 flip is observed clean/noisy fixed-pool top-candidate disagreement, and proxy gap $>0$ marks rows where the retained q50/q90 summary-level radius--margin proxy is positive. These traces support the planner-side mechanism audit but are not a checkpoint-selection rule.}
-\label{fig:full-sweep-planner-guard}
+\includegraphics[width=\linewidth]{fig_fixed_pool_certificate_calibration.pdf}
+\caption{Fixed-pool candidate-stability conditions with task$\times$training-seed block-bootstrap 95\% intervals. Left: coverage of the common-drift and candidate-wise sharp conditions. Right: observed top-1 flip rate over all histories and over histories that fail the sharp condition. The zero flip rate when the sharp condition holds follows deterministically and is not counted as separate validation evidence.}
+\label{fig:fixed-pool-certificate-calibration}
 \end{figure}
 
-\begin{table}[H]
-\centering
-\caption{Fixed-pool top-1 agreement analysis derived from the measured fixed-pool flip rate. Rows show the no-noise baseline, the first closed-loop recovery-band checkpoint on the discrete sweep, and the matched \stdmax{} $=0.08$ endpoint.}
-\label{tab:appendix-top1-agreement}
-\footnotesize
-\setlength{\tabcolsep}{3.5pt}
-\begin{tabular}{llrrrr}
-\toprule
-Task & checkpoint & cost drift q90 & clean margin q50 & proxy gap & top-1 agreement \\
-\midrule
-TwoRoom & base $0.00$ & $180.33$ & $94.14$ & $-266.52$ & $0.207$ \\
-TwoRoom & onset $0.01$ & $85.42$ & $100.56$ & $-70.28$ & $0.510$ \\
-TwoRoom & endpoint $0.08$ & $6.00$ & $65.46$ & $53.46$ & $0.960$ \\
-PushT & base $0.00$ & $163.82$ & $129.21$ & $-198.44$ & $0.110$ \\
-PushT & onset $0.03$ & $18.16$ & $143.29$ & $106.96$ & $0.937$ \\
-PushT & endpoint $0.08$ & $7.15$ & $132.05$ & $117.74$ & $0.973$ \\
-Reacher & base $0.00$ & $217.30$ & $17.29$ & $-417.32$ & $0.097$ \\
-Reacher & onset $0.02$ & $37.67$ & $18.54$ & $-56.80$ & $0.810$ \\
-Reacher & endpoint $0.08$ & $4.24$ & $20.08$ & $11.59$ & $0.983$ \\
-Cube & base $0.00$ & $198.70$ & $82.76$ & $-314.65$ & $0.087$ \\
-Cube & onset $0.03$ & $39.48$ & $82.95$ & $3.99$ & $0.923$ \\
-Cube & endpoint $0.08$ & $5.05$ & $76.94$ & $66.85$ & $0.997$ \\
-\bottomrule
-\end{tabular}
-\end{table}
+This analysis is post-evaluation: candidate-specific drift requires both branches and is not a cheap predictor for a new pool. Extending it to adaptive CEM would require prospective calibration over newly sampled pools and repeated replanning.
+
+\section{Local Linearization}\label{sec:appendix-local-sensitivity}
+
+For small raw-pixel Gaussian noise $\xi$, the paired rollout difference has first-order term $J_{\bar G_{\mathbf a}}J_E\xi$. The covariance-aware JVP/Hutchinson estimate uses the same weighted $H=8$ map, anchors, and ImageNet-coordinate correction as the finite-difference measurement.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\linewidth]{fig_radius_margin_overlap.png}
-\caption{Fixed-pool radius--margin overlap proxy across the full Gaussian training sweep. Curves use the available summary-level fixed-pool summaries: q50 clean candidate margin and twice the q90 paired cost drift. The separate sample-level recomputation in \Cref{tab:sample-level-certificate-full-sweep} provides q10/q95 gaps and event rates; q10/q95 gaps remain negative, so the analysis supports the mechanism rather than a calibrated planner-margin bound. The sampled pool is fixed rather than adaptive CEM.}
-\label{fig:radius-margin-overlap}
+\includegraphics[width=0.82\linewidth]{fig_linearization_calibration.pdf}
+\caption{Finite-difference $\mathbb E[R^2]/\sigma^2$ versus the covariance-aware composed JVP trace for 36 checkpoints and four small noise levels. The dashed line is equality; deviations for several no-noise Reacher/Cube checkpoints show that the finite tested range is not uniformly linear.}
+\label{fig:linearization-calibration}
 \end{figure}
 
-\subsection{Fixed-pool event-rate audit}\label{sec:appendix-fixed-pool-risk-calibration}
+The endpoint composed trace contracts strongly, but rollout-side traces and finite-range linearization error are task dependent. These diagnostics explain a local mechanism; they do not provide a global or closed-loop certificate.
 
-For each sampled state $h_i$, let $E_{\mathrm{pool}}(h_i)$ be the fixed-pool sufficient event that the maximum paired candidate-cost drift over the $K=65$ fixed candidates is below one half of the clean top-1/top-2 margin. Let $F_{\mathrm{pool}}(h_i)$ be the observed clean/noisy fixed-pool top-1 disagreement. We report three empirical rates over the sampled anchors in each split:
-\begin{align}
-\hat p_{\mathrm{cert}} &= \frac{1}{n}\sum_i \mathbf{1}[E_{\mathrm{pool}}(h_i)],\nonumber\\
-\hat p_{\mathrm{flip}} &= \frac{1}{n}\sum_i \mathbf{1}[F_{\mathrm{pool}}(h_i)],\nonumber\\
-\hat p_{\mathrm{flip}\mid\mathrm{cert}} &= \frac{\sum_i \mathbf{1}[F_{\mathrm{pool}}(h_i)\wedge E_{\mathrm{pool}}(h_i)]}{\sum_i \mathbf{1}[E_{\mathrm{pool}}(h_i)]}.
-\end{align}
-The sufficient-event interpretation is sample-level: whenever $E_{\mathrm{pool}}(h_i)$ holds, the corresponding deterministic condition rules out a flip for that history and candidate set. Consequently $\hat p_{\mathrm{flip}\mid\mathrm{cert}}=0$ is an implementation invariant, not an independent empirical validation statistic. The older coarse rates below are retained for provenance; the main result uses the sharper candidate-wise slack, risk--coverage curve, and block bootstrap.
+\section{Cross-Stressor Component Analysis}\label{sec:appendix-boundary-stressors}
 
-\input{tables/table_fixed_pool_certificate_coverage}
+The analysis includes all 24 fixed-severity LeWM blur/resize base--endpoint pairs. Component scores are competitive: Spearman correlations with robustness change are $0.887$ for encoder change, $0.868$ for correct-action H8, $0.875$ for time-shuffled H8, and $0.864$ for the joint score. Thus the cross-stressor result supports predictive ordering within LeWM, not a uniquely action-specific mechanism; action/horizon increment is claimed only for future-drift prediction.
 
-In this interpretation, $\beta_{\mathrm{plan}}$ and $\beta_{\mathrm{disc}}$ name empirical failure components rather than calibrated probabilities. The planning component is represented by the fixed-pool cost-margin proxy, top-1 agreement analysis, and the sample-level event-rate recomputation; the discriminability component is represented directly by SMPR, where higher values indicate stronger margin preservation. The closed-loop recovery band explains the fixed-pool radius--margin validation rather than converting the separate ATR/SMPR diagnostic-region validation into a threshold-classifier claim.
-
-\input{tables/table_fixed_pool_tail_audit}
-
-\input{tables/table_sample_level_certificate_full_sweep}
-
-\input{tables/table_sample_level_event_rate_ci}
-
-\input{tables/table_sample_level_certificate_endpoint}
-
-\section{Local Sensitivity Details}\label{sec:appendix-local-sensitivity}
-
-The main matched-map calibration in \Cref{fig:linearization-calibration,tab:linearization-calibration} compares finite differences and covariance-aware JVPs on the same map and anchors. This appendix separates the raw encoder, rollout, and composed JVP/Hutchinson trace ratios from the relative isotropic gain; the latter can exceed one and is not an angle or certificate.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\linewidth]{fig_jvp_trace_decomposition_heatmap.png}
-\caption{JVP/Hutchinson decomposition behind the local sensitivity audit. Raw trace ratios show encoder, rollout, and composed endpoint/base sensitivity estimates; the relative isotropic gain is displayed separately because it is not on the same scale as the trace quantities. These local diagnostics explain where composed sensitivity changes, but they do not provide a global or closed-loop guarantee.}
-\label{fig:jvp-trace-decomposition-heatmap}
-\end{figure}
-
-\input{tables/table_jvp_hutchinson_sensitivity_audit}
-
-\section{Cross-Stressor Scope}\label{sec:appendix-boundary-stressors}
-
-The main text reports every fixed-severity blur/resize base-to-endpoint pair used by the paired-change analysis, not only favorable task aggregates. The supported result is one relative zero-threshold rule within the calibrated LeWM family. Additional corruption families, severities, and model-family replications remain outside this release, so the result is not a universal corruption or cross-model calibration theorem.
-
-\section{Reproducibility}\label{sec:appendix-reproducibility}
-
-The release checks are deterministic over the retained artifacts. Summary-level diagnostics and checkpoint-level audits are rebuilt by repository commands documented outside the paper; checkpoint-level audits require accessible LeWM checkpoints and datasets. The PDF and source package are checked by the repository readiness target, and the author-placeholder override is for local readiness checks only.
+\input{tables/table_cross_stressor_robustness_audit}
 
 \end{document}

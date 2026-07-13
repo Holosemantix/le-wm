@@ -16,14 +16,20 @@ from matplotlib.patches import Patch
 from .utils_paper1_io import ROOT, TASKS, fnum, read_csv, safe_mean
 
 DEFAULT_DIAGNOSTICS = ROOT / "paper1" / "results" / "full_sweep_diagnostics.csv"
-DEFAULT_FIG = ROOT / "assets" / "paper1_figs" / "fig_full_sweep_diagnostics.png"
-DEFAULT_REGION_FIG = ROOT / "assets" / "paper1_figs" / "fig_full_sweep_diagnostic_region.png"
-DEFAULT_PLANNER_FIG = ROOT / "assets" / "paper1_figs" / "fig_full_sweep_planner_guard.png"
+DEFAULT_FIG = ROOT / "assets" / "paper1_figs" / "fig_full_sweep_diagnostics.pdf"
+DEFAULT_REGION_FIG = ROOT / "assets" / "paper1_figs" / "fig_full_sweep_diagnostic_region.pdf"
+DEFAULT_PLANNER_FIG = ROOT / "assets" / "paper1_figs" / "fig_full_sweep_planner_guard.pdf"
 
 PLOT_STYLE = {
+    "font.family": "serif",
+    "font.serif": ["DejaVu Serif", "Times New Roman", "Times"],
+    "mathtext.fontset": "stix",
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
     "font.size": 8,
     "axes.labelsize": 8,
     "axes.titlesize": 9,
+    "axes.linewidth": 0.7,
     "xtick.labelsize": 8,
     "ytick.labelsize": 8,
     "legend.fontsize": 8,
@@ -48,6 +54,22 @@ def _mean_by_rho(task_rows: list[dict[str, str]], key: str) -> list[float]:
         vals = [r[key] for r in task_rows if abs(fnum(r["rho"]) - rho) < 1e-12]
         out.append(safe_mean(vals))
     return out
+
+
+def _range_by_rho(
+    task_rows: list[dict[str, str]], key: str
+) -> tuple[list[float], list[float]]:
+    lower, upper = [], []
+    for rho in _task_rhos(task_rows):
+        values = [
+            fnum(row[key])
+            for row in task_rows
+            if abs(fnum(row["rho"]) - rho) < 1e-12
+        ]
+        values = [value for value in values if math.isfinite(value)]
+        lower.append(min(values) if values else math.nan)
+        upper.append(max(values) if values else math.nan)
+    return lower, upper
 
 
 def _rate_by_rho(task_rows: list[dict[str, str]], key: str) -> list[float]:
@@ -126,10 +148,16 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             score = _mean_by_rho(trs, "obs_sigma_008_score")
             atr = _mean_by_rho(trs, "atr_normalized_q90")
             smpr = _mean_by_rho(trs, "smpr_delta0")
+            score_lo, score_hi = _range_by_rho(trs, "obs_sigma_008_score")
+            atr_lo, atr_hi = _range_by_rho(trs, "atr_normalized_q90")
+            smpr_lo, smpr_hi = _range_by_rho(trs, "smpr_delta0")
             recovery = _rate_by_rho(trs, "recovery_label")
 
             _shade_recovery(score_ax, x, recovery)
             _shade_recovery(diagnostic_ax, x, recovery)
+            score_ax.fill_between(x, score_lo, score_hi, color="#555555", alpha=0.12, lw=0, zorder=1)
+            diagnostic_ax.fill_between(x, atr_lo, atr_hi, color="#d95f02", alpha=0.11, lw=0, zorder=1)
+            diagnostic_ax.fill_between(x, smpr_lo, smpr_hi, color="#7570b3", alpha=0.10, lw=0, zorder=1)
             score_ax.plot(x, score, color="#222222", marker="o", lw=1.6, ms=3.6, zorder=2)
             diagnostic_ax.plot(x, atr, color="#d95f02", marker="s", lw=1.35, ms=3.4, zorder=2)
             diagnostic_ax.plot(
@@ -154,8 +182,18 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             Line2D([], [], color="#d95f02", marker="s", lw=1.35, ms=3.4, label=r"ATR rel ($\downarrow$)"),
             Line2D([], [], color="#7570b3", marker="^", lw=1.35, ms=3.5, ls="--", label=r"SMPR ($\uparrow$)"),
             Patch(facecolor=RECOVERY_COLOR, edgecolor="none", alpha=0.50, label="Majority recovered"),
+            Patch(facecolor="#777777", edgecolor="none", alpha=0.15, label="Across-seed range"),
         ]
-        fig.legend(handles=legend_handles, loc="upper center", ncol=4, frameon=False, bbox_to_anchor=(0.5, 0.985))
+        fig.legend(
+            handles=legend_handles,
+            loc="upper center",
+            ncol=5,
+            frameon=False,
+            fontsize=7.0,
+            columnspacing=1.0,
+            handletextpad=0.45,
+            bbox_to_anchor=(0.5, 0.985),
+        )
         fig.supxlabel(r"training noise $\sigma_{\max}^{\mathrm{train}}$", y=0.015)
         fig.savefig(out_fig, dpi=230)
         plt.close(fig)

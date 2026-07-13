@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\caption{Held-out transfer of a LeWM calibration fit on seed 3072 and applied without refitting to independently trained seeds 3073/3074. BA denotes balanced accuracy; AUPRC denotes area under the precision--recall curve.}
+\label{tab:seed-transfer-audit}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrrrrr}
+\toprule
+Evaluation set & rows & BA & AUPRC & precision & recall \\
+\midrule
+Both test seeds & 72 & 0.945 & 0.965 & 0.961 & 0.980 \\
+Seed 3073 & 36 & 0.931 & 0.993 & 0.962 & 0.962 \\
+Seed 3074 & 36 & 0.958 & 0.941 & 0.960 & 1.000 \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,15 @@
+\begin{table}[t]
+\centering
+\caption{Transfer to all 24 fixed-severity LeWM blur/resize pairs without stressor-specific retuning. BA is balanced accuracy and AUPRC is area under the precision--recall curve. The single-checkpoint region accepts 7/24 endpoints (selective false-pass-risk U95: 0.348); paired change requires the no-noise reference.}
+\label{tab:cross-stressor-transfer}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrr}
+\toprule
+Rule & BA & AUPRC & precision & recall & $\rho_s$ \\
+\midrule
+Single-checkpoint region & 0.733 & 0.856 & 1.000 & 0.467 & -- \\
+Paired change ($\Delta S>0$) & 0.889 & 0.974 & 0.882 & 1.000 & 0.864 \\
+\bottomrule
+\end{tabular}
+\end{table}

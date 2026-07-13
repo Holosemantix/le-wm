@@ -1,6 +1,25 @@
 {
   "canonical_horizon_v2_source": "assets/paper1_data/acpc_horizon_v2_lewm.json",
   "checkpoint_epoch": 10,
+  "claim_aligned_three_pillar_extension": {
+    "artifact_sha256": {
+      "paper1/config/target_aligned_acpc_four_task_contract_v2.json": "f1bc917a41088be6bb8e5561e698def3cfb21ca69bc71d2b87a0b306977cccf4",
+      "paper1/results/target_aligned_acpc_dev/adjudication_four_task_seed3073_goal25_base_endpoint_v1.json": "abfb2a059e0f87af9757ac1849937b87e502c826033ddbcb0fffaf26e8c6ce72",
+      "paper1/results/target_aligned_acpc_dev/adjudication_four_task_seed3074_goal25_base_endpoint_v1.json": "b90de21f2e4dc57801c154f10853832b7afdb61480394fec47210029f89b7b01",
+      "paper1/results/target_aligned_acpc_dev/meta_four_task_seeds3073_3074_goal25_base_endpoint_v1.json": "7724856d363da758451686aefcdd324d28cd880defe80bbac8fafa9f15e3ec35",
+      "paper1/results/three_pillar_evidence_summary.json": "fe8cc58868e1b4f783b300701a5cd53ba36fa4b607c5b0fc108f16c9cdfce9ea",
+      "paper1/tables/table_cross_stressor_transfer.tex": "ade0d5a86fbcbc412ee19d173cd61ec88a71a3955ef090c85286eb77e99ff91f",
+      "paper1/tables/table_seed_transfer_audit.tex": "217c670dae1ab5bf5907bc39528749bd0da283b8e83329f8c22229b7df7fd9b9",
+      "paper1/tables/table_target_aligned_acpc.tex": "3621d226254d6bd9987c1b32d606377449901a93255736dae14f5192dcf151b9"
+    },
+    "evidence_bundle": "paper1/results/three_pillar_evidence_summary.json",
+    "p1_primary_target": "action-matched held-out future-error drift",
+    "p1_provenance": "seed3073 includes TwoRoom/PushT DEV provenance; seed3074 is the fully frozen four-task replication",
+    "p1_regression_role": "analysis-only conditional-information test; not a deployed future-label-dependent surrogate",
+    "p2_calibration": "LeWM seed3072 only; seeds3073/3074 read-only TEST",
+    "p3_calibration": "Gaussian only; blur/resize thresholds unchanged",
+    "threshold_search_allowed": false
+  },
   "closed_loop_eval_source": "assets/paper1_data/three_seed_gaussian_sweep_summary_20260706.json",
   "component_baseline_source": "paper1/results/diagnostic_baselines/diagnostic_baseline_all_v1.json",
   "diagnostic_source": "paper1/results/prospective_diagnostic/diagnostics_all_ckpts.csv",
@@ -38,7 +57,7 @@
       0.02
     ]
   },
-  "generated_at": "2026-07-11T17:33:28.198930+00:00",
+  "generated_at": "2026-07-13T12:55:01.226208+00:00",
   "generated_outputs": [
     "paper1/results/full_sweep_diagnostics.csv",
     "paper1/results/full_sweep_diagnostics_summary.csv",
@@ -89,6 +108,12 @@
     "paper1/results/external_validation/cross_stressor_fixed_rho_rows.csv",
     "paper1/results/external_validation/cross_stressor_all_pairs.csv",
     "paper1/tables/table_cross_stressor_paired_change.tex",
+    "paper1/tables/table_cross_stressor_robustness_audit.tex",
+    "paper1/results/three_pillar_evidence_summary.json",
+    "paper1/results/target_aligned_acpc_dev/meta_four_task_seeds3073_3074_goal25_base_endpoint_v1.json",
+    "paper1/tables/table_target_aligned_acpc.tex",
+    "paper1/tables/table_seed_transfer_audit.tex",
+    "paper1/tables/table_cross_stressor_transfer.tex",
     "assets/paper1_figs/fig_cross_stressor_fixed_rho.png",
     "paper1/results/external_validation/target_view_frozen_summary.json",
     "paper1/results/diagnostic_baselines/diagnostic_baseline_all_v1.json",
@@ -132,10 +157,29 @@
     "Held-out gates are calibrated on calibration rows only; held-out labels are used only for evaluation.",
     "SMPR and fixed-pool top1 flip are guard-side checks interpreted jointly with ATR, not standalone robustness metrics.",
     "Exact-autograd JVP/Hutchinson traces decompose local encoder, rollout, and composed sensitivity but do not materialize a full Jacobian or prove closed-loop robustness.",
-    "Matched component and horizon baselines do not establish empirical necessity for H=8 or correct-action conditioning.",
+    "Coarse checkpoint labels do not establish H8/correct-action increment; the separate target-aligned fragile logged-future audit does.",
     "The sharp certificate is deterministic for the sampled ordered candidate pool; zero certified flips are an invariant check.",
     "SMPR rejects complete collapse but does not establish incremental task-label, action, progressive-collapse, or four-task oracle relevance."
   ],
+  "prospective_multiseverity_extension": {
+    "completed_primary_pairs": 0,
+    "evidence_status": "protocol-only; not public-v1 completed evidence",
+    "execution_addendum_sha256": "ac89c6c69ae67e123c90205a9de532f9a0bb9709ad91c5404c1f43dc23ea5afb",
+    "execution_addendum_source": "paper1/config/paired_multiseverity_execution_addendum_v2.json",
+    "expected_primary_pairs": 72,
+    "parent_execution_addendum_sha256": "70ca8cb9a361f144ca047235ae5844e0859394dd350cb021eb8c5720845d44c2",
+    "parent_execution_addendum_source": "paper1/config/paired_multiseverity_execution_addendum_v1.json",
+    "protocol_sha256": "6712b4f595444d751d9c327262c288e37dbd80be7ddde9bb4fd336ed41119622",
+    "protocol_source": "paper1/config/paired_multiseverity_protocol_v1.json",
+    "smoke_validation": {
+      "completed_behavior_atr_smpr_triplets": 1,
+      "primary_claim_eligible": false,
+      "scope": "LeWM seed3072 TwoRoom gaussian_blur kernel_size=7",
+      "zero_rule_direction_agreement": true
+    },
+    "status": "frozen_protocol_with_v2_task_bound_smoke",
+    "v1_reference_path_failure_disclosed": true
+  },
   "protocol_development_split": "CAL: LeWM training seed 3072 Gaussian sweep only",
   "public_v1_artifact_sha256": {
     "assets/paper1_data/smpr_controls_v2.json": "55a53c5e8036bcca2e8be82186bbad665531e1cefc7a5a5a8045c4313d68cdf2",
@@ -144,7 +188,7 @@
     "paper1/config/frozen_diagnostic_protocol_v1.json": "edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21",
     "paper1/results/diagnostic_baselines/diagnostic_baseline_all_v1.json": "df43cfd80b0387bde31426a37445149646a247724c1b2dd61f801a97d6c4f3c8",
     "paper1/results/diagnostic_baselines/gaussian_rho_confound_summary.json": "3079d357d7dcca2643dc0a4ef9bb3297bf1de49cfcfae51ae632bdc272ed3591",
-    "paper1/results/external_validation/cross_stressor_fixed_rho_summary.json": "e4acc7a45b22f15e304d63d17ffaa27a6fec696ac6b10cd63056b173c9a78de8",
+    "paper1/results/external_validation/cross_stressor_fixed_rho_summary.json": "94077f772e8dd7641b47e161a17d4ec67cea695dc044cb9a0229857efc157453",
     "paper1/results/external_validation/pldm_frozen_summary_v2.json": "edf14d47a6b5e72097220e2b606f43a422e06ae9d832805cd2311f147e6b9387",
     "paper1/results/external_validation/target_view_frozen_summary.json": "dba255daf282d1dbea7a102839e054cdd39b159a08a9ea9b1d3def7767477870",
     "paper1/results/fixed_pool_candidatewise_certificate_summary.json": "ccd8c0e35fa18cd4b1af4b6f43ed70af64ac21b97abfd4cf73e3cb69789e67fe",
@@ -159,16 +203,18 @@
       "LeWM",
       "PLDM"
     ],
-    "correct_action_increment_established": false,
+    "coarse_checkpoint_label_correct_action_increment_established": false,
+    "coarse_checkpoint_label_long_horizon_increment_established": false,
     "cross_stressor_transfer_claim": "within-LeWM paired comparison across fixed blur/resize; absolute screening is conservative",
     "fixed_pool_only": true,
-    "long_horizon_empirically_necessary": false,
     "paired_change_reference_required": true,
     "paired_change_shared_zero_threshold_within_lewm": true,
     "pldm_training_runs": 1,
     "shared_cross_model_absolute_threshold": false,
     "smpr_constant_collapse_rejected": true,
-    "smpr_task_label_increment_established": false
+    "smpr_task_label_increment_established": false,
+    "target_aligned_candidate_h5_universal_increment_established": false,
+    "target_aligned_fragile_logged_h8_increment_established": true
   },
   "raw_fixed_pool_source": "paper1/results/fixed_pool_candidatewise_certificate_summary.json",
   "rho_grid": [

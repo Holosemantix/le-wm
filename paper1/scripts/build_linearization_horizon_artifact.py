@@ -424,43 +424,77 @@ def write_horizon_table(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
 
 
 def plot_calibration(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
-    colors = {"TwoRoom": "#1b9e77", "PushT": "#d95f02", "Reacher": "#7570b3", "Cube": "#e7298a"}
+    from matplotlib.lines import Line2D
+
+    colors = {"TwoRoom": "#4477AA", "PushT": "#EE6677", "Reacher": "#228833", "Cube": "#CCBB44"}
     markers = {"base": "o", "onset": "s", "endpoint": "^"}
-    fig, ax = plt.subplots(figsize=(5.8, 5.0))
-    all_values: list[float] = []
-    seen: set[tuple[str, str]] = set()
-    for row in rows:
-        measured = float(row["empirical_mean_R2_over_sigma2"])
-        predicted = float(row["jvp_gaussian_trace_per_sequence"])
-        if measured <= 0 or predicted <= 0:
-            continue
-        key = (str(row["task"]), str(row["checkpoint_type"]))
-        label = f"{key[0]} {key[1]}" if key not in seen else None
-        seen.add(key)
-        ax.scatter(
-            predicted,
-            measured,
-            color=colors[key[0]],
-            marker=markers[key[1]],
-            s=24,
-            alpha=0.65,
-            edgecolors="none",
-            label=label,
+    style = {
+        "font.family": "serif",
+        "font.serif": ["DejaVu Serif", "Times New Roman", "Times"],
+        "mathtext.fontset": "stix",
+        "pdf.fonttype": 42,
+        "font.size": 8,
+        "axes.labelsize": 8,
+        "xtick.labelsize": 7.5,
+        "ytick.labelsize": 7.5,
+    }
+    with plt.rc_context(style):
+        fig, ax = plt.subplots(figsize=(5.45, 4.2))
+        all_values: list[float] = []
+        for row in rows:
+            measured = float(row["empirical_mean_R2_over_sigma2"])
+            predicted = float(row["jvp_gaussian_trace_per_sequence"])
+            if measured <= 0 or predicted <= 0:
+                continue
+            task = str(row["task"])
+            checkpoint = str(row["checkpoint_type"])
+            ax.scatter(
+                predicted,
+                measured,
+                color=colors[task],
+                marker=markers[checkpoint],
+                s=27,
+                alpha=0.72,
+                edgecolors="white",
+                linewidths=0.35,
+            )
+            all_values.extend([predicted, measured])
+        lower = min(all_values)
+        upper = max(all_values)
+        ax.plot([lower, upper], [lower, upper], color="#222222", linewidth=1.0, linestyle="--")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlabel("Covariance-aware JVP trace per sequence")
+        ax.set_ylabel(r"Measured $\mathbb{E}[R^2]/\sigma^2$")
+        ax.grid(True, which="both", color="#B0B0B0", alpha=0.25, linewidth=0.55)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+        task_handles = [
+            Line2D([], [], marker="o", linestyle="none", markersize=5, color=color, label=task)
+            for task, color in colors.items()
+        ]
+        checkpoint_handles = [
+            Line2D(
+                [], [], marker=marker, linestyle="none", markersize=5,
+                markerfacecolor="#777777", markeredgecolor="#777777", label=checkpoint.capitalize()
+            )
+            for checkpoint, marker in markers.items()
+        ]
+        task_legend = ax.legend(
+            handles=task_handles, title="Task", loc="upper left", ncol=2,
+            fontsize=6.4, title_fontsize=6.7, frameon=False,
+            handletextpad=0.35, columnspacing=0.8,
         )
-        all_values.extend([predicted, measured])
-    lower = min(all_values)
-    upper = max(all_values)
-    ax.plot([lower, upper], [lower, upper], color="black", linewidth=1.0, linestyle="--")
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlabel("covariance-aware JVP trace per sequence")
-    ax.set_ylabel(r"measured $\mathbb{E}[R^2]/\sigma^2$")
-    ax.grid(True, which="both", alpha=0.2)
-    ax.legend(fontsize=6, ncol=2, frameon=False)
-    fig.tight_layout()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(path, dpi=240, bbox_inches="tight")
-    plt.close(fig)
+        ax.add_artist(task_legend)
+        ax.legend(
+            handles=checkpoint_handles, title="Checkpoint", loc="lower right",
+            fontsize=6.4, title_fontsize=6.7, frameon=False, handletextpad=0.35,
+        )
+        fig.tight_layout(pad=0.5)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(path, dpi=240, bbox_inches="tight")
+        plt.close(fig)
 
 
 def build_parser() -> argparse.ArgumentParser:

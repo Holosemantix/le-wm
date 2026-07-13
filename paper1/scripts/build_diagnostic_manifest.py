@@ -13,6 +13,9 @@ from .utils_paper1_io import ROOT, RHO_GRID, SEEDS, TASKS
 DEFAULT_OUT = ROOT / "paper1" / "results" / "diagnostic_manifest.json"
 
 FROZEN_PROTOCOL = "paper1/config/frozen_diagnostic_protocol_v1.json"
+PROSPECTIVE_MULTISEVERITY_PROTOCOL = "paper1/config/paired_multiseverity_protocol_v1.json"
+PROSPECTIVE_MULTISEVERITY_ADDENDUM_V1 = "paper1/config/paired_multiseverity_execution_addendum_v1.json"
+PROSPECTIVE_MULTISEVERITY_ADDENDUM_V2 = "paper1/config/paired_multiseverity_execution_addendum_v2.json"
 PUBLIC_V1_ARTIFACTS = (
     FROZEN_PROTOCOL,
     "paper1/results/frozen_external_validation_summary_v3.json",
@@ -27,6 +30,16 @@ PUBLIC_V1_ARTIFACTS = (
     "assets/paper1_data/smpr_sensitivity_v2.json",
     "assets/paper1_data/smpr_controls_v2.json",
     "assets/paper1_data/smpr_oracle_guard_v2.json",
+)
+CLAIM_ALIGNED_EXTENSION_ARTIFACTS = (
+    "paper1/config/target_aligned_acpc_four_task_contract_v2.json",
+    "paper1/results/target_aligned_acpc_dev/adjudication_four_task_seed3073_goal25_base_endpoint_v1.json",
+    "paper1/results/target_aligned_acpc_dev/adjudication_four_task_seed3074_goal25_base_endpoint_v1.json",
+    "paper1/results/target_aligned_acpc_dev/meta_four_task_seeds3073_3074_goal25_base_endpoint_v1.json",
+    "paper1/results/three_pillar_evidence_summary.json",
+    "paper1/tables/table_target_aligned_acpc.tex",
+    "paper1/tables/table_seed_transfer_audit.tex",
+    "paper1/tables/table_cross_stressor_transfer.tex",
 )
 
 
@@ -46,7 +59,14 @@ def main() -> int:
         rel: sha256_file(ROOT / rel)
         for rel in PUBLIC_V1_ARTIFACTS
     }
+    claim_aligned_hashes = {
+        rel: sha256_file(ROOT / rel)
+        for rel in CLAIM_ALIGNED_EXTENSION_ARTIFACTS
+    }
     protocol_hash = artifact_hashes[FROZEN_PROTOCOL]
+    prospective_protocol_hash = sha256_file(ROOT / PROSPECTIVE_MULTISEVERITY_PROTOCOL)
+    prospective_addendum_v1_hash = sha256_file(ROOT / PROSPECTIVE_MULTISEVERITY_ADDENDUM_V1)
+    prospective_addendum_v2_hash = sha256_file(ROOT / PROSPECTIVE_MULTISEVERITY_ADDENDUM_V2)
     data = {
         "schema_version": "paper1-diagnostic-manifest-2.0",
         "tasks": TASKS,
@@ -70,6 +90,41 @@ def main() -> int:
         "jacobian_audit_source": "exact-autograd matched-map audit: paper1/results/jvp_hutchinson_sensitivity_audit_v2.json; covariance-aware finite-difference calibration: paper1/results/linearization_horizon_sensitivity_v1.json",
         "component_baseline_source": "paper1/results/diagnostic_baselines/diagnostic_baseline_all_v1.json",
         "public_v1_artifact_sha256": artifact_hashes,
+        "claim_aligned_three_pillar_extension": {
+            "artifact_sha256": claim_aligned_hashes,
+            "evidence_bundle": "paper1/results/three_pillar_evidence_summary.json",
+            "p1_provenance": (
+                "seed3073 includes TwoRoom/PushT DEV provenance; seed3074 is "
+                "the fully frozen four-task replication"
+            ),
+            "p1_primary_target": "action-matched held-out future-error drift",
+            "p1_regression_role": (
+                "analysis-only conditional-information test; not a deployed "
+                "future-label-dependent surrogate"
+            ),
+            "p2_calibration": "LeWM seed3072 only; seeds3073/3074 read-only TEST",
+            "p3_calibration": "Gaussian only; blur/resize thresholds unchanged",
+            "threshold_search_allowed": False,
+        },
+        "prospective_multiseverity_extension": {
+            "completed_primary_pairs": 0,
+            "evidence_status": "protocol-only; not public-v1 completed evidence",
+            "execution_addendum_sha256": prospective_addendum_v2_hash,
+            "execution_addendum_source": PROSPECTIVE_MULTISEVERITY_ADDENDUM_V2,
+            "parent_execution_addendum_sha256": prospective_addendum_v1_hash,
+            "parent_execution_addendum_source": PROSPECTIVE_MULTISEVERITY_ADDENDUM_V1,
+            "expected_primary_pairs": 72,
+            "protocol_sha256": prospective_protocol_hash,
+            "protocol_source": PROSPECTIVE_MULTISEVERITY_PROTOCOL,
+            "smoke_validation": {
+                "completed_behavior_atr_smpr_triplets": 1,
+                "primary_claim_eligible": False,
+                "scope": "LeWM seed3072 TwoRoom gaussian_blur kernel_size=7",
+                "zero_rule_direction_agreement": True,
+            },
+            "status": "frozen_protocol_with_v2_task_bound_smoke",
+            "v1_reference_path_failure_disclosed": True,
+        },
         "external_validation": {
             "E1_heldout_lewm": "paper1/results/frozen_external_validation_summary_v3.json",
             "E2_pldm_one_training_family": "paper1/results/external_validation/pldm_frozen_summary_v2.json",
@@ -127,6 +182,12 @@ def main() -> int:
             "paper1/results/external_validation/cross_stressor_fixed_rho_rows.csv",
             "paper1/results/external_validation/cross_stressor_all_pairs.csv",
             "paper1/tables/table_cross_stressor_paired_change.tex",
+            "paper1/tables/table_cross_stressor_robustness_audit.tex",
+            "paper1/results/three_pillar_evidence_summary.json",
+            "paper1/results/target_aligned_acpc_dev/meta_four_task_seeds3073_3074_goal25_base_endpoint_v1.json",
+            "paper1/tables/table_target_aligned_acpc.tex",
+            "paper1/tables/table_seed_transfer_audit.tex",
+            "paper1/tables/table_cross_stressor_transfer.tex",
             "assets/paper1_figs/fig_cross_stressor_fixed_rho.png",
             "paper1/results/external_validation/target_view_frozen_summary.json",
             "paper1/results/diagnostic_baselines/diagnostic_baseline_all_v1.json",
@@ -177,8 +238,10 @@ def main() -> int:
             "interpretation": "legacy proxy view retained for provenance; public-v1 claim decisions use the v2 SMPR sensitivity/control/MVE artifacts",
         },
         "public_v1_claim_boundaries": {
-            "long_horizon_empirically_necessary": False,
-            "correct_action_increment_established": False,
+            "coarse_checkpoint_label_long_horizon_increment_established": False,
+            "coarse_checkpoint_label_correct_action_increment_established": False,
+            "target_aligned_fragile_logged_h8_increment_established": True,
+            "target_aligned_candidate_h5_universal_increment_established": False,
             "smpr_task_label_increment_established": False,
             "smpr_constant_collapse_rejected": True,
             "pldm_training_runs": 1,
@@ -200,7 +263,7 @@ def main() -> int:
             "Held-out gates are calibrated on calibration rows only; held-out labels are used only for evaluation.",
             "SMPR and fixed-pool top1 flip are guard-side checks interpreted jointly with ATR, not standalone robustness metrics.",
             "Exact-autograd JVP/Hutchinson traces decompose local encoder, rollout, and composed sensitivity but do not materialize a full Jacobian or prove closed-loop robustness.",
-            "Matched component and horizon baselines do not establish empirical necessity for H=8 or correct-action conditioning.",
+            "Coarse checkpoint labels do not establish H8/correct-action increment; the separate target-aligned fragile logged-future audit does.",
             "The sharp certificate is deterministic for the sampled ordered candidate pool; zero certified flips are an invariant check.",
             "SMPR rejects complete collapse but does not establish incremental task-label, action, progressive-collapse, or four-task oracle relevance.",
         ],

@@ -377,36 +377,62 @@ def _plot(path: Path, summary: Mapping[str, Any]) -> None:
     intervals = summary["hierarchical_block_bootstrap"]["metrics"]
     panels = (
         (
-            "Certificate coverage",
-            ("Coarse", "Sharp"),
+            "(a) Certificate coverage",
+            ("Common drift", "Candidate-wise"),
             ("coarse_cert_pass_rate", "sharp_cert_pass_rate"),
         ),
         (
-            "Observed top-1 flip risk",
-            ("All anchors", "Sharp-cert fail"),
+            "(b) Observed top-1 flips",
+            ("All histories", "Condition fails"),
             ("observed_flip_rate", "flip_when_sharp_cert_fail_rate"),
         ),
     )
-    figure, axes = plt.subplots(1, 2, figsize=(8.8, 3.9))
-    for axis, (title, labels, keys) in zip(axes, panels):
-        values = [float(overall[key]) for key in keys]
-        errors = [
-            [value - float(intervals[key]["lower"]) for value, key in zip(values, keys)],
-            [float(intervals[key]["upper"]) - value for value, key in zip(values, keys)],
-        ]
-        axis.bar(range(len(keys)), values, color=("#9ecae1", "#3182bd"), yerr=errors, capsize=4)
-        axis.set_xticks(range(len(keys)), labels)
-        axis.set_ylim(0.0, 1.0)
-        axis.set_title(title)
-        axis.grid(axis="y", alpha=0.2)
-        for index, value in enumerate(values):
-            axis.text(index, min(value + 0.045, 0.95), f"{value:.3f}", ha="center", fontsize=9)
-    axes[0].set_ylabel("Rate")
-    figure.suptitle("Fixed-pool candidate-wise certificate (block-bootstrap 95% CI)")
-    figure.tight_layout()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    figure.savefig(path, dpi=220, bbox_inches="tight")
-    plt.close(figure)
+    style = {
+        "font.family": "serif",
+        "font.serif": ["DejaVu Serif", "Times New Roman", "Times"],
+        "mathtext.fontset": "stix",
+        "pdf.fonttype": 42,
+        "font.size": 8,
+        "axes.labelsize": 8,
+        "axes.titlesize": 8.5,
+        "xtick.labelsize": 7.5,
+        "ytick.labelsize": 7.5,
+    }
+    with plt.rc_context(style):
+        figure, axes = plt.subplots(1, 2, figsize=(6.7, 2.55), sharey=True)
+        for axis, (title, labels, keys) in zip(axes, panels):
+            values = [float(overall[key]) for key in keys]
+            errors = [
+                [value - float(intervals[key]["lower"]) for value, key in zip(values, keys)],
+                [float(intervals[key]["upper"]) - value for value, key in zip(values, keys)],
+            ]
+            bars = axis.bar(
+                range(len(keys)),
+                values,
+                color=("#4477AA", "#EE6677"),
+                edgecolor="#333333",
+                linewidth=0.55,
+                yerr=errors,
+                error_kw={"elinewidth": 0.8, "capthick": 0.8},
+                capsize=3,
+                width=0.62,
+                zorder=2,
+            )
+            for bar, hatch in zip(bars, ("", "///")):
+                bar.set_hatch(hatch)
+            axis.set_xticks(range(len(keys)), labels)
+            axis.set_ylim(0.0, 1.0)
+            axis.set_title(title, loc="left", fontweight="semibold")
+            axis.grid(axis="y", color="#B0B0B0", alpha=0.28, linewidth=0.6, zorder=0)
+            axis.spines["top"].set_visible(False)
+            axis.spines["right"].set_visible(False)
+            for index, value in enumerate(values):
+                axis.text(index, min(value + 0.05, 0.94), f"{value:.3f}", ha="center", fontsize=7.5)
+        axes[0].set_ylabel("Rate")
+        figure.tight_layout(pad=0.5, w_pad=1.1)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        figure.savefig(path, dpi=240, bbox_inches="tight")
+        plt.close(figure)
 
 
 def build_parser() -> argparse.ArgumentParser:

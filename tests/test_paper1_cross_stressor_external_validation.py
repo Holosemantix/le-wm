@@ -10,7 +10,10 @@ from paper1.scripts.build_cross_stressor_external_validation import (
     _average_precision,
     _classification,
     _delta_metric_summary,
+    _exact_binomial_upper_tail,
+    _exact_randomization_audit,
     _quantile,
+    _selection_summary,
     classify_transfer,
 )
 
@@ -98,3 +101,95 @@ def test_paired_change_uses_one_zero_threshold_and_orients_radius_improvement():
 
 def test_quantile_uses_linear_interpolation():
     assert _quantile([0.0, 10.0], 0.25) == pytest.approx(2.5)
+
+
+def test_selection_audit_reports_choice_accuracy_and_regret_without_fitting():
+    rows = [
+        {
+            "delta_behavior": 10.0,
+            "delta_joint_score": 2.0,
+            "base_stressed_score": 50.0,
+            "endpoint_stressed_score": 60.0,
+        },
+        {
+            "delta_behavior": -5.0,
+            "delta_joint_score": 1.0,
+            "base_stressed_score": 70.0,
+            "endpoint_stressed_score": 65.0,
+        },
+    ]
+
+    result = _selection_summary(
+        rows,
+        field="delta_joint_score",
+        direction=1.0,
+    )
+
+    assert result["choice_accuracy"] == pytest.approx(0.5)
+    assert result["material_choice_accuracy"] == pytest.approx(0.5)
+    assert result["mean_regret_pp"] == pytest.approx(2.5)
+    assert result["max_regret_pp"] == pytest.approx(5.0)
+    assert result["zero_regret_rate"] == pytest.approx(0.5)
+
+
+def test_exact_randomization_retains_blur_and_resize_within_block():
+    rows = [
+        {
+            "model_family": "LeWM",
+            "task": "TaskA",
+            "training_seed_or_family_id": "seed1",
+            "stressor_family": "blur",
+            "delta_behavior": 10.0,
+            "delta_joint_score": 2.0,
+        },
+        {
+            "model_family": "LeWM",
+            "task": "TaskA",
+            "training_seed_or_family_id": "seed1",
+            "stressor_family": "resize",
+            "delta_behavior": 8.0,
+            "delta_joint_score": 1.0,
+        },
+        {
+            "model_family": "LeWM",
+            "task": "TaskB",
+            "training_seed_or_family_id": "seed2",
+            "stressor_family": "blur",
+            "delta_behavior": -10.0,
+            "delta_joint_score": -2.0,
+        },
+        {
+            "model_family": "LeWM",
+            "task": "TaskB",
+            "training_seed_or_family_id": "seed2",
+            "stressor_family": "resize",
+            "delta_behavior": -8.0,
+            "delta_joint_score": -1.0,
+        },
+    ]
+
+    result = _exact_randomization_audit(rows)
+
+    assert result["block_count"] == 2
+    assert result["enumerated_assignments"] == 4
+    assert result["observed_spearman"] == pytest.approx(1.0)
+    assert result["one_sided_p_value"] == pytest.approx(0.25)
+    assert result["row_level_signed_agreement"]["successes"] == 4
+
+
+def test_exact_binomial_tail_is_not_normal_approximation():
+    assert _exact_binomial_upper_tail(3, 4) == pytest.approx(5.0 / 16.0)
+
+
+@pytest.mark.parametrize(
+    "transform",
+    [
+        lambda value: value,
+        lambda value: 3.0 * value + 7.0,
+        lambda value: value**3,
+    ],
+)
+def test_paired_order_is_invariant_to_strictly_increasing_reparameterization(transform):
+    base = 1.0
+    endpoint = 2.0
+    assert (endpoint - base > 0.0) == (transform(endpoint) - transform(base) > 0.0)
