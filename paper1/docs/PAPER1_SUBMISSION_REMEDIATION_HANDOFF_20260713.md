@@ -238,11 +238,20 @@ The submission-facing writing/display pass has also completed its main edits:
 - The explicit commit scope includes reproducible submission-facing Paper1
   protocols, scripts, tests, generated tables/figures, and result artifacts.
   It excludes replay caches, files explicitly marked invalid, the duplicate
-  blind PDF, and all
-  unrelated Paper2/environment/worldmodels files.
-  The superseded operational decision-stability dev branch is also excluded:
-  four post-freeze source/test files no longer match its immutable protocol and
+  blind PDF, all unrelated Paper2/environment/worldmodels files, and the
+  superseded operational decision-stability dev branch. Four post-freeze
+  source/test files no longer match its immutable protocol and
   must be revived through a new addendum, never by mutating frozen hashes.
+
+## Publication record
+
+- Main submission commit: `162e4a7d29ca4033980bff608460197404f6d478`.
+- Both `origin/ag/dev` and `holo/ag/dev` accepted the fast-forward from
+  `e8566ef` to `162e4a7`; independent `ls-remote` queries returned the same
+  full SHA.
+- The configured HTTPS proxy repeatedly returned 503. Publication succeeded
+  through per-command `NO_PROXY=github.com`; no persistent Git or network
+  configuration was changed.
 
 ## Remaining non-writing scientific priorities
 
@@ -278,8 +287,8 @@ The submission-facing writing/display pass has also completed its main edits:
   direct-`git` fallback after confirming both remote branches are aligned.
 - [x] Stage only intended Paper1/code/test/manifest files; exclude unrelated
   `paper2_data`, environment snapshots, `worldmodels/`, and other user files.
-- [ ] Commit with a concise Paper1 submission-remediation message.
-- [ ] Push the current branch to both existing remotes.
+- [x] Commit with a concise Paper1 submission-remediation message.
+- [x] Push the current branch to both existing remotes and verify full SHAs.
 - [x] Record remaining non-writing scientific blockers/opportunities above.
 
 ## Expected final scientific boundary
