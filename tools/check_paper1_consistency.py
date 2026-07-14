@@ -987,11 +987,11 @@ def check_visual_text_structure() -> None:
     body, appendix = main_tex.split(marker, 1)
 
     required_headings = (
-        "\\subsection{Paired rollout radius}",
+        "\\subsection{From visual perturbations to rollout tubes}",
         "\\subsection{Common-future error drift}",
         "\\subsection{Planner flips as radius--margin events}",
-        "\\subsection{Selective predictive consistency}",
-        "\\subsection{Checkpoint-level diagnostic score}",
+        "\\subsection{Selective consistency and semantic margins}",
+        "\\subsection{From pairwise quantities to checkpoint-level scores}",
         "\\subsection{Evaluation setup}",
         "\\subsection{Planning performance under observation noise}",
         "\\subsection{Predicting error changes under visual perturbations}",

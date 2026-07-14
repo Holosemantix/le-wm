@@ -152,24 +152,30 @@ Recent diagnostics test whether learned dynamics preserve action and temporal st
 
 \section{Action-Conditioned Predictive Consistency}\label{sec:acpc}
 
-ACPC is a radius--margin diagnostic. A visual probe of the same underlying
-state should stay inside a small action-conditioned rollout tube, while states
-that differ in a task-relevant way should remain outside that tube. The radius
-side gives paired prediction-error and planner-cost inequalities. The margin
-side prevents the low-radius solution from being a collapsed representation.
-The experiments use these objects as diagnostics of frozen checkpoints, not as
-a universal robustness guarantee.
+A same-state visual corruption first creates an upstream latent displacement.
+For control, that displacement is only a proxy: the planner acts on predicted
+futures and costs after the action-conditioned predictor has had a chance to
+amplify, rotate, or contract the shift. At the same time, useful control
+requires selectivity. A background perturbation should not move the predicted
+future much, but an object pose, doorway state, contact state, or goal relation
+that changes the useful action must remain distinguishable.
 
-\subsection{Paired rollout radius}\label{sec:acpc-def}
+ACPC is built around this radius--margin view. The radius side asks whether two
+visual views of the same underlying state remain inside a small rollout tube
+under the same actions. The margin side asks whether task-different pairs stay
+outside that tube. The pairwise ACPC radius gives the prediction-error and
+planner-cost statements below; ATR summarizes this radius over logged anchors;
+SMPR is the empirical margin guard against low-radius collapse.
 
-Let $h$ be a nominal observation--action history and $\tilde h$ a visually
-perturbed view of the same underlying state. A frozen encoder maps them to
-$z=E_\theta(h)$ and $\tilde z=E_\theta(\tilde h)$. The predictor $F_\theta$
-rolls both representations forward under one shared action sequence
-$\mathbf a=(a_0,\ldots,a_{H-1})$. A projection $\Pi$ selects the part of each
-predicted representation used by the diagnostic, and nonnegative weights
-$\alpha_k$ with $\sum_{k=1}^H\alpha_k=1$ determine how the $H$ future steps are
-combined. Define
+\subsection{From visual perturbations to rollout tubes}\label{sec:acpc-def}
+
+Let $h$ be a nominal observation--action history and let $\tilde h$ be a
+visually perturbed view of the same underlying control state. A frozen encoder
+maps them to $z=E_\theta(h)$ and $\tilde z=E_\theta(\tilde h)$. The predictor
+$F_\theta$ rolls both representations forward under one shared action sequence
+$\mathbf a=(a_0,\ldots,a_{H-1})$. A projection $\Pi$ selects the representation
+component used by the diagnostic, and nonnegative weights $\alpha_k$ with
+$\sum_{k=1}^H\alpha_k=1$ combine the $H$ future steps. Define
 \begin{equation}
 \bar G_{\mathbf a}(z)
 =
@@ -183,25 +189,28 @@ combined. Define
 \|\bar G_{\mathbf a}(z)-\bar G_{\mathbf a}(\tilde z)\|_2 .
 \label{eq:acpc-h}
 \end{equation}
-ACPC is the radius of the same-state rollout tube: it measures how far two
-visual views of one state separate after the same actions are applied. This is
-different from encoder shift, which is measured before the action sequence and
-therefore cannot show whether the predictor amplifies or contracts the visual
-displacement. Here $H$ counts predicted future steps, not history frames, and
-\emph{action matched} means that both branches receive the same recorded or
-candidate actions. The stacked rollout $\bar G_{\mathbf a}$ is used for
-future-error analysis; its final component is the quantity that enters the
-LeWM squared-distance goal cost.
+The map $\bar G_{\mathbf a}$ is the weighted predicted rollout. ACPC is the
+distance between the clean and perturbed rollouts after the same action
+intervention; it is the radius of the same-state rollout tube. This differs
+from encoder shift, which is measured before actions are applied and therefore
+cannot tell whether the predictor will amplify or contract the visual
+displacement. Here $H$ counts future prediction steps, not history frames.
+\emph{Action matched} means that both branches receive the same recorded or
+candidate actions; it isolates visual sensitivity under a fixed intervention
+and does not by itself certify action faithfulness. The unnormalized ACPC in
+\Cref{eq:acpc-h} is the object used by the propositions. ATR below is the
+normalized checkpoint-level summary used for screening.
 
 \subsection{Common-future error drift}
 
-The first bound explains what the rollout tube can say about prediction error.
-The target $Y_{\mathbf a}^H$ is not produced by either branch. It is the same
-action-matched future used only for evaluation, for example the projected
-latent of the actually observed future stacked and weighted like
-$\bar G_{\mathbf a}$. Both branches must be compared with the same
-$Y_{\mathbf a}^H$; otherwise the error difference below is not a same-future
-comparison.
+The first proposition is a bookkeeping guarantee. Once two branches are
+compared with the same action-matched future, their difference in prediction
+error cannot exceed their rollout disagreement. The future
+$Y_{\mathbf a}^H$ is not produced by either branch. It is an external target
+used only for evaluation, such as the projected latent of the actually
+observed future under the recorded action sequence, stacked and weighted like
+$\bar G_{\mathbf a}$. If the two branches are compared with different futures,
+the reverse-triangle argument no longer describes visual sensitivity.
 
 \begin{proposition}[Common-future error-drift bound]\label{prop:target-free-error-drift}
 Let $Y_{\mathbf a}^H$ be any projected external future generated from the same
@@ -217,7 +226,8 @@ the following holds sample by sample:
 \le \mathrm{ACPC}_H(h,\tilde h,\mathbf a).
 \label{eq:target-free-error-drift}
 \end{equation}
-The adverse increase $(e_{\tilde h}-e_h)_+$ obeys the same bound. The right-hand side can be computed without a future target at diagnostic time.
+The adverse increase $(e_{\tilde h}-e_h)_+$ obeys the same bound. The
+right-hand side can be computed without a future target at diagnostic time.
 \end{proposition}
 \begin{proof}
 This is the reverse triangle inequality in the weighted-stacked projected-rollout space. The common action sequence is required because both errors must share the same target.
@@ -225,23 +235,26 @@ This is the reverse triangle inequality in the weighted-stacked projected-rollou
 
 The proposition bounds the difference between the two errors, not their
 absolute magnitude. A small ACPC value therefore does not prove that either
-prediction is accurate. It says that, for a common action-matched future, the
-visual perturbation cannot change the prediction error by more than the
-paired-rollout disagreement. This is the quantity tested by the future-drift
-experiment.
+prediction is accurate. It says only that, for a common action-matched future,
+the visual perturbation cannot change the prediction error by more than the
+paired-rollout radius. This is why the future-drift experiment predicts the
+absolute change in eight-step latent error rather than claiming that low ACPC
+means low prediction error.
 
 \subsection{Planner flips as radius--margin events}
 
-A visual perturbation changes a CEM decision only if it moves candidate costs
-enough to cross a clean candidate gap. ACPC supplies the movement side of this
-comparison; the clean top-1 and elite margins supply the amount of movement
-required for a flip. Consider a fixed pool of candidate action sequences
-$\{\mathbf a^j\}_{j=1}^K$. Let
+A planner flip is also a radius--margin event. A visual perturbation can
+change a fixed-pool CEM decision only if it moves candidate costs enough to
+cross a clean candidate gap. For LeWM's implemented goal cost, only the final
+predicted representation at the candidate horizon enters the squared distance
+to the goal. We therefore write
 $x_j=\Pi(F_\theta^H(E_\theta(h),\mathbf a^j))$ and
-$\tilde x_j=\Pi(F_\theta^H(E_\theta(\tilde h),\mathbf a^j))$ be the final
-predicted representations for candidate $j$. Their displacement is
-$r_j=\|x_j-\tilde x_j\|_2$. This is the final-step component of ACPC, and
-$r_j\leq \mathrm{ACPC}_H/\sqrt{\alpha_H}$ whenever $\alpha_H>0$.
+$\tilde x_j=\Pi(F_\theta^H(E_\theta(\tilde h),\mathbf a^j))$ for the final
+clean and perturbed endpoints of candidate $j$ in a fixed pool
+$\{\mathbf a^j\}_{j=1}^K$. Their displacement is
+$r_j=\|x_j-\tilde x_j\|_2$, the final-step component of ACPC. When
+$\alpha_H>0$, $r_j\leq \mathrm{ACPC}_H/\sqrt{\alpha_H}$, but the planner audit
+records $r_j$ directly.
 
 \begin{proposition}[Squared goal-cost drift and fixed-pool certificates]\label{prop:exact-cost-certificate}
 LeWM scores candidate $j$ against a fixed goal embedding $g$ by $C_j=\|x_j-g\|_2^2$ and $\tilde C_j=\|\tilde x_j-g\|_2^2$. Define
@@ -272,35 +285,43 @@ then the perturbed branch has the same winner.
 the perturbed branch has exactly the same elite set.
 \end{proposition}
 
-The quantity $b_j$ is a candidate-specific upper bound on how much the squared
-goal cost can move under the visual perturbation. If the clean cost gap is
-larger than the relevant pair of movement bounds, the perturbation cannot
-change the winner or elite set for that fixed pool. Unlike a global Lipschitz
-argument, \Cref{eq:exact-cost-bound} uses the actual paired endpoints and their
-distances from the goal. It is worst-case tight from these quantities alone;
+The term $b_j$ is the most that candidate $j$'s squared goal cost can move
+from the observed endpoint displacement and goal distances alone. The regret
+bound says that choosing the perturbed winner on the clean branch cannot cost
+more than the movement allowed for the clean and perturbed winners. The winner
+and elite certificates are margin tests: after subtracting the allowed cost
+movement from each clean gap, a positive remainder rules out that fixed-pool
+flip. Unlike a global Lipschitz argument, \Cref{eq:exact-cost-bound} uses the
+actual paired endpoints. It is worst-case tight from these quantities alone;
 proofs and equality cases are in Appendix~\ref{sec:appendix-acpc-proofs}. The
-certificate is not a compute-saving rule: it requires evaluating each candidate
-under both matched histories.
+certificate is not a compute-saving rule because it requires evaluating the
+candidate under both matched histories.
 
-The cross-entropy method (CEM) repeatedly fits its next proposal to the current elite set. With common random numbers, two identical proposals generate the same ordered candidate pool, so a certified common elite set also produces the same next proposal.
+The cross-entropy method (CEM) repeatedly fits its next proposal to the current
+elite set. With common random numbers, two identical proposals generate the
+same ordered candidate pool, so a certified common elite set also produces the
+same next proposal.
 
 \begin{corollary}[Conditional CEM stability]\label{cor:adaptive-cem-alignment}
 Consider nominal and perturbed CEM runs initialized by the same proposal and sampled with common random numbers. While their ordered candidate pools are aligned, if \Cref{eq:elite-certificate-main} holds at the current iteration, both runs fit the same next proposal. If it holds at every iteration, the pools, proposals, and final action remain aligned by induction.
 \end{corollary}
 
-The corollary is conditional: it ends at the first iteration where the elite
-condition fails, after which later proposals may diverge. It is a shared-pool
-model-cost statement, not a closed-loop return guarantee. Appendix~\ref{sec:appendix-fixed-pool-details}
-specifies the fixed-pool and adaptive-CEM evaluation contract.
+The corollary is conditional. It applies only while the two runs keep aligned
+candidate pools and stops at the first iteration where the elite certificate
+fails. It is a shared-pool model-cost statement, not a closed-loop return
+guarantee. Appendix~\ref{sec:appendix-fixed-pool-details} specifies the
+fixed-pool and adaptive-CEM evaluation contract.
 
-\subsection{Selective predictive consistency}
+\subsection{Selective consistency and semantic margins}
 
 Small radius alone is insufficient because a constant representation would
-make every same-state pair agree. We therefore distinguish nominal/probed
-histories of the same state, collected in $\mathcal P_{\rm same}$, from
-task-defined proxy pairs that cross a state distinction, collected in
-$\mathcal P_{\rm diff}$. Let $d_\theta$ denote their normalized rollout
-distance.
+make every same-state pair agree while erasing the distinctions a planner
+needs. Selective consistency therefore couples a same-state tube with a
+different-state margin. Let $\mathcal P_{\rm same}$ contain nominal/probed
+histories of the same state and let $\mathcal P_{\rm diff}$ contain proxy
+pairs that cross a task-relevant state distinction, such as different
+positions, contact configurations, or goal relations. Let $d_\theta$ denote
+their normalized rollout distance.
 \begin{definition}[Selective predictive consistency]\label{def:selective-discriminability}
 For radius $r$, margin $\gamma>0$, and pass probabilities
 $p_{\rm same},p_{\rm diff}$, a representation is selectively consistent when
@@ -311,24 +332,23 @@ $p_{\rm same},p_{\rm diff}$, a representation is selectively consistent when
 \label{eq:selective-discriminability}
 \end{equation}
 \end{definition}
-The first condition is the same-state tube requirement. The second condition
-is the margin guard: different-state proxy pairs should stay outside that
-tube. We use selective consistency only in this radius--margin sense.
-Selective Margin Pass Rate (SMPR) is the empirical fraction of
-different-state proxy pairs satisfying the second inequality when $r$ is the
-same-state q90 tube. SMPR is designed to detect gross collapse; it does not
-prove semantic validity, action faithfulness, or preservation of every
-task-relevant distinction.
+The first inequality accepts same-state visual invariance only inside radius
+$r$. The second inequality requires different-state proxy pairs to remain at
+least $\gamma$ outside that tube. Selective Margin Pass Rate (SMPR) is the
+empirical pass rate of the second inequality when $r$ is the same-state q90
+tube. SMPR is designed to detect gross collapse; it does not prove semantic
+validity, action faithfulness, or preservation of every task-relevant
+distinction. Its role is to keep the radius diagnostic from rewarding a model
+that becomes stable by making everything look the same.
 
-\subsection{Checkpoint-level diagnostic score}\label{sec:acpc-diag}
+\subsection{From pairwise quantities to checkpoint-level scores}\label{sec:acpc-diag}
 
 The propositions above operate on one paired history or one fixed candidate
-pool. To compare entire checkpoints across tasks, we normalize each pair by a
-clean transition scale and then summarize the upper tail across logged
-anchors. ATR and SMPR are checkpoint-level scores: they summarize logged
-anchors rather than single histories. For anchor $i$, let $s_i$ be the median
-norm of its clean observed
-transitions, including the history-to-future boundary:
+pool. To compare checkpoints, we convert pairwise radii into checkpoint-level
+scores by normalizing each pair with a clean transition scale and summarizing
+the upper tail across logged anchors. For anchor $i$, let $s_i$ be the median
+norm of its clean observed transitions, including the history-to-future
+boundary:
 \begin{equation}
 s_i=Q_{0.50}\!\left(\{\|u^{\mathrm{obs}}_{i,k}-u^{\mathrm{obs}}_{i,k-1}\|_2\}_{k=1}^{H}\right).
 \label{eq:clean-transition-scale}
@@ -345,12 +365,13 @@ R^{(i,m)}
 Q_q\!\left(\left\{\frac{1}{M}\sum_{m=1}^{M}R^{(i,m)}\right\}_{i=1}^{n}\right).
 \label{eq:predictive-radius}
 \end{equation}
-The numerator is the unnormalized ACPC radius used by the pairwise bounds and
-planner analysis. The scale $s_i$ is an anchor-specific yardstick fixed by the
-clean logged transition and is not an outcome label. ATR is the high-quantile
-same-state tube radius across logged anchors; it is an offline checkpoint
-summary, not an online single-history alarm and not a candidate-distribution
-probability.
+The numerator is the unnormalized ACPC radius used by the pairwise bounds. The
+scale $s_i$ is an anchor-specific yardstick fixed by the clean logged
+transition, not an outcome label. ATR is the high-quantile same-state tube
+radius across logged anchors. We use q90 because a small number of high-radius
+anchors can still create fragile planner histories; q90 is a reporting
+summary, not a candidate-distribution probability and not a calibrated tail
+bound.
 
 The construction requires paired views, an inspectable encoder--predictor
 path, and one common projection and normalization within a comparison. It does
@@ -366,33 +387,57 @@ S_{\mathcal F,\upsilon}(\theta)
 \right\}.
 \label{eq:joint-diagnostic-score}
 \end{equation}
-The criterion $S\ge0$ means that a checkpoint meets both calibrated
-conditions: $\mathrm{ATR}\le t_R$ and $\mathrm{SMPR}\ge t_M$. Computing $S$ for
+The minimum makes the score selective: one failing side makes the whole score
+negative. Thus $S\ge0$ means that the checkpoint passes both calibrated
+conditions, $\mathrm{ATR}\le t_R$ and $\mathrm{SMPR}\ge t_M$. Computing $S$ for
 a fixed checkpoint requires no task outcome, although success rates are used
 when thresholds are selected on source tasks. Thresholds are learned separately
-for each model family. Given a reference checkpoint $\theta_0$, the paired
-comparison is
+for each model family and visual-shift calibration. Given a reference
+checkpoint $\theta_0$, the paired comparison is
 \begin{equation}
 \Delta S_{\mathcal F,\upsilon}(\theta_1;\theta_0)
 =
 S_{\mathcal F,\upsilon}(\theta_1)-S_{\mathcal F,\upsilon}(\theta_0)>0
 \label{eq:paired-diagnostic-change}
 \end{equation}
-Both checkpoints use the same scoring map, so $\Delta S>0$ asks only whether $\theta_1$ improves on $\theta_0$. The rule requires the reference and does not imply that either checkpoint is absolutely robust.
+Both checkpoints use the same scoring map, so $\Delta S>0$ asks only whether
+$\theta_1$ improves on $\theta_0$ under that map. The rule requires the
+reference and does not imply that either checkpoint is absolutely robust.
 
 \begin{definition}[Calibrated diagnostic region]\label{def:robust-interval}
 For a fixed model family and visual-shift calibration, the diagnostic region contains checkpoints satisfying $\mathrm{ATR}\le t_R$ and $\mathrm{SMPR}\ge t_M$. Its meaning is evaluated on tasks excluded from threshold selection; raw thresholds are not assumed to transfer across model architectures.
 \end{definition}
 
-The experiments use these objects in three ways. The prediction experiment
-tests the common-future error-drift proposition by asking whether
-recorded-action eight-step ACPC predicts the change in eight-step latent error
-better than one-step ACPC or same-horizon action-destroyed controls. The
-planner experiment tests the fixed-pool and adaptive-CEM quantities. The
-cross-task, cross-stressor, and PLDM analyses use the checkpoint-level ATR+SMPR
-score to test calibrated threshold transfer. These are separate claims:
-prediction-error sensitivity, planner relevance, and calibrated checkpoint
-screening are not interchangeable.
+Table~\ref{tab:acpc-object-guide} summarizes the objects and where they enter
+the experiments. The prediction experiment tests the common-future
+error-drift proposition by asking whether recorded-action eight-step ACPC
+predicts the change in eight-step latent error better than one-step ACPC or
+same-horizon action-destroyed controls. The planner experiment tests the
+fixed-pool and adaptive-CEM quantities. The cross-task, cross-stressor, and
+PLDM analyses use the checkpoint-level ATR+SMPR score to test calibrated
+threshold transfer. These are separate claims: prediction-error sensitivity,
+planner relevance, and calibrated checkpoint screening are not interchangeable.
+
+\begin{table}[H]
+\centering
+\caption{Reader guide to the ACPC objects.}
+\label{tab:acpc-object-guide}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\linewidth}{p{0.17\linewidth}X p{0.27\linewidth}}
+\toprule
+Object & Intuition & Used in \\
+\midrule
+ACPC & Same-state rollout-tube radius under a shared action sequence. & Prediction and planner diagnostics \\
+Common-future drift & How much the visual probe changes error to one action-matched future. & Future-drift experiment \\
+$b_j$ & Maximum squared-cost movement allowed for candidate $j$ from its paired endpoints. & Fixed-pool planner certificates \\
+ATR & q90 normalized same-state tube radius over logged anchors. & Checkpoint screening \\
+SMPR & Fraction of different-state proxies that remain outside the same-state tube. & Collapse guard \\
+$S$ & Worse side of the calibrated radius and margin passes. & Cross-task threshold transfer \\
+$\Delta S$ & Change in $S$ relative to a reference checkpoint under the same scoring map. & Cross-stressor checkpoint ordering \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \section{Experiments}\label{sec:exp}
 
