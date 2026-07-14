@@ -93,11 +93,11 @@
   \newcommand{\paperauthors}{\arxivauthors}
 \fi
 
-\title{\textbf{Target-Free Action-Conditioned Predictive Diagnostics\\for Visual Robustness in JEPA World Models}}
+\title{\textbf{Action-Conditioned Predictive Diagnostics\\for JEPA World Models}}
 \author{\paperauthors}
 \date{July 2026}
 \hypersetup{
-  pdftitle={Target-Free Action-Conditioned Predictive Diagnostics for Visual Robustness in JEPA World Models},
+  pdftitle={Action-Conditioned Predictive Diagnostics for JEPA World Models},
   pdfkeywords={JEPA world models, predictive stability, action-conditioned diagnostics, cross-task calibration, visual corruption}
 }
 
@@ -105,7 +105,7 @@
 \maketitle
 
 \begin{abstract}
-Visual world models can fail under visual corruption, yet a diagnostic available before acting has neither the realized future nor a behavior label. We introduce Action-Conditioned Predictive Consistency (ACPC), which rolls nominal and visually probed histories forward under the same action sequence and measures their latent disagreement. ACPC obeys samplewise diagnostic inequalities for action-matched future-error drift and, for squared latent goal costs, yields fixed-pool planner certificates; a different-state margin guard rejects constant representations. Across four control tasks, recorded-action eight-step ACPC reduces mean absolute error for a common eight-step future-drift target by $51.3\pm3.5\%$ relative to the strongest same-horizon zeroed- or shuffled-action control, consistently across tasks and training runs. Candidate-conditioned ACPC also improves prediction of planner cost drift and adaptive clean-history decision regret, reducing decision-regret prediction error by $15.2\pm2.0\%$ for every evaluated task and run. Thresholds selected on one to three source tasks transfer unchanged to the remaining tasks with $0.84$--$0.86$ balanced accuracy. The three-source Gaussian rule also preserves relative checkpoint ordering under blur and resize with $0.889$ balanced accuracy and no stressor-specific adjustment. A complete PLDM sweep confirms that the same ACPC/SMPR analysis can be instantiated on a second architecture, with numerical calibration treated as model-family specific. These results support an architecture-portable, family-calibrated target-free diagnostic rather than a universal robustness certificate or closed-loop guarantee.
+Visual changes that leave the underlying control state unchanged can still alter the futures predicted by a world model. Encoder-level invariance alone does not reveal whether such discrepancies are amplified by learned dynamics or matter to downstream planning. We study this problem with Action-Conditioned Predictive Consistency (ACPC), which compares nominal and visually perturbed histories after rolling them forward under the same action sequence; the score itself uses neither future targets nor behavior labels. ACPC yields exact diagnostic inequalities for future-error and squared goal-cost drift, together with a different-state margin guard against trivial collapse. Across four control tasks, eight-step ACPC reduces mean absolute error for predicting future-error drift by $51.3\pm3.5\%$ relative to the strongest matched action-destroyed control. Candidate-conditioned ACPC is also informative about planner cost drift and decision regret. Source-task calibration transfers unchanged to the remaining tasks with $0.84$--$0.86$ balanced accuracy, while one fixed rule retains useful checkpoint ordering under blur and resize without stressor-specific adjustment. The same analysis is instantiated on PLDM with model-family-specific numerical calibration. Together, these results support action-conditioned rollout disagreement as a target-free signal of predictive sensitivity under visual shifts.
 
 \smallskip
 \noindent\textbf{Keywords:} visual world models; predictive stability; action-conditioned diagnostics; calibration transfer; visual corruption.
