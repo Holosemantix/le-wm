@@ -1,12 +1,12 @@
 \begin{table}[t]
 \centering
-\caption{Compact view of the complete nine-level Gaussian training sweep. ``Best'' selects the level with highest mean success under observation noise $\sigma=0.08$; the full trajectories over all nine levels remain in Fig.~\ref{fig:full-sweep-diagnostics}. ATR is divided by each task$\times$run no-noise value (base $=1$) and is lower-is-better; SMPR remains on its original rate scale and is higher-is-better.}
+\caption{Summary of the nine-level Gaussian-augmentation sweep. ``Best'' denotes the augmentation level with the highest mean planning success rate at evaluation noise $\sigma=0.08$; Fig.~\ref{fig:full-sweep-diagnostics} shows every level. Relative ATR is divided by its value without noise augmentation and is lower-is-better; SMPR is reported on its original scale and is higher-is-better.}
 \label{tab:full-sweep-compact}
 \scriptsize
 \setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{lrrrrrr}
 \toprule
-Task & Base success (\%) & Best success (\%) & Best $\sigma_{\max}$ & ATR: base $\to$ best & SMPR: base $\to$ best & Majority-recovered levels \\
+Task & No-aug. success (\%) & Best success (\%) & Best $\sigma_{\max}$ & Relative ATR & SMPR & Levels meeting criterion \\
 \midrule
 TwoRoom & 68.8 & 97.1 & 0.08 & 1.00$\to$0.07 & 0.34$\to$0.99 & 0.01--0.08 \\
 PushT & 7.2 & 86.8 & 0.06 & 1.00$\to$0.10 & 0.44$\to$1.00 & 0.03--0.08 \\

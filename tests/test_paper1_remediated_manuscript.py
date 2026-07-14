@@ -41,7 +41,6 @@ def test_main_text_uses_reader_facing_data_flow_language() -> None:
     for excluded in (
         "seed3075",
         "seed 3075",
-        "held-out",
         "dev-era",
         "prospective seed",
         "correct-action",
@@ -50,8 +49,8 @@ def test_main_text_uses_reader_facing_data_flow_language() -> None:
     ):
         assert excluded not in lowered
 
-    assert "same eight-step latent" in lowered
-    assert "all 14 directional" in lowered
+    assert "absolute change in eight-step latent prediction error" in lowered
+    assert "this gives 14 directional" in lowered
     assert "selected from one, two, and three source tasks" in lowered
     assert "action-conditioned predictive consistency" in lowered
     assert "selective consistency" in lowered

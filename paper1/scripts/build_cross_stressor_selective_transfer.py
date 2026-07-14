@@ -283,13 +283,13 @@ def write_summary_table(summary: dict[str, Any], out: Path) -> None:
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Transfer of the selective ACPC score to blur and resize. For each task, thresholds are selected on the other three Gaussian tasks and applied without stressor-specific adjustment. The score change is compared with endpoint-minus-base stressed-success change; this evaluates relative ordering rather than absolute robustness detection.}",
+        r"\caption{Transfer of the selective ACPC score from Gaussian noise to blur and resize. For each task, thresholds are selected on the other three Gaussian-noise tasks and then fixed. The table compares the score change with the change in planning success rate between checkpoints trained with and without Gaussian augmentation.}",
         r"\label{tab:cross-stressor-selective-transfer}",
         r"\small",
         r"\setlength{\tabcolsep}{4pt}",
         r"\begin{tabular}{lrrrrr}",
         r"\toprule",
-        r"Stressor subset & Pairs & BA & Precision / recall & Spearman & Discordant \\",
+        r"Visual shift & Pairs & BA & Precision / recall & Spearman & Discordant \\",
         r"\midrule",
     ]
     for label, metrics in rows:
@@ -308,13 +308,13 @@ def write_all_pairs_table(rows: list[dict[str, Any]], out: Path) -> None:
     lines = [
         r"\begin{table*}[t]",
         r"\centering",
-        r"\caption{All 24 LeWM blur/resize pairs used in the cross-stressor analysis. ATR$_{\rm rel}$ and SMPR are endpoint values; $\Delta B$ is endpoint-minus-base stressed success in percentage points, and $\Delta S$ is the corresponding selective-score change. A behavioral change is positive only when $\Delta B\geq5$ points and clean success loses at most five points; a score change is positive when $\Delta S>0$. Outcomes are shown as behavior / score.}",
+        r"\caption{All 24 LeWM checkpoint pairs evaluated under blur and resize. ATR$_{\rm rel}$ and SMPR are measured for the checkpoint trained with Gaussian augmentation. $\Delta P$ is its change in planning success rate relative to the checkpoint trained without augmentation, and $\Delta S$ is the corresponding selective-score change. A success-rate change is positive when $\Delta P\geq5$ percentage points and the clean success rate decreases by at most five points. Outcome lists the success-rate classification followed by the score classification.}",
         r"\label{tab:cross-stressor-all-pairs}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{3pt}",
         r"\begin{tabular}{lrlrrrrrl}",
         r"\toprule",
-        r"Task & Seed & Stressor & ATR$_{\rm rel}$ & SMPR & $\Delta B$ & $\Delta S$ & Outcome \\",
+        r"Task & Seed & Shift & ATR$_{\rm rel}$ & SMPR & $\Delta P$ & $\Delta S$ & Outcome \\",
         r"\midrule",
     ]
     labels = {
@@ -357,7 +357,7 @@ def plot(rows: list[dict[str, Any]], out: Path) -> None:
         ax.axhline(0.0, color="#444444", linewidth=0.8, linestyle="--")
         ax.axvline(0.0, color="#444444", linewidth=0.8, linestyle="--")
         ax.set_xlabel("Change in selective ACPC score")
-        ax.set_ylabel("Stressed-success change (percentage points)")
+        ax.set_ylabel("Change in success rate under blur/resize\n(percentage points)")
         ax.grid(True, color="#B0B0B0", alpha=0.22, linewidth=0.55)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)

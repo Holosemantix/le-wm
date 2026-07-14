@@ -1,6 +1,6 @@
 \begin{table}[t]
 \centering
-\caption{Absolute MAE for the common eight-step latent error-drift target. Each row contains 16 trajectory blocks. The recorded-action column is the proposed eight-step ACPC feature; the control column reports the strongest zeroed- or shuffled-action feature at the same horizon. Lower is better.}
+\caption{Held-out MAE for predicting the absolute change in eight-step latent prediction error. Each row contains 16 trajectory groups. The recorded-action column uses eight-step ACPC with the observed actions; the control column uses the strongest eight-step feature with zeroed or shuffled actions. Lower is better.}
 \label{tab:target-aligned-acpc-absolute}
 \scriptsize
 \setlength{\tabcolsep}{3.6pt}

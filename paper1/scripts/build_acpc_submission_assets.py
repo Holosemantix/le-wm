@@ -101,15 +101,14 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
     severities = (0.02, 0.05, 0.08)
     out.parent.mkdir(parents=True, exist_ok=True)
     with plt.rc_context(STYLE):
-        # The planner panel occupies its own submission float page.  A taller
-        # native canvas increases per-panel plotting area and avoids a large
-        # unused lower margin after LaTeX places the caption.
-        fig, axes = plt.subplots(2, 2, figsize=(6.8, 6.4))
+        # Keep the four panels at full paper width while fitting beside the
+        # accompanying result text and caption.
+        fig, axes = plt.subplots(2, 2, figsize=(6.8, 5.8))
         ax_stability, ax_regret, ax_increment, ax_full = axes.ravel()
 
         for role, color, label in (
-            ("base", BASE_COLOR, "fragile base"),
-            ("endpoint", ENDPOINT_COLOR, "noise-trained endpoint"),
+            ("base", BASE_COLOR, "No noise augmentation"),
+            ("endpoint", ENDPOINT_COLOR, r"Gaussian aug. ($\sigma_{\max}=0.08$)"),
         ):
             task_seed_values: list[list[float]] = []
             for seed in seeds:
@@ -135,8 +134,8 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
             ]
             ax_stability.plot(severities, mean, color=color, lw=2.0, marker="o", ms=4.0, label=label)
         ax_stability.set_title("(a) Fixed-pool top-1 stability", loc="left", fontweight="semibold")
-        ax_stability.set_xlabel("probe severity")
-        ax_stability.set_ylabel("same-winner rate")
+        ax_stability.set_xlabel("Visual-perturbation severity")
+        ax_stability.set_ylabel("Best candidate unchanged")
         ax_stability.set_xlim(0.015, 0.085)
         ax_stability.set_ylim(-0.03, 1.03)
         ax_stability.set_xticks(severities)
@@ -173,16 +172,16 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
             ]
             ax_regret.plot(severities, mean, color=color, lw=2.0, marker="o", ms=4.0)
         ax_regret.set_title("(b) Adaptive-CEM decision regret", loc="left", fontweight="semibold")
-        ax_regret.set_xlabel("probe severity")
-        ax_regret.set_ylabel(r"equal-task mean $\log_{10}(1+\mathrm{regret})$")
+        ax_regret.set_xlabel("Visual-perturbation severity")
+        ax_regret.set_ylabel(r"Mean $\log_{10}(1+\mathrm{decision\ regret})$")
         ax_regret.set_xlim(0.015, 0.085)
         ax_regret.set_xticks(severities)
         _polish(ax_regret)
 
         response_specs = (
-            ("cost_drift", "cost drift"),
+            ("cost_drift", "max cost change"),
             ("positive_clean_regret", "decision regret"),
-            ("first_action_rms", "action RMS"),
+            ("first_action_rms", "first-action RMS"),
         )
         x = list(range(3))
         means = [
@@ -229,8 +228,8 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
         ax_increment.axhline(5, color="#7A3E9D", lw=1.0, ls="--")
         ax_increment.axhline(0, color="#555555", lw=0.7)
         ax_increment.set_xticks(x, [label for _, label in response_specs])
-        ax_increment.set_ylabel("MAE reduction from adding 5-step ACPC (%)")
-        ax_increment.set_title("(c) Increment from 5-step ACPC", loc="left", fontweight="semibold")
+        ax_increment.set_ylabel("Reduction in held-out MAE (%)")
+        ax_increment.set_title("(c) Gain from five-step ACPC", loc="left", fontweight="semibold")
         ax_increment.set_ylim(-1.5, 20.0)
         ax_increment.text(2.38, 5.5, "5% reference", color="#6A2C8C", ha="right", va="bottom", fontsize=7.0)
         for bar, value, sd in zip(bars, means, sds):
@@ -296,8 +295,11 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
             ax_full.scatter(1, endpoint, marker=TASK_MARKERS[task], s=34, color=ENDPOINT_COLOR, edgecolor="white", lw=0.5, zorder=3)
         ax_full.set_yscale("log")
         ax_full.set_xlim(-0.35, 1.35)
-        ax_full.set_xticks([0, 1], ["fragile base", "endpoint"])
-        ax_full.set_ylabel("positive regret (log scale)")
+        ax_full.set_xticks(
+            [0, 1],
+            ["No augmentation", r"$\sigma_{\max}^{\rm train}=0.08$"],
+        )
+        ax_full.set_ylabel("Decision regret (log scale)")
         ax_full.set_title(r"(d) Full budget: $K=300$, 30 CEM steps", loc="left", fontweight="semibold")
         task_handles = [
             Line2D([], [], marker=TASK_MARKERS[task], color="#555555", ls="none", label=task, ms=4.5)
@@ -314,14 +316,14 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
 def build_increment_table(summary: dict[str, Any]) -> str:
     analyses = summary["predeclared_incremental_analyses"]
     specs = (
-        ("cost_drift", "Fixed-pool max cost drift"),
-        ("positive_clean_regret", "Adaptive positive decision regret"),
+        ("cost_drift", "Maximum fixed-pool cost change"),
+        ("positive_clean_regret", "Adaptive CEM decision regret"),
         ("first_action_rms", "Adaptive first-action RMS"),
     )
     lines = [
         r"\begin{table}[H]",
         r"\centering",
-        r"\caption{Cross-task ridge analysis on 9,600 matched reduced-budget history records. Models are fitted separately within each training run on three tasks and evaluated on the fourth. The reference features are severity, checkpoint role, candidate-conditioned one-step ACPC, and nominal top-1 margin; the expanded model adds candidate-conditioned five-step ACPC. Entries are equal-task MAE reductions; mean $\pm$ sample SD treats the training run as the model-replication unit, and the final column counts improving task--run evaluations.}",
+        r"\caption{Added predictive value of candidate-conditioned five-step ACPC on 9,600 reduced-budget history records. Within each training run, ridge models are fitted on three tasks and evaluated on the fourth. Both models use perturbation severity, training condition, one-step ACPC, and the nominal top-1 margin; the expanded model also uses five-step ACPC. Entries are reductions in held-out MAE, averaged equally across evaluation tasks.}",
         r"\label{tab:acpc-planner-increment}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{3.7pt}",
@@ -353,15 +355,15 @@ def build_absolute_table(summary: dict[str, Any]) -> str:
     lines = [
         r"\begin{table}[H]",
         r"\centering",
-        r"\caption{Absolute planner outcomes at Gaussian severity 0.08, reported as mean $\pm$ sample SD across independent training runs after histories are averaged within run. Reduced-budget rows use 100 histories, $K=64$, top-8 elites, and eight CEM steps; full-budget rows evaluate the same 16 fixed histories per task across roles and runs with $K=300$, top-30 elites, and 30 steps. Regret is clean-history squared latent goal-cost, not closed-loop return, and its scale is task specific.}",
+        r"\caption{CEM decision statistics at Gaussian perturbation severity 0.08. Values are mean $\pm$ sample SD across independent training runs after histories are averaged within each run. Reduced-budget rows use 100 histories, $K=64$, top-8 elites, and eight CEM steps; full-budget rows use the same 16 histories per task with $K=300$, top-30 elites, and 30 steps. Regret is measured with the model's squared latent goal cost and is not an environment success rate.}",
         r"\label{tab:acpc-planner-absolute}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{2.2pt}",
         r"\begin{tabular}{lrrrrrr}",
         r"\toprule",
-        r"& \multicolumn{2}{c}{Top-1 stability} & \multicolumn{2}{c}{Reduced regret} & \multicolumn{2}{c}{Full-budget regret} \\",
+        r"& \multicolumn{2}{c}{Best candidate unchanged} & \multicolumn{2}{c}{Reduced-budget regret} & \multicolumn{2}{c}{Full-budget regret} \\",
         r"\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}",
-        r"Task & Base & Endpoint & Base & Endpoint & Base & Endpoint \\",
+        r"Task & No aug. & $\sigma_{\max}{=}0.08$ & No aug. & $\sigma_{\max}{=}0.08$ & No aug. & $\sigma_{\max}{=}0.08$ \\",
         r"\midrule",
     ]
     def cell(record: dict[str, Any], field: str) -> str:
@@ -458,13 +460,13 @@ def build_sweep_table(rows: list[dict[str, str]]) -> str:
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Compact view of the complete nine-level Gaussian training sweep. ``Best'' selects the level with highest mean success under observation noise $\sigma=0.08$; the full trajectories over all nine levels remain in Fig.~\ref{fig:full-sweep-diagnostics}. ATR is divided by each task$\times$run no-noise value (base $=1$) and is lower-is-better; SMPR remains on its original rate scale and is higher-is-better.}",
+        r"\caption{Summary of the nine-level Gaussian-augmentation sweep. ``Best'' denotes the augmentation level with the highest mean planning success rate at evaluation noise $\sigma=0.08$; Fig.~\ref{fig:full-sweep-diagnostics} shows every level. Relative ATR is divided by its value without noise augmentation and is lower-is-better; SMPR is reported on its original scale and is higher-is-better.}",
         r"\label{tab:full-sweep-compact}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{3.5pt}",
         r"\begin{tabular}{lrrrrrr}",
         r"\toprule",
-        r"Task & Base success (\%) & Best success (\%) & Best $\sigma_{\max}$ & ATR: base $\to$ best & SMPR: base $\to$ best & Majority-recovered levels \\",
+        r"Task & No-aug. success (\%) & Best success (\%) & Best $\sigma_{\max}$ & Relative ATR & SMPR & Levels meeting criterion \\",
         r"\midrule",
     ]
     for task in TASKS:
@@ -585,7 +587,7 @@ def build_pldm_table(
     lines = [
         r"\begin{table}[H]",
         r"\centering",
-        r"\caption{PLDM architecture-portability check on the complete four-task, nine-checkpoint Gaussian sweep. Both rows use the current task-relative ATR score: thresholds are selected on the other three PLDM tasks or transferred from the corresponding LeWM split. Metrics pool all 36 evaluation rows. Raw numerical thresholds are not assumed to be shared across model families.}",
+        r"\caption{Applying the same ACPC analysis to the complete PLDM sweep of four tasks and nine augmentation levels. The first row selects thresholds on the other three PLDM tasks. The second uses the corresponding LeWM thresholds after normalizing ATR within each PLDM task. Metrics include all 36 PLDM evaluation rows; raw thresholds are not assumed to match across model families.}",
         r"\label{tab:pldm-architecture-portability}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{4.0pt}",
@@ -594,12 +596,12 @@ def build_pldm_table(
         r"Calibration & BA & Precision & Recall & False pass & False miss \\",
         r"\midrule",
         (
-            f"PLDM-local, other three tasks & {local_ba:.3f} & "
+            f"PLDM thresholds, other three tasks & {local_ba:.3f} & "
             f"{local_precision:.3f} & {local_recall:.3f} & "
             f"{local_confusion['fp']} & {local_confusion['fn']} \\\\"
         ),
         (
-            f"LeWM-source reference, PLDM-anchored & {relative_ba:.3f} & "
+            f"LeWM thresholds, PLDM-normalized & {relative_ba:.3f} & "
             f"{relative_precision:.3f} & {relative_recall:.3f} & "
             f"{relative_lewm_confusion['fp']} & "
             f"{relative_lewm_confusion['fn']} \\\\"

@@ -43,7 +43,7 @@ def test_submission_planner_tables_are_bound_to_validated_three_seed_summary() -
         "Equal-task mean & 0.09$\\pm$0.03 & 0.93$\\pm$0.01 & "
         "227.04$\\pm$16.92 & 3.64$\\pm$0.68"
     ) in absolute
-    assert "not closed-loop return" in absolute
+    assert "not an environment success rate" in absolute
 
 
 def test_pldm_table_uses_the_current_task_relative_protocol() -> None:
@@ -57,10 +57,10 @@ def test_pldm_table_uses_the_current_task_relative_protocol() -> None:
     )
 
     table = build_pldm_table(rows, cross_task)
-    assert "complete four-task, nine-checkpoint Gaussian sweep" in table
-    assert "PLDM-local, other three tasks & 0.836 & 0.789 & 0.882 & 4 & 2" in table
-    assert "LeWM-source reference, PLDM-anchored & 0.807 & 0.778 & 0.824 & 4 & 3" in table
-    assert "Raw numerical thresholds are not assumed" in table
+    assert "complete PLDM sweep of four tasks and nine augmentation levels" in table
+    assert "PLDM thresholds, other three tasks & 0.836 & 0.789 & 0.882 & 4 & 2" in table
+    assert "LeWM thresholds, PLDM-normalized & 0.807 & 0.778 & 0.824 & 4 & 3" in table
+    assert "raw thresholds are not assumed" in table
 
 
 def test_submission_full_sweep_table_keeps_all_tasks_and_nine_levels() -> None:
@@ -76,7 +76,7 @@ def test_submission_full_sweep_table_keeps_all_tasks_and_nine_levels() -> None:
         "Cube",
     }
     table = build_sweep_table(rows)
-    assert "complete nine-level Gaussian training sweep" in table
+    assert "nine-level Gaussian-augmentation sweep" in table
     assert "TwoRoom & 68.8 & 97.1" in table
     assert "PushT & 7.2 & 86.8" in table
     assert "Reacher & 18.2 & 83.3" in table

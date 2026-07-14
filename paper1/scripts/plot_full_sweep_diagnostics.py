@@ -124,6 +124,7 @@ def _shade_recovery(ax: plt.Axes, x: list[float], recovery: list[float]) -> None
 
 def _polish_axis(ax: plt.Axes) -> None:
     ax.grid(True, axis="y", color="#b0b0b0", alpha=0.22, lw=0.6)
+    ax.tick_params(axis="both", which="major", direction="out", length=3.0)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
@@ -131,10 +132,9 @@ def _polish_axis(ax: plt.Axes) -> None:
 def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
     out_fig.parent.mkdir(parents=True, exist_ok=True)
     with plt.rc_context(PLOT_STYLE):
-        # Use the available single-column float-page height: the four task
-        # blocks remain at native text width but gain vertical separation and
-        # larger plotting regions in the submission PDF.
-        fig = plt.figure(figsize=(6.7, 6.7))
+        # Keep all four task blocks legible while fitting the figure beside its
+        # result text in a standard paper page.
+        fig = plt.figure(figsize=(6.7, 5.4))
         outer = fig.add_gridspec(
             2, 2, left=0.09, right=0.985, bottom=0.09, top=0.90, wspace=0.27, hspace=0.34
         )
@@ -168,36 +168,57 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             )
 
             score_ax.set_title(f"({chr(97 + index)}) {task}", loc="left", fontweight="semibold")
-            score_ax.set_ylabel("Score (%)")
-            score_ax.set_ylim(0, 105)
-            score_ax.set_yticks([0, 50, 100])
+            if index % 2 == 0:
+                score_ax.set_ylabel("Planning\nsuccess rate (%)")
+                diagnostic_ax.set_ylabel("Relative ATR\n/ SMPR")
+            score_ax.set_ylim(0, 102)
+            score_ax.set_yticks([0, 25, 50, 75, 100])
             score_ax.tick_params(axis="x", labelbottom=False, length=0)
-            diagnostic_ax.set_ylabel("Diagnostic value")
-            diagnostic_ax.set_ylim(-0.04, 1.06)
+            diagnostic_ax.set_ylim(-0.03, 1.03)
             diagnostic_ax.set_yticks([0, 0.5, 1.0])
+            diagnostic_ax.set_yticks([0.25, 0.75], minor=True)
             diagnostic_ax.set_xlim(-0.003, 0.083)
             diagnostic_ax.set_xticks([0.00, 0.02, 0.04, 0.06, 0.08])
             _polish_axis(score_ax)
             _polish_axis(diagnostic_ax)
+            diagnostic_ax.grid(
+                True,
+                axis="y",
+                which="minor",
+                color="#b0b0b0",
+                alpha=0.12,
+                lw=0.45,
+            )
+            diagnostic_ax.tick_params(
+                axis="y", which="minor", direction="out", length=2.0
+            )
 
         legend_handles = [
-            Line2D([], [], color="#222222", marker="o", lw=1.6, ms=3.6, label="Obs-noise score"),
-            Line2D([], [], color="#d95f02", marker="s", lw=1.35, ms=3.4, label=r"ATR rel ($\downarrow$)"),
+            Line2D(
+                [],
+                [],
+                color="#222222",
+                marker="o",
+                lw=1.6,
+                ms=3.6,
+                label=r"Success rate ($\sigma_{\rm eval}=0.08$)",
+            ),
+            Line2D([], [], color="#d95f02", marker="s", lw=1.35, ms=3.4, label=r"Relative ATR ($\downarrow$)"),
             Line2D([], [], color="#7570b3", marker="^", lw=1.35, ms=3.5, ls="--", label=r"SMPR ($\uparrow$)"),
-            Patch(facecolor=RECOVERY_COLOR, edgecolor="none", alpha=0.50, label="Majority recovered"),
-            Patch(facecolor="#777777", edgecolor="none", alpha=0.15, label="Across-run range"),
+            Patch(facecolor=RECOVERY_COLOR, edgecolor="none", alpha=0.50, label="Success-rate criterion"),
+            Patch(facecolor="#777777", edgecolor="none", alpha=0.15, label="Training-run range"),
         ]
         fig.legend(
             handles=legend_handles,
             loc="upper center",
             ncol=5,
             frameon=False,
-            fontsize=7.0,
-            columnspacing=1.0,
+            fontsize=6.7,
+            columnspacing=0.85,
             handletextpad=0.45,
             bbox_to_anchor=(0.5, 0.985),
         )
-        fig.supxlabel(r"training noise $\sigma_{\max}^{\mathrm{train}}$", y=0.015)
+        fig.supxlabel(r"Gaussian augmentation level $\sigma_{\max}^{\mathrm{train}}$", y=0.015)
         fig.savefig(out_fig, dpi=230)
         plt.close(fig)
 

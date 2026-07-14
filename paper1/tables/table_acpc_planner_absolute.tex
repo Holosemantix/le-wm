@@ -1,14 +1,14 @@
 \begin{table}[H]
 \centering
-\caption{Absolute planner outcomes at Gaussian severity 0.08, reported as mean $\pm$ sample SD across independent training runs after histories are averaged within run. Reduced-budget rows use 100 histories, $K=64$, top-8 elites, and eight CEM steps; full-budget rows evaluate the same 16 fixed histories per task across roles and runs with $K=300$, top-30 elites, and 30 steps. Regret is clean-history squared latent goal-cost, not closed-loop return, and its scale is task specific.}
+\caption{CEM decision statistics at Gaussian perturbation severity 0.08. Values are mean $\pm$ sample SD across independent training runs after histories are averaged within each run. Reduced-budget rows use 100 histories, $K=64$, top-8 elites, and eight CEM steps; full-budget rows use the same 16 histories per task with $K=300$, top-30 elites, and 30 steps. Regret is measured with the model's squared latent goal cost and is not an environment success rate.}
 \label{tab:acpc-planner-absolute}
 \scriptsize
 \setlength{\tabcolsep}{2.2pt}
 \begin{tabular}{lrrrrrr}
 \toprule
-& \multicolumn{2}{c}{Top-1 stability} & \multicolumn{2}{c}{Reduced regret} & \multicolumn{2}{c}{Full-budget regret} \\
+& \multicolumn{2}{c}{Best candidate unchanged} & \multicolumn{2}{c}{Reduced-budget regret} & \multicolumn{2}{c}{Full-budget regret} \\
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
-Task & Base & Endpoint & Base & Endpoint & Base & Endpoint \\
+Task & No aug. & $\sigma_{\max}{=}0.08$ & No aug. & $\sigma_{\max}{=}0.08$ & No aug. & $\sigma_{\max}{=}0.08$ \\
 \midrule
 TwoRoom & 0.13$\pm$0.03 & 0.93$\pm$0.02 & 203.81$\pm$9.97 & 8.47$\pm$2.75 & 224.97$\pm$30.56 & 1.75$\pm$1.44 \\
 PushT & 0.13$\pm$0.09 & 0.92$\pm$0.01 & 167.50$\pm$29.53 & 4.30$\pm$0.28 & 220.14$\pm$32.97 & 7.91$\pm$4.23 \\

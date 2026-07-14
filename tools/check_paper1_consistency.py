@@ -379,9 +379,9 @@ REQUIRED_MAIN_TEXT_SNIPPETS = [
     "raw thresholds are not assumed to transfer across model architectures",
     "adaptive result is conditional on pool alignment",
     "Evaluation seeds are conditional measurement replicates",
-    "without stressor-specific adjustment",
-    "not for a universal numerical threshold",
-    "do not turn the score into an absolute cross-stressor robustness certificate",
+    "No blur- or resize-specific adjustment is made",
+    "not one numerical threshold for every task or model family",
+    "They do not establish an absolute robustness classifier",
     "t-SNE does not preserve metric geometry",
     "not an independent statistical success count",
     "does not rank encoder shift",
@@ -506,7 +506,7 @@ PAIRED_MULTISEVERITY_SMPR_SMOKE_SHA256 = "eb41ff0d6a23db0e15ea5f48540f91f5d83483
 PUBLIC_V1_ARTIFACT_HASHES = {
     "paper1/config/frozen_diagnostic_protocol_v1.json": FROZEN_PROTOCOL_SHA256,
     "paper1/results/frozen_external_validation_summary_v3.json": "ec485a7026c1d2ff80295f4dc85dd3753ca12f2ede7d7c0137a13796070dfeba",
-    "paper1/tables/table_pldm_architecture_portability.tex": "52186ae599deadc8f8756a14daca38b5a609b766142169ca123be19b31048df2",
+    "paper1/tables/table_pldm_architecture_portability.tex": "8c4fda0abec11a777249422b08ab7fb3ced11ee5222962f28d0ca6ec4f73309e",
     "paper1/results/external_validation/cross_stressor_fixed_rho_summary.json": "94077f772e8dd7641b47e161a17d4ec67cea695dc044cb9a0229857efc157453",
     "paper1/results/external_validation/target_view_frozen_summary.json": "dba255daf282d1dbea7a102839e054cdd39b159a08a9ea9b1d3def7767477870",
     "paper1/results/diagnostic_baselines/diagnostic_baseline_all_v1.json": "df43cfd80b0387bde31426a37445149646a247724c1b2dd61f801a97d6c4f3c8",
@@ -991,11 +991,12 @@ def check_visual_text_structure() -> None:
         "\\subsection{Prediction and planning bounds}",
         "\\subsection{Checkpoint-level scores}",
         "\\subsection{Collapse guard and calibration}",
-        "\\subsection{Robustness and diagnostic trends}",
-        "\\subsection{Predicting future-error drift}",
-        "\\subsection{Planner cost and decision stability}",
-        "\\subsection{Cross-task transfer}",
-        "\\subsection{Transfer to PLDM}",
+        "\\subsection{Evaluation setup}",
+        "\\subsection{Planning performance under observation noise}",
+        "\\subsection{Predicting error changes under visual perturbations}",
+        "\\subsection{ACPC and CEM decisions}",
+        "\\subsection{Cross-task threshold transfer}",
+        "\\subsection{Application to PLDM}",
         "\\subsection{Transfer to blur and resize}",
     )
     for heading in required_headings:
@@ -3409,7 +3410,6 @@ def check_claim_aligned_three_pillar_evidence() -> None:
     for token in (
         "seed3075",
         "seed 3075",
-        "held-out",
         "dev-era",
         "correct-action",
         "tables/table_seed_transfer_audit",
@@ -3495,9 +3495,9 @@ def check_public_v1_remediation_artifacts() -> None:
         ROOT / "paper1/tables/table_pldm_architecture_portability.tex"
     ).read_text(encoding="utf-8")
     for expected in (
-        "PLDM-local, other three tasks & 0.836 & 0.789 & 0.882 & 4 & 2",
-        "LeWM-source reference, PLDM-anchored & 0.807 & 0.778 & 0.824 & 4 & 3",
-        "Raw numerical thresholds are not assumed to be shared across model families",
+        "PLDM thresholds, other three tasks & 0.836 & 0.789 & 0.882 & 4 & 2",
+        "LeWM thresholds, PLDM-normalized & 0.807 & 0.778 & 0.824 & 4 & 3",
+        "raw thresholds are not assumed to match across model families",
     ):
         if expected not in e2_table:
             fail(f"E2 PLDM architecture-portability table changed: {expected}")

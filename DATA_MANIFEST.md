@@ -57,7 +57,7 @@ The public-v1 diagnostic protocol is immutable at SHA-256 `edcb801c3da388e673c9b
 |---|---|---|
 | `paper1/config/frozen_diagnostic_protocol_v1.json` | Immutable public-v1 metric/gate protocol | `edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21` |
 | `paper1/results/frozen_external_validation_summary_v3.json` | E1 held-out LeWM frozen validation | `ec485a7026c1d2ff80295f4dc85dd3753ca12f2ede7d7c0137a13796070dfeba` |
-| `paper1/tables/table_pldm_architecture_portability.tex` | E2 one-family PLDM architecture-portability summary | `52186ae599deadc8f8756a14daca38b5a609b766142169ca123be19b31048df2` |
+| `paper1/tables/table_pldm_architecture_portability.tex` | E2 one-family PLDM architecture-portability summary | `8c4fda0abec11a777249422b08ab7fb3ced11ee5222962f28d0ca6ec4f73309e` |
 | `paper1/results/external_validation/cross_stressor_fixed_rho_summary.json` | E3 absolute/paired blur-resize validation plus post-freeze robustness audit | `94077f772e8dd7641b47e161a17d4ec67cea695dc044cb9a0229857efc157453` |
 | `paper1/tables/table_cross_stressor_robustness_audit.tex` | Generated E3 exact/deletion/selection audit table | `f97774bed394eaaf979ed2c8f835d73a999249489bb03a12c49c52dc4c9614bf` |
 | `paper1/results/external_validation/target_view_frozen_summary.json` | E4 failed-repair falsification | `dba255daf282d1dbea7a102839e054cdd39b159a08a9ea9b1d3def7767477870` |

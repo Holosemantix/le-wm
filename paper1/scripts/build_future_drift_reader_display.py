@@ -101,7 +101,7 @@ def _write_summary_table(summaries: list[dict[str, Any]]) -> None:
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Three independent training runs give the same future-drift conclusion. Every model predicts the same eight-step latent error-drift target. The first comparison adds eight-step ACPC computed with the recorded action sequence to common covariates plus one-step ACPC. The second replaces the one-step comparator by the strongest same-horizon control whose actions are zeroed or shuffled. Values are equal-task relative MAE reductions after rotating evaluation over 16 trajectory groups (fit on 15, evaluate the remaining group); higher is better.}",
+        r"\caption{Predicting the change in eight-step latent error under a visual perturbation. All regressions use the same target and base features; they differ only in the ACPC feature. The recorded-action eight-step feature is compared with one-step ACPC and with the strongest same-horizon feature using zeroed or shuffled actions. Values are relative reductions in held-out MAE after rotating evaluation over 16 trajectory groups; higher is better.}",
         r"\label{tab:target-aligned-acpc}",
         r"\small",
         r"\setlength{\tabcolsep}{6pt}",
@@ -132,7 +132,7 @@ def _write_absolute_table(rows: list[dict[str, Any]]) -> None:
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Absolute MAE for the common eight-step latent error-drift target. Each row contains 16 trajectory blocks. The recorded-action column is the proposed eight-step ACPC feature; the control column reports the strongest zeroed- or shuffled-action feature at the same horizon. Lower is better.}",
+        r"\caption{Held-out MAE for predicting the absolute change in eight-step latent prediction error. Each row contains 16 trajectory groups. The recorded-action column uses eight-step ACPC with the observed actions; the control column uses the strongest eight-step feature with zeroed or shuffled actions. Lower is better.}",
         r"\label{tab:target-aligned-acpc-absolute}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{3.6pt}",
@@ -154,7 +154,7 @@ def _write_absolute_table(rows: list[dict[str, Any]]) -> None:
     OUT_ABSOLUTE.write_text("\n".join(lines) + "\n")
 
 
-def _plot(summaries: list[dict[str, Any]]) -> None:
+def _plot(rows: list[dict[str, Any]]) -> None:
     plt.rcParams.update(
         {
             "font.family": "serif",
@@ -167,57 +167,58 @@ def _plot(summaries: list[dict[str, Any]]) -> None:
             "ytick.labelsize": 7.5,
         }
     )
-    fig, ax = plt.subplots(figsize=(6.65, 2.35))
-    comparisons = [
-        ("reduction_vs_control", 1.0, "vs. best 8-step control\n(zeroed or shuffled actions)"),
-        ("reduction_vs_one_step", 0.0, "vs. 1-step action-matched ACPC"),
-    ]
-    colors = {3072: "#4C78A8", 3073: "#4C78A8", 3074: "#4C78A8"}
-    offsets = {3072: -0.10, 3073: 0.0, 3074: 0.10}
-    for key, y, _ in comparisons:
-        values = []
-        for row_index, row in enumerate(summaries):
-            value = 100 * row[key]
-            values.append(value)
-            ax.scatter(
-                value,
-                y + offsets[row["training_seed"]],
-                s=34,
-                color=colors[row["training_seed"]],
-                edgecolor="white",
-                linewidth=0.5,
-                zorder=3,
-                label="training runs" if y == 1 and row_index == 0 else None,
-            )
-            ax.text(
-                value + 0.9,
-                y + offsets[row["training_seed"]],
-                f"{value:.1f}",
-                va="center",
-                fontsize=6.8,
-            )
-        ax.plot([min(values), max(values)], [y, y], color="#9a9a9a", linewidth=1.0, zorder=1)
-        ax.scatter(
-            mean(values),
-            y,
-            marker="D",
-            s=48,
-            color="#222222",
-            edgecolor="white",
-            linewidth=0.6,
-            zorder=4,
-            label="mean" if y == 1 else None,
+    fig, ax = plt.subplots(figsize=(6.65, 2.85))
+    comparisons = (
+        ("reduction_vs_one_step", -0.16, "#4C78A8", "vs. one-step ACPC"),
+        (
+            "reduction_vs_control",
+            0.16,
+            "#E45756",
+            "vs. same-horizon action control",
+        ),
+    )
+    run_jitter = (-0.045, 0.0, 0.045)
+    for task_index, task in enumerate(TASKS):
+        task_rows = sorted(
+            (row for row in rows if row["task"] == task),
+            key=lambda row: int(row["training_seed"]),
         )
-    ax.axvline(0, color="#777777", linewidth=0.8)
-    ax.set_xlim(0, 70)
-    ax.set_ylim(-0.38, 1.38)
-    ax.set_yticks([0, 1], [comparisons[1][2], comparisons[0][2]])
-    ax.set_xlabel("Relative reduction in MAE for the same 8-step future-drift target (%)")
-    ax.grid(axis="x", color="#e5e5e5", linewidth=0.7)
-    ax.spines[["top", "right", "left"]].set_visible(False)
-    ax.tick_params(axis="y", length=0)
-    handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles, labels, ncol=4, loc="upper center", bbox_to_anchor=(0.5, 1.15), frameon=False)
+        if len(task_rows) != len(SEEDS):
+            raise ValueError(f"{task}: expected one row per training run")
+        for key, offset, color, label in comparisons:
+            values = [100 * row[key] for row in task_rows]
+            for jitter, value in zip(run_jitter, values):
+                ax.scatter(
+                    task_index + offset + jitter,
+                    value,
+                    s=27,
+                    color=color,
+                    alpha=0.55,
+                    edgecolor="white",
+                    linewidth=0.4,
+                    zorder=3,
+                )
+            ax.scatter(
+                task_index + offset,
+                mean(values),
+                marker="D",
+                s=50,
+                color=color,
+                edgecolor="#222222",
+                linewidth=0.55,
+                zorder=4,
+                label=label if task_index == 0 else None,
+            )
+    ax.axhline(0, color="#666666", linewidth=0.8, linestyle="--", zorder=1)
+    ax.set_xlim(-0.55, len(TASKS) - 0.45)
+    ax.set_ylim(0, 90)
+    ax.set_xticks(range(len(TASKS)), TASKS)
+    ax.set_yticks([0, 20, 40, 60, 80])
+    ax.set_ylabel("Reduction in held-out MAE (%)")
+    ax.grid(axis="y", color="#d9d9d9", linewidth=0.65)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.tick_params(axis="both", direction="out", length=3.0)
+    ax.legend(ncol=2, loc="upper center", bbox_to_anchor=(0.5, 1.14), frameon=False)
     fig.tight_layout(pad=0.7)
     OUT_FIGURE.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT_FIGURE, bbox_inches="tight")
@@ -231,7 +232,7 @@ def main() -> None:
     a = [row["reduction_vs_one_step"] for row in summaries]
     b = [row["reduction_vs_control"] for row in summaries]
     payload = {
-        "target": "absolute eight-step latent future-error drift",
+        "target": "absolute change in eight-step latent prediction error",
         "training_seeds": list(SEEDS),
         "seed_summaries": summaries,
         "mean_reduction_vs_one_step": mean(a),
@@ -243,7 +244,7 @@ def main() -> None:
     OUT_SUMMARY.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     _write_summary_table(summaries)
     _write_absolute_table(rows)
-    _plot(summaries)
+    _plot(rows)
 
 
 if __name__ == "__main__":

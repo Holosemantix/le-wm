@@ -1,6 +1,6 @@
 \begin{table}[t]
 \centering
-\caption{Three independent training runs give the same future-drift conclusion. Every model predicts the same eight-step latent error-drift target. The first comparison adds eight-step ACPC computed with the recorded action sequence to common covariates plus one-step ACPC. The second replaces the one-step comparator by the strongest same-horizon control whose actions are zeroed or shuffled. Values are equal-task relative MAE reductions after rotating evaluation over 16 trajectory groups (fit on 15, evaluate the remaining group); higher is better.}
+\caption{Predicting the change in eight-step latent error under a visual perturbation. All regressions use the same target and base features; they differ only in the ACPC feature. The recorded-action eight-step feature is compared with one-step ACPC and with the strongest same-horizon feature using zeroed or shuffled actions. Values are relative reductions in held-out MAE after rotating evaluation over 16 trajectory groups; higher is better.}
 \label{tab:target-aligned-acpc}
 \small
 \setlength{\tabcolsep}{6pt}

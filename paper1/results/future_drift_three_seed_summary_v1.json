@@ -27,7 +27,7 @@
       "training_seed": 3074
     }
   ],
-  "target": "absolute eight-step latent future-error drift",
+  "target": "absolute change in eight-step latent prediction error",
   "training_seeds": [
     3072,
     3073,

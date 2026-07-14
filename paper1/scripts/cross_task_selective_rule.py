@@ -438,7 +438,7 @@ def write_table(summary: dict[str, Any], out: Path) -> None:
     lines = [
         r"\begin{table*}[t]",
         r"\centering",
-        r"\caption{Cross-task portability of the selective ACPC rule. Thresholds are selected only on the source tasks and applied unchanged to the evaluation tasks. Metrics first average three training runs within each task. Onset errors use training-noise-grid units. This table evaluates threshold portability, not individual diagnostic components.}",
+        r"\caption{Cross-task evaluation of the selective ACPC rule. Thresholds are selected on the source tasks and applied unchanged to all remaining tasks. Metrics first average training runs within each evaluation task and then weight tasks equally. Onset error is measured in Gaussian-augmentation grid units.}",
         r"\label{tab:cross-task-all-subsets}",
         r"\small",
         r"\setlength{\tabcolsep}{3.5pt}",
@@ -469,8 +469,12 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
     with plt.rc_context(STYLE):
         fig, axes = plt.subplots(1, 2, figsize=(6.8, 2.55))
         metrics = (
-            ("balanced_accuracy", "(a) Evaluation-task accuracy", "Balanced accuracy"),
-            ("mean_abs_start_error", "(b) Recovery onset", "Mean absolute onset error"),
+            ("balanced_accuracy", "(a) Threshold classification", "Balanced accuracy"),
+            (
+                "mean_abs_start_error",
+                "(b) Success-rate criterion onset",
+                "Mean absolute onset error",
+            ),
         )
         for ax, (metric, title, ylabel) in zip(axes, metrics):
             for coverage in (1, 2, 3):
@@ -539,7 +543,7 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
                     ls="",
                     markerfacecolor="white",
                     markeredgecolor=summary_color,
-                    label="task-equal summary",
+                    label="mean across evaluation tasks",
                 ),
             ],
             loc="lower center",

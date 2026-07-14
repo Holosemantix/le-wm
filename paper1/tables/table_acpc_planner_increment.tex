@@ -1,6 +1,6 @@
 \begin{table}[H]
 \centering
-\caption{Cross-task ridge analysis on 9,600 matched reduced-budget history records. Models are fitted separately within each training run on three tasks and evaluated on the fourth. The reference features are severity, checkpoint role, candidate-conditioned one-step ACPC, and nominal top-1 margin; the expanded model adds candidate-conditioned five-step ACPC. Entries are equal-task MAE reductions; mean $\pm$ sample SD treats the training run as the model-replication unit, and the final column counts improving task--run evaluations.}
+\caption{Added predictive value of candidate-conditioned five-step ACPC on 9,600 reduced-budget history records. Within each training run, ridge models are fitted on three tasks and evaluated on the fourth. Both models use perturbation severity, training condition, one-step ACPC, and the nominal top-1 margin; the expanded model also uses five-step ACPC. Entries are reductions in held-out MAE, averaged equally across evaluation tasks.}
 \label{tab:acpc-planner-increment}
 \scriptsize
 \setlength{\tabcolsep}{3.7pt}
@@ -8,8 +8,8 @@
 \toprule
 Response & Mean $\pm$ SD & Run range & Cells improved \\
 \midrule
-Fixed-pool max cost drift & 7.9 $\pm$ 1.4\% & 6.6--9.5\% & 8/12 \\
-Adaptive positive decision regret & 15.2 $\pm$ 2.0\% & 12.9--16.9\% & 12/12 \\
+Maximum fixed-pool cost change & 7.9 $\pm$ 1.4\% & 6.6--9.5\% & 8/12 \\
+Adaptive CEM decision regret & 15.2 $\pm$ 2.0\% & 12.9--16.9\% & 12/12 \\
 Adaptive first-action RMS & 1.1 $\pm$ 0.5\% & 0.8--1.7\% & 10/12 \\
 \bottomrule
 \end{tabular}

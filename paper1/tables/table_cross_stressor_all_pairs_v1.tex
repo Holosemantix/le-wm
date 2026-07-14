@@ -1,12 +1,12 @@
 \begin{table*}[t]
 \centering
-\caption{All 24 LeWM blur/resize pairs used in the cross-stressor analysis. ATR$_{\rm rel}$ and SMPR are endpoint values; $\Delta B$ is endpoint-minus-base stressed success in percentage points, and $\Delta S$ is the corresponding selective-score change. A behavioral change is positive only when $\Delta B\geq5$ points and clean success loses at most five points; a score change is positive when $\Delta S>0$. Outcomes are shown as behavior / score.}
+\caption{All 24 LeWM checkpoint pairs evaluated under blur and resize. ATR$_{\rm rel}$ and SMPR are measured for the checkpoint trained with Gaussian augmentation. $\Delta P$ is its change in planning success rate relative to the checkpoint trained without augmentation, and $\Delta S$ is the corresponding selective-score change. A success-rate change is positive when $\Delta P\geq5$ percentage points and the clean success rate decreases by at most five points. Outcome lists the success-rate classification followed by the score classification.}
 \label{tab:cross-stressor-all-pairs}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{lrlrrrrrl}
 \toprule
-Task & Seed & Stressor & ATR$_{\rm rel}$ & SMPR & $\Delta B$ & $\Delta S$ & Outcome \\
+Task & Seed & Shift & ATR$_{\rm rel}$ & SMPR & $\Delta P$ & $\Delta S$ & Outcome \\
 \midrule
 TwoRoom & 3072 & blur & 0.499 & 0.885 & 55.7 & 2.505 & positive / positive \\
 TwoRoom & 3072 & resize & 0.336 & 0.967 & 52.3 & 3.321 & positive / positive \\

@@ -1,12 +1,12 @@
 \begin{table}[t]
 \centering
-\caption{Transfer of the selective ACPC score to blur and resize. For each task, thresholds are selected on the other three Gaussian tasks and applied without stressor-specific adjustment. The score change is compared with endpoint-minus-base stressed-success change; this evaluates relative ordering rather than absolute robustness detection.}
+\caption{Transfer of the selective ACPC score from Gaussian noise to blur and resize. For each task, thresholds are selected on the other three Gaussian-noise tasks and then fixed. The table compares the score change with the change in planning success rate between checkpoints trained with and without Gaussian augmentation.}
 \label{tab:cross-stressor-selective-transfer}
 \small
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{lrrrrr}
 \toprule
-Stressor subset & Pairs & BA & Precision / recall & Spearman & Discordant \\
+Visual shift & Pairs & BA & Precision / recall & Spearman & Discordant \\
 \midrule
 All pairs & 24 & 0.889 & 0.882 / 1.000 & 0.909 & 2 \\
 Blur & 12 & 0.875 & 0.889 / 1.000 & 0.937 & 1 \\
