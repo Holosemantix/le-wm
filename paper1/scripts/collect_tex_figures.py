@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-r"""Copy figures referenced by a Paper1 TeX entry point.
+r"""Copy figures and optional tables referenced by a Paper1 TeX entry point.
 
 The script parses \includegraphics targets after recursively expanding simple
 \input{...} files. It is intentionally narrow: it is a source-packaging helper,
@@ -120,10 +120,48 @@ def output_relative_path(target: str, source: Path) -> Path:
     return raw if raw.suffix else raw.with_suffix(source.suffix)
 
 
+def copy_referenced_tables(text: str, base_dir: Path, out_dir: Path) -> list[Path]:
+    """Copy only direct ``tables/...`` inputs found in expanded TeX text.
+
+    Blind bundles must not include every historical table in the repository.
+    Restricting targets to one basename below ``tables/`` also prevents an
+    input from escaping the intended bundle directory.
+    """
+
+    targets: list[str] = []
+    for target in INPUT_RE.findall(text):
+        raw = Path(target)
+        if raw.parent != Path("tables") or raw.name in {"", ".", ".."}:
+            continue
+        if target not in targets:
+            targets.append(target)
+
+    copied: list[Path] = []
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for target in targets:
+        raw = Path(target)
+        if raw.suffix not in {"", ".tex"}:
+            raise ValueError(f"table input {target!r} must be a TeX file")
+        source = (base_dir / raw).with_suffix(".tex").resolve()
+        table_root = (base_dir / "tables").resolve()
+        if source.parent != table_root or not source.is_file():
+            raise FileNotFoundError(f"missing referenced table input: {target}")
+        destination = out_dir / source.name
+        shutil.copy2(source, destination)
+        copied.append(destination)
+        print(f"copied {source} -> {destination}")
+    return copied
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tex", required=True, help="TeX entry point to parse")
     parser.add_argument("--out-dir", required=True, help="Directory to receive copied figures")
+    parser.add_argument(
+        "--table-out-dir",
+        default=None,
+        help="Optional directory to receive only referenced tables/... inputs",
+    )
     parser.add_argument("--base-dir", default=None, help="Directory for TeX-relative figure lookup; defaults to the TeX parent")
     parser.add_argument("--dry-run", action="store_true", help="List figures without copying")
     args = parser.parse_args()
@@ -160,6 +198,10 @@ def main() -> int:
     if args.dry_run:
         for target, source, _ in resolved:
             print(f"{target}\t{source}")
+        if args.table_out_dir:
+            for target in INPUT_RE.findall(text):
+                if Path(target).parent == Path("tables"):
+                    print(f"table\t{target}")
         return 0
 
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -168,6 +210,8 @@ def main() -> int:
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, destination)
         print(f"copied {source} -> {destination}")
+    if args.table_out_dir:
+        copy_referenced_tables(text, base_dir, Path(args.table_out_dir).resolve())
     return 0
 
 

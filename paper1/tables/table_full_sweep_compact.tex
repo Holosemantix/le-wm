@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering
+\caption{Compact view of the complete nine-level Gaussian training sweep (three training seeds per level). ``Best'' selects the level with highest mean success under observation noise $\sigma=0.08$; the full trajectories over all nine levels remain in Fig.~\ref{fig:full-sweep-diagnostics}. ATR is divided by each task$\times$seed no-noise value (base $=1$) and is lower-is-better; SMPR remains on its original rate scale and is higher-is-better.}
+\label{tab:full-sweep-compact}
+\scriptsize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+Task & Base success (\%) & Best success (\%) & Best $\sigma_{\max}$ & ATR: base $\to$ best & SMPR: base $\to$ best & Majority-recovered levels \\
+\midrule
+TwoRoom & 68.8 & 97.1 & 0.08 & 1.00$\to$0.07 & 0.34$\to$0.99 & 0.01--0.08 \\
+PushT & 7.2 & 86.8 & 0.06 & 1.00$\to$0.10 & 0.44$\to$1.00 & 0.03--0.08 \\
+Reacher & 18.2 & 83.3 & 0.07 & 1.00$\to$0.03 & 0.73$\to$0.99 & 0.03--0.08 \\
+Cube & 43.1 & 66.0 & 0.03 & 1.00$\to$0.31 & 0.45$\to$0.99 & 0.03--0.07 \\
+\bottomrule
+\end{tabular}
+\end{table}

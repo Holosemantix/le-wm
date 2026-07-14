@@ -53,8 +53,11 @@ fi
 rm -rf /tmp/paper1_blind_src
 mkdir -p /tmp/paper1_blind_src/figures /tmp/paper1_blind_src/tables
 cp docs/main_blind.tex main.tex references.bib main_blind.bbl /tmp/paper1_blind_src/
-cp tables/*.tex /tmp/paper1_blind_src/tables/
-python scripts/collect_tex_figures.py --tex docs/main_blind.tex --base-dir . --out-dir /tmp/paper1_blind_src/figures
+python scripts/collect_tex_figures.py \
+  --tex docs/main_blind.tex \
+  --base-dir . \
+  --out-dir /tmp/paper1_blind_src/figures \
+  --table-out-dir /tmp/paper1_blind_src/tables
 
 if grep -R -n -E -i --include='*.tex' "Anguo-star|github\.com|Author names to be supplied|Acknowledgements|public repository|LeWM authors" /tmp/paper1_blind_src; then
   fail "blind source bundle contains self-identifying arXiv/source wording"

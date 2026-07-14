@@ -1,0 +1,714 @@
+{
+  "aggregation": "mean over training-seed blocks within evaluation task; mean over eligible source subsets within coverage; equal mean over four evaluation tasks",
+  "coverage": [
+    {
+      "balanced_accuracy": 0.8397156084656084,
+      "evaluation_task_incidence_count": 12,
+      "evaluation_task_metrics": {
+        "Cube": {
+          "abs_start_error": 0.011111111111111112,
+          "balanced_accuracy": 0.7305555555555555,
+          "f1": 0.735578002244669,
+          "precision": 0.75,
+          "recall": 0.7444444444444445
+        },
+        "PushT": {
+          "abs_start_error": 0.006666666666666667,
+          "balanced_accuracy": 0.8796296296296297,
+          "f1": 0.9003367003367003,
+          "precision": 0.9407407407407408,
+          "recall": 0.8703703703703703
+        },
+        "Reacher": {
+          "abs_start_error": 0.002222222222222222,
+          "balanced_accuracy": 0.9074074074074073,
+          "f1": 0.9572649572649572,
+          "precision": 0.9206349206349206,
+          "recall": 1.0
+        },
+        "TwoRoom": {
+          "abs_start_error": 0.024444444444444442,
+          "balanced_accuracy": 0.8412698412698413,
+          "f1": 0.8101343101343101,
+          "precision": 1.0,
+          "recall": 0.6825396825396826
+        }
+      },
+      "f1": 0.8508284924951591,
+      "max_abs_start_error": 0.03,
+      "mean_abs_start_error": 0.01111111111111111,
+      "partition_balanced_accuracy_range": [
+        0.761904761904762,
+        0.8915343915343915
+      ],
+      "partition_count": 4,
+      "partition_mean_abs_start_error_range": [
+        0.0044444444444444444,
+        0.01888888888888889
+      ],
+      "precision": 0.9028439153439154,
+      "recall": 0.8243386243386244,
+      "selected_threshold_counts": [
+        {
+          "count": 1,
+          "tau_atr": 0.15,
+          "tau_smpr": 0.95
+        },
+        {
+          "count": 1,
+          "tau_atr": 0.2,
+          "tau_smpr": 0.95
+        },
+        {
+          "count": 1,
+          "tau_atr": 0.3,
+          "tau_smpr": 0.9
+        },
+        {
+          "count": 1,
+          "tau_atr": 0.3,
+          "tau_smpr": 0.95
+        }
+      ],
+      "source_coverage": 1
+    },
+    {
+      "balanced_accuracy": 0.8552248677248677,
+      "evaluation_task_incidence_count": 12,
+      "evaluation_task_metrics": {
+        "Cube": {
+          "abs_start_error": 0.007777777777777778,
+          "balanced_accuracy": 0.774074074074074,
+          "f1": 0.78989898989899,
+          "precision": 0.7666666666666667,
+          "recall": 0.8314814814814815
+        },
+        "PushT": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.9166666666666666,
+          "f1": 0.9444444444444444,
+          "precision": 0.9444444444444444,
+          "recall": 0.9444444444444444
+        },
+        "Reacher": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.8888888888888888,
+          "f1": 0.9487179487179487,
+          "precision": 0.9047619047619048,
+          "recall": 1.0
+        },
+        "TwoRoom": {
+          "abs_start_error": 0.024444444444444442,
+          "balanced_accuracy": 0.8412698412698413,
+          "f1": 0.8101343101343101,
+          "precision": 1.0,
+          "recall": 0.6825396825396826
+        }
+      },
+      "f1": 0.8732989232989233,
+      "max_abs_start_error": 0.03,
+      "mean_abs_start_error": 0.009722222222222222,
+      "partition_balanced_accuracy_range": [
+        0.791468253968254,
+        0.9027777777777777
+      ],
+      "partition_count": 6,
+      "partition_mean_abs_start_error_range": [
+        0.0033333333333333327,
+        0.018333333333333333
+      ],
+      "precision": 0.903968253968254,
+      "recall": 0.8646164021164021,
+      "selected_threshold_counts": [
+        {
+          "count": 2,
+          "tau_atr": 0.2,
+          "tau_smpr": 0.95
+        },
+        {
+          "count": 3,
+          "tau_atr": 0.3,
+          "tau_smpr": 0.9
+        },
+        {
+          "count": 1,
+          "tau_atr": 0.3,
+          "tau_smpr": 0.95
+        }
+      ],
+      "source_coverage": 2
+    },
+    {
+      "balanced_accuracy": 0.8540674603174603,
+      "evaluation_task_incidence_count": 4,
+      "evaluation_task_metrics": {
+        "Cube": {
+          "abs_start_error": 0.006666666666666667,
+          "balanced_accuracy": 0.7833333333333333,
+          "f1": 0.8,
+          "precision": 0.7666666666666667,
+          "recall": 0.85
+        },
+        "PushT": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.9166666666666666,
+          "f1": 0.9444444444444444,
+          "precision": 0.9444444444444444,
+          "recall": 0.9444444444444444
+        },
+        "Reacher": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.8888888888888888,
+          "f1": 0.9487179487179487,
+          "precision": 0.9047619047619048,
+          "recall": 1.0
+        },
+        "TwoRoom": {
+          "abs_start_error": 0.026666666666666665,
+          "balanced_accuracy": 0.8273809523809524,
+          "f1": 0.7905982905982906,
+          "precision": 1.0,
+          "recall": 0.6547619047619048
+        }
+      },
+      "f1": 0.870940170940171,
+      "max_abs_start_error": 0.03,
+      "mean_abs_start_error": 0.009999999999999998,
+      "partition_balanced_accuracy_range": [
+        0.7833333333333333,
+        0.9166666666666666
+      ],
+      "partition_count": 4,
+      "partition_mean_abs_start_error_range": [
+        0.0033333333333333327,
+        0.026666666666666665
+      ],
+      "precision": 0.903968253968254,
+      "recall": 0.8623015873015873,
+      "selected_threshold_counts": [
+        {
+          "count": 1,
+          "tau_atr": 0.2,
+          "tau_smpr": 0.95
+        },
+        {
+          "count": 3,
+          "tau_atr": 0.3,
+          "tau_smpr": 0.9
+        }
+      ],
+      "source_coverage": 3
+    }
+  ],
+  "detail_row_count": 84,
+  "evaluation_task_incidence_count": 28,
+  "partition_count": 14,
+  "partitions": [
+    {
+      "balanced_accuracy": 0.8629629629629629,
+      "evaluation_task_metrics": {
+        "Cube": {
+          "abs_start_error": 0.006666666666666667,
+          "balanced_accuracy": 0.7833333333333333,
+          "f1": 0.8,
+          "precision": 0.7666666666666667,
+          "recall": 0.85
+        },
+        "PushT": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.9166666666666666,
+          "f1": 0.9444444444444444,
+          "precision": 0.9444444444444444,
+          "recall": 0.9444444444444444
+        },
+        "Reacher": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.8888888888888888,
+          "f1": 0.9487179487179487,
+          "precision": 0.9047619047619048,
+          "recall": 1.0
+        }
+      },
+      "evaluation_tasks": [
+        "PushT",
+        "Reacher",
+        "Cube"
+      ],
+      "f1": 0.8977207977207977,
+      "max_abs_start_error": 0.010000000000000002,
+      "mean_abs_start_error": 0.0044444444444444444,
+      "partition_id": "src1_tworoom",
+      "precision": 0.8719576719576719,
+      "recall": 0.9314814814814815,
+      "source_coverage": 1,
+      "source_tasks": [
+        "TwoRoom"
+      ],
+      "tau_atr": 0.3,
+      "tau_smpr": 0.9
+    },
+    {
+      "balanced_accuracy": 0.8424603174603175,
+      "evaluation_task_metrics": {
+        "Cube": {
+          "abs_start_error": 0.01,
+          "balanced_accuracy": 0.7555555555555555,
+          "f1": 0.7696969696969698,
+          "precision": 0.7666666666666667,
+          "recall": 0.7944444444444445
+        },
+        "Reacher": {
+          "abs_start_error": 0.0,
+          "balanced_accuracy": 0.9444444444444444,
+          "f1": 0.9743589743589743,
+          "precision": 0.9523809523809523,
+          "recall": 1.0
+        },
+        "TwoRoom": {
+          "abs_start_error": 0.026666666666666665,
+          "balanced_accuracy": 0.8273809523809524,
+          "f1": 0.7905982905982906,
+          "precision": 1.0,
+          "recall": 0.6547619047619048
+        }
+      },
+      "evaluation_tasks": [
+        "TwoRoom",
+        "Reacher",
+        "Cube"
+      ],
+      "f1": 0.8448847448847449,
+      "max_abs_start_error": 0.03,
+      "mean_abs_start_error": 0.012222222222222221,
+      "partition_id": "src1_pusht",
+      "precision": 0.9063492063492063,
+      "recall": 0.8164021164021165,
+      "source_coverage": 1,
+      "source_tasks": [
+        "PushT"
+      ],
+      "tau_atr": 0.2,
+      "tau_smpr": 0.95
+    },
+    {
+      "balanced_accuracy": 0.761904761904762,
+      "evaluation_task_metrics": {
+        "Cube": {
+          "abs_start_error": 0.01666666666666667,
+          "balanced_accuracy": 0.6527777777777778,
+          "f1": 0.6370370370370371,
+          "precision": 0.7166666666666667,
+          "recall": 0.5888888888888889
+        },
+        "PushT": {
+          "abs_start_error": 0.013333333333333334,
+          "balanced_accuracy": 0.8055555555555556,
+          "f1": 0.8121212121212121,
+          "precision": 0.9333333333333333,
+          "recall": 0.7222222222222222
+        },
+        "TwoRoom": {
+          "abs_start_error": 0.026666666666666665,
+          "balanced_accuracy": 0.8273809523809524,
+          "f1": 0.7905982905982906,
+          "precision": 1.0,
+          "recall": 0.6547619047619048
+        }
+      },
+      "evaluation_tasks": [
+        "TwoRoom",
+        "PushT",
+        "Cube"
+      ],
+      "f1": 0.7465855132521799,
+      "max_abs_start_error": 0.03,
+      "mean_abs_start_error": 0.01888888888888889,
+      "partition_id": "src1_reacher",
+      "precision": 0.8833333333333333,
+      "recall": 0.6552910052910053,
+      "source_coverage": 1,
+      "source_tasks": [
+        "Reacher"
+      ],
+      "tau_atr": 0.15,
+      "tau_smpr": 0.95
+    },
+    {
+      "balanced_accuracy": 0.8915343915343915,
+      "evaluation_task_metrics": {
+        "PushT": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.9166666666666666,
+          "f1": 0.9444444444444444,
+          "precision": 0.9444444444444444,
+          "recall": 0.9444444444444444
+        },
+        "Reacher": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.8888888888888888,
+          "f1": 0.9487179487179487,
+          "precision": 0.9047619047619048,
+          "recall": 1.0
+        },
+        "TwoRoom": {
+          "abs_start_error": 0.019999999999999997,
+          "balanced_accuracy": 0.8690476190476191,
+          "f1": 0.8492063492063492,
+          "precision": 1.0,
+          "recall": 0.7380952380952381
+        }
+      },
+      "evaluation_tasks": [
+        "TwoRoom",
+        "PushT",
+        "Reacher"
+      ],
+      "f1": 0.9141229141229141,
+      "max_abs_start_error": 0.02,
+      "mean_abs_start_error": 0.008888888888888887,
+      "partition_id": "src1_cube",
+      "precision": 0.9497354497354498,
+      "recall": 0.8941798941798942,
+      "source_coverage": 1,
+      "source_tasks": [
+        "Cube"
+      ],
+      "tau_atr": 0.3,
+      "tau_smpr": 0.95
+    },
+    {
+      "balanced_accuracy": 0.836111111111111,
+      "evaluation_task_metrics": {
+        "Cube": {
+          "abs_start_error": 0.006666666666666667,
+          "balanced_accuracy": 0.7833333333333333,
+          "f1": 0.8,
+          "precision": 0.7666666666666667,
+          "recall": 0.85
+        },
+        "Reacher": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.8888888888888888,
+          "f1": 0.9487179487179487,
+          "precision": 0.9047619047619048,
+          "recall": 1.0
+        }
+      },
+      "evaluation_tasks": [
+        "Reacher",
+        "Cube"
+      ],
+      "f1": 0.8743589743589744,
+      "max_abs_start_error": 0.010000000000000002,
+      "mean_abs_start_error": 0.005,
+      "partition_id": "src2_tworoom_pusht",
+      "precision": 0.8357142857142857,
+      "recall": 0.925,
+      "source_coverage": 2,
+      "source_tasks": [
+        "TwoRoom",
+        "PushT"
+      ],
+      "tau_atr": 0.3,
+      "tau_smpr": 0.9
+    },
+    {
+      "balanced_accuracy": 0.85,
+      "evaluation_task_metrics": {
+        "Cube": {
+          "abs_start_error": 0.006666666666666667,
+          "balanced_accuracy": 0.7833333333333333,
+          "f1": 0.8,
+          "precision": 0.7666666666666667,
+          "recall": 0.85
+        },
+        "PushT": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.9166666666666666,
+          "f1": 0.9444444444444444,
+          "precision": 0.9444444444444444,
+          "recall": 0.9444444444444444
+        }
+      },
+      "evaluation_tasks": [
+        "PushT",
+        "Cube"
+      ],
+      "f1": 0.8722222222222222,
+      "max_abs_start_error": 0.010000000000000002,
+      "mean_abs_start_error": 0.005,
+      "partition_id": "src2_tworoom_reacher",
+      "precision": 0.8555555555555556,
+      "recall": 0.8972222222222221,
+      "source_coverage": 2,
+      "source_tasks": [
+        "TwoRoom",
+        "Reacher"
+      ],
+      "tau_atr": 0.3,
+      "tau_smpr": 0.9
+    },
+    {
+      "balanced_accuracy": 0.9027777777777777,
+      "evaluation_task_metrics": {
+        "PushT": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.9166666666666666,
+          "f1": 0.9444444444444444,
+          "precision": 0.9444444444444444,
+          "recall": 0.9444444444444444
+        },
+        "Reacher": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.8888888888888888,
+          "f1": 0.9487179487179487,
+          "precision": 0.9047619047619048,
+          "recall": 1.0
+        }
+      },
+      "evaluation_tasks": [
+        "PushT",
+        "Reacher"
+      ],
+      "f1": 0.9465811965811965,
+      "max_abs_start_error": 0.009999999999999998,
+      "mean_abs_start_error": 0.0033333333333333327,
+      "partition_id": "src2_tworoom_cube",
+      "precision": 0.9246031746031746,
+      "recall": 0.9722222222222222,
+      "source_coverage": 2,
+      "source_tasks": [
+        "TwoRoom",
+        "Cube"
+      ],
+      "tau_atr": 0.3,
+      "tau_smpr": 0.9
+    },
+    {
+      "balanced_accuracy": 0.791468253968254,
+      "evaluation_task_metrics": {
+        "Cube": {
+          "abs_start_error": 0.01,
+          "balanced_accuracy": 0.7555555555555555,
+          "f1": 0.7696969696969698,
+          "precision": 0.7666666666666667,
+          "recall": 0.7944444444444445
+        },
+        "TwoRoom": {
+          "abs_start_error": 0.026666666666666665,
+          "balanced_accuracy": 0.8273809523809524,
+          "f1": 0.7905982905982906,
+          "precision": 1.0,
+          "recall": 0.6547619047619048
+        }
+      },
+      "evaluation_tasks": [
+        "TwoRoom",
+        "Cube"
+      ],
+      "f1": 0.7801476301476302,
+      "max_abs_start_error": 0.03,
+      "mean_abs_start_error": 0.018333333333333333,
+      "partition_id": "src2_pusht_reacher",
+      "precision": 0.8833333333333333,
+      "recall": 0.7246031746031747,
+      "source_coverage": 2,
+      "source_tasks": [
+        "PushT",
+        "Reacher"
+      ],
+      "tau_atr": 0.2,
+      "tau_smpr": 0.95
+    },
+    {
+      "balanced_accuracy": 0.878968253968254,
+      "evaluation_task_metrics": {
+        "Reacher": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.8888888888888888,
+          "f1": 0.9487179487179487,
+          "precision": 0.9047619047619048,
+          "recall": 1.0
+        },
+        "TwoRoom": {
+          "abs_start_error": 0.019999999999999997,
+          "balanced_accuracy": 0.8690476190476191,
+          "f1": 0.8492063492063492,
+          "precision": 1.0,
+          "recall": 0.7380952380952381
+        }
+      },
+      "evaluation_tasks": [
+        "TwoRoom",
+        "Reacher"
+      ],
+      "f1": 0.8989621489621489,
+      "max_abs_start_error": 0.02,
+      "mean_abs_start_error": 0.011666666666666665,
+      "partition_id": "src2_pusht_cube",
+      "precision": 0.9523809523809523,
+      "recall": 0.8690476190476191,
+      "source_coverage": 2,
+      "source_tasks": [
+        "PushT",
+        "Cube"
+      ],
+      "tau_atr": 0.3,
+      "tau_smpr": 0.95
+    },
+    {
+      "balanced_accuracy": 0.8720238095238095,
+      "evaluation_task_metrics": {
+        "PushT": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.9166666666666666,
+          "f1": 0.9444444444444444,
+          "precision": 0.9444444444444444,
+          "recall": 0.9444444444444444
+        },
+        "TwoRoom": {
+          "abs_start_error": 0.026666666666666665,
+          "balanced_accuracy": 0.8273809523809524,
+          "f1": 0.7905982905982906,
+          "precision": 1.0,
+          "recall": 0.6547619047619048
+        }
+      },
+      "evaluation_tasks": [
+        "TwoRoom",
+        "PushT"
+      ],
+      "f1": 0.8675213675213675,
+      "max_abs_start_error": 0.03,
+      "mean_abs_start_error": 0.015,
+      "partition_id": "src2_reacher_cube",
+      "precision": 0.9722222222222222,
+      "recall": 0.7996031746031746,
+      "source_coverage": 2,
+      "source_tasks": [
+        "Reacher",
+        "Cube"
+      ],
+      "tau_atr": 0.2,
+      "tau_smpr": 0.95
+    },
+    {
+      "balanced_accuracy": 0.7833333333333333,
+      "evaluation_task_metrics": {
+        "Cube": {
+          "abs_start_error": 0.006666666666666667,
+          "balanced_accuracy": 0.7833333333333333,
+          "f1": 0.8,
+          "precision": 0.7666666666666667,
+          "recall": 0.85
+        }
+      },
+      "evaluation_tasks": [
+        "Cube"
+      ],
+      "f1": 0.8,
+      "max_abs_start_error": 0.010000000000000002,
+      "mean_abs_start_error": 0.006666666666666667,
+      "partition_id": "src3_tworoom_pusht_reacher",
+      "precision": 0.7666666666666667,
+      "recall": 0.85,
+      "source_coverage": 3,
+      "source_tasks": [
+        "TwoRoom",
+        "PushT",
+        "Reacher"
+      ],
+      "tau_atr": 0.3,
+      "tau_smpr": 0.9
+    },
+    {
+      "balanced_accuracy": 0.8888888888888888,
+      "evaluation_task_metrics": {
+        "Reacher": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.8888888888888888,
+          "f1": 0.9487179487179487,
+          "precision": 0.9047619047619048,
+          "recall": 1.0
+        }
+      },
+      "evaluation_tasks": [
+        "Reacher"
+      ],
+      "f1": 0.9487179487179487,
+      "max_abs_start_error": 0.009999999999999998,
+      "mean_abs_start_error": 0.0033333333333333327,
+      "partition_id": "src3_tworoom_pusht_cube",
+      "precision": 0.9047619047619048,
+      "recall": 1.0,
+      "source_coverage": 3,
+      "source_tasks": [
+        "TwoRoom",
+        "PushT",
+        "Cube"
+      ],
+      "tau_atr": 0.3,
+      "tau_smpr": 0.9
+    },
+    {
+      "balanced_accuracy": 0.9166666666666666,
+      "evaluation_task_metrics": {
+        "PushT": {
+          "abs_start_error": 0.0033333333333333327,
+          "balanced_accuracy": 0.9166666666666666,
+          "f1": 0.9444444444444444,
+          "precision": 0.9444444444444444,
+          "recall": 0.9444444444444444
+        }
+      },
+      "evaluation_tasks": [
+        "PushT"
+      ],
+      "f1": 0.9444444444444444,
+      "max_abs_start_error": 0.009999999999999998,
+      "mean_abs_start_error": 0.0033333333333333327,
+      "partition_id": "src3_tworoom_reacher_cube",
+      "precision": 0.9444444444444444,
+      "recall": 0.9444444444444444,
+      "source_coverage": 3,
+      "source_tasks": [
+        "TwoRoom",
+        "Reacher",
+        "Cube"
+      ],
+      "tau_atr": 0.3,
+      "tau_smpr": 0.9
+    },
+    {
+      "balanced_accuracy": 0.8273809523809524,
+      "evaluation_task_metrics": {
+        "TwoRoom": {
+          "abs_start_error": 0.026666666666666665,
+          "balanced_accuracy": 0.8273809523809524,
+          "f1": 0.7905982905982906,
+          "precision": 1.0,
+          "recall": 0.6547619047619048
+        }
+      },
+      "evaluation_tasks": [
+        "TwoRoom"
+      ],
+      "f1": 0.7905982905982906,
+      "max_abs_start_error": 0.03,
+      "mean_abs_start_error": 0.026666666666666665,
+      "partition_id": "src3_pusht_reacher_cube",
+      "precision": 1.0,
+      "recall": 0.6547619047619048,
+      "source_coverage": 3,
+      "source_tasks": [
+        "PushT",
+        "Reacher",
+        "Cube"
+      ],
+      "tau_atr": 0.2,
+      "tau_smpr": 0.95
+    }
+  ],
+  "partitions_are_independent_samples": false,
+  "schema_version": "paper1-cross-task-selective-rule-summary-1.0"
+}

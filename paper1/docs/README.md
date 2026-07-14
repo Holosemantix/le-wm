@@ -70,11 +70,13 @@ bash paper1/check_arxiv_ready.sh
 tar -tzf /tmp/paper1_arxiv_v1_src.tar.gz | sort
 ```
 
-For figure-only source packaging, `paper1/scripts/collect_tex_figures.py` parses `\includegraphics{...}` targets from the TeX entry point and copies the referenced figures from the configured `\graphicspath` locations:
+For scoped source packaging, `paper1/scripts/collect_tex_figures.py` parses `\includegraphics{...}` targets from the TeX entry point and copies the referenced figures from the configured `\graphicspath` locations. Passing `--table-out-dir` additionally copies only referenced `tables/...` inputs, excluding historical tables that are not part of the submission:
 
 ```bash
 cd paper1
-python scripts/collect_tex_figures.py --tex main.tex --base-dir . --out-dir /tmp/paper1_arxiv_src/figures
+python scripts/collect_tex_figures.py --tex main.tex --base-dir . \
+  --out-dir /tmp/paper1_arxiv_src/figures \
+  --table-out-dir /tmp/paper1_arxiv_src/tables
 ```
 
 The source package intentionally excludes `main.pdf`, unused figures, and local build products; the TeX source path includes `main.bbl`, whose basename matches `main.tex`. Both readiness scripts extract their generated tarballs into a fresh `/tmp` directory and compile there, so missing packaged inputs or figures fail the release gate.

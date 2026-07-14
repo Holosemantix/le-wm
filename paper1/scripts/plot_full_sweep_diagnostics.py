@@ -131,7 +131,10 @@ def _polish_axis(ax: plt.Axes) -> None:
 def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
     out_fig.parent.mkdir(parents=True, exist_ok=True)
     with plt.rc_context(PLOT_STYLE):
-        fig = plt.figure(figsize=(6.7, 5.8))
+        # Use the available single-column float-page height: the four task
+        # blocks remain at native text width but gain vertical separation and
+        # larger plotting regions in the submission PDF.
+        fig = plt.figure(figsize=(6.7, 6.7))
         outer = fig.add_gridspec(
             2, 2, left=0.09, right=0.985, bottom=0.09, top=0.90, wspace=0.27, hspace=0.34
         )

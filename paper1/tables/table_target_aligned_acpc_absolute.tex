@@ -1,0 +1,28 @@
+\begin{table}[t]
+\centering
+\caption{Absolute MAE for the common eight-step latent error-drift target. Each row contains 16 trajectory blocks. The recorded-action column is the proposed eight-step ACPC feature; the control column reports the strongest zeroed- or shuffled-action feature at the same horizon. Lower is better.}
+\label{tab:target-aligned-acpc-absolute}
+\scriptsize
+\setlength{\tabcolsep}{3.6pt}
+\begin{tabular}{lrrrrlc}
+\toprule
+Task & seed & one-step & same-horizon control & recorded-action 8-step & control type & win blocks \\
+\midrule
+TwoRoom & 3072 & 2.535 & 2.099 & \textbf{0.755} & time-shuffled actions & 15/16 \\
+TwoRoom & 3073 & 2.336 & 2.015 & \textbf{0.866} & time-shuffled actions & 15/16 \\
+TwoRoom & 3074 & 2.075 & 1.911 & \textbf{1.006} & cross-trajectory actions & 13/16 \\
+\addlinespace[1pt]
+PushT & 3072 & 2.068 & 2.068 & \textbf{1.762} & time-shuffled actions & 11/16 \\
+PushT & 3073 & 1.969 & 2.008 & \textbf{1.315} & zero actions & 13/16 \\
+PushT & 3074 & 1.909 & 1.833 & \textbf{1.439} & zero actions & 13/16 \\
+\addlinespace[1pt]
+Reacher & 3072 & 1.358 & 1.097 & \textbf{0.288} & time-shuffled actions & 16/16 \\
+Reacher & 3073 & 1.399 & 0.793 & \textbf{0.247} & time-shuffled actions & 16/16 \\
+Reacher & 3074 & 1.409 & 1.136 & \textbf{0.263} & time-shuffled actions & 16/16 \\
+\addlinespace[1pt]
+Cube & 3072 & 1.171 & 1.037 & \textbf{0.489} & zero actions & 14/16 \\
+Cube & 3073 & 1.416 & 1.212 & \textbf{0.500} & zero actions & 14/16 \\
+Cube & 3074 & 1.061 & 1.008 & \textbf{0.552} & time-shuffled actions & 14/16 \\
+\bottomrule
+\end{tabular}
+\end{table}

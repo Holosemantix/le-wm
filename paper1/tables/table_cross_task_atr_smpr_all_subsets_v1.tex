@@ -1,0 +1,27 @@
+\begin{table*}[t]
+\centering
+\caption{Cross-task portability of the selective ACPC rule. Thresholds are selected only on the source tasks and applied unchanged to the evaluation tasks. Metrics first average three training runs within each task. Onset errors use training-noise-grid units. This table evaluates threshold portability, not individual diagnostic components.}
+\label{tab:cross-task-all-subsets}
+\small
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.17\textwidth}rrrrr}
+\toprule
+Source tasks & Evaluation tasks & $\tau_R$ & $\tau_M$ & BA & P / R & \shortstack{Onset error\\mean / max} \\
+\midrule
+TwoRoom & PushT, Reacher, Cube & 0.3 & 0.90 & 0.863 & 0.872 / 0.931 & 0.004 / 0.010 \\
+PushT & TwoRoom, Reacher, Cube & 0.2 & 0.95 & 0.842 & 0.906 / 0.816 & 0.012 / 0.030 \\
+Reacher & TwoRoom, PushT, Cube & 0.15 & 0.95 & 0.762 & 0.883 / 0.655 & 0.019 / 0.030 \\
+Cube & TwoRoom, PushT, Reacher & 0.3 & 0.95 & 0.892 & 0.950 / 0.894 & 0.009 / 0.020 \\
+TwoRoom, PushT & Reacher, Cube & 0.3 & 0.90 & 0.836 & 0.836 / 0.925 & 0.005 / 0.010 \\
+TwoRoom, Reacher & PushT, Cube & 0.3 & 0.90 & 0.850 & 0.856 / 0.897 & 0.005 / 0.010 \\
+TwoRoom, Cube & PushT, Reacher & 0.3 & 0.90 & 0.903 & 0.925 / 0.972 & 0.003 / 0.010 \\
+PushT, Reacher & TwoRoom, Cube & 0.2 & 0.95 & 0.791 & 0.883 / 0.725 & 0.018 / 0.030 \\
+PushT, Cube & TwoRoom, Reacher & 0.3 & 0.95 & 0.879 & 0.952 / 0.869 & 0.012 / 0.020 \\
+Reacher, Cube & TwoRoom, PushT & 0.2 & 0.95 & 0.872 & 0.972 / 0.800 & 0.015 / 0.030 \\
+TwoRoom, PushT, Reacher & Cube & 0.3 & 0.90 & 0.783 & 0.767 / 0.850 & 0.007 / 0.010 \\
+TwoRoom, PushT, Cube & Reacher & 0.3 & 0.90 & 0.889 & 0.905 / 1.000 & 0.003 / 0.010 \\
+TwoRoom, Reacher, Cube & PushT & 0.3 & 0.90 & 0.917 & 0.944 / 0.944 & 0.003 / 0.010 \\
+PushT, Reacher, Cube & TwoRoom & 0.2 & 0.95 & 0.827 & 1.000 / 0.655 & 0.027 / 0.030 \\
+\bottomrule
+\end{tabular}
+\end{table*}

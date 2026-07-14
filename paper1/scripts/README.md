@@ -1,6 +1,48 @@
 # Paper1 Diagnostic Remediation Scripts
 
-The public-v1 remediation scripts rebuild training-free diagnostics and do not retrain models. The explicitly named paired_multiseverity runners are a separate prospective extension: they reuse fixed checkpoints, rerun bounded closed-loop evaluation, and never train.
+Submission-facing scripts rebuild diagnostics and displays from the three
+independent training runs (seeds 3072/3073/3074). They do not train a new
+checkpoint. Separately named paired_multiseverity runners reuse fixed
+checkpoints, rerun bounded closed-loop evaluation, and never train.
+
+## Current submission-facing ACPC bundle
+
+The submission mainline is rebuilt from the future-drift adjudications, the
+complete Gaussian sweep, the planner summary, and the 24-pair stressor file:
+
+```bash
+python -m paper1.scripts.build_future_drift_reader_display
+python -m paper1.scripts.cross_task_selective_rule
+python -m paper1.scripts.build_cross_stressor_selective_transfer
+python paper1/scripts/build_acpc_submission_assets.py
+bash paper1/build.sh
+```
+
+The first three commands rebuild the symmetric three-seed future-drift
+display, all 14 cross-task threshold partitions, and the final-score-only
+blur/resize transfer analysis. The fourth writes the vector method and
+planner-evidence figures plus compact planner and full-sweep tables. These
+steps perform no model evaluation or training. The planner inputs are the 24
+validated shards under
+`paper1/results/acpc_planner_stability_v2/`; the numerical v2 wrapper changes
+only signed cost-gap algebra to float64 after the unchanged float32 model-cost
+path.
+
+To inspect or reproduce one frozen planner task queue:
+
+```bash
+python paper1/scripts/run_acpc_planner_stability_shards.py plan \
+  --task TwoRoom \
+  --protocol paper1/config/acpc_planner_stability_protocol_v2.json \
+  --device 0
+```
+
+The legacy three-pillar evidence generator is archived and is not part of the
+current paper dependency graph. The retained theory chain gives the sharp
+candidate-cost bound, a shared-pool clean-regret bound, top-1/elite
+certificates, and conditional adaptive-CEM alignment. Its empirical support is
+the three-seed future-drift increment, planner panel, exhaustive cross-task
+calibration, complete Gaussian sweep, and blur/resize selective-score transfer.
 
 Run the CPU-only manifest/checker path from repository root:
 
@@ -36,7 +78,7 @@ python -m paper1.scripts.build_cross_stressor_external_validation \
 
 Archived summary/plot regeneration can overwrite legacy figures and is therefore also explicit: `REBUILD_LEGACY_AGGREGATES=1`. No flag reruns closed-loop evaluation or training.
 
-Current public-v1 checkpoint steps (all serial and resumable):
+Archived public-v1 checkpoint steps retained for provenance:
 
 ```bash
 bash paper1/scripts/run_jvp_hutchinson_shards.sh
@@ -101,7 +143,7 @@ v2 runner binds every reference by seed, task, stressor, and severity.
 
 Plot output notes:
 
-- `plot_full_sweep_diagnostics` writes vector PDF figures by default: a main figure with separate behavior and direct ATR/SMPR axes per task, the diagnostic-region scatter, and a compact four-across appendix planner-guard figure; recovery shading is rendered as continuous majority-recovered ranges.
+- `plot_full_sweep_diagnostics` writes vector PDF figures by default: a main figure with separate behavior and ATR/SMPR axes per task, the diagnostic-region scatter, and a compact four-across appendix planner-guard figure; recovery shading is rendered as continuous majority-recovered ranges. The main sweep display divides ATR by each task$\times$seed no-noise value (base 1) while leaving SMPR on its original rate scale; frozen calibration uses the unrescaled ATR statistic.
 - `plot_cross_stressor_submission` reads the locked all-pairs CSV and writes the 24-pair LeWM submission scatter as a vector PDF; it does not rerun diagnostics or evaluation.
 - `plot_endpoint_atr_smpr` writes the two-panel endpoint dumbbell figure with base-to-noise-trained movement arrows.
 - `plot_gaussian_sensitivity_mechanism` writes a two-panel endpoint/base lollipop figure for the main text and the trace-decomposition heatmap plus separate alignment panel for the appendix.

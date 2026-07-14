@@ -1,0 +1,16 @@
+\begin{table}[H]
+\centering
+\caption{Cross-task ridge analysis on 3,200 reduced-budget history records with matched ACPC and planner outcomes. For each evaluation task, models are fitted on the other three tasks. The reference feature set contains severity, base-versus-noise-trained checkpoint identity, candidate-conditioned one-step ACPC, and nominal top-1 margin; the expanded set adds candidate-conditioned five-step ACPC, matching the candidate evaluation horizon. Positive values are reductions in evaluation-task MAE; the final two columns report Spearman rank correlations.}
+\label{tab:acpc-planner-increment}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrrrr}
+\toprule
+Response & MAE reduction & Tasks improved & 1-step Spearman & 5-step Spearman \\
+\midrule
+Fixed-pool max cost drift & \textbf{9.5\%} & 3/4 & 0.908 & 0.958 \\
+Adaptive positive decision regret & \textbf{12.9\%} & 4/4 & 0.752 & 0.772 \\
+Adaptive first-action RMS & 0.8\% & 4/4 & 0.691 & 0.718 \\
+\bottomrule
+\end{tabular}
+\end{table}

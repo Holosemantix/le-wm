@@ -1,0 +1,21 @@
+\begin{table}[H]
+\centering
+\caption{Absolute planner outcomes at Gaussian severity 0.08. Reduced-budget rows use 100 independent histories, $K=64$, top-8 elites, and eight CEM steps; full-budget rows use 16 histories, $K=300$, top-30 elites, and 30 steps. Regret evaluates the perturbed action in task-specific squared latent goal-cost units under the clean history; it is not closed-loop return, and magnitudes should not be pooled across tasks.}
+\label{tab:acpc-planner-absolute}
+\footnotesize
+\setlength{\tabcolsep}{4.2pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+& \multicolumn{2}{c}{Top-1 stability} & \multicolumn{2}{c}{Reduced regret} & \multicolumn{2}{c}{Full-budget regret} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Task & Base & Endpoint & Base & Endpoint & Base & Endpoint \\
+\midrule
+TwoRoom & 0.16 & 0.91 & 192.38 & 5.31 & 198.19 & 0.40 \\
+PushT & 0.21 & 0.93 & 134.29 & 4.27 & 182.21 & 3.04 \\
+Reacher & 0.07 & 0.99 & 259.89 & 0.64 & 251.95 & 0.18 \\
+Cube & 0.04 & 0.89 & 248.87 & 1.20 & 242.40 & 0.42 \\
+\midrule
+Equal-task mean & 0.12 & 0.93 & 208.86 & 2.85 & 218.69 & 1.01 \\
+\bottomrule
+\end{tabular}
+\end{table}

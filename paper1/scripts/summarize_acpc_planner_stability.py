@@ -439,7 +439,11 @@ def main() -> int:
     )
     args.out_csv.parent.mkdir(parents=True, exist_ok=True)
     with args.out_csv.open("w", encoding="utf-8", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=list(groups[0]))
+        writer = csv.DictWriter(
+            stream,
+            fieldnames=list(groups[0]),
+            lineterminator="\n",
+        )
         writer.writeheader()
         writer.writerows(groups)
     print(f"wrote {args.out_json}")

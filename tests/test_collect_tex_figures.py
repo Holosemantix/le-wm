@@ -7,6 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from paper1.scripts.collect_tex_figures import (
     collect_tex,
+    copy_referenced_tables,
     find_figure,
     output_relative_path,
 )
@@ -52,3 +53,30 @@ def test_output_path_rejects_directory_target(tmp_path: Path) -> None:
     assert output_relative_path("plot", source) == Path("plot.png")
     with pytest.raises(ValueError, match="basename-only"):
         output_relative_path("subdir/plot.png", source)
+
+
+def test_copy_referenced_tables_omits_unreferenced_inputs(tmp_path: Path) -> None:
+    tables = tmp_path / "tables"
+    tables.mkdir()
+    used = tables / "used.tex"
+    unused = tables / "legacy_failed.tex"
+    used.write_text("used", encoding="utf-8")
+    unused.write_text("unused", encoding="utf-8")
+    identity = tmp_path / "arxiv_metadata.tex"
+    identity.write_text("identity", encoding="utf-8")
+    main = tmp_path / "main.tex"
+    main.write_text(
+        "\n".join(
+            [r"\input{arxiv_metadata}", r"\input{tables/used}"],
+        ),
+        encoding="utf-8",
+    )
+
+    text, _ = collect_tex(main, tmp_path, set())
+    output = tmp_path / "bundle_tables"
+    copied = copy_referenced_tables(text, tmp_path, output)
+
+    assert copied == [output / "used.tex"]
+    assert (output / "used.tex").read_text(encoding="utf-8") == "used"
+    assert not (output / "legacy_failed.tex").exists()
+    assert not (output / "arxiv_metadata.tex").exists()

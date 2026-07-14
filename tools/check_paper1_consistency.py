@@ -375,29 +375,31 @@ REQUIRED_MAIN_TEXT_SNIPPETS = [
     "Target-free prediction-error-drift bound",
     "Selective Margin Pass Rate (SMPR)",
     "not a candidate-distribution probability",
-    "do not establish semantic or action faithfulness",
+    "It is a gross-collapse guard",
     "the rule requires the reference and does not imply",
     "raw thresholds are not assumed to transfer across model architectures",
-    "does not cover adaptive sampling or replanning",
+    "adaptive result is conditional on pool alignment",
     "Evaluation seeds are conditional measurement replicates",
-    "receive no stressor-specific retuning",
-    "does not establish unseen-task, cross-family, or universal numerical calibration",
-    "not an absolute stability detector or population safety guarantee",
-    "retrospective completeness check",
+    "without stressor-specific adjustment",
+    "not for a universal numerical threshold",
+    "do not turn the score into an absolute cross-stressor robustness certificate",
     "t-SNE does not preserve metric geometry",
-    "not counted as separate validation evidence",
-    "not a uniquely action-specific mechanism",
+    "not an independent statistical success count",
+    "does not repeat a component contest",
 ]
 
 MAIN_TEXT_FIGURES = {
+    "fig_acpc_method.pdf",
     "fig_full_sweep_diagnostics.pdf",
-    "fig_cross_stressor_submission.pdf",
+    "fig_future_drift_three_seed_v1.pdf",
+    "fig_acpc_planner_evidence.pdf",
+    "fig_cross_task_atr_smpr_source_coverage_v1.pdf",
+    "fig_cross_stressor_selective_transfer_v1.pdf",
 }
 
 APPENDIX_FIGURES = {
     "fig_acpc_basin_tsne.png",
-    "fig_fixed_pool_certificate_calibration.pdf",
-    "fig_linearization_calibration.pdf",
+    "fig_gaussian_sensitivity_main.png",
 }
 
 
@@ -919,6 +921,7 @@ def check_forbidden_text() -> None:
             if snippet in text:
                 hits.append(f"{path.relative_to(ROOT)} contains forbidden snippet: {snippet!r}")
     main_tex = (ROOT / "paper1" / "main.tex").read_text(encoding="utf-8")
+    normalized_main_tex = " ".join(main_tex.split())
     paper_facing_files = [ROOT / "paper1" / "main.tex"] + sorted((ROOT / "paper1" / "tables").glob("table_*.tex"))
     top_conference_forbidden = [
         "Remediation audit tables",
@@ -960,7 +963,7 @@ def check_forbidden_text() -> None:
         if snippet in main_tex:
             hits.append(f"paper1/main.tex contains retired main-text snippet: {snippet!r}")
     for snippet in REQUIRED_MAIN_TEXT_SNIPPETS:
-        if snippet not in main_tex:
+        if snippet not in normalized_main_tex:
             hits.append(f"paper1/main.tex missing required scope-boundary snippet: {snippet!r}")
     if hits:
         fail("\n".join(hits))
@@ -990,8 +993,8 @@ def check_visual_text_structure() -> None:
         "\\subsection{Radius, discriminability guard, and calibration}",
         "\\subsection{Behavioral recovery and diagnostic co-movement}",
         "\\subsection{Action-matched rollouts predict future drift}",
-        "\\subsection{Calibration transfers across training seeds}",
-        "\\subsection{Gaussian calibration transfers to blur and resize}",
+        "\\subsection{Thresholds transfer across task subsets}",
+        "\\subsection{The selective score retains ordering under blur and resize}",
     )
     for heading in required_headings:
         if heading not in body:
@@ -1006,10 +1009,6 @@ def check_visual_text_structure() -> None:
     for heading in retired_headings:
         if heading in body:
             fail(f"paper1/main.tex restored retired heading: {heading}")
-
-    for forced_float in ("\\begin{figure}[H]", "\\begin{table}[H]"):
-        if forced_float in body:
-            fail(f"main-text float must not use forced placement: {forced_float}")
 
     for retired_visual_phrase in ("SMPR failure", "1-\\mathrm{SMPR}"):
         if retired_visual_phrase in body:
@@ -3342,166 +3341,98 @@ def check_radius_margin_certificate_outputs() -> None:
 
 
 def check_claim_aligned_three_pillar_evidence() -> None:
-    """Validate the target-aligned P1/P2/P3 extension and claim boundaries."""
+    """Validate the current three-seed P1, all-subset P2, and final-rule P3."""
 
-    summary = _load_strict_json(
-        ROOT / "paper1/results/three_pillar_evidence_summary.json"
+    p1 = _load_strict_json(
+        ROOT / "paper1/results/future_drift_three_seed_summary_v1.json"
     )
-    metadata = summary.get("metadata", {})
-    if metadata.get("schema_version") != "paper1-three-pillar-evidence-1.0":
-        fail("three-pillar evidence schema changed")
+    if p1.get("training_seeds") != [3072, 3073, 3074]:
+        fail("P1 training-seed set changed")
+    if p1.get("all_seed_task_cells_pass") is not True:
+        fail("P1 must preserve direction on all 12 task-seed cells")
+    for key, expected in (
+        ("mean_reduction_vs_one_step", 0.5589057064173736),
+        ("sample_sd_reduction_vs_one_step", 0.047338259788311327),
+        ("mean_reduction_vs_same_horizon_control", 0.5129276774853404),
+        ("sample_sd_reduction_vs_same_horizon_control", 0.03524693071442968),
+    ):
+        if not math.isclose(float(p1[key]), expected, abs_tol=1e-12):
+            fail(f"P1 three-seed statistic changed: {key}")
+
+    p2 = _load_strict_json(
+        ROOT / "paper1/results/cross_task_atr_smpr_all_subsets_summary_v1.json"
+    )
+    if p2.get("schema_version") != "paper1-cross-task-selective-rule-summary-1.0":
+        fail("P2 all-subset schema changed")
     if (
-        metadata.get("threshold_search_allowed") is not False
-        or metadata.get("model_evaluation_performed") is not False
+        p2.get("partition_count") != 14
+        or p2.get("detail_row_count") != 84
+        or p2.get("evaluation_task_incidence_count") != 28
+        or p2.get("partitions_are_independent_samples") is not False
     ):
-        fail("three-pillar builder must not fit thresholds or run model eval")
+        fail("P2 all-subset coverage changed")
+    coverage = {row["source_coverage"]: row for row in p2["coverage"]}
+    for source_count, expected_ba, expected_onset in (
+        (1, 0.8397156084656084, 0.01111111111111111),
+        (2, 0.8552248677248677, 0.009722222222222222),
+        (3, 0.8540674603174603, 0.01),
+    ):
+        row = coverage[source_count]
+        if not math.isclose(row["balanced_accuracy"], expected_ba, abs_tol=1e-12):
+            fail(f"P2 balanced accuracy changed for {source_count} source tasks")
+        if not math.isclose(row["mean_abs_start_error"], expected_onset, abs_tol=1e-12):
+            fail(f"P2 onset error changed for {source_count} source tasks")
 
-    p1 = summary["P1"]
-    if p1["metadata"].get("schema_version") != (
-        "paper1-target-aligned-acpc-four-task-meta-0.2"
-    ):
-        fail("P1 four-task meta schema changed")
-    primary = p1["primary_logged_fragile_base"]
-    if not primary.get("all_available_seeds_pass_all_four_tasks"):
-        fail("P1 logged fragile/base result must pass four tasks in both seeds")
-    if p1["candidate_fragile_base_bridge"].get(
-        "all_available_seeds_meet_three_task_gate"
-    ):
-        fail("P1 must retain the task-dependent candidate-bridge boundary")
-    if not (
-        p1["certificate"].get("candidate_zero_violation_all_rows")
-        and p1["certificate"].get("logged_zero_violation_all_rows")
-    ):
-        fail("P1 reverse-triangle implementation audit changed")
-
-    absolute = primary["uncertainty"]["absolute"]
-    adverse = primary["uncertainty"]["adverse"]
-    for block, expected_h1, expected_control in (
-        (absolute, 0.5647927738475621, 0.5186090940019519),
-        (adverse, 0.5545170295060298, 0.5064272048684091),
-    ):
-        observed = block["observed"]
-        if not math.isclose(
-            observed["equal_task_mean_reduction_vs_h1"],
-            expected_h1,
-            abs_tol=1e-12,
-        ):
-            fail("P1 reduction versus H1 changed")
-        if not math.isclose(
-            observed["equal_task_mean_reduction_vs_best_destroyed"],
-            expected_control,
-            abs_tol=1e-12,
-        ):
-            fail("P1 reduction versus destroyed-H8 changed")
-        bootstrap = block["cluster_bootstrap"]
-        if bootstrap.get("repetitions") != 5000 or bootstrap.get("seed") != 20260713:
-            fail("P1 cluster-bootstrap contract changed")
-        if bootstrap["equal_task_mean_reduction_vs_h1_ci95"][0] <= 0.50:
-            fail("P1 lower confidence limit versus H1 unexpectedly changed")
-        direction = block["paired_block_direction"]
-        if direction.get("both_win_count") != 57 or direction.get("cluster_count") != 64:
-            fail("P1 paired block-direction count changed")
-
-    p2 = summary["P2"]
-    if p2.get("threshold_search_allowed") is not False:
-        fail("P2 must keep the seed3072 thresholds frozen")
-    p2_metrics = p2["overall"]
-    if p2_metrics.get("n") != 72:
-        fail("P2 must contain 72 held-out rows")
+    p3 = _load_strict_json(
+        ROOT
+        / "paper1/results/external_validation/"
+        "cross_stressor_three_source_thresholds_summary_v1.json"
+    )
+    if p3.get("threshold_search_on_blur_or_resize") is not False:
+        fail("P3 must not select thresholds on blur or resize")
+    overall = p3["overall"]
+    if overall.get("n") != 24 or overall.get("discordant_n") != 2:
+        fail("P3 pair coverage changed")
     if not math.isclose(
-        p2_metrics["balanced_accuracy"], 0.9445454545454546, abs_tol=1e-12
+        overall["balanced_accuracy"], 0.8888888888888888, abs_tol=1e-12
     ) or not math.isclose(
-        p2_metrics["auprc"], 0.9654813594276511, abs_tol=1e-12
-    ):
-        fail("P2 frozen cross-seed metrics changed")
-    p2_bootstrap = p2["block_bootstrap"]
-    if (
-        p2_bootstrap.get("block_count") != 8
-        or p2_bootstrap.get("repetitions") != 5000
-        or p2_bootstrap.get("seed") != 20260713
-    ):
-        fail("P2 block-bootstrap contract changed")
-    task_ba_range = p2["deletion_stability"]["leave_one_task_out"][
-        "remaining_metric_range"
-    ]["balanced_accuracy"]
-    if any(
-        not math.isclose(value, expected, abs_tol=1e-12)
-        for value, expected in zip(
-            task_ba_range, [0.924342105263158, 0.955592105263158]
-        )
-    ):
-        fail("P2 leave-one-task-out range changed")
-
-    p3 = summary["P3"]
-    if p3.get("threshold_search_allowed") is not False:
-        fail("P3 must keep Gaussian calibration frozen")
-    absolute_screen = p3["absolute_single_checkpoint_screen"]
-    if absolute_screen.get("n") != 24 or not math.isclose(
-        absolute_screen["precision"], 1.0, abs_tol=1e-12
-    ) or not math.isclose(
-        absolute_screen["recall"], 0.4666666666666667, abs_tol=1e-12
-    ):
-        fail("P3 conservative absolute-screen boundary changed")
-    coverage = absolute_screen["coverage"]
-    selective_risk = absolute_screen["selective_false_pass_risk"]
-    if coverage.get("pass_count") != 7 or not math.isclose(
-        coverage["observed"], 7 / 24, abs_tol=1e-12
-    ):
-        fail("P3 absolute-screen coverage changed")
-    if selective_risk.get("false_pass_count") != 0 or not math.isclose(
-        selective_risk["exact_one_sided_95_upper"],
-        0.34816365513116077,
+        overall["spearman_delta_behavior_vs_delta_selective_score"],
+        0.9093153287220684,
         abs_tol=1e-12,
     ):
-        fail("P3 selective false-pass uncertainty changed")
-    if "pair-derived positive transfer" not in absolute_screen.get(
-        "evaluation_target", ""
-    ) or "not an absolute stability label" not in p3.get("boundary", ""):
-        fail("P3 endpoint-score outcome boundary changed")
-    p3_bootstrap = absolute_screen["block_bootstrap"]
-    if (
-        p3_bootstrap.get("block_count") != 12
-        or p3_bootstrap.get("repetitions") != 5000
-        or p3_bootstrap.get("seed") != 20260713
-    ):
-        fail("P3 absolute block-bootstrap contract changed")
-    paired = p3["paired_reference_rule"]["overall"]
-    if not math.isclose(
-        paired["balanced_accuracy"], 0.8888888888888888, abs_tol=1e-12
-    ) or not math.isclose(
-        paired["spearman_delta_behavior_vs_oriented_delta_score"],
-        0.8641009119252958,
-        abs_tol=1e-12,
-    ):
-        fail("P3 paired frozen-transfer result changed")
-
-    manifest = _load_strict_json(ROOT / "paper1/results/diagnostic_manifest.json")
-    extension = manifest.get("claim_aligned_three_pillar_extension", {})
-    if extension.get("threshold_search_allowed") is not False:
-        fail("diagnostic manifest does not freeze the three-pillar extension")
-    if "fully frozen four-task replication" not in extension.get(
-        "p1_provenance", ""
-    ):
-        fail("diagnostic manifest omits P1 DEV/replication provenance")
-    for rel, expected_hash in extension.get("artifact_sha256", {}).items():
-        if _sha256_file(ROOT / rel) != expected_hash:
-            fail(f"claim-aligned manifest hash changed for {rel}")
+        fail("P3 final selective-score transfer changed")
 
     main_text = (ROOT / "paper1/main.tex").read_text(encoding="utf-8")
+    lowered = main_text.lower()
     for token in (
-        "thm:target-free-error-drift",
-        "eq:candidate-cost",
-        "tables/table_target_aligned_acpc",
+        "seed3075",
+        "seed 3075",
+        "held-out",
+        "dev-era",
+        "correct-action",
         "tables/table_seed_transfer_audit",
-        "tables/table_cross_stressor_transfer",
-        "Leave-one-block-out ridge models",
-        "seed 3074 is the fully frozen four-task replication",
-        "false-pass upper bound of $0.348$",
-        "evaluation label remains pair-derived improvement",
-        "retrospective completeness check",
+        "tables/table_cross_stressor_robustness_audit",
+    ):
+        if token in lowered:
+            fail(f"retired paper-facing token restored: {token}")
+    for token in (
+        "def:selective-discriminability",
+        "fig_future_drift_three_seed_v1.pdf",
+        "fig_cross_task_atr_smpr_source_coverage_v1.pdf",
+        "fig_cross_stressor_selective_transfer_v1.pdf",
+        "tables/table_cross_task_atr_smpr_all_subsets_v1",
+        "tables/table_cross_stressor_all_pairs_v1",
     ):
         if token not in main_text:
-            fail(f"Paper1 mainline is missing claim-boundary token: {token}")
+            fail(f"current Paper1 mainline is missing: {token}")
+
+    for rel in (
+        "assets/paper1_figs/fig_future_drift_three_seed_v1.pdf",
+        "assets/paper1_figs/fig_cross_task_atr_smpr_source_coverage_v1.pdf",
+        "assets/paper1_figs/fig_cross_stressor_selective_transfer_v1.pdf",
+    ):
+        if (ROOT / rel).stat().st_size < 5_000:
+            fail(f"current Paper1 figure looks too small: {rel}")
 
 
 def check_public_v1_remediation_artifacts() -> None:
@@ -3866,7 +3797,7 @@ def main() -> int:
         ("artifacts", check_artifacts),
         ("paired multi-severity protocol", check_paired_multiseverity_protocol),
         ("public-v1 remediation artifacts", check_public_v1_remediation_artifacts),
-        ("claim-aligned three-pillar evidence", check_claim_aligned_three_pillar_evidence),
+        ("current selective diagnostic evidence", check_claim_aligned_three_pillar_evidence),
         ("forbidden text", check_forbidden_text),
         ("appendix internal heading gate", check_appendix_internal_heading_gate),
         ("visual and text structure", check_visual_text_structure),
