@@ -371,7 +371,7 @@ LEGACY_REQUIRED_MAIN_TEXT_SNIPPETS = [
 REQUIRED_MAIN_TEXT_SNIPPETS = [
     "This is a diagnostic study of frozen checkpoints, not a new robust-training method",
     "same-state visual perturbation",
-    "Future-error bound",
+    "Common-future error-drift bound",
     "Selective Margin Pass Rate (SMPR)",
     "not a candidate-distribution probability",
     "SMPR is designed to detect gross collapse",
@@ -987,10 +987,11 @@ def check_visual_text_structure() -> None:
     body, appendix = main_tex.split(marker, 1)
 
     required_headings = (
-        "\\subsection{Rollout disagreement}",
-        "\\subsection{Prediction and planning bounds}",
-        "\\subsection{Checkpoint-level scores}",
-        "\\subsection{Collapse guard and calibration}",
+        "\\subsection{Paired rollout radius}",
+        "\\subsection{Common-future error drift}",
+        "\\subsection{Planner flips as radius--margin events}",
+        "\\subsection{Selective predictive consistency}",
+        "\\subsection{Checkpoint-level diagnostic score}",
         "\\subsection{Evaluation setup}",
         "\\subsection{Planning performance under observation noise}",
         "\\subsection{Predicting error changes under visual perturbations}",
