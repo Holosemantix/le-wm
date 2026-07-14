@@ -338,8 +338,20 @@ def write_all_pairs_table(rows: list[dict[str, Any]], out: Path) -> None:
 def plot(rows: list[dict[str, Any]], out: Path) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     with plt.rc_context(STYLE):
-        fig, ax = plt.subplots(figsize=(4.9, 3.05))
-        ax.axhspan(-5.0, 5.0, color="#D9D9D9", alpha=0.30, linewidth=0, zorder=0)
+        fig, ax = plt.subplots(figsize=(5.1, 3.25))
+        x_values = [row["delta_selective_score"] for row in rows]
+        y_values = [row["delta_behavior"] for row in rows]
+        x_min = min(x_values) - 0.25
+        x_max = max(x_values) + 0.25
+        y_min = min(y_values) - 6.0
+        y_max = max(y_values) + 7.0
+
+        agreement_color = "#DCEED7"
+        disagreement_color = "#F6DDDA"
+        ax.fill_between([x_min, 0.0], y_min, 5.0, color=agreement_color, alpha=0.42, zorder=0)
+        ax.fill_between([0.0, x_max], 5.0, y_max, color=agreement_color, alpha=0.42, zorder=0)
+        ax.fill_between([x_min, 0.0], 5.0, y_max, color=disagreement_color, alpha=0.34, zorder=0)
+        ax.fill_between([0.0, x_max], y_min, 5.0, color=disagreement_color, alpha=0.34, zorder=0)
         for row in rows:
             style = STRESSOR_STYLE[row["stressor"]]
             facecolor = style["color"] if style["filled"] else "white"
@@ -354,10 +366,112 @@ def plot(rows: list[dict[str, Any]], out: Path) -> None:
                 alpha=0.88,
                 zorder=3,
             )
-        ax.axhline(0.0, color="#444444", linewidth=0.8, linestyle="--")
-        ax.axvline(0.0, color="#444444", linewidth=0.8, linestyle="--")
-        ax.set_xlabel(r"Change in calibrated selective score, $\Delta S$")
-        ax.set_ylabel("Change in success rate under blur/resize\n(percentage points)")
+
+        discordant_rows = [row for row in rows if row["discordance"].startswith("false_")]
+        for row in discordant_rows:
+            ax.scatter(
+                row["delta_selective_score"],
+                row["delta_behavior"],
+                marker=TASK_MARKER[row["task"]],
+                s=92,
+                facecolor="none",
+                edgecolor="#A51C30",
+                linewidth=1.25,
+                zorder=4,
+            )
+
+        agreement_n = sum(row["observed_positive"] == row["predicted_positive"] for row in rows)
+        rho = _spearman(
+            [row["delta_behavior"] for row in rows],
+            [row["delta_selective_score"] for row in rows],
+        )
+        rho_label = f"{rho:.3f}"
+        ax.text(
+            0.025,
+            0.965,
+            rf"Agreement: {agreement_n}/{len(rows)}"
+            + "\n"
+            + rf"Spearman $\rho={rho_label}$",
+            transform=ax.transAxes,
+            ha="left",
+            va="top",
+            fontsize=7.2,
+            color="#333333",
+            bbox={"facecolor": "white", "edgecolor": "#BDBDBD", "alpha": 0.88, "pad": 2.0},
+            zorder=5,
+        )
+        if discordant_rows:
+            target_x = mean(row["delta_selective_score"] for row in discordant_rows)
+            target_y = mean(row["delta_behavior"] for row in discordant_rows)
+            ax.annotate(
+                "Two PushT pairs at +4 pp\n(borderline observed outcome)",
+                xy=(target_x, target_y),
+                xytext=(1.15, -8.0),
+                textcoords="data",
+                ha="center",
+                va="top",
+                fontsize=6.8,
+                color="#8E1B2C",
+                arrowprops={"arrowstyle": "->", "color": "#8E1B2C", "lw": 0.8},
+                bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.82, "pad": 1.0},
+                zorder=5,
+            )
+
+        ax.axhline(5.0, color="#444444", linewidth=0.8, linestyle="--", zorder=2)
+        ax.axvline(0.0, color="#444444", linewidth=0.8, linestyle="--", zorder=2)
+        ax.text(
+            x_max - 0.03,
+            5.7,
+            "+5 pp observed threshold",
+            ha="right",
+            va="bottom",
+            fontsize=6.5,
+            color="#555555",
+        )
+        ax.text(
+            0.04,
+            y_min + 1.0,
+            r"$\Delta S=0$",
+            ha="left",
+            va="bottom",
+            fontsize=6.5,
+            color="#555555",
+        )
+        ax.text(x_min + 0.08, y_min + 1.0, "agreement", fontsize=6.5, color="#567A50")
+        ax.text(
+            x_max - 0.08,
+            y_max - 1.0,
+            "agreement",
+            ha="right",
+            va="top",
+            fontsize=6.5,
+            color="#567A50",
+        )
+        ax.text(
+            -0.05,
+            y_max - 1.0,
+            "disagreement",
+            ha="right",
+            va="top",
+            fontsize=6.5,
+            color="#9B5A54",
+        )
+
+        ax.set_xlim(x_min, x_max)
+        ax.set_ylim(y_min, y_max)
+        ax.set_title(
+            "Cross-stressor diagnostic–planning agreement",
+            loc="left",
+            fontweight="semibold",
+        )
+        ax.set_xlabel(
+            r"Selective-score change, $\Delta S$"
+            "\n(right favors augmented checkpoint)"
+        )
+        ax.set_ylabel(
+            "Observed planning-success change (pp)\n"
+            "(up favors augmented checkpoint)"
+        )
         ax.grid(True, color="#B0B0B0", alpha=0.22, linewidth=0.55)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
@@ -387,10 +501,16 @@ def plot(rows: list[dict[str, Any]], out: Path) -> None:
             )
             for task, marker in TASK_MARKER.items()
         ]
-        first = ax.legend(handles=stressor_handles, loc="upper left", frameon=False, ncol=2)
+        first = ax.legend(
+            handles=stressor_handles,
+            loc="upper left",
+            bbox_to_anchor=(0.01, 0.79),
+            frameon=False,
+            ncol=2,
+        )
         ax.add_artist(first)
         ax.legend(handles=task_handles, loc="lower right", frameon=False, ncol=2)
-        fig.tight_layout(pad=0.5)
+        fig.tight_layout(pad=0.65)
         fig.savefig(out)
         plt.close(fig)
 

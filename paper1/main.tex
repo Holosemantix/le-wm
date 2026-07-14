@@ -120,25 +120,23 @@ Latent predictive world models avoid reconstructing every pixel, but latent pred
 
 World models support control by predicting how candidate actions change the environment~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. Joint-embedding predictive architectures (JEPAs) move this prediction problem from pixels to learned representations~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa}. By avoiding pixel reconstruction, they can reduce pressure to model nuisance detail~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}. This is appealing for visual control, where lighting, texture, or image quality may change even when the physical situation does not. Latent prediction alone, however, does not establish that a trained world model will produce stable action-conditioned predictions under such changes.
 
-For control, whether a visual difference is irrelevant depends on the state and the actions being considered. A background texture can be ignored, whereas a contact pose, doorway state, or object--goal relation may determine which action is useful. Encoder invariance cannot resolve this distinction on its own because a planner does not act directly on the encoder output. It rolls the representation forward under candidate actions and ranks the resulting predictions with a cost. A small encoder discrepancy may grow through this computation, whereas a larger one may contract before it affects the cost. This motivates our first question: after the same action sequence is applied, do nominal and perturbed views of one trajectory still produce similar predicted futures?
+For control, whether a visual difference is irrelevant depends on the state and the actions being considered. A background texture can be ignored, whereas a contact pose, doorway state, or object--goal relation may determine which action is useful. Encoder invariance cannot resolve this distinction on its own because a planner does not act directly on the encoder output. It rolls the representation forward under candidate actions and ranks the resulting predictions with a cost. A small encoder discrepancy may grow through this computation, whereas a larger one may contract before it affects the cost. This motivates the central question: after the same action sequence is applied, do nominal and perturbed views of one trajectory still produce similar predicted futures?
 
 Low rollout disagreement alone is not enough. A model that maps every observation to a constant representation would make all paired rollouts identical while retaining no state information for control. A useful diagnostic must therefore test two properties together: same-state visual views should remain close throughout the predicted rollout, while pairs identified as different by task state coordinates should remain separated. The latter test is a deliberately limited collapse guard. It assesses only the supplied coordinate labels and does not certify every semantic or action-relevant distinction.
 
-We introduce Action-Conditioned Predictive Consistency (ACPC) to quantify same-state rollout stability. Given nominal and visually perturbed histories of one trajectory, ACPC propagates both histories under a shared action sequence and measures the distance between their predicted latent trajectories. The pairwise score itself requires neither a realized future nor a task outcome. When both predictions are evaluated against the same logged future, an exact inequality bounds the difference between their prediction errors by ACPC. For LeWM's squared latent goal cost, a second inequality bounds how much each candidate cost can move; comparing these bounds with the nominal candidate margins yields fixed-pool stability certificates. At the checkpoint level, Action-Conditioned Trajectory Radius (ATR) summarizes a high quantile of normalized same-state rollout disagreement. Selective Margin Pass Rate (SMPR) reports the fraction of coordinate-labeled different-state pairs whose separation exceeds the raw same-state radius by a prescribed margin. A calibrated score combines the ATR and SMPR threshold margins to screen frozen checkpoints. ACPC is therefore an evaluation tool, not a new training objective.
+We introduce Action-Conditioned Predictive Consistency (ACPC) to quantify same-state rollout stability. ACPC propagates nominal and visually perturbed histories of one trajectory under a shared action sequence and measures the distance between their predicted latent trajectories; the pairwise score itself requires neither a realized future nor a task outcome. Evaluating both predictions against the same logged future gives an exact bound on the difference between their errors. For LeWM's squared latent goal cost, a second bound limits candidate-cost movement and yields fixed-pool stability certificates when combined with the clean candidate margins. At the checkpoint level, Action-Conditioned Trajectory Radius (ATR) summarizes high-quantile normalized disagreement, while Selective Margin Pass Rate (SMPR) checks whether coordinate-labeled different-state pairs remain outside the raw same-state radius by a prescribed margin. A calibrated score combining ATR and SMPR screens frozen checkpoints for visual predictive sensitivity. ACPC is an evaluation tool, not a new training objective.
 
-Our experiments test these links in the same order. First, we ask whether recorded-action multi-step ACPC predicts perturbation-induced changes in future error better than one-step ACPC and same-horizon controls built with zeroed, mismatched, or time-shuffled actions. Second, in paired evaluations of fixed candidate pools and adaptive planning with the cross-entropy method (CEM), we ask whether candidate-conditioned five-step ACPC adds predictive information about cost movement and model-cost decision regret beyond severity, one-step disagreement, and the nominal planner margin. Third, we test whether ATR--SMPR thresholds calibrated on source tasks screen held-out tasks, and whether the resulting checkpoint ordering remains informative under other visual shifts and a second joint-embedding world-model family.
-
-We answer these questions on LeWM~\cite{maes2026lewm} across TwoRoom, PushT, Reacher, and Cube, with Gaussian observation noise as the calibration stressor. Recorded-action eight-step ACPC lowers held-out MAE for predicting the change in future error by $51.3\pm3.5\%$ relative to the best same-horizon control without the recorded action information, with improvement in every task--run cell. Candidate-conditioned five-step ACPC consistently improves prediction of decision regret measured by the model's latent goal cost; its improvement for maximum fixed-pool cost movement is positive on three of the four tasks. Across all 14 partitions into source and held-out tasks, balanced accuracy is $0.855$, $0.900$, and $0.900$ when one, two, and three source tasks are available. Using thresholds chosen only from Gaussian-noise source tasks, checkpoint-score changes remain strongly rank-correlated with planning changes at the tested blur and resize severities. Repeating the analysis on PLDM provides a second model-family case study using the same equations and evaluation protocol, with thresholds recalibrated for that family.
+We evaluate this diagnostic on LeWM~\cite{maes2026lewm} across TwoRoom, PushT, Reacher, and Cube, using Gaussian observation noise for calibration. Using recorded-action eight-step ACPC lowers held-out MAE for predicting the change in future error by $51.3\pm3.5\%$ relative to the strongest same-horizon control that destroys the recorded action sequence. Candidate-conditioned five-step ACPC consistently improves prediction of adaptive-CEM model-cost decision regret; its improvement for maximum fixed-pool cost movement is positive on three of the four tasks. Aggregated over all 14 directional partitions, balanced accuracy is $0.855$ with one source task and $0.900$ with either two or three. Gaussian-calibrated score changes also track planning-success changes at one tested severity for each of blur and resize. The same analysis can be instantiated on PLDM, but its numerical thresholds require model-family-specific recalibration.
 
 The contributions are:
 \begin{enumerate}[leftmargin=1.4em]
-  \item \textbf{Measuring visual sensitivity after action-conditioned rollout.} We define ACPC for paired nominal and perturbed histories evaluated under the same actions. We aggregate its high-quantile normalized disagreement into ATR and pair it with the SMPR state-coordinate guard against constant-representation collapse.
-  \item \textbf{Connecting rollout disagreement to prediction error and planning cost.} Exact samplewise inequalities establish these two links. Controlled experiments compare recorded-action multi-step ACPC with one-step and destroyed-action alternatives, and a paired CEM audit tests its incremental relation to fixed-pool candidate costs and adaptive decision regret.
-  \item \textbf{Testing checkpoint screening beyond the calibration tasks.} We evaluate all 14 partitions into source and held-out tasks, test whether Gaussian-calibrated score changes track planning-success changes at fixed blur and resize severities, and repeat the procedure on PLDM with separate numerical calibration.
+  \item \textbf{A paired-rollout diagnostic.} ACPC measures how same-state visual changes propagate through action-conditioned predictions, ATR summarizes the checkpoint-level radius, and SMPR provides a state-coordinate guard against constant-representation collapse.
+  \item \textbf{Exact links to prediction and planning quantities.} Samplewise inequalities connect rollout disagreement to common-future error drift and squared latent goal-cost movement.
+  \item \textbf{Controlled evidence beyond the calibration tasks.} Experiments test predictive relevance and calibration transfer across tasks, fixed visual shifts, and a second model family.
 \end{enumerate}
 \section{Related Work}\label{sec:related}
 
-This work connects three lines of research: latent predictive world models, visual robustness for control, and diagnostics of learned dynamics. We review them according to the role they play in our setting: learning predictive representations, preserving control-relevant distinctions, and evaluating a trained predictor.
+Prior work addresses three complementary parts of this problem: learning latent predictive representations, preserving control-relevant distinctions under visual shifts, and evaluating learned dynamics.
 
 \paragraph{Latent predictive world models.}
 DreamerV3 and TD-MPC2 illustrate how learned dynamics can support control by predicting the consequences of candidate actions~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. JEPAs replace pixel reconstruction with prediction in representation space, first for images and then for video~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,assran2025vjepa2}. LeWM instantiates this idea as an end-to-end JEPA world model stabilized by SIGReg~\cite{maes2026lewm,eppspulley1983}, while PLDM provides a different joint-embedding dynamics design~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting,maes2026stableworldmodel}. Analyses of latent prediction explain why it can suppress nuisance or noisy features~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures,klindt2026lejepaworldmodel}; Seq-JEPA studies the related balance between invariant and equivariant prediction~\cite{ghaemi2025seqjepa}. These results motivate latent predictive learning, but our focus is checkpoint evaluation: whether the discrepancy between two visual views of the same trajectory contracts or grows as the predictor rolls them forward under shared actions.
@@ -559,38 +557,41 @@ questions.
 
 \subsection{Predicting error changes under visual perturbations}\label{sec:exp-target-aligned}
 
-We first test the quantity bounded by
-\Cref{prop:target-free-error-drift}:
-the absolute change in eight-step latent prediction error between a nominal
-history and a visually perturbed history, both compared with the same observed
-future. Every regression predicts this target from the same perturbation
-severity, encoder shift, action magnitude, and nominal-dynamics features. The
-only difference is the ACPC feature: one-step ACPC; the strongest of three
-eight-step controls with zeroed actions, actions from another trajectory, or
-time-shuffled actions; or eight-step ACPC using
-the recorded actions. The same-horizon comparison isolates action information
+We ask whether ACPC helps predict how much a visual perturbation changes an
+eight-step prediction error, the quantity bounded by
+\Cref{prop:target-free-error-drift}. Both predictions are compared with the
+same observed future, and the target is the absolute difference between their
+errors. Every regression uses the same perturbation severity, encoder shift,
+action magnitude, and nominal-dynamics features. The regressions differ only
+in their ACPC feature: one-step ACPC; the strongest of three same-horizon
+destroyed-action controls using zeroed actions, actions from another
+trajectory, or time-shuffled actions; or eight-step ACPC under the recorded
+actions. The same-horizon comparison isolates the recorded action information
 from rollout length.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{fig_future_drift_three_seed_v1.pdf}
-\caption{Reduction in held-out error when recorded-action eight-step ACPC
-replaces each comparator. Small circles show individual training runs and
-diamonds show the mean for each task. Both comparisons predict the same
-absolute change in error to one observed eight-step future, and all regressions
-share the same base covariates, including encoder shift. The same-horizon
-control uses whichever of zeroed actions, actions from another trajectory, or
-time-shuffled actions performs best.}
+\caption{All regressions predict the same target: the absolute change in
+prediction error against one observed eight-step future. The vertical axis is
+held-out MAE, so lower is better. Each task panel reports regressions using
+one-step ACPC, the best same-horizon destroyed-action control, and
+recorded-action eight-step ACPC. Small points are individual training runs,
+thin lines join results from the same run, and diamonds are task means. All
+regressions use identical base covariates. The control is selected from zeroed,
+cross-trajectory, and time-shuffled actions. Latent-error scales are
+task-specific, so comparisons should be made within a panel.}
 \label{fig:future-drift-runs}
 \end{figure}
 
-Recorded-action eight-step ACPC reduces held-out MAE by $55.9\pm4.7\%$
-relative to one-step ACPC and by $51.3\pm3.5\%$ relative to the strongest
-same-horizon control (equal-task mean $\pm$ sample SD across runs). All 12
-task--run comparisons improve. These results concern the ability to predict a
-change in eight-step error; they do not compare the absolute accuracy of
-one-step and eight-step predictions. Appendix~\ref{sec:appendix-p1-controls}
-reports the task-level MAEs and selected controls.
+The regression using recorded-action eight-step ACPC has the lowest held-out
+MAE in all 12 task--run cells. Relative to one-step ACPC, the equal-task MAE reduction is
+$55.9\pm4.7\%$; relative to the strongest same-horizon control it is
+$51.3\pm3.5\%$ (mean $\pm$ sample standard deviation across run-level
+equal-task summaries). These results concern the ability to predict a change
+in eight-step error; they do not compare the absolute accuracy of one-step and
+eight-step forecasts. Appendix~\ref{sec:appendix-p1-controls} reports the
+task-level values and selected controls.
 
 \subsection{ACPC and CEM decisions}\label{sec:exp-planner}
 
@@ -602,33 +603,40 @@ Identity probes give zero five-step ACPC and zero first-action RMS. Whenever
 the elite-set certificate remains valid, the nominal and perturbed CEM updates
 also remain aligned, as required by Corollary~\ref{cor:adaptive-cem-alignment}.
 
-\input{tables/table_acpc_planner_increment}
+We then ask whether candidate-conditioned five-step ACPC adds predictive
+information beyond perturbation severity, training condition, one-step ACPC,
+and the nominal top-1 margin. Table~\ref{tab:acpc-planner-increment} reports
+the reduction in held-out prediction error, and
+Fig.~\ref{fig:acpc-planner-evidence} shows paired held-out errors for the
+baseline and expanded regressions.
 
-Adding candidate-conditioned five-step ACPC reduces held-out MAE for maximum
-fixed-pool cost change by $7.9\pm1.4\%$; the reduction is positive on three of
-the four tasks. For adaptive CEM, it reduces held-out MAE for positive decision
-regret by $15.2\pm2.0\%$, with an improvement in every task--run cell. The
-$1.1\pm0.5\%$ reduction for first-action RMS is too small to support an
-incremental claim. In all three analyses, the rank association is higher for
-five-step than for one-step ACPC in every task--run cell.
+\input{tables/table_acpc_planner_increment}
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\linewidth]{fig_acpc_planner_evidence.pdf}
-\caption{ACPC and CEM decision statistics. Panels (a)--(c) use 100 histories
-per task, run, and training condition: (a) best-candidate retention in a shared
-pool, (b) extra clean-history latent goal cost of the perturbed CEM decision,
-and (c) held-out MAE reduction from adding five-step ACPC for candidate-cost
-movement, decision regret, and first-action change. Panel (d) reports decision
-regret on 16 shared histories per task at the deployed $K=300$, 30-step budget.
-In panels (a), (b), and (d), faint marks show task--run cells and heavy marks
-show equal-task summaries. In panel (c), white circles show the three
-run-level equal-task summaries; bars and error bars show their mean and sample
-SD. These panels examine the cost-movement and margin quantities in
-\Cref{prop:exact-cost-certificate}; decision regret is a model cost, not task
-success.}
+\caption{Direct held-out prediction errors for two planner-facing quantities;
+lower is better. Each panel compares two nested ridge models fitted and
+evaluated on the same task--run split, without and with candidate-conditioned
+five-step ACPC. The base model already includes perturbation severity,
+training condition, one-step ACPC, and the nominal top-1 margin. Thin lines
+connect the two errors for the same task--run evaluation; the heavy black pair
+is the across-run mean of the run-level equal-task MAEs. The panel annotation
+is the across-run mean of the run-level relative decreases reported in
+Table~\ref{tab:acpc-planner-increment}. Errors are measured on the fitted
+$\log(1+\mathrm{target})$ scale, and axis ranges are response-specific.
+Decision regret is extra squared latent goal cost under the frozen model, not
+simulator return.}
 \label{fig:acpc-planner-evidence}
 \end{figure}
+
+Adding candidate-conditioned five-step ACPC reduces held-out MAE for maximum
+fixed-pool cost movement by $7.9\pm1.4\%$; the reduction is positive on three
+of the four tasks. For adaptive CEM, it reduces held-out MAE for positive
+decision regret by $15.2\pm2.0\%$, with an improvement in every task--run cell.
+The $1.1\pm0.5\%$ reduction for first-action change is too small to support an
+incremental claim. In all three analyses, the rank association is higher for
+five-step than for one-step ACPC in every task--run cell.
 
 At perturbation severity 0.08, the task-level mean rate of retaining the best
 fixed-pool candidate is $0.92$--$0.96$ after training with Gaussian
@@ -643,37 +651,43 @@ gives the task-level values.
 
 \subsection{Cross-task threshold transfer}\label{sec:exp-frozen-external}
 
-We select ATR and SMPR thresholds on every nonempty proper subset of the four
-tasks and evaluate them on all remaining tasks. This gives 14 directional
-partitions (Fig.~\ref{fig:cross-task-source-coverage}).
+We ask whether ATR and SMPR thresholds selected on some tasks can screen
+checkpoints from tasks not used for calibration. We select thresholds on every
+nonempty proper subset of the four tasks and apply them unchanged to all
+remaining tasks. This gives 14 directional source/evaluation partitions
+(Fig.~\ref{fig:cross-task-source-coverage}).
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\linewidth]{fig_cross_task_atr_smpr_source_coverage_v1.pdf}
-\caption{Cross-task evaluation over all 14 source/evaluation partitions. ATR
-and SMPR thresholds are selected using only the source tasks and applied
-unchanged to the remaining tasks; a checkpoint passes only when relative
-ATR $\le t_R$ and SMPR $\ge t_M$. Small points show individual partitions and
-diamonds show coverage-level summaries: eligible source subsets are first
-averaged within each evaluation task, after which the four evaluation tasks
-receive equal weight. Onset error is the absolute difference
-between the first augmentation level selected by the diagnostic and by the
-success-rate criterion.}
+\caption{Cross-task transfer of ATR--SMPR thresholds over all 14
+source/evaluation partitions. Thresholds are selected using source tasks only
+and then applied unchanged to the remaining tasks; a checkpoint passes when
+relative ATR $\le t_R$ and SMPR $\ge t_M$. Panel (a) reports balanced accuracy
+on held-out checkpoints (higher is better; chance is $0.5$). Panel (b) reports
+the absolute gap between the first augmentation level accepted by the
+diagnostic and the first level meeting the success-rate criterion, measured in
+Gaussian-augmentation grid steps (lower is better; one step is $0.01$ in
+training-noise standard deviation). Gray points are individual
+source/evaluation partitions, and diamonds are equal-task summaries for each
+number of calibration tasks.}
 \label{fig:cross-task-source-coverage}
 \end{figure}
 
 Balanced accuracy is $0.855$, $0.900$, and $0.900$ when thresholds are
 selected from one, two, and three source tasks, respectively. Corresponding
 precision/recall values are $0.910/0.854$, $0.913/0.953$, and
-$0.913/0.953$. Mean absolute onset errors are $0.011$, $0.005$, and $0.005$
-Gaussian-augmentation-grid units; their maximum values are $0.050$, $0.010$,
-and $0.010$. With one source task, balanced accuracy ranges from $0.723$ to
+$0.913/0.953$. Mean absolute onset errors are $1.1$, $0.5$, and $0.5$ grid
+steps; the largest individual partition--task--run errors are $5$, $1$, and
+$1$ steps. With one source task,
+balanced accuracy ranges from $0.723$ to
 $0.913$ across the four possible sources, showing that task composition
 matters. Two and three source tasks perform similarly on average in this
 four-task study. Thus the evaluation supports transfer of the
 threshold-selection procedure across these tasks, but not one numerical
 threshold for every task or model family. Appendix~\ref{sec:appendix-cross-task}
 reports every partition.
+\FloatBarrier
 
 \subsection{Application to PLDM}
 \label{sec:exp-pldm-portability}
@@ -701,32 +715,38 @@ while calibration remains model-family specific.
 \subsection{Transfer to blur and resize}
 \label{sec:exp-cross-stressor}
 
-For each task, we apply the thresholds selected on the other three
+Finally, we ask whether a Gaussian-calibrated change in the selective score
+orders checkpoint pairs in the same direction as planning success under new
+visual shifts. For each task, we apply thresholds selected on the other three
 Gaussian-noise tasks to checkpoint pairs evaluated under blur and resize. No
 blur or resize result is used to select or adjust a threshold.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.92\linewidth]{fig_cross_stressor_selective_transfer_v1.pdf}
-\caption{Selective-score and planning-success changes for all 24 LeWM
-checkpoint pairs under blur and resize. Each point compares a checkpoint
-trained with Gaussian augmentation ($\stdmax{}=0.08$) with the corresponding
-checkpoint trained without augmentation. The horizontal axis is $\Delta S$ in
-\Cref{eq:paired-diagnostic-change}, computed with thresholds selected on the
-other three Gaussian-noise tasks; the vertical axis is the corresponding
-change in planning success rate. Marker shape denotes task and fill denotes
-the visual shift; blur and resize are each evaluated at one fixed severity.}
+\caption{Agreement between the Gaussian-calibrated selective score and observed
+planning changes under blur and resize. Each of the 24 points compares a
+checkpoint trained with Gaussian augmentation ($\stdmax{}=0.08$) with the
+corresponding checkpoint trained without augmentation. A point to the right
+means the selective score favors the augmented checkpoint; a higher point
+means its planning success rate is higher. The diagnostic predicts improvement
+when $\Delta S>0$; the observed positive criterion requires at least a
+five-percentage-point success gain and no more than a five-point clean loss.
+Background regions show agreement or disagreement between these decisions.
+Marker shape denotes task and color/fill denotes the visual shift; blur and
+resize are each evaluated at one fixed severity.}
 \label{fig:cross-stressor-selective-transfer}
 \end{figure}
 
-The sign rule reaches $0.889$ balanced accuracy, $0.882$ precision, and
-$1.000$ recall, while the continuous score change has $0.835$ Spearman
-correlation with the change in success rate. Blur and resize separately reach
-$0.875/0.900$ balanced accuracy. The two discordant cases are both PushT
-changes of exactly four percentage points, which fall below the fixed
-five-point positive label while the selective score improves. These results
-support relative checkpoint ordering for these two visual shifts at the tested
-severity. They do not establish an absolute robustness classifier.
+The sign of $\Delta S$ agrees with the observed label on 22 of 24 pairs and
+reaches $0.889$ balanced accuracy, $0.882$ precision, and $1.000$ recall.
+The continuous score change has Spearman's $\rho=0.835$ with the change in
+success rate. Balanced accuracy is $0.875$ for blur and $0.900$ for resize.
+The two discordant cases are
+both PushT changes of exactly four percentage points, which fall just below the
+fixed five-point positive label while the selective score improves. These
+results support relative checkpoint ordering for these two visual shifts at
+the tested severity. They do not establish an absolute robustness classifier.
 \FloatBarrier
 
 \section{Discussion and limitations}\label{sec:disc}

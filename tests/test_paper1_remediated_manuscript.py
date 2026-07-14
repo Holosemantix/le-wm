@@ -36,9 +36,13 @@ def test_future_drift_summary_uses_three_symmetric_training_runs() -> None:
 
 def test_future_drift_text_describes_all_three_destroyed_action_controls() -> None:
     text = (ROOT / "paper1/main.tex").read_text()
-    assert "strongest of three same-horizon destroyed-action controls" in text
-    assert "zeroed actions, actions from another trajectory, or time-shuffled actions" in text
-    assert "better of the two" not in text
+    normalized = " ".join(text.split())
+    assert "strongest of three same-horizon destroyed-action controls" in normalized
+    assert (
+        "zeroed actions, actions from another trajectory, or time-shuffled actions"
+        in normalized
+    )
+    assert "better of the two" not in normalized
 
 
 def test_main_text_uses_reader_facing_data_flow_language() -> None:

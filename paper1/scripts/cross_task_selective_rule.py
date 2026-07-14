@@ -468,16 +468,21 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
     individual_color = "#7A7A7A"
     summary_color = "#0072B2"
     grid_color = "#B7B7B7"
+    grid_step = 0.01
     out.parent.mkdir(parents=True, exist_ok=True)
 
     with plt.rc_context(STYLE):
-        fig, axes = plt.subplots(1, 2, figsize=(6.8, 2.55))
+        fig, axes = plt.subplots(1, 2, figsize=(6.8, 2.75))
         metrics = (
-            ("balanced_accuracy", "(a) Threshold classification", "Balanced accuracy"),
+            (
+                "balanced_accuracy",
+                r"(a) Held-out balanced accuracy $\uparrow$",
+                "Balanced accuracy",
+            ),
             (
                 "mean_abs_start_error",
-                "(b) Success-rate criterion onset",
-                "Mean absolute onset error",
+                r"(b) Recovery-onset error $\downarrow$",
+                "Mean absolute error (grid steps)",
             ),
         )
         for ax, (metric, title, ylabel) in zip(axes, metrics):
@@ -493,7 +498,8 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
                         for index in range(len(partitions))
                     ]
                 )
-                values = [item[metric] for item in partitions]
+                scale = 1.0 if metric == "balanced_accuracy" else 1.0 / grid_step
+                values = [item[metric] * scale for item in partitions]
                 ax.scatter(
                     [coverage + offset for offset in offsets],
                     values,
@@ -507,9 +513,10 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
                 coverage_summary = next(
                     item for item in summary["coverage"] if item["source_coverage"] == coverage
                 )
+                summary_value = coverage_summary[metric] * scale
                 ax.scatter(
                     [coverage],
-                    [coverage_summary[metric]],
+                    [summary_value],
                     s=52,
                     facecolor="white",
                     edgecolor=summary_color,
@@ -517,8 +524,27 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
                     marker="D",
                     zorder=3,
                 )
+                annotation = (
+                    f"{summary_value:.3f}"
+                    if metric == "balanced_accuracy"
+                    else f"{summary_value:.1f}"
+                )
+                annotation_offset = 6 if metric == "balanced_accuracy" else 7
+                ax.annotate(
+                    annotation,
+                    (coverage, summary_value),
+                    xytext=(0, annotation_offset),
+                    textcoords="offset points",
+                    ha="center",
+                    va="bottom",
+                    color=summary_color,
+                    fontsize=7.0,
+                    fontweight="semibold",
+                    bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.78, "pad": 0.5},
+                    zorder=4,
+                )
             ax.set_title(title, loc="left", fontweight="semibold")
-            ax.set_xlabel("Number of source tasks")
+            ax.set_xlabel("Tasks used for calibration")
             ax.set_ylabel(ylabel)
             ax.set_xticks((1, 2, 3))
             ax.set_xlim(0.65, 3.35)
@@ -526,20 +552,33 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
             ax.spines["top"].set_visible(False)
             ax.spines["right"].set_visible(False)
         axes[0].axhline(0.5, color="#A0A0A0", lw=0.7, ls="--", zorder=1)
-        axes[0].text(3.31, 0.505, "chance", ha="right", va="bottom", fontsize=6.8, color="#666666")
-        axes[1].text(
-            0.02,
-            0.98,
-            "training-noise-grid units",
-            transform=axes[1].transAxes,
-            ha="left",
-            va="top",
+        axes[0].text(
+            3.31,
+            0.505,
+            "chance = 0.5",
+            ha="right",
+            va="bottom",
             fontsize=6.8,
-            color="#555555",
+            color="#666666",
+        )
+        axes[0].set_ylim(0.48, 0.965)
+        axes[1].set_ylim(0.0, 3.25)
+        fig.suptitle(
+            "Cross-task transfer of calibrated thresholds",
+            y=0.985,
+            fontsize=9.0,
+            fontweight="semibold",
         )
         fig.legend(
             handles=[
-                plt.Line2D([], [], marker="o", ls="", color=individual_color, label="source subset"),
+                plt.Line2D(
+                    [],
+                    [],
+                    marker="o",
+                    ls="",
+                    color=individual_color,
+                    label="source/evaluation split",
+                ),
                 plt.Line2D(
                     [],
                     [],
@@ -547,7 +586,7 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
                     ls="",
                     markerfacecolor="white",
                     markeredgecolor=summary_color,
-                    label="coverage-level mean",
+                    label="equal-task summary",
                 ),
             ],
             loc="lower center",
@@ -555,7 +594,7 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
             frameon=False,
             bbox_to_anchor=(0.5, -0.015),
         )
-        fig.subplots_adjust(left=0.09, right=0.985, top=0.90, bottom=0.27, wspace=0.32)
+        fig.subplots_adjust(left=0.09, right=0.985, top=0.82, bottom=0.25, wspace=0.32)
         fig.savefig(out)
         plt.close(fig)
 

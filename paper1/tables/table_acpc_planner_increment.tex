@@ -1,16 +1,16 @@
 \begin{table}[H]
 \centering
-\caption{Added predictive value of candidate-conditioned five-step ACPC on 9,600 reduced-budget history records. Within each training run, ridge models are fitted on three tasks and evaluated on the fourth. Both models use perturbation severity, training condition, one-step ACPC, and the nominal top-1 margin; the expanded model also uses five-step ACPC. Entries are reductions in held-out MAE, averaged equally across evaluation tasks.}
+\caption{Held-out prediction gain from candidate-conditioned five-step ACPC in the reduced-budget CEM audit (9,600 history records). Both ridge models include perturbation severity, training condition, one-step ACPC, and the nominal top-1 margin; the expanded model adds five-step ACPC. Within each independent training run, held-out MAE on the fitted $\log(1+\mathrm{target})$ response is averaged equally across the four leave-one-task-out evaluations for each model, and the relative decrease between those two equal-task MAEs is then computed. Entries report the across-run mean $\pm$ sample standard deviation of these run-level decreases; the final column counts positive task--run cases out of 12. Higher is better. Decision regret is measured in the model's squared latent goal cost, not simulator return.}
 \label{tab:acpc-planner-increment}
 \scriptsize
-\setlength{\tabcolsep}{3.7pt}
-\begin{tabular}{lrrr}
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabularx}{\linewidth}{Xcc}
 \toprule
-Response & Mean $\pm$ SD & Run range & Cells improved \\
+Prediction target & \shortstack{Held-out MAE decrease\\(\%, mean $\pm$ sample SD, $\uparrow$)} & \shortstack{Positive task--run\\cases (/12)} \\
 \midrule
-Maximum fixed-pool cost change & 7.9 $\pm$ 1.4\% & 6.6--9.5\% & 8/12 \\
-Adaptive CEM decision regret & 15.2 $\pm$ 2.0\% & 12.9--16.9\% & 12/12 \\
-Adaptive first-action RMS & 1.1 $\pm$ 0.5\% & 0.8--1.7\% & 10/12 \\
+Maximum fixed-pool cost movement & 7.9 $\pm$ 1.4 & 8/12 \\
+Adaptive-CEM decision regret & 15.2 $\pm$ 2.0 & 12/12 \\
+Adaptive-CEM first-action change (RMS) & 1.1 $\pm$ 0.5 & 10/12 \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}

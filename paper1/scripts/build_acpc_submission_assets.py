@@ -32,9 +32,12 @@ DEFAULT_PLDM_TABLE = ROOT / "paper1/tables/table_pldm_architecture_portability.t
 
 TASKS = ("TwoRoom", "PushT", "Reacher", "Cube")
 TASK_MARKERS = {"TwoRoom": "o", "PushT": "s", "Reacher": "^", "Cube": "D"}
-SEED_MARKERS = {3072: "o", 3073: "s", 3074: "^"}
-BASE_COLOR = "#D55E00"
-ENDPOINT_COLOR = "#0072B2"
+TASK_COLORS = {
+    "TwoRoom": "#4E79A7",
+    "PushT": "#F28E2B",
+    "Reacher": "#59A14F",
+    "Cube": "#E15759",
+}
 GRID_COLOR = "#A7A7A7"
 STYLE = {
     "font.family": "serif",
@@ -79,236 +82,144 @@ def _group_index(summary: dict[str, Any]) -> dict[tuple[str, str, float], dict[s
     }
 
 
-def _group_seed_index(
-    summary: dict[str, Any],
-) -> dict[tuple[int, str, str, float], dict[str, Any]]:
-    return {
-        (
-            int(row["training_seed"]),
-            row["task"],
-            row["checkpoint_role"],
-            float(row["severity"]),
-        ): row
-        for row in summary["group_seed_summary"]
-    }
-
-
 def plot_planner(summary: dict[str, Any], out: Path) -> None:
-    index = _group_index(summary)
-    seed_index = _group_seed_index(summary)
     analyses = summary["predeclared_incremental_analyses"]
     seeds = tuple(int(seed) for seed in summary["training_seeds"])
-    severities = (0.02, 0.05, 0.08)
+    response_specs = (
+        ("cost_drift", "(a) Maximum fixed-pool cost movement"),
+        ("positive_clean_regret", "(b) Adaptive-CEM decision regret"),
+    )
+    seed_offsets = {
+        seed: offset for seed, offset in zip(seeds, (-0.045, 0.0, 0.045))
+    }
     out.parent.mkdir(parents=True, exist_ok=True)
     with plt.rc_context(STYLE):
-        # Keep the four panels at full paper width while fitting beside the
-        # accompanying result text and caption.
-        fig, axes = plt.subplots(2, 2, figsize=(6.8, 5.8))
-        ax_stability, ax_regret, ax_increment, ax_full = axes.ravel()
-
-        for role, color, label in (
-            ("base", BASE_COLOR, "No noise augmentation"),
-            ("endpoint", ENDPOINT_COLOR, r"Gaussian aug. ($\sigma_{\max}=0.08$)"),
-        ):
-            task_seed_values: list[list[float]] = []
-            for seed in seeds:
-                for task in TASKS:
-                    values = [
-                        seed_index[(seed, task, role, s)]["top1_stability_rate"]
-                        for s in severities
+        fig, axes = plt.subplots(1, 2, figsize=(6.8, 3.15))
+        for ax, (key, title) in zip(axes, response_specs):
+            analysis = analyses[key]
+            for task in TASKS:
+                color = TASK_COLORS[task]
+                marker = TASK_MARKERS[task]
+                for seed in seeds:
+                    task_result = analysis["per_seed"][str(seed)]["lobo_ridge"][
+                        "per_task"
+                    ][task]
+                    offset = seed_offsets[seed]
+                    xs = [offset, 1.0 + offset]
+                    ys = [
+                        task_result["baseline_log1p_mae"],
+                        task_result["plus_h5_log1p_mae"],
                     ]
-                    task_seed_values.append(values)
-                    ax_stability.plot(
-                        severities,
-                        values,
-                        color=color,
-                        alpha=0.12,
-                        lw=0.65,
-                        marker=TASK_MARKERS[task],
-                        ms=2.3,
+                    ax.plot(xs, ys, color=color, lw=0.75, alpha=0.42, zorder=1)
+                    ax.scatter(
+                        xs,
+                        ys,
+                        marker=marker,
+                        s=22,
+                        facecolor=color,
+                        edgecolor="white",
+                        linewidth=0.45,
+                        alpha=0.78,
+                        zorder=2,
                     )
-            mean = [
-                sum(values[i] for values in task_seed_values)
-                / len(task_seed_values)
-                for i in range(3)
-            ]
-            ax_stability.plot(severities, mean, color=color, lw=2.0, marker="o", ms=4.0, label=label)
-        ax_stability.set_title("(a) Fixed-pool top-1 stability", loc="left", fontweight="semibold")
-        ax_stability.set_xlabel("Visual-perturbation severity")
-        ax_stability.set_ylabel("Best candidate unchanged")
-        ax_stability.set_xlim(0.015, 0.085)
-        ax_stability.set_ylim(-0.03, 1.03)
-        ax_stability.set_xticks(severities)
-        ax_stability.legend(frameon=False, loc="lower left")
-        _polish(ax_stability)
 
-        for role, color in (("base", BASE_COLOR), ("endpoint", ENDPOINT_COLOR)):
-            task_seed_values = []
-            for seed in seeds:
-                for task in TASKS:
-                    values = [
-                        math.log10(
-                            1
-                            + seed_index[(seed, task, role, s)][
-                                "positive_clean_regret_mean"
-                            ]
-                        )
-                        for s in severities
-                    ]
-                    task_seed_values.append(values)
-                    ax_regret.plot(
-                        severities,
-                        values,
-                        color=color,
-                        alpha=0.12,
-                        lw=0.65,
-                        marker=TASK_MARKERS[task],
-                        ms=2.3,
-                    )
-            mean = [
-                sum(values[i] for values in task_seed_values)
-                / len(task_seed_values)
-                for i in range(3)
+            base_run_means = [
+                analysis["per_seed"][str(seed)]["lobo_ridge"][
+                    "equal_task_baseline_log1p_mae"
+                ]
+                for seed in seeds
             ]
-            ax_regret.plot(severities, mean, color=color, lw=2.0, marker="o", ms=4.0)
-        ax_regret.set_title("(b) Adaptive-CEM decision regret", loc="left", fontweight="semibold")
-        ax_regret.set_xlabel("Visual-perturbation severity")
-        ax_regret.set_ylabel(r"Mean $\log_{10}(1+\mathrm{decision\ regret})$")
-        ax_regret.set_xlim(0.015, 0.085)
-        ax_regret.set_xticks(severities)
-        _polish(ax_regret)
-
-        response_specs = (
-            ("cost_drift", "max cost change"),
-            ("positive_clean_regret", "decision regret"),
-            ("first_action_rms", "first-action RMS"),
-        )
-        x = list(range(3))
-        means = [
-            100
-            * analyses[key]["three_seed_summary"][
+            h5_run_means = [
+                analysis["per_seed"][str(seed)]["lobo_ridge"][
+                    "equal_task_plus_h5_log1p_mae"
+                ]
+                for seed in seeds
+            ]
+            equal_task_means = [
+                sum(base_run_means) / len(base_run_means),
+                sum(h5_run_means) / len(h5_run_means),
+            ]
+            ax.plot(
+                [0.0, 1.0],
+                equal_task_means,
+                color="#111111",
+                lw=2.4,
+                marker="D",
+                markersize=5.4,
+                markerfacecolor="white",
+                markeredgecolor="#111111",
+                markeredgewidth=1.1,
+                zorder=4,
+            )
+            reduction = 100.0 * analysis["three_seed_summary"][
                 "relative_mae_reduction_mean"
             ]
-            for key, _ in response_specs
-        ]
-        sds = [
-            100
-            * analyses[key]["three_seed_summary"][
-                "relative_mae_reduction_sample_sd"
-            ]
-            for key, _ in response_specs
-        ]
-        bars = ax_increment.bar(x, means, width=0.58, color=["#4C78A8", "#59A14F", "#BAB0AC"], zorder=2)
-        ax_increment.errorbar(
-            x,
-            means,
-            yerr=sds,
-            fmt="none",
-            ecolor="#303030",
-            elinewidth=0.9,
-            capsize=2.5,
-            zorder=4,
-        )
-        for xpos, (key, _) in zip(x, response_specs):
-            offsets = (-0.13, 0.0, 0.13)
-            for offset, seed in zip(offsets, seeds):
-                value = analyses[key]["per_seed"][str(seed)]["lobo_ridge"][
-                    "equal_task_relative_mae_reduction"
-                ]
-                ax_increment.scatter(
-                    xpos + offset,
-                    100 * value,
-                    marker="o",
-                    s=22,
-                    facecolor="white",
-                    edgecolor="#303030",
-                    lw=0.65,
-                    zorder=3,
-                )
-        ax_increment.axhline(5, color="#7A3E9D", lw=1.0, ls="--")
-        ax_increment.axhline(0, color="#555555", lw=0.7)
-        ax_increment.set_xticks(x, [label for _, label in response_specs])
-        ax_increment.set_ylabel("Reduction in held-out MAE (%)")
-        ax_increment.set_title("(c) Gain from five-step ACPC", loc="left", fontweight="semibold")
-        ax_increment.set_ylim(-1.5, 20.0)
-        ax_increment.text(2.38, 5.5, "5% reference", color="#6A2C8C", ha="right", va="bottom", fontsize=7.0)
-        for bar, value, sd in zip(bars, means, sds):
-            ax_increment.text(
-                bar.get_x() + bar.get_width() / 2,
-                value + sd + 0.7,
-                f"{value:.1f}$\\pm${sd:.1f}",
-                ha="center",
-                va="bottom",
+            ax.text(
+                0.97,
+                0.96,
+                f"Mean decrease: {reduction:.1f}%",
+                transform=ax.transAxes,
+                ha="right",
+                va="top",
                 fontsize=7.2,
+                fontweight="semibold",
+                bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.82, "pad": 1.5},
             )
-        _polish(ax_increment)
+            ax.set_title(title, loc="left", fontweight="semibold")
+            ax.set_xlim(-0.20, 1.20)
+            ax.set_xticks(
+                [0.0, 1.0],
+                ["Base model\n(includes H1 ACPC)", "+ candidate\nH5 ACPC"],
+            )
+            _polish(ax)
 
-        full_index = {
-            (row["task"], row["checkpoint_role"]): row
-            for row in summary["full_budget_summary"]
-        }
-        full_seed_index = {
-            (int(row["training_seed"]), row["task"], row["checkpoint_role"]): row
-            for row in summary["full_budget_seed_summary"]
-        }
-        seed_offsets = {seed: offset for seed, offset in zip(seeds, (-0.045, 0.0, 0.045))}
-        for task in TASKS:
-            for seed in seeds:
-                base_seed = full_seed_index[(seed, task, "base")][
-                    "positive_clean_regret_mean"
-                ]
-                endpoint_seed = full_seed_index[(seed, task, "endpoint")][
-                    "positive_clean_regret_mean"
-                ]
-                offset = seed_offsets[seed]
-                ax_full.plot(
-                    [offset, 1 + offset],
-                    [base_seed, endpoint_seed],
-                    color="#777777",
-                    lw=0.55,
-                    alpha=0.28,
-                )
-                ax_full.scatter(
-                    offset,
-                    base_seed,
-                    marker=TASK_MARKERS[task],
-                    s=15,
-                    color=BASE_COLOR,
-                    alpha=0.38,
-                    edgecolor="none",
-                    zorder=2,
-                )
-                ax_full.scatter(
-                    1 + offset,
-                    endpoint_seed,
-                    marker=TASK_MARKERS[task],
-                    s=15,
-                    color=ENDPOINT_COLOR,
-                    alpha=0.38,
-                    edgecolor="none",
-                    zorder=2,
-                )
-            base = full_index[(task, "base")]["positive_clean_regret_mean"]
-            endpoint = full_index[(task, "endpoint")]["positive_clean_regret_mean"]
-            ax_full.plot([0, 1], [base, endpoint], color="#555555", lw=1.05, alpha=0.82)
-            ax_full.scatter(0, base, marker=TASK_MARKERS[task], s=34, color=BASE_COLOR, edgecolor="white", lw=0.5, zorder=3)
-            ax_full.scatter(1, endpoint, marker=TASK_MARKERS[task], s=34, color=ENDPOINT_COLOR, edgecolor="white", lw=0.5, zorder=3)
-        ax_full.set_yscale("log")
-        ax_full.set_xlim(-0.35, 1.35)
-        ax_full.set_xticks(
-            [0, 1],
-            ["No augmentation", r"$\sigma_{\max}^{\rm train}=0.08$"],
-        )
-        ax_full.set_ylabel("Decision regret (log scale)")
-        ax_full.set_title(r"(d) Full budget: $K=300$, 30 CEM steps", loc="left", fontweight="semibold")
         task_handles = [
-            Line2D([], [], marker=TASK_MARKERS[task], color="#555555", ls="none", label=task, ms=4.5)
+            Line2D(
+                [],
+                [],
+                marker=TASK_MARKERS[task],
+                color=TASK_COLORS[task],
+                markerfacecolor=TASK_COLORS[task],
+                ls="-",
+                lw=0.9,
+                label=task,
+                ms=4.2,
+            )
             for task in TASKS
         ]
-        ax_full.legend(handles=task_handles, ncol=2, frameon=False, loc="lower left")
-        _polish(ax_full)
-
-        fig.subplots_adjust(left=0.09, right=0.985, bottom=0.08, top=0.965, wspace=0.30, hspace=0.30)
+        task_handles.append(
+            Line2D(
+                [],
+                [],
+                marker="D",
+                color="#111111",
+                markerfacecolor="white",
+                lw=2.2,
+                label="Equal-task mean",
+                ms=4.6,
+            )
+        )
+        fig.legend(
+            handles=task_handles,
+            ncol=5,
+            loc="upper center",
+            bbox_to_anchor=(0.53, 0.995),
+            frameon=False,
+            handlelength=1.5,
+            columnspacing=1.2,
+        )
+        fig.supylabel(
+            r"Held-out MAE on fitted $\log(1+\mathrm{target})$ ($\downarrow$)",
+            x=0.01,
+            fontsize=8,
+        )
+        fig.subplots_adjust(
+            left=0.10,
+            right=0.985,
+            bottom=0.19,
+            top=0.83,
+            wspace=0.28,
+        )
         fig.savefig(out, dpi=240)
         plt.close(fig)
 
@@ -316,36 +227,32 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
 def build_increment_table(summary: dict[str, Any]) -> str:
     analyses = summary["predeclared_incremental_analyses"]
     specs = (
-        ("cost_drift", "Maximum fixed-pool cost change"),
-        ("positive_clean_regret", "Adaptive CEM decision regret"),
-        ("first_action_rms", "Adaptive first-action RMS"),
+        ("cost_drift", "Maximum fixed-pool cost movement"),
+        ("positive_clean_regret", "Adaptive-CEM decision regret"),
+        ("first_action_rms", "Adaptive-CEM first-action change (RMS)"),
     )
     lines = [
         r"\begin{table}[H]",
         r"\centering",
-        r"\caption{Added predictive value of candidate-conditioned five-step ACPC on 9,600 reduced-budget history records. Within each training run, ridge models are fitted on three tasks and evaluated on the fourth. Both models use perturbation severity, training condition, one-step ACPC, and the nominal top-1 margin; the expanded model also uses five-step ACPC. Entries are reductions in held-out MAE, averaged equally across evaluation tasks.}",
+        r"\caption{Held-out prediction gain from candidate-conditioned five-step ACPC in the reduced-budget CEM audit (9,600 history records). Both ridge models include perturbation severity, training condition, one-step ACPC, and the nominal top-1 margin; the expanded model adds five-step ACPC. Within each independent training run, held-out MAE on the fitted $\log(1+\mathrm{target})$ response is averaged equally across the four leave-one-task-out evaluations for each model, and the relative decrease between those two equal-task MAEs is then computed. Entries report the across-run mean $\pm$ sample standard deviation of these run-level decreases; the final column counts positive task--run cases out of 12. Higher is better. Decision regret is measured in the model's squared latent goal cost, not simulator return.}",
         r"\label{tab:acpc-planner-increment}",
         r"\scriptsize",
-        r"\setlength{\tabcolsep}{3.7pt}",
-        r"\begin{tabular}{lrrr}",
+        r"\setlength{\tabcolsep}{4.5pt}",
+        r"\begin{tabularx}{\linewidth}{Xcc}",
         r"\toprule",
-        r"Response & Mean $\pm$ SD & Run range & Cells improved \\",
+        r"Prediction target & \shortstack{Held-out MAE decrease\\(\%, mean $\pm$ sample SD, $\uparrow$)} & \shortstack{Positive task--run\\cases (/12)} \\",
         r"\midrule",
     ]
     for key, label in specs:
         aggregate = analyses[key]["three_seed_summary"]
         mean = 100 * aggregate["relative_mae_reduction_mean"]
         sd = 100 * aggregate["relative_mae_reduction_sample_sd"]
-        mean_display = f"{mean:.1f} $\\pm$ {sd:.1f}\\%"
-        run_range = (
-            f"{100 * aggregate['relative_mae_reduction_min']:.1f}--"
-            f"{100 * aggregate['relative_mae_reduction_max']:.1f}\\%"
-        )
+        mean_display = f"{mean:.1f} $\\pm$ {sd:.1f}"
         lines.append(
-            f"{label} & {mean_display} & {run_range} & "
+            f"{label} & {mean_display} & "
             f"{aggregate['task_seed_cells_improved']}/12 \\\\"
         )
-    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}"])
+    lines.extend([r"\bottomrule", r"\end{tabularx}", r"\end{table}"])
     return "\n".join(lines)
 
 

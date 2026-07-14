@@ -167,61 +167,80 @@ def _plot(rows: list[dict[str, Any]]) -> None:
             "ytick.labelsize": 7.5,
         }
     )
-    fig, ax = plt.subplots(figsize=(6.65, 2.85))
-    comparisons = (
-        ("reduction_vs_one_step", -0.16, "#4C78A8", "vs. one-step ACPC"),
-        (
-            "reduction_vs_control",
-            0.16,
-            "#E45756",
-            "vs. same-horizon action control",
-        ),
+    fig, axes = plt.subplots(1, len(TASKS), figsize=(6.8, 2.65))
+    methods = (
+        ("one_step_mae", "H1\nACPC", "#9A9A9A"),
+        ("best_control_mae", "Best H8\n(destroyed\nactions)", "#5F5F5F"),
+        ("eight_step_mae", "Recorded\naction H8", "#0072B2"),
     )
-    run_jitter = (-0.045, 0.0, 0.045)
-    for task_index, task in enumerate(TASKS):
+    run_offsets = (-0.055, 0.0, 0.055)
+    for ax, task in zip(axes, TASKS):
         task_rows = sorted(
             (row for row in rows if row["task"] == task),
             key=lambda row: int(row["training_seed"]),
         )
         if len(task_rows) != len(SEEDS):
             raise ValueError(f"{task}: expected one row per training run")
-        for key, offset, color, label in comparisons:
-            values = [100 * row[key] for row in task_rows]
-            for jitter, value in zip(run_jitter, values):
+
+        for run_offset, row in zip(run_offsets, task_rows):
+            run_values = [float(row[key]) for key, _, _ in methods]
+            ax.plot(
+                [index + run_offset for index in range(len(methods))],
+                run_values,
+                color="#B8B8B8",
+                linewidth=0.65,
+                alpha=0.85,
+                zorder=1,
+            )
+            for method_index, ((_, _, color), value) in enumerate(
+                zip(methods, run_values)
+            ):
                 ax.scatter(
-                    task_index + offset + jitter,
+                    method_index + run_offset,
                     value,
-                    s=27,
+                    s=18,
                     color=color,
-                    alpha=0.55,
+                    alpha=0.72,
                     edgecolor="white",
-                    linewidth=0.4,
-                    zorder=3,
+                    linewidth=0.35,
+                    zorder=2,
                 )
+
+        for method_index, (key, _, color) in enumerate(methods):
+            values = [float(row[key]) for row in task_rows]
             ax.scatter(
-                task_index + offset,
+                method_index,
                 mean(values),
                 marker="D",
-                s=50,
+                s=48,
                 color=color,
                 edgecolor="#222222",
                 linewidth=0.55,
-                zorder=4,
-                label=label if task_index == 0 else None,
+                zorder=3,
             )
-    ax.axhline(0, color="#666666", linewidth=0.8, linestyle="--", zorder=1)
-    ax.set_xlim(-0.55, len(TASKS) - 0.45)
-    ax.set_ylim(0, 90)
-    ax.set_xticks(range(len(TASKS)), TASKS)
-    ax.set_yticks([0, 20, 40, 60, 80])
-    ax.set_ylabel("Reduction in held-out MAE (%)")
-    ax.grid(axis="y", color="#d9d9d9", linewidth=0.65)
-    ax.spines[["top", "right"]].set_visible(False)
-    ax.tick_params(axis="both", direction="out", length=3.0)
-    ax.legend(ncol=2, loc="upper center", bbox_to_anchor=(0.5, 1.14), frameon=False)
-    fig.tight_layout(pad=0.7)
+
+        task_max = max(float(row[key]) for row in task_rows for key, _, _ in methods)
+        ax.set_ylim(0, task_max * 1.16)
+        ax.set_xlim(-0.24, len(methods) - 0.76)
+        ax.set_xticks(
+            range(len(methods)),
+            [label for _, label, _ in methods],
+        )
+        ax.set_title(task, fontsize=8.5, fontweight="semibold", pad=5)
+        ax.grid(axis="y", color="#D9D9D9", linewidth=0.6)
+        ax.spines[["top", "right"]].set_visible(False)
+        ax.tick_params(axis="x", direction="out", length=2.5, labelsize=6.4)
+        ax.tick_params(axis="y", direction="out", length=2.5, labelsize=7.0)
+        ax.locator_params(axis="y", nbins=4)
+
+    axes[0].set_ylabel(
+        "Held-out MAE (lower is better)",
+        fontsize=7.6,
+        labelpad=5,
+    )
+    fig.subplots_adjust(left=0.10, right=0.96, bottom=0.27, top=0.90, wspace=0.25)
     OUT_FIGURE.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT_FIGURE, bbox_inches="tight")
+    fig.savefig(OUT_FIGURE)
     plt.close(fig)
 
 

@@ -28,12 +28,12 @@ def test_submission_planner_tables_are_bound_to_validated_three_seed_summary() -
     assert summary["invariants"]["pass"] is True
 
     increment = build_increment_table(summary)
-    assert r"7.9 $\pm$ 1.4\%" in increment
-    assert r"15.2 $\pm$ 2.0\%" in increment
-    assert r"1.1 $\pm$ 0.5\%" in increment
-    assert r"6.6--9.5\% & 8/12" in increment
-    assert r"12.9--16.9\% & 12/12" in increment
-    assert r"0.8--1.7\% & 10/12" in increment
+    assert r"7.9 $\pm$ 1.4 & 8/12" in increment
+    assert r"15.2 $\pm$ 2.0 & 12/12" in increment
+    assert r"1.1 $\pm$ 0.5 & 10/12" in increment
+    assert "sample standard deviation" in increment
+    assert "Positive task--run" in increment
+    assert "Run range" not in increment
     assert "seed 3072" not in increment
     assert "Three-seed" not in increment
 
