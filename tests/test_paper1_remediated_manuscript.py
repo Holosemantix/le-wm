@@ -37,7 +37,6 @@ def test_future_drift_summary_uses_three_symmetric_training_runs() -> None:
 def test_main_text_uses_reader_facing_data_flow_language() -> None:
     text = (ROOT / "paper1/main.tex").read_text()
     lowered = text.lower()
-    normalized = " ".join(lowered.split())
 
     for excluded in (
         "seed3075",
@@ -54,8 +53,9 @@ def test_main_text_uses_reader_facing_data_flow_language() -> None:
     assert "same eight-step latent" in lowered
     assert "all 14 directional" in lowered
     assert "selected from one, two, and three source tasks" in lowered
-    assert "does not repeat a component contest" in normalized
-    assert "selective discriminability" in lowered
+    assert "action-conditioned predictive consistency" in lowered
+    assert "selective consistency" in lowered
+    assert "checkpoint-level scores" in lowered
 
 
 def test_referenced_cross_stressor_outputs_contain_only_final_rule() -> None:

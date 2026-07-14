@@ -371,11 +371,11 @@ LEGACY_REQUIRED_MAIN_TEXT_SNIPPETS = [
 REQUIRED_MAIN_TEXT_SNIPPETS = [
     "This is a diagnostic study of frozen checkpoints, not a new robust-training method",
     "same-state visual perturbation",
-    "Target-free prediction-error-drift bound",
+    "Future-error bound",
     "Selective Margin Pass Rate (SMPR)",
     "not a candidate-distribution probability",
-    "It is a gross-collapse guard",
-    "the rule requires the reference and does not imply",
+    "SMPR is designed to detect gross collapse",
+    "The rule requires the reference and does not imply",
     "raw thresholds are not assumed to transfer across model architectures",
     "adaptive result is conditional on pool alignment",
     "Evaluation seeds are conditional measurement replicates",
@@ -987,12 +987,16 @@ def check_visual_text_structure() -> None:
     body, appendix = main_tex.split(marker, 1)
 
     required_headings = (
-        "\\subsection{Action-matched rollout radius}",
-        "\\subsection{Radius, discriminability guard, and calibration}",
-        "\\subsection{Behavioral recovery and diagnostic co-movement}",
-        "\\subsection{Action-matched rollouts predict future drift}",
-        "\\subsection{Thresholds transfer across task subsets}",
-        "\\subsection{The selective score retains ordering under blur and resize}",
+        "\\subsection{Rollout disagreement}",
+        "\\subsection{Prediction and planning bounds}",
+        "\\subsection{Checkpoint-level scores}",
+        "\\subsection{Collapse guard and calibration}",
+        "\\subsection{Robustness and diagnostic trends}",
+        "\\subsection{Predicting future-error drift}",
+        "\\subsection{Planner cost and decision stability}",
+        "\\subsection{Cross-task transfer}",
+        "\\subsection{Transfer to PLDM}",
+        "\\subsection{Transfer to blur and resize}",
     )
     for heading in required_headings:
         if heading not in body:
