@@ -5090,8 +5090,9 @@
       "P2 within-family cross-seed frozen threshold transfer",
       "P3 Gaussian-to-blur/resize frozen transfer"
     ],
-    "created_utc": "2026-07-13T12:04:31.197028+00:00",
+    "created_utc": "2026-07-13T21:27:10.855098+00:00",
     "model_evaluation_performed": false,
+    "p1_prospective_gate_pass": true,
     "schema_version": "paper1-three-pillar-evidence-1.0",
     "threshold_search_allowed": false
   }

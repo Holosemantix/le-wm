@@ -4,8 +4,8 @@
     "base_builder_path": "paper1/scripts/build_smpr_v2_artifact.py",
     "base_builder_sha256": "68612df5684aa8997082b6ac478d46656d9cc64445df6c3645f6d49f468ea236",
     "behavior_blind": true,
-    "code_commit": "c943fdf75cd71bc08e5466e1700676069728b7d2",
-    "created_utc": "2026-07-10T11:00:33.040305+00:00",
+    "code_commit": "cea179c66a9fa51acf4acb5191e20722d45612a5",
+    "created_utc": "2026-07-14T07:13:36.096783+00:00",
     "errors": [],
     "evaluation_seed_semantics": "conditional evaluation variability, not training-run replication",
     "evaluation_seeds": [
@@ -51,10 +51,10 @@
     "script_path": "paper1/scripts/build_external_pldm_smpr_v2_artifact.py",
     "script_sha256": "0d5af6b8a0d7a5c4544266b1fe784b79978fbc3a2eafb53d5299085376566db1",
     "source_hashes": {
-      "Cube": "36165bd15927ce695a7233aca5a315967cb132b598891bd0f713baf1a40ddfcc",
-      "PushT": "06dae847b7b52b8015dfead04373cca741072342edb2cf6478502a71140161d5",
-      "Reacher": "7fd4568e9d5b3ee3a3c4cc0076405998f0242ca6da8da8b025b8a27675d9d7c1",
-      "TwoRoom": "a5b26a400167b7954523c57e63ba0d949021bfe40746758c7dbc0c7391b81172",
+      "Cube": "7241a642ad118a86c426a2eb64e468ac41a352b286101d0f888406a6956ee9e6",
+      "PushT": "39c655e94df2be96edd46fb297cc7405ec3867782e807e6de526fd72fc5c245f",
+      "Reacher": "d2f2139468177c160cdb7f158288ce63756ae351b2f1b7b328bc8ccf4ed84da3",
+      "TwoRoom": "c75717766131c3605d86740320e06ec734425aa05058af2055c858b4e3549873",
       "checkpoint_Cube_0.0": "03cc460cf9721fa1779b9ccb7f5bab3d8fafa5edd4e7fd2392dea23d63d70949",
       "checkpoint_Cube_0.01": "30915ae77cd84da5546047db4adf8ffc13296245de8484cd80bc79ba8fea3615",
       "checkpoint_Cube_0.02": "fcac5983be242400197a3bf6c0bdd1215a20e6aa5c58c496b38e81eaa2344e85",
@@ -92,7 +92,7 @@
       "checkpoint_TwoRoom_0.07": "cbb9b77266b508470dbcadf8e473c636d659fcad88285f2582658d3b78a72d4e",
       "checkpoint_TwoRoom_0.08": "95a8f2fffe35eda283c48c3bd830535e0b4236fbbe5ad2d92ab63901a50ad223",
       "protocol": "edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21",
-      "reference_atr": "1f5f0db79ed8a5dea9c37338e427d21de89bc4cdc15cd300995bab26a778b68f"
+      "reference_atr": "6b2820506bfdb1a491ab980dc603be7889a6bff622e0bab2b28d2ed1d7de1b3d"
     },
     "source_metadata": {
       "Cube": {
@@ -198,7 +198,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -255,7 +255,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -312,7 +312,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -369,7 +369,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -554,7 +554,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -611,7 +611,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -668,7 +668,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -725,7 +725,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -910,7 +910,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -967,7 +967,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -1024,7 +1024,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -1081,7 +1081,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -1266,7 +1266,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -1323,7 +1323,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -1380,7 +1380,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -1437,7 +1437,7 @@
               "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
               "missing_rows": [],
               "model_roots": [
-                "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms"
+                "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms"
               ],
               "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
               "protocol": {
@@ -1525,42 +1525,42 @@
       "PushT": "paper1/results/remediation_phase2_external_sources/pldm_canonical/smpr_pusht_v2.json",
       "Reacher": "paper1/results/remediation_phase2_external_sources/pldm_canonical/smpr_reacher_v2.json",
       "TwoRoom": "paper1/results/remediation_phase2_external_sources/pldm_canonical/smpr_tworoom_v2.json",
-      "checkpoint_Cube_0.0": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_baseline/cube_pldm_baseline_epoch_10_object.ckpt",
-      "checkpoint_Cube_0.01": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to001_p1/cube_pldm_noise_0to001_p1_epoch_10_object.ckpt",
-      "checkpoint_Cube_0.02": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to002_p1/cube_pldm_noise_0to002_p1_epoch_10_object.ckpt",
-      "checkpoint_Cube_0.03": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to003_p1/cube_pldm_noise_0to003_p1_epoch_10_object.ckpt",
-      "checkpoint_Cube_0.04": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to004_p1/cube_pldm_noise_0to004_p1_epoch_10_object.ckpt",
-      "checkpoint_Cube_0.05": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to005_p1/cube_pldm_noise_0to005_p1_epoch_10_object.ckpt",
-      "checkpoint_Cube_0.06": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to006_p1/cube_pldm_noise_0to006_p1_epoch_10_object.ckpt",
-      "checkpoint_Cube_0.07": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to007_p1/cube_pldm_noise_0to007_p1_epoch_10_object.ckpt",
-      "checkpoint_Cube_0.08": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to008_p1/cube_pldm_noise_0to008_p1_epoch_10_object.ckpt",
-      "checkpoint_PushT_0.0": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_baseline/pusht_pldm_baseline_epoch_10_object.ckpt",
-      "checkpoint_PushT_0.01": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to001_p1/pusht_pldm_noise_0to001_p1_epoch_10_object.ckpt",
-      "checkpoint_PushT_0.02": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to002_p1/pusht_pldm_noise_0to002_p1_epoch_10_object.ckpt",
-      "checkpoint_PushT_0.03": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to003_p1/pusht_pldm_noise_0to003_p1_epoch_10_object.ckpt",
-      "checkpoint_PushT_0.04": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to004_p1/pusht_pldm_noise_0to004_p1_epoch_10_object.ckpt",
-      "checkpoint_PushT_0.05": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to005_p1/pusht_pldm_noise_0to005_p1_epoch_10_object.ckpt",
-      "checkpoint_PushT_0.06": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to006_p1/pusht_pldm_noise_0to006_p1_epoch_10_object.ckpt",
-      "checkpoint_PushT_0.07": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to007_p1/pusht_pldm_noise_0to007_p1_epoch_10_object.ckpt",
-      "checkpoint_PushT_0.08": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to008_p1/pusht_pldm_noise_0to008_p1_epoch_10_object.ckpt",
-      "checkpoint_Reacher_0.0": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_baseline/reacher_pldm_baseline_epoch_10_object.ckpt",
-      "checkpoint_Reacher_0.01": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to001_p1/reacher_pldm_noise_0to001_p1_epoch_10_object.ckpt",
-      "checkpoint_Reacher_0.02": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to002_p1/reacher_pldm_noise_0to002_p1_epoch_10_object.ckpt",
-      "checkpoint_Reacher_0.03": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to003_p1/reacher_pldm_noise_0to003_p1_epoch_10_object.ckpt",
-      "checkpoint_Reacher_0.04": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to004_p1/reacher_pldm_noise_0to004_p1_20260522_epoch_10_object.ckpt",
-      "checkpoint_Reacher_0.05": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to005_p1/reacher_pldm_noise_0to005_p1_epoch_10_object.ckpt",
-      "checkpoint_Reacher_0.06": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to006_p1/reacher_pldm_noise_0to006_p1_epoch_10_object.ckpt",
-      "checkpoint_Reacher_0.07": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to007_p1/reacher_pldm_noise_0to007_p1_epoch_10_object.ckpt",
-      "checkpoint_Reacher_0.08": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to008_p1/reacher_pldm_noise_0to008_p1_epoch_10_object.ckpt",
-      "checkpoint_TwoRoom_0.0": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_baseline/tworoom_pldm_baseline_20260522_epoch_10_object.ckpt",
-      "checkpoint_TwoRoom_0.01": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to001_p1/tworoom_pldm_noise_0to001_p1_epoch_10_object.ckpt",
-      "checkpoint_TwoRoom_0.02": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to002_p1/tworoom_pldm_noise_0to002_p1_epoch_10_object.ckpt",
-      "checkpoint_TwoRoom_0.03": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to003_p1/tworoom_pldm_noise_0to003_p1_epoch_10_object.ckpt",
-      "checkpoint_TwoRoom_0.04": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to004_p1/tworoom_pldm_noise_0to004_p1_epoch_10_object.ckpt",
-      "checkpoint_TwoRoom_0.05": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to005_p1/tworoom_pldm_noise_0to005_p1_epoch_10_object.ckpt",
-      "checkpoint_TwoRoom_0.06": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to006_p1/tworoom_pldm_noise_0to006_p1_epoch_10_object.ckpt",
-      "checkpoint_TwoRoom_0.07": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to007_p1/tworoom_pldm_noise_0to007_p1_epoch_10_object.ckpt",
-      "checkpoint_TwoRoom_0.08": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to008_p1/tworoom_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+      "checkpoint_Cube_0.0": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_baseline/cube_pldm_baseline_epoch_10_object.ckpt",
+      "checkpoint_Cube_0.01": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to001_p1/cube_pldm_noise_0to001_p1_epoch_10_object.ckpt",
+      "checkpoint_Cube_0.02": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to002_p1/cube_pldm_noise_0to002_p1_epoch_10_object.ckpt",
+      "checkpoint_Cube_0.03": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to003_p1/cube_pldm_noise_0to003_p1_epoch_10_object.ckpt",
+      "checkpoint_Cube_0.04": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to004_p1/cube_pldm_noise_0to004_p1_epoch_10_object.ckpt",
+      "checkpoint_Cube_0.05": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to005_p1/cube_pldm_noise_0to005_p1_epoch_10_object.ckpt",
+      "checkpoint_Cube_0.06": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to006_p1/cube_pldm_noise_0to006_p1_epoch_10_object.ckpt",
+      "checkpoint_Cube_0.07": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to007_p1/cube_pldm_noise_0to007_p1_epoch_10_object.ckpt",
+      "checkpoint_Cube_0.08": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to008_p1/cube_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+      "checkpoint_PushT_0.0": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_baseline/pusht_pldm_baseline_epoch_10_object.ckpt",
+      "checkpoint_PushT_0.01": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to001_p1/pusht_pldm_noise_0to001_p1_epoch_10_object.ckpt",
+      "checkpoint_PushT_0.02": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to002_p1/pusht_pldm_noise_0to002_p1_epoch_10_object.ckpt",
+      "checkpoint_PushT_0.03": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to003_p1/pusht_pldm_noise_0to003_p1_epoch_10_object.ckpt",
+      "checkpoint_PushT_0.04": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to004_p1/pusht_pldm_noise_0to004_p1_epoch_10_object.ckpt",
+      "checkpoint_PushT_0.05": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to005_p1/pusht_pldm_noise_0to005_p1_epoch_10_object.ckpt",
+      "checkpoint_PushT_0.06": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to006_p1/pusht_pldm_noise_0to006_p1_epoch_10_object.ckpt",
+      "checkpoint_PushT_0.07": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to007_p1/pusht_pldm_noise_0to007_p1_epoch_10_object.ckpt",
+      "checkpoint_PushT_0.08": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to008_p1/pusht_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+      "checkpoint_Reacher_0.0": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_baseline/reacher_pldm_baseline_epoch_10_object.ckpt",
+      "checkpoint_Reacher_0.01": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to001_p1/reacher_pldm_noise_0to001_p1_epoch_10_object.ckpt",
+      "checkpoint_Reacher_0.02": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to002_p1/reacher_pldm_noise_0to002_p1_epoch_10_object.ckpt",
+      "checkpoint_Reacher_0.03": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to003_p1/reacher_pldm_noise_0to003_p1_epoch_10_object.ckpt",
+      "checkpoint_Reacher_0.04": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to004_p1/reacher_pldm_noise_0to004_p1_20260522_epoch_10_object.ckpt",
+      "checkpoint_Reacher_0.05": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to005_p1/reacher_pldm_noise_0to005_p1_epoch_10_object.ckpt",
+      "checkpoint_Reacher_0.06": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to006_p1/reacher_pldm_noise_0to006_p1_epoch_10_object.ckpt",
+      "checkpoint_Reacher_0.07": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to007_p1/reacher_pldm_noise_0to007_p1_epoch_10_object.ckpt",
+      "checkpoint_Reacher_0.08": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to008_p1/reacher_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+      "checkpoint_TwoRoom_0.0": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_baseline/tworoom_pldm_baseline_20260522_epoch_10_object.ckpt",
+      "checkpoint_TwoRoom_0.01": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to001_p1/tworoom_pldm_noise_0to001_p1_epoch_10_object.ckpt",
+      "checkpoint_TwoRoom_0.02": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to002_p1/tworoom_pldm_noise_0to002_p1_epoch_10_object.ckpt",
+      "checkpoint_TwoRoom_0.03": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to003_p1/tworoom_pldm_noise_0to003_p1_epoch_10_object.ckpt",
+      "checkpoint_TwoRoom_0.04": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to004_p1/tworoom_pldm_noise_0to004_p1_epoch_10_object.ckpt",
+      "checkpoint_TwoRoom_0.05": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to005_p1/tworoom_pldm_noise_0to005_p1_epoch_10_object.ckpt",
+      "checkpoint_TwoRoom_0.06": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to006_p1/tworoom_pldm_noise_0to006_p1_epoch_10_object.ckpt",
+      "checkpoint_TwoRoom_0.07": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to007_p1/tworoom_pldm_noise_0to007_p1_epoch_10_object.ckpt",
+      "checkpoint_TwoRoom_0.08": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to008_p1/tworoom_pldm_noise_0to008_p1_epoch_10_object.ckpt",
       "protocol": "paper1/config/frozen_diagnostic_protocol_v1.json",
       "reference_atr": "paper1/results/remediation_phase2_external_sources/pldm_canonical/acpc_horizon_v2_checkpoint_bound.json"
     },
@@ -1581,7 +1581,7 @@
       "checkpoint_sha256": "e4642da78e64be0d8f66e51676430c6d919bdc7b78aca05d9deb95f3421f9ec6",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_baseline/tworoom_pldm_baseline_20260522_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_baseline/tworoom_pldm_baseline_20260522_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -1609,7 +1609,7 @@
       "checkpoint_sha256": "0f321d2e47211390b367fb21e1180a85dd60e8ccf6112c8ce60b53fdee3969f4",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to001_p1/tworoom_pldm_noise_0to001_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to001_p1/tworoom_pldm_noise_0to001_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -1637,7 +1637,7 @@
       "checkpoint_sha256": "9d246db002b8c1ae736a3a23609c6fd92d2280a265aa62873a8c3c3f909f04c6",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to002_p1/tworoom_pldm_noise_0to002_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to002_p1/tworoom_pldm_noise_0to002_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -1665,7 +1665,7 @@
       "checkpoint_sha256": "07d6def3a9a29f54d95c0b95addfb6596447d368416d02f0206697a00ce571dc",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to003_p1/tworoom_pldm_noise_0to003_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to003_p1/tworoom_pldm_noise_0to003_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -1693,7 +1693,7 @@
       "checkpoint_sha256": "1af47655239353d0b334ca4844b3ad36a71e976aeb9f3d38a76bdf5b2f4c6343",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to004_p1/tworoom_pldm_noise_0to004_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to004_p1/tworoom_pldm_noise_0to004_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -1721,7 +1721,7 @@
       "checkpoint_sha256": "d54b1bc4cdf7a7bfbe15242c31d9d306d432fabb989621f827c4033066d3bdbe",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to005_p1/tworoom_pldm_noise_0to005_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to005_p1/tworoom_pldm_noise_0to005_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -1749,7 +1749,7 @@
       "checkpoint_sha256": "b215a6c22a541fb55926e8421dab33fed5f7b0a9fba40bdb2172d43d95d264c0",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to006_p1/tworoom_pldm_noise_0to006_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to006_p1/tworoom_pldm_noise_0to006_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -1777,7 +1777,7 @@
       "checkpoint_sha256": "cbb9b77266b508470dbcadf8e473c636d659fcad88285f2582658d3b78a72d4e",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to007_p1/tworoom_pldm_noise_0to007_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to007_p1/tworoom_pldm_noise_0to007_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -1805,7 +1805,7 @@
       "checkpoint_sha256": "95a8f2fffe35eda283c48c3bd830535e0b4236fbbe5ad2d92ab63901a50ad223",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to008_p1/tworoom_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms/ckpt/tworoom_pldm_noise_0to008_p1/tworoom_pldm_noise_0to008_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -1833,7 +1833,7 @@
       "checkpoint_sha256": "43ba5c201115c420cc90fe00935bb3dfc69afeb02478b28fec9256537500a3e9",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_baseline/pusht_pldm_baseline_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_baseline/pusht_pldm_baseline_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -1861,7 +1861,7 @@
       "checkpoint_sha256": "7428d7d21e628e43097c3d45d3b6bf36d62c5779b5d4a51030ff9414fff6e349",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to001_p1/pusht_pldm_noise_0to001_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to001_p1/pusht_pldm_noise_0to001_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -1889,7 +1889,7 @@
       "checkpoint_sha256": "d23ee1e0169749654211a034baa84b3369b9c506676090251f57a21c747da39c",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to002_p1/pusht_pldm_noise_0to002_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to002_p1/pusht_pldm_noise_0to002_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -1917,7 +1917,7 @@
       "checkpoint_sha256": "45b673eadf6d7fc1157975790c65b68086c7accf3d343522051116b8e48891f1",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to003_p1/pusht_pldm_noise_0to003_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to003_p1/pusht_pldm_noise_0to003_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -1945,7 +1945,7 @@
       "checkpoint_sha256": "3214ed1642f3d5c0fc02ac5cd50a8b04627fae349c87f54c6e46df52fb4eae12",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to004_p1/pusht_pldm_noise_0to004_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to004_p1/pusht_pldm_noise_0to004_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -1973,7 +1973,7 @@
       "checkpoint_sha256": "37367290b9795fadfb1c1c71aabb8fc8a6aacef4779c50496c9d3c6c9de6cfd5",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to005_p1/pusht_pldm_noise_0to005_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to005_p1/pusht_pldm_noise_0to005_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2001,7 +2001,7 @@
       "checkpoint_sha256": "6447e0235eb8ea2daf918ba29622c0328b3c2e387bba69132a05334d793c4f90",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to006_p1/pusht_pldm_noise_0to006_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to006_p1/pusht_pldm_noise_0to006_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2029,7 +2029,7 @@
       "checkpoint_sha256": "443f11a8180a3f5e87ccdc0277480a314d7eede261511e6e3e0caf7f88576d12",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to007_p1/pusht_pldm_noise_0to007_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to007_p1/pusht_pldm_noise_0to007_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2057,7 +2057,7 @@
       "checkpoint_sha256": "74b2c86ec307c3cc948819e2a3ccd25b24b31f7602d665bb5b6aa47a42a55525",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to008_p1/pusht_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht/ckpt/pusht_pldm_noise_0to008_p1/pusht_pldm_noise_0to008_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2085,7 +2085,7 @@
       "checkpoint_sha256": "bc2f9afa600439aaee82802463c6a922fe5167dc702b15f3acdece9af451e5e4",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_baseline/reacher_pldm_baseline_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_baseline/reacher_pldm_baseline_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2113,7 +2113,7 @@
       "checkpoint_sha256": "8831c45483fccc03dd4a974221512999341d5464d40b50dd6e002c1d1bc532eb",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to001_p1/reacher_pldm_noise_0to001_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to001_p1/reacher_pldm_noise_0to001_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2141,7 +2141,7 @@
       "checkpoint_sha256": "b92caa6362360a0dafcbbbaf76b6698f558ad2e29831200ef41848f2c26941e4",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to002_p1/reacher_pldm_noise_0to002_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to002_p1/reacher_pldm_noise_0to002_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2169,7 +2169,7 @@
       "checkpoint_sha256": "8f66af0b4b333ad5926a98c6051c9f1775497fb727d980ca3338f5d802140198",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to003_p1/reacher_pldm_noise_0to003_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to003_p1/reacher_pldm_noise_0to003_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2197,7 +2197,7 @@
       "checkpoint_sha256": "823ff799000b847112dfa3759f5cf7e776c5f2cbbadf7833e66de3e6ff8fd81c",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to004_p1/reacher_pldm_noise_0to004_p1_20260522_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to004_p1/reacher_pldm_noise_0to004_p1_20260522_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2225,7 +2225,7 @@
       "checkpoint_sha256": "c73e6cbc7a5b00e9a3219038b95d10a98eca1c42a6474a79f8c17c752fad00c6",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to005_p1/reacher_pldm_noise_0to005_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to005_p1/reacher_pldm_noise_0to005_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2253,7 +2253,7 @@
       "checkpoint_sha256": "634aa8d00b9334444c154c29acf8cb351443643508b1471b9abd111308dc5066",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to006_p1/reacher_pldm_noise_0to006_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to006_p1/reacher_pldm_noise_0to006_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2281,7 +2281,7 @@
       "checkpoint_sha256": "79d4f1f06a7ac353005b0b5f3a0380eb8547ba5db225e5ce91be58e7792dd847",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to007_p1/reacher_pldm_noise_0to007_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to007_p1/reacher_pldm_noise_0to007_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2309,7 +2309,7 @@
       "checkpoint_sha256": "53ac0a3949ceac55bca170e5936ae2a447e0e85ad171d734fd1498be2b9f61ce",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to008_p1/reacher_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher/ckpt/reacher_pldm_noise_0to008_p1/reacher_pldm_noise_0to008_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2337,7 +2337,7 @@
       "checkpoint_sha256": "03cc460cf9721fa1779b9ccb7f5bab3d8fafa5edd4e7fd2392dea23d63d70949",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_baseline/cube_pldm_baseline_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_baseline/cube_pldm_baseline_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2365,7 +2365,7 @@
       "checkpoint_sha256": "30915ae77cd84da5546047db4adf8ffc13296245de8484cd80bc79ba8fea3615",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to001_p1/cube_pldm_noise_0to001_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to001_p1/cube_pldm_noise_0to001_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2393,7 +2393,7 @@
       "checkpoint_sha256": "fcac5983be242400197a3bf6c0bdd1215a20e6aa5c58c496b38e81eaa2344e85",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to002_p1/cube_pldm_noise_0to002_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to002_p1/cube_pldm_noise_0to002_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2421,7 +2421,7 @@
       "checkpoint_sha256": "485e7ca5353fe61538302e611a9c9ea6f5d0aed4d9dfa4d5adf49e0022768bf4",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to003_p1/cube_pldm_noise_0to003_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to003_p1/cube_pldm_noise_0to003_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2449,7 +2449,7 @@
       "checkpoint_sha256": "30b1ec74a8a17893d0f65aef3acab5464d4b6b942c9de8b79960751349da81b6",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to004_p1/cube_pldm_noise_0to004_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to004_p1/cube_pldm_noise_0to004_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2477,7 +2477,7 @@
       "checkpoint_sha256": "79e65e432e3355e93bfe2e31dd9a5d04d776fe7e2fec48a18972560261e3dfe1",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to005_p1/cube_pldm_noise_0to005_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to005_p1/cube_pldm_noise_0to005_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2505,7 +2505,7 @@
       "checkpoint_sha256": "1a2e37d443bc01174ded8898b9854a0ede8c026c2b3f09beaf237867883241b6",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to006_p1/cube_pldm_noise_0to006_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to006_p1/cube_pldm_noise_0to006_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2533,7 +2533,7 @@
       "checkpoint_sha256": "01044e6a3a504a863f8a9850f1ba889b239ea7665fc88a4ce4600e7f4f6276fd",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to007_p1/cube_pldm_noise_0to007_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to007_p1/cube_pldm_noise_0to007_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,
@@ -2561,7 +2561,7 @@
       "checkpoint_sha256": "d32f09ead199e86ff315db8da82d7435bb3cab4ad024f4151841036392eebed5",
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to008_p1/cube_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to008_p1/cube_pldm_noise_0to008_p1_epoch_10_object.ckpt",
       "n_sequences": 100,
       "noise_std": 0.08,
       "num_noise_draws": 5,

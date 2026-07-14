@@ -222,11 +222,14 @@ def _partition_id(source: tuple[str, ...]) -> str:
     return f"src{len(source)}_{slug}"
 
 
-def _validate_input(rows: list[dict[str, Any]]) -> None:
+def _validate_input(
+    rows: list[dict[str, Any]], expected_seeds: Iterable[int] = SEEDS
+) -> None:
+    seeds = tuple(int(seed) for seed in expected_seeds)
     expected = {
         (task, seed, f"{rho / 100:.2f}")
         for task in TASKS
-        for seed in SEEDS
+        for seed in seeds
         for rho in range(9)
     }
     observed = {
@@ -269,8 +272,11 @@ def _partition_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 def run_all_subsets(
     rows: list[dict[str, Any]],
+    *,
+    expected_seeds: Iterable[int] = SEEDS,
 ) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, Any]]:
-    _validate_input(rows)
+    seeds = tuple(int(seed) for seed in expected_seeds)
+    _validate_input(rows, seeds)
     all_details: list[dict[str, Any]] = []
     split_params: list[dict[str, Any]] = []
     partition_summaries: list[dict[str, Any]] = []
@@ -384,7 +390,7 @@ def run_all_subsets(
         "schema_version": "paper1-cross-task-selective-rule-params-1.0",
         "rule": "ATR_rel <= tau_atr AND SMPR >= tau_smpr",
         "task_order": TASKS,
-        "training_seeds": SEEDS,
+        "training_seeds": seeds,
         "checkpoint_grid": [f"{rho / 100:.2f}" for rho in range(9)],
         "candidate_grid": {"tau_atr": TAU_ATR, "tau_smpr": TAU_SMPR},
         "selection_objective_order": [

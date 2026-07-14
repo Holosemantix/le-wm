@@ -507,40 +507,22 @@ TEST = LeWM seeds3073/3074
 
 若 strict frozen gate 明显差于现有 cross-validation，正文必须使用 strict 结果；原表降为 sensitivity appendix。
 
-## 6.2 PLDM Gaussian model-family transfer
+## 6.2 PLDM Gaussian architecture-portability audit
 
-扩展或重构诊断工具：
+当前分析保留完整的 PLDM four-task、nine-checkpoint 观测网格，但不再保留旧的 absolute frozen-gate estimand。ATR 在 PLDM family 内按 task-relative reference 归一化，并分别报告：
 
-- `tools/paper1_semantic_margin.py` 支持 `--method LeWM|PLDM`；
-- 支持显式 `--evals`/`--manifest`；
-- 不硬编码 `lewm_seed*.json`；
-- 使用 canonical horizon-v2 radius；
-- 使用同一 embedding/cost space policy 和 normalization contract；
-- frozen gate 直接应用。
+- 使用其余三个 PLDM tasks 校准后在 held-out task 上评估；
+- 将相应 LeWM split 的 task-relative decision rule 应用于 PLDM；
+- 全部 task-level failure，不假设 LeWM 与 PLDM 共享 raw numerical threshold。
 
 输出：
 
 ```text
-paper1/results/external_validation/pldm_frozen_rows_v1.csv
-paper1/results/external_validation/pldm_frozen_summary_v1.json
-paper1/tables/table_pldm_frozen_validation.tex
-assets/paper1_figs/fig_pldm_frozen_validation.png
+paper1/results/external_validation/pldm_frozen_rows_v2.csv
+paper1/tables/table_pldm_architecture_portability.tex
 ```
 
-V1 成功标准：
-
-1. 不重新调 threshold；
-2. 至少 3/4 tasks 的 onset error 在两格以内，或 row-level calibration 仍有一致方向；
-3. joint diagnostic 相比 encoder/H1/action-shuffled checkpoint-level baseline 有增量；
-4. 全部失败任务公开；
-5. 只称 one-training-family model transfer。
-
-V2 成功标准：
-
-- protocol_v1 对两个新 PLDM training seeds 无重调应用；
-- 三 training seeds 的 endpoint/intermediate direction 基本一致；
-- 若配置 A 完成，报告 PLDM training-seed mean/std 和 per-seed onset；
-- 若配置 B 完成，不声称三 seed full-sweep onset，只报告 canonical full sweep + prospective point replication。
+该 panel 只回答诊断理论与分析流程能否跨 architecture 使用；不声称跨模型统一阈值，也不把单个独立训练的 PLDM family 写成实验缺陷。
 
 ## 6.3 fixed-`rho` cross-stressor discrimination
 
@@ -1693,7 +1675,8 @@ paper1/results/diagnostic_baselines/gaussian_rho_confound_rows.csv
 paper1/results/diagnostic_baselines/gaussian_rho_confound_summary.json
 paper1/results/external_validation/cross_stressor_fixed_rho_rows.csv
 paper1/results/external_validation/cross_stressor_fixed_rho_summary.json
-paper1/results/external_validation/pldm_frozen_rows_v1.csv
+paper1/results/external_validation/pldm_frozen_rows_v2.csv
+paper1/tables/table_pldm_architecture_portability.tex
 paper1/results/fixed_pool_candidatewise_certificate.csv
 paper1/results/fixed_pool_risk_coverage.csv
 ```
@@ -2087,7 +2070,7 @@ Phase 0--5 的技术工作已经完成；Phase 6--7 按本计划的先后关系�
 
 - Phase 0：checkpoint/loadability、target-view、blur/resize、smoke runtime/GPU memory 和 missing/error contracts 已审计；最终无残留 `eval.py`、diagnostic、pytest 或 LaTeX 进程。
 - Phase 1：canonical horizon-v2 metric、matched weighted-stacked JVP map、两种 kappa 定义和 synthetic tests 已完成。完整 JVP v2 为 36 checkpoint rows / 288 probes，全部 `ok`。
-- Phase 2：CAL/E1/E2/E3/E4 已完成并保持 frozen no-retuning。E1 balanced accuracy/AUPRC 为 `0.945/0.965`；E2 为 `0.684/0.541`；E3 fixed-rho 为 `0.563/0.737` 且 recall `0.375`；E4 保留 target-view failure 和 full-sequence false-pass boundary。
+- Phase 2：CAL/E1/E2/E3/E4 已完成。E1 balanced accuracy/AUPRC 为 `0.945/0.965`；E2 已改为当前 task-relative PLDM architecture-portability audit（PLDM-local BA/precision/recall 为 `0.836/0.789/0.882`）；E3 fixed-rho 为 `0.563/0.737` 且 recall `0.375`；E4 保留 target-view failure 和 full-sequence false-pass boundary。
 - Phase 3：272-row matched baselines、Gaussian-only rho confound、108-checkpoint/10,800-history sharp certificate、K sensitivity、risk--coverage、12-block bootstrap、912-row SMPR sensitivity、44-row controls 和 TwoRoom+PushT four-row state-derived MVE 已完成。结果要求删除 long-horizon/correct-action necessity，并将 SMPR 收缩到 proxy-level guard correctness。
 - Phase 4：标题、摘要、contributions、theory/probability-space、direct comparison、六篇 2026 references、ATM feasibility boundary、图表和 captions 已按真实结果重写。
 - Phase 5：`DATA_MANIFEST.md`、diagnostic manifest builder、release notes、runner、checker、main/blind/arXiv builds 已更新。旧 monolithic checkpoint path 已退休；所有 checkpoint shards 串行、带 timeout、默认单 GPU/2 native threads、完成 shard 可校验续跑。默认 Paper1 runner 为 CPU-only；通用 `run_trainer.sh` 另以 `eval_max_concurrency=1` 为默认并发上限，并保留显式提高能力。

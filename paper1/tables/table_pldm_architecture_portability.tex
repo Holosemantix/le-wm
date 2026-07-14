@@ -1,0 +1,15 @@
+\begin{table}[H]
+\centering
+\caption{PLDM architecture-portability check on the complete four-task, nine-checkpoint Gaussian sweep. Both rows use the current task-relative ATR score: thresholds are selected on the other three PLDM tasks or transferred from the corresponding LeWM split. Metrics pool all 36 evaluation rows. Raw numerical thresholds are not assumed to be shared across model families.}
+\label{tab:pldm-architecture-portability}
+\scriptsize
+\setlength{\tabcolsep}{4.0pt}
+\begin{tabular}{lrrrrr}
+\toprule
+Calibration & BA & Precision & Recall & False pass & False miss \\
+\midrule
+PLDM-local, other three tasks & 0.836 & 0.789 & 0.882 & 4 & 2 \\
+LeWM-source reference, PLDM-anchored & 0.807 & 0.778 & 0.824 & 4 & 3 \\
+\bottomrule
+\end{tabular}
+\end{table}

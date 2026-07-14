@@ -7,6 +7,7 @@ from pathlib import Path
 from paper1.scripts.build_acpc_submission_assets import (
     build_absolute_table,
     build_increment_table,
+    build_pldm_table,
     build_sweep_table,
 )
 
@@ -15,27 +16,51 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def _planner_summary() -> dict:
-    path = ROOT / "paper1/results/acpc_planner_stability_v2/summary.json"
+    path = ROOT / "paper1/results/acpc_planner_stability_v4/summary.json"
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def test_submission_planner_tables_are_bound_to_validated_v2_summary() -> None:
+def test_submission_planner_tables_are_bound_to_validated_three_seed_summary() -> None:
     summary = _planner_summary()
 
-    assert summary["validated_shard_count"] == 24
+    assert summary["validated_shard_count"] == 72
+    assert summary["training_seeds"] == [3072, 3073, 3074]
     assert summary["invariants"]["pass"] is True
 
     increment = build_increment_table(summary)
-    assert r"\textbf{9.5\%}" in increment
-    assert r"\textbf{12.9\%}" in increment
-    assert "0.8\\%" in increment
-    assert "3/4" in increment
-    assert "4/4" in increment
+    assert r"7.9 $\pm$ 1.4\%" in increment
+    assert r"15.2 $\pm$ 2.0\%" in increment
+    assert r"1.1 $\pm$ 0.5\%" in increment
+    assert r"6.6--9.5\% & 8/12" in increment
+    assert r"12.9--16.9\% & 12/12" in increment
+    assert r"0.8--1.7\% & 10/12" in increment
+    assert "seed 3072" not in increment
+    assert "Three-seed" not in increment
 
     absolute = build_absolute_table(summary)
-    assert "TwoRoom & 0.16 & 0.91 & 192.38 & 5.31" in absolute
-    assert "Equal-task mean & 0.12 & 0.93 & 208.86 & 2.85 & 218.69 & 1.01" in absolute
+    assert "TwoRoom & 0.13$\\pm$0.03 & 0.93$\\pm$0.02" in absolute
+    assert (
+        "Equal-task mean & 0.09$\\pm$0.03 & 0.93$\\pm$0.01 & "
+        "227.04$\\pm$16.92 & 3.64$\\pm$0.68"
+    ) in absolute
     assert "not closed-loop return" in absolute
+
+
+def test_pldm_table_uses_the_current_task_relative_protocol() -> None:
+    rows_path = ROOT / "paper1/results/external_validation/pldm_frozen_rows_v2.csv"
+    with rows_path.open(newline="", encoding="utf-8") as stream:
+        rows = list(csv.DictReader(stream))
+    cross_task = json.loads(
+        (
+            ROOT / "paper1/results/cross_task_atr_smpr_all_subsets_summary_v1.json"
+        ).read_text(encoding="utf-8")
+    )
+
+    table = build_pldm_table(rows, cross_task)
+    assert "complete four-task, nine-checkpoint Gaussian sweep" in table
+    assert "PLDM-local, other three tasks & 0.836 & 0.789 & 0.882 & 4 & 2" in table
+    assert "LeWM-source reference, PLDM-anchored & 0.807 & 0.778 & 0.824 & 4 & 3" in table
+    assert "Raw numerical thresholds are not assumed" in table
 
 
 def test_submission_full_sweep_table_keeps_all_tasks_and_nine_levels() -> None:

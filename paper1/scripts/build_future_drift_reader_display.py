@@ -172,11 +172,11 @@ def _plot(summaries: list[dict[str, Any]]) -> None:
         ("reduction_vs_control", 1.0, "vs. best 8-step control\n(zeroed or shuffled actions)"),
         ("reduction_vs_one_step", 0.0, "vs. 1-step action-matched ACPC"),
     ]
-    colors = {3072: "#0072B2", 3073: "#E69F00", 3074: "#009E73"}
+    colors = {3072: "#4C78A8", 3073: "#4C78A8", 3074: "#4C78A8"}
     offsets = {3072: -0.10, 3073: 0.0, 3074: 0.10}
     for key, y, _ in comparisons:
         values = []
-        for row in summaries:
+        for row_index, row in enumerate(summaries):
             value = 100 * row[key]
             values.append(value)
             ax.scatter(
@@ -187,7 +187,7 @@ def _plot(summaries: list[dict[str, Any]]) -> None:
                 edgecolor="white",
                 linewidth=0.5,
                 zorder=3,
-                label=f"seed {row['training_seed']}" if y == 1 else None,
+                label="training runs" if y == 1 and row_index == 0 else None,
             )
             ax.text(
                 value + 0.9,
@@ -206,7 +206,7 @@ def _plot(summaries: list[dict[str, Any]]) -> None:
             edgecolor="white",
             linewidth=0.6,
             zorder=4,
-            label="three-seed mean" if y == 1 else None,
+            label="mean" if y == 1 else None,
         )
     ax.axvline(0, color="#777777", linewidth=0.8)
     ax.set_xlim(0, 70)

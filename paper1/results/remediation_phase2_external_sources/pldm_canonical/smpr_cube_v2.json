@@ -102,7 +102,7 @@
           "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
           "missing_rows": [],
           "model_roots": [
-            "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube"
+            "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube"
           ],
           "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
           "protocol": {
@@ -159,7 +159,7 @@
           "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
           "missing_rows": [],
           "model_roots": [
-            "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht"
+            "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-pusht"
           ],
           "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
           "protocol": {
@@ -216,7 +216,7 @@
           "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
           "missing_rows": [],
           "model_roots": [
-            "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher"
+            "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-reacher"
           ],
           "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
           "protocol": {
@@ -273,7 +273,7 @@
           "metric_implementation_sha256": "96dcc017a6bddd630606aca6afeec6a65fb433877134e9dfc380a80fd8b9a48b",
           "missing_rows": [],
           "model_roots": [
-            "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms"
+            "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-tworooms"
           ],
           "note": "ADM uses an action-distance latent proxy; it is a Phase-0 diagnostic and should not be treated as a task-oracle result.",
           "protocol": {
@@ -491,10 +491,10 @@
       "local_state_quantile": 0.35,
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_baseline/cube_pldm_baseline_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_baseline/cube_pldm_baseline_epoch_10_object.ckpt",
       "model_load_time": 0.11658588983118534,
       "model_search_dirs": [
-        "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_baseline"
+        "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_baseline"
       ],
       "n_sequences": 100,
       "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_radius_quantile",
@@ -1042,7 +1042,7 @@
       ],
       "reference_atr_horizon_v2_q90": 1.6392087936401367,
       "rollout_horizon_actual": 8,
-      "run_path": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_baseline",
+      "run_path": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_baseline",
       "runtime_dependency_setup_time": 17.693023527041078,
       "same_state_radius_distribution": {
         "count": 100,
@@ -1883,7 +1883,7 @@
       "std_key": "0.0",
       "subdir": "cube_pldm_baseline",
       "task": "Cube",
-      "task_home": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
+      "task_home": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
       "timing_unit": "seconds",
       "training_family_id": "pldm_canonical_seed3072",
       "training_rho": 0.0,
@@ -2025,10 +2025,10 @@
       "local_state_quantile": 0.35,
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to001_p1/cube_pldm_noise_0to001_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to001_p1/cube_pldm_noise_0to001_p1_epoch_10_object.ckpt",
       "model_load_time": 0.1683817971497774,
       "model_search_dirs": [
-        "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to001_p1"
+        "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to001_p1"
       ],
       "n_sequences": 100,
       "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_radius_quantile",
@@ -2576,7 +2576,7 @@
       ],
       "reference_atr_horizon_v2_q90": 1.2004046440124512,
       "rollout_horizon_actual": 8,
-      "run_path": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to001_p1",
+      "run_path": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to001_p1",
       "runtime_dependency_setup_time": 9.955838322639465e-06,
       "same_state_radius_distribution": {
         "count": 100,
@@ -3417,7 +3417,7 @@
       "std_key": "0.01",
       "subdir": "cube_pldm_noise_0to001_p1",
       "task": "Cube",
-      "task_home": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
+      "task_home": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
       "timing_unit": "seconds",
       "training_family_id": "pldm_canonical_seed3072",
       "training_rho": 0.01,
@@ -3559,10 +3559,10 @@
       "local_state_quantile": 0.35,
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to002_p1/cube_pldm_noise_0to002_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to002_p1/cube_pldm_noise_0to002_p1_epoch_10_object.ckpt",
       "model_load_time": 0.16264561377465725,
       "model_search_dirs": [
-        "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to002_p1"
+        "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to002_p1"
       ],
       "n_sequences": 100,
       "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_radius_quantile",
@@ -4110,7 +4110,7 @@
       ],
       "reference_atr_horizon_v2_q90": 1.1312566995620728,
       "rollout_horizon_actual": 8,
-      "run_path": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to002_p1",
+      "run_path": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to002_p1",
       "runtime_dependency_setup_time": 1.0224059224128723e-05,
       "same_state_radius_distribution": {
         "count": 100,
@@ -4951,7 +4951,7 @@
       "std_key": "0.02",
       "subdir": "cube_pldm_noise_0to002_p1",
       "task": "Cube",
-      "task_home": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
+      "task_home": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
       "timing_unit": "seconds",
       "training_family_id": "pldm_canonical_seed3072",
       "training_rho": 0.02,
@@ -5093,10 +5093,10 @@
       "local_state_quantile": 0.35,
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to003_p1/cube_pldm_noise_0to003_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to003_p1/cube_pldm_noise_0to003_p1_epoch_10_object.ckpt",
       "model_load_time": 0.21050523966550827,
       "model_search_dirs": [
-        "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to003_p1"
+        "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to003_p1"
       ],
       "n_sequences": 100,
       "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_radius_quantile",
@@ -5644,7 +5644,7 @@
       ],
       "reference_atr_horizon_v2_q90": 0.4706001281738281,
       "rollout_horizon_actual": 8,
-      "run_path": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to003_p1",
+      "run_path": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to003_p1",
       "runtime_dependency_setup_time": 2.773292362689972e-05,
       "same_state_radius_distribution": {
         "count": 100,
@@ -6485,7 +6485,7 @@
       "std_key": "0.03",
       "subdir": "cube_pldm_noise_0to003_p1",
       "task": "Cube",
-      "task_home": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
+      "task_home": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
       "timing_unit": "seconds",
       "training_family_id": "pldm_canonical_seed3072",
       "training_rho": 0.03,
@@ -6627,10 +6627,10 @@
       "local_state_quantile": 0.35,
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to004_p1/cube_pldm_noise_0to004_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to004_p1/cube_pldm_noise_0to004_p1_epoch_10_object.ckpt",
       "model_load_time": 0.1469013337045908,
       "model_search_dirs": [
-        "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to004_p1"
+        "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to004_p1"
       ],
       "n_sequences": 100,
       "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_radius_quantile",
@@ -7178,7 +7178,7 @@
       ],
       "reference_atr_horizon_v2_q90": 0.3274262249469757,
       "rollout_horizon_actual": 8,
-      "run_path": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to004_p1",
+      "run_path": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to004_p1",
       "runtime_dependency_setup_time": 1.025572419166565e-05,
       "same_state_radius_distribution": {
         "count": 100,
@@ -8019,7 +8019,7 @@
       "std_key": "0.04",
       "subdir": "cube_pldm_noise_0to004_p1",
       "task": "Cube",
-      "task_home": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
+      "task_home": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
       "timing_unit": "seconds",
       "training_family_id": "pldm_canonical_seed3072",
       "training_rho": 0.04,
@@ -8161,10 +8161,10 @@
       "local_state_quantile": 0.35,
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to005_p1/cube_pldm_noise_0to005_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to005_p1/cube_pldm_noise_0to005_p1_epoch_10_object.ckpt",
       "model_load_time": 0.07965893484652042,
       "model_search_dirs": [
-        "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to005_p1"
+        "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to005_p1"
       ],
       "n_sequences": 100,
       "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_radius_quantile",
@@ -8712,7 +8712,7 @@
       ],
       "reference_atr_horizon_v2_q90": 0.14219564199447632,
       "rollout_horizon_actual": 8,
-      "run_path": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to005_p1",
+      "run_path": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to005_p1",
       "runtime_dependency_setup_time": 1.6907230019569397e-05,
       "same_state_radius_distribution": {
         "count": 100,
@@ -9553,7 +9553,7 @@
       "std_key": "0.05",
       "subdir": "cube_pldm_noise_0to005_p1",
       "task": "Cube",
-      "task_home": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
+      "task_home": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
       "timing_unit": "seconds",
       "training_family_id": "pldm_canonical_seed3072",
       "training_rho": 0.05,
@@ -9695,10 +9695,10 @@
       "local_state_quantile": 0.35,
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to006_p1/cube_pldm_noise_0to006_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to006_p1/cube_pldm_noise_0to006_p1_epoch_10_object.ckpt",
       "model_load_time": 0.12310917861759663,
       "model_search_dirs": [
-        "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to006_p1"
+        "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to006_p1"
       ],
       "n_sequences": 100,
       "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_radius_quantile",
@@ -10246,7 +10246,7 @@
       ],
       "reference_atr_horizon_v2_q90": 0.0889582559466362,
       "rollout_horizon_actual": 8,
-      "run_path": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to006_p1",
+      "run_path": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to006_p1",
       "runtime_dependency_setup_time": 9.272247552871704e-06,
       "same_state_radius_distribution": {
         "count": 100,
@@ -11087,7 +11087,7 @@
       "std_key": "0.06",
       "subdir": "cube_pldm_noise_0to006_p1",
       "task": "Cube",
-      "task_home": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
+      "task_home": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
       "timing_unit": "seconds",
       "training_family_id": "pldm_canonical_seed3072",
       "training_rho": 0.06,
@@ -11229,10 +11229,10 @@
       "local_state_quantile": 0.35,
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to007_p1/cube_pldm_noise_0to007_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to007_p1/cube_pldm_noise_0to007_p1_epoch_10_object.ckpt",
       "model_load_time": 0.11602139472961426,
       "model_search_dirs": [
-        "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to007_p1"
+        "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to007_p1"
       ],
       "n_sequences": 100,
       "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_radius_quantile",
@@ -11780,7 +11780,7 @@
       ],
       "reference_atr_horizon_v2_q90": 0.08258732408285141,
       "rollout_horizon_actual": 8,
-      "run_path": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to007_p1",
+      "run_path": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to007_p1",
       "runtime_dependency_setup_time": 9.216368198394775e-06,
       "same_state_radius_distribution": {
         "count": 100,
@@ -12621,7 +12621,7 @@
       "std_key": "0.07",
       "subdir": "cube_pldm_noise_0to007_p1",
       "task": "Cube",
-      "task_home": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
+      "task_home": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
       "timing_unit": "seconds",
       "training_family_id": "pldm_canonical_seed3072",
       "training_rho": 0.07,
@@ -12763,10 +12763,10 @@
       "local_state_quantile": 0.35,
       "margin_delta_norm": 0.1,
       "model_family": "PLDM",
-      "model_file": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to008_p1/cube_pldm_noise_0to008_p1_epoch_10_object.ckpt",
+      "model_file": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to008_p1/cube_pldm_noise_0to008_p1_epoch_10_object.ckpt",
       "model_load_time": 0.07195119000971317,
       "model_search_dirs": [
-        "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to008_p1"
+        "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to008_p1"
       ],
       "n_sequences": 100,
       "noise_draw_aggregation": "per_anchor_mean_then_checkpoint_radius_quantile",
@@ -13314,7 +13314,7 @@
       ],
       "reference_atr_horizon_v2_q90": 0.07380933314561844,
       "rollout_horizon_actual": 8,
-      "run_path": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to008_p1",
+      "run_path": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube/ckpt/cube_pldm_noise_0to008_p1",
       "runtime_dependency_setup_time": 5.990266799926758e-06,
       "same_state_radius_distribution": {
         "count": 100,
@@ -14155,7 +14155,7 @@
       "std_key": "0.08",
       "subdir": "cube_pldm_noise_0to008_p1",
       "task": "Cube",
-      "task_home": "/opt/workspace/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
+      "task_home": "/opt/huawei/explorer-env/dataset/ag_data/data/world_model/quentinll/lewm-cube",
       "timing_unit": "seconds",
       "training_family_id": "pldm_canonical_seed3072",
       "training_rho": 0.08,

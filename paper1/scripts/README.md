@@ -1,14 +1,15 @@
 # Paper1 Diagnostic Remediation Scripts
 
-Submission-facing scripts rebuild diagnostics and displays from the three
-independent training runs (seeds 3072/3073/3074). They do not train a new
-checkpoint. Separately named paired_multiseverity runners reuse fixed
-checkpoints, rerun bounded closed-loop evaluation, and never train.
+Submission-facing scripts rebuild diagnostics and displays from the LeWM
+training runs and the complete PLDM four-task Gaussian sweep. They do not
+train a new checkpoint. Separately named paired_multiseverity runners reuse
+fixed checkpoints, rerun bounded closed-loop evaluation, and never train.
 
 ## Current submission-facing ACPC bundle
 
 The submission mainline is rebuilt from the future-drift adjudications, the
-complete Gaussian sweep, the planner summary, and the 24-pair stressor file:
+complete LeWM and PLDM Gaussian sweeps, the planner summary, and the 24-pair
+LeWM stressor file:
 
 ```bash
 python -m paper1.scripts.build_future_drift_reader_display
@@ -18,23 +19,32 @@ python paper1/scripts/build_acpc_submission_assets.py
 bash paper1/build.sh
 ```
 
-The first three commands rebuild the symmetric three-seed future-drift
-display, all 14 cross-task threshold partitions, and the final-score-only
-blur/resize transfer analysis. The fourth writes the vector method and
-planner-evidence figures plus compact planner and full-sweep tables. These
-steps perform no model evaluation or training. The planner inputs are the 24
-validated shards under
-`paper1/results/acpc_planner_stability_v2/`; the numerical v2 wrapper changes
-only signed cost-gap algebra to float64 after the unchanged float32 model-cost
-path.
+The first three commands rebuild the future-drift display, all 14 LeWM
+cross-task threshold partitions, and the final-score-only blur/resize transfer
+analysis. The fourth writes the vector planner-evidence figure,
+compact planner/full-sweep tables, and the PLDM architecture-portability
+table. Its PLDM inputs are the complete 36-row frozen sweep at
+`paper1/results/external_validation/pldm_frozen_rows_v2.csv`; the score-aligned
+comparison also reads the current LeWM cross-task threshold summary. These
+steps perform no model evaluation or training.
+The planner input is the
+three-seed v4 summary: 24 validated seed-3074 reference shards under
+`paper1/results/acpc_planner_stability_v2/` plus 48 exact-protocol replication
+shards for seeds 3072/3073 under
+`paper1/results/acpc_planner_stability_v4/`. The numerical fixed-pool wrapper
+changes only signed cost-gap algebra to float64 after the unchanged float32
+model-cost path. The unexecuted v3 freeze was superseded before result
+generation because its source manifest omitted a transitive summarizer
+dependency; v4 binds that dependency without changing the experiment.
 
 To inspect or reproduce one frozen planner task queue:
 
 ```bash
 python paper1/scripts/run_acpc_planner_stability_shards.py plan \
   --task TwoRoom \
-  --protocol paper1/config/acpc_planner_stability_protocol_v2.json \
-  --device 0
+  --protocol paper1/config/acpc_planner_stability_protocol_v4.json \
+  --addendum paper1/config/acpc_planner_stability_execution_v4.json \
+  --device cuda:0
 ```
 
 The legacy three-pillar evidence generator is archived and is not part of the

@@ -11,9 +11,9 @@
     "script_path": "paper1/scripts/build_pldm_frozen_diagnostic_input.py",
     "script_sha256": "7360677dcea8c063ab46336ba55b72bedb1f59583af4efd6f64ba42ea1105958",
     "source_hashes": {
-      "atr_pldm_canonical": "1f5f0db79ed8a5dea9c37338e427d21de89bc4cdc15cd300995bab26a778b68f",
+      "atr_pldm_canonical": "6b2820506bfdb1a491ab980dc603be7889a6bff622e0bab2b28d2ed1d7de1b3d",
       "protocol": "edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21",
-      "smpr_pldm_canonical": "400523587f04cc4b05fce6c9aea9d9bbb5d02138951636a6074aa06f8d6b22b2"
+      "smpr_pldm_canonical": "887a33be367922375e540ed00a0a6f58f95853507d1ec9675828ae7f3f6c2d06"
     },
     "source_paths": {
       "atr_pldm_canonical": "paper1/results/remediation_phase2_external_sources/pldm_canonical/acpc_horizon_v2_checkpoint_bound.json",

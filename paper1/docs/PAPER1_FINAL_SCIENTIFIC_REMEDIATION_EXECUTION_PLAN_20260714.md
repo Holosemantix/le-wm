@@ -21,7 +21,8 @@
 3. 8-step action-matched disagreement 是否提供超出 encoder shift、1-step disagreement 和同为 8-step 的 action/time-destroyed controls 的信息；
 4. predictive stability 与 different-state separation 联合使用时，threshold portability 如何随 source-task 数量与组成变化；
 5. 该 selective diagnostic 与 fixed-pool cost drift、planner decision regret 是否有可审计联系；
-6. 在不针对 blur/resize 重新选择 threshold 时，最终 selective diagnostic 是否保留 relative checkpoint-ordering utility。
+6. 在不针对 blur/resize 重新选择 threshold 时，最终 selective diagnostic 是否保留 relative checkpoint-ordering utility；
+7. 同一 mathematical/analysis interface 能否在 PLDM 上完整实例化，同时把 model-family-specific calibration 与 architecture portability 区分开。
 
 ### 1.3 最终 claim hierarchy
 
@@ -31,8 +32,9 @@
 4. **Planner audit:** candidate-conditioned ACPC 与 evaluated fixed-pool cost drift、certificates 和 adaptive decision regret 对齐。
 5. **P2 cross-task transfer:** 对四个 tasks 的每个 nonempty proper source-task subset 选择 reference-normalized selective rule，并将 thresholds 原样应用到其余 tasks；完整覆盖 `1->3`、`2->2`、`3->1` 三个 source-coverage levels。
 6. **P3 stressor scope:** 每个 task 使用由另外三个 Gaussian tasks 选择的 final selective rule，在 fixed blur/resize pairs 上接受 scoped relative-transfer 检验。
+7. **Architecture portability:** 同一 ACPC/SMPR definitions、normalization、recovery rule 与 cross-task calibration algorithm 在完整 PLDM `4 tasks × 9 checkpoints` sweep 上执行；PLDM-local other-three-task calibration 与 score-aligned LeWM-threshold transfer 分开报告。
 
-最终稿不声称 universal absolute threshold、精确 training-run population variance、SMPR semantic validity proof、unconstrained adaptive-CEM guarantee、closed-loop robustness guarantee 或 cross-architecture transfer。
+最终稿不声称 universal raw threshold、精确 training-run population variance、SMPR semantic validity proof、unconstrained adaptive-CEM guarantee、closed-loop robustness guarantee、cross-family shared calibration 或 cross-architecture performance generalization。它只声称 mathematical/analysis interface 可在 LeWM 与 PLDM 上实例化。
 
 ## 2. Reader-facing metric dictionary
 
@@ -192,7 +194,7 @@ E ||Delta G||_2^2
 |---|---|---|
 | Gaussian sweep | task × training seed block | seed 内汇总后 task 等权；展示三-seed dispersion |
 | P1 future drift | training seed；task 为 seed 内等权单位 | 三 seed points、mean ± sample SD、每 seed 4-task pass count |
-| Planner audit | evaluated task/checkpoint/history block | 不外推 training-seed population |
+| Planner audit | training run；task 为 run 内等权单位 | 每 run 独立 leave-one-task-out；主文报告 mean ± sample SD、run range 与 task×run improving count，具体 seed IDs/gates 只留在 setup、appendix 或 provenance；history rows 为嵌套测量，不外推 training-run population |
 | P2 cross-task | evaluation task | 枚举 14 个有方向的 source/evaluation task partitions；先在每个 evaluation task 内汇总三个 seeds，再对四个 tasks 等权 |
 | Seed stability | evaluation training seed | appendix only |
 | P3 cross-stressor | task × training seed pair | blur/resize 同属一个 block；task 等权 |
@@ -393,7 +395,15 @@ Appendix 用一句完整 protocol 解释：thresholds 在两个 training repeats
 
 ## 7. Planner mechanism audit
 
-Planner panel 不增加 training seed，也不提出 training-run population claim。
+Planner panel 对 training seeds 3072/3073/3074 对称执行，不提出 training-run population claim。seed3074 保留已冻结的 v2 reference artifacts；seeds3072/3073 在任何新结果产生前冻结完全相同的 checkpoint-role、trajectory/probe/CEM seeds、candidate budgets、responses、features、Ridge alpha 与 leave-one-task-out split，随后补跑。未执行的 v3 freeze 因遗漏 transitive summarizer source binding 而在产生结果前由 v4 supersede；v4 只补齐 source hash，不改变 estimand 或分析口径。
+
+Incremental regression 必须在每个 training seed 内独立执行：fit on three tasks and evaluate on the fourth，先对四个 tasks 等权，再报告三个 seed-level MAE reductions 及 mean ± sample SD。每 seed 的 frozen strong-association gate 为 equal-task MAE reduction 至少 5% 且至少 3/4 tasks 改善。必须同时报告 positive-seed count、gate-pass count 和 12 个 task×seed cells，不得把 9,600 history rows 当作 training-run replicates。
+
+三-seed adjudication 固定为：
+
+- fixed-pool maximum cost drift：seeds3072/3073/3074 分别降低 MAE `6.6%/7.6%/9.5%`，`7.9 ± 1.4%`，3/3 seeds 为正、2/3 seed gates、8/12 task×seed cells；只写 directionally consistent / partially replicated，不写 universal task-level increment；
+- adaptive positive decision regret：`15.7%/16.9%/12.9%`，`15.2 ± 2.0%`，3/3 seed gates、12/12 cells；
+- first-action RMS：`0.8%/1.7%/0.8%`，`1.1 ± 0.5%`，0/3 gates；保留 negative result。
 
 Reader-facing 首次名称为 `5-step candidate-conditioned planner ACPC (H=5, matching the evaluated planning horizon)`，不得裸写 `H5`。正文保留：
 
@@ -403,7 +413,7 @@ Reader-facing 首次名称为 `5-step candidate-conditioned planner ACPC (H=5, m
 - 5-step candidate-conditioned ACPC beyond severity、checkpoint role、1-step ACPC 与 nominal margin；
 - first-action RMS 未达到预设 5% reporting criterion 的 negative result。
 
-明确该 panel 使用 specified checkpoints 与 finite candidate budgets；certificate 只适用于 evaluated paired ordered pool；adaptive implication 只在 common proposals 与 elite certificate 逐轮成立时继续；输出不是 closed-loop return。
+明确该 panel 使用三 seeds 的 specified base/endpoint checkpoints 与 finite candidate budgets；reduced panel 每 task×seed×role 使用 100 histories，full-budget panel 每 task×seed×role 使用 16 histories。certificate 只适用于 evaluated paired ordered pool；adaptive implication 只在 common proposals 与 elite certificate 逐轮成立时继续；输出不是 closed-loop return。
 
 ## 8. P3 — Cross-stressor transfer of the final selective diagnostic
 
@@ -497,13 +507,14 @@ paired nominal/probed histories
 1. **Introduction** — encoder invariance 的不足、consistency/collapse tension、future-error/planner/cross-task questions。
 2. **Related Work** — latent prediction、control-relevant abstraction、visual robustness diagnostics。
 3. **Target-Free Selective ACPC** — ACPC-H、future-error theorem、selective guard、ATR/SMPR、planner consequence。
-4. **Experimental Protocol** — four tasks、three training repeats、Gaussian grid、P1 three-feature-set comparison、P2 all-subset source/evaluation partitions、planner panel、P3 no-refit stressor scope。
+4. **Experimental Protocol** — four tasks、LeWM training repeats、PLDM complete sweep、Gaussian grid、P1 three-feature-set comparison、P2 all-subset source/evaluation partitions、planner panel、P3 no-refit stressor scope。
 5. **Gaussian Fragility and Recovery** — one complete four-task sweep figure。
-6. **Does action-matched rollout disagreement add future-drift information?** — P1 explanatory display and three-seed result。
+6. **Does action-matched rollout disagreement add future-drift information?** — P1 explanatory display and training-run result。
 7. **Does ACPC connect to planner costs and decisions?** — planner mechanism audit。
 8. **How does selective-threshold portability depend on source-task coverage?** — P2 all-subset evaluation。
-9. **Does the final selective rule transfer to blur and resize?** — P3 final-rule result。
-10. **Limitations and Conclusion** — reference requirement、proxy guard、fixed-pool boundary、closed-loop authority、family/stressor scope。
+9. **Does the analysis instantiate on PLDM?** — complete four-task PLDM sweep，区分 PLDM-local calibration 与 score-aligned threshold transfer。
+10. **Does the final selective rule transfer to blur and resize?** — P3 final-rule result。
+11. **Limitations and Conclusion** — reference requirement、proxy guard、fixed-pool boundary、closed-loop authority、family/stressor scope。
 
 Cube 始终作为 ordinary fourth task 等权进入 figures/tables；不设置 boundary-case prose。
 
@@ -516,7 +527,7 @@ Appendix 顺序：proofs；ATR/SMPR/proxy definitions；P1 absolute/control deta
 每个 main-text display 只回答一个 reader question，并满足以下统一规范：
 
 - task order 与 mapping 固定为 TwoRoom `#0072B2`/circle、PushT `#E69F00`/square、Reacher `#009E73`/triangle、Cube `#CC79A7`/diamond；
-- 同一 task 内的 training seeds 使用 solid/dashed/dotted line 或 direct numeric labels 区分，不覆盖 task marker mapping，也不引入第二套 rainbow palette；
+- 同一 task 内的 training runs 使用统一 muted styling、faint points 或 direct aggregate；reader-facing legend 不用 seed ID 命名 individual runs，也不引入第二套 rainbow palette；
 - pass/fail 或 positive/negative 不只依赖 red/green，必须同时使用 marker shape、line style 或 direct label；
 - line plots、dot plots、schematics 优先输出 vector PDF；必须使用 raster 时按最终版面尺寸至少 300 dpi；
 - 缩放到最终单栏/双栏宽度后，axis/title/caption text 不小于 8 pt，legend 不小于 7.5 pt；所有 fonts embedded；
@@ -532,16 +543,16 @@ Appendix 顺序：proofs；ATR/SMPR/proxy definitions；P1 absolute/control deta
 
 | Slot | 内容 | 必须完成的阅读任务 |
 |---|---|---|
-| Figure 1 | ACPC method + compact data-flow strip | 解释 rollout horizon、action matching、target-free scoring 与三个 experiments 的 data access |
-| Figure 2 | Four-task, three-seed Gaussian sweep | 用唯一 full-sweep figure 建立 fragile/recovered checkpoint family |
-| Figure 3 | P1 feature-set schematic + three-seed dot plot | 一眼看清共同 target、两个 comparators、proposed feature 与 MAE reduction |
-| Figure 4 | Planner mechanism | 区分 deterministic bound、cost/regret increment 与 negative first-action result |
-| Figure 5 | P2 source-coverage dot plot | 展示全部 14 partitions 以及 1/2/3 source-task coverage 的 accuracy/onset-error sensitivity |
-| Table 1 or compact Figure 6 | P3 final selective-rule transfer | 只展示 24-pair final-rule summary 与 discordance count |
+| Figure 1 | Four-task Gaussian sweep | 用唯一 full-sweep figure 建立 fragile/recovered checkpoint family；individual runs 不在 legend 中用 seed ID 命名 |
+| Figure 2 | P1 training-run dot plot | 一眼看清共同 target、两个 comparators、proposed feature 与 MAE reduction |
+| Figure 3 | Planner mechanism | 区分 deterministic bound、run-level cost/regret increment、run dispersion 与 negative first-action result |
+| Table 2 | PLDM architecture portability | 完整 36-row sweep；PLDM-local calibration `0.836/0.789/0.882` 与 PLDM-anchored LeWM-source reference `0.807/0.778/0.824` |
+| Figure 4 | P2 source-coverage dot plot | 展示全部 14 partitions 以及 1/2/3 source-task coverage 的 accuracy/onset-error sensitivity |
+| Figure 5 | P3 final selective-rule transfer | 只展示 24-pair final-rule summary 与 discordance count |
 
-P2 Figure 5 固定为两个横向对齐 panels，共享 `Number of source tasks` x-axis。所有 14 个 source subsets 必须显示；轻量 points 表示 individual directional partitions，较大空心 marker 表示 task-equal coverage summary。Source-subset identity 放 appendix table，不用十四种颜色或十四项 legend。
+P2 Figure 4 固定为两个横向对齐 panels，共享 `Number of source tasks` x-axis。所有 14 个 source subsets 必须显示；轻量 points 表示 individual directional partitions，较大空心 marker 表示 task-equal coverage summary。Source-subset identity 放 appendix table，不用十四种颜色或十四项 legend。
 
-P1 Figure 3 的 model labels 固定为：`Encoder shift + 1-step ACPC`、`Best 8-step control (zeroed or shuffled actions)`、`8-step ACPC (recorded actions)`。Caption 将第三项与正文定义的 `action-matched` 对应。图内不使用 A/B/C、H1/H8 或百分比公式作为唯一解释；MAE-reduction definition 放 caption 的一个短 clause。
+P1 Figure 2 的 comparison labels 固定为：`vs. 1-step action-matched ACPC` 与 `vs. best 8-step control (zeroed or shuffled actions)`。图内不使用具体 seed ID；caption 将 proposed feature 与正文定义的 recorded-action/action-matched ACPC 对应。
 
 ### 11.3 Appendix displays
 
@@ -582,7 +593,7 @@ Appendix wide tables 超过七列时使用 landscape 或拆成 protocol/result �
 
 - [ ] 对三种 adjudication schema 实现 explicit adapter。
 - [ ] Assert exact P1 estimand、four-task coverage 与三个 seed values。
-- [ ] 生成 three-feature-set schematic。
+- [x] 生成不暴露具体 seed ID 的 compact training-run display。
 - [ ] 生成 same-horizon comparator first 的 three-seed display。
 - [ ] Appendix 生成 absolute MAE 与 all-control table。
 - [ ] Caption 写出 MAE-reduction formula 与 15-groups-to-1 protocol。
@@ -603,9 +614,13 @@ Appendix wide tables 超过七列时使用 landscape 或拆成 protocol/result �
 
 ### Phase E — Planner audit
 
-- [ ] 用 `5-step candidate-conditioned planner ACPC` 替换裸 `H5`。
-- [ ] 保留 bound/certificate invariants、cost drift、regret 和 negative first-action result。
-- [ ] 简化 protocol wording，删除 internal audit narrative。
+- [x] 在结果生成前冻结 exact three-seed extension；formal seed set 为 `{3072,3073,3074}`，新增执行只含 3072/3073，3074 复用 hash-bound v2 reference。
+- [x] 完成 `3 seeds × 4 tasks × 2 checkpoint roles × 3 analysis roles = 72` total shards，其中 48 个为新增 shards；reduced fixed/adaptive join 精确为 9,600 rows。
+- [x] 每 seed 独立执行 leave-one-task-out Ridge；machine-readable artifact 保留 run values/gates，正文只报告 mean ± sample SD、run range 与 12 个 task×run cells。
+- [x] 用 `5-step candidate-conditioned planner ACPC` 替换裸 `H5`。
+- [x] 保留 bound/certificate invariants、cost drift、regret 和 negative first-action result。
+- [x] 简化 protocol wording，删除 internal audit narrative。
+- [x] Reader-facing result/caption/table 使用 training runs 与 task--run cells；具体 seed IDs 和 seed gates 不作为主结论条件。
 
 **Gate E:** theorem object、empirical response 与 non-closed-loop boundary 一一对应。
 
@@ -620,6 +635,15 @@ Appendix wide tables 超过七列时使用 landscape 或拆成 protocol/result �
 
 **Gate F:** paper-facing P3 outputs 不含 encoder/H1/H8/SMPR component ranking；所有数字可追溯到 P2 three-source threshold artifacts。
 
+### Phase F2 — PLDM architecture portability
+
+- [x] 使用一个 independently trained PLDM family 的完整 `4 tasks × 9 checkpoints` sweep；evaluation seeds 42/43/44 只作为 conditional measurement replicates。
+- [x] 复用当前 task-relative ATR、SMPR、recovery label、candidate grid 与 other-three-task calibration algorithm。
+- [x] PLDM-local pooled result 为 BA/precision/recall `0.836/0.789/0.882`；完整报告 Reacher BA `0.500` boundary case。
+- [x] 同一 task-relative score 下的 LeWM-threshold transfer 为 `0.807/0.778/0.824`；不把 task-relative anchoring 描述成 universal raw threshold。
+
+**Gate F2:** 论文明确写出“architecture-portable method, family-specific numerical calibration”；不把一个 PLDM training family写成缺陷，也不声称 cross-family shared raw threshold。
+
 ### Phase G — Build 与 reader audit
 
 - [ ] Deterministically regenerate all paper-facing assets。
@@ -629,7 +653,7 @@ Appendix wide tables 超过七列时使用 landscape 或拆成 protocol/result �
 - [ ] 逐页检查 overflow、embedded fonts、legend、caption、task/seed labels 与 data-flow clarity。
 - [ ] 在最终栏宽、100% zoom、grayscale 和 common color-vision-deficiency preview 下检查所有 main figures。
 - [ ] 检查 main table column count、decimal alignment、caption word count 与 row-label length。
-- [ ] 让未看代码的读者仅靠 Figure 1 和 P1 display 复述三个 feature sets 的 comparison。
+- [x] 删除收益小于风险的 method schematic；让未看代码的读者仅靠 ACPC equation、紧邻定义和 P1 display 复述 comparison。
 
 **Gate G:** builds/tests 全通过；所有 main displays 在最终尺寸可读，captions 不依赖 internal experiment vocabulary，P2 的 14 points 和 P1 的两个 comparators 无需查 appendix 即可辨认。
 
@@ -652,11 +676,14 @@ Appendix wide tables 超过七列时使用 landscape 或拆成 protocol/result �
 13. P3 每 task 使用 P2 的 unique three-source threshold pair；
 14. P3 精确 24 pairs，无 stressor-specific threshold search；
 15. P3 referenced output schema 不含 component-ranking rows；
-16. main figures 使用固定 task order/palette/marker mapping，font size、legend count、caption length 与 vector-output checks 通过；
-17. main tables 不超过七个 data columns，decimal precision 与 reader-facing labels 通过 lint；
-18. `pdftotext` 与 TeX-source audit 对 reader-facing `held-out`、internal split labels 和 bare horizon names 均为零命中；
-19. `main.tex` referenced assets 与 release manifest 一致；
-20. source package 不含 internal plans、unused component tables 或 excluded-seed dependency。
+16. Planner formal seed set 精确为 `{3072,3073,3074}`，总计 72 个 validated shards、9,600 joined reduced rows；
+17. Planner join key 包含 training seed，每 seed 独立 fit，三-seed summary 从 seed-level equal-task values 计算；
+18. Planner cost/regret/action-RMS gate counts 分别为 `2/3`、`3/3`、`0/3`，task×seed cells 分别为 `8/12`、`12/12`、`10/12`；
+19. main figures 使用固定 task order/palette/marker mapping，font size、legend count、caption length 与 vector-output checks 通过；
+20. main tables 不超过七个 data columns，decimal precision 与 reader-facing labels 通过 lint；
+21. `pdftotext` 与 TeX-source audit 对 reader-facing `held-out`、internal split labels 和 bare horizon names 均为零命中；
+22. `main.tex` referenced assets 与 release manifest 一致；
+23. source package 不含 internal plans、unused component tables 或 excluded-seed dependency。
 
 ## 14. Failure rules
 
@@ -667,7 +694,7 @@ Appendix wide tables 超过七列时使用 landscape 或拆成 protocol/result �
 - P2 只能在 raw ATR 上成立：删除 numerical cross-task portability claim，保留 descriptive task-local result。
 - P3 在 three-source thresholds 下变弱：报告实际 24 pairs，必要时移 appendix，不重调 stressor threshold。
 - Local-sensitivity figure 无法 deterministic rebuild：删除 figure，只保留 equation 与 paragraph。
-- Planner assertions 失败：暂停 planner claim，先修复 artifact/code mismatch。
+- Planner assertions 失败：暂停 planner claim，先修复 artifact/code mismatch；不得退回只报告 seed3074 或 outcome-dependent 改 gate。
 
 ## 15. Definition of done
 
@@ -682,7 +709,8 @@ Appendix wide tables 超过七列时使用 landscape 或拆成 protocol/result �
 - [ ] P2 main display 同时呈现 source-coverage trend、source-composition spread、worst case 与全部 14 directional points。
 - [ ] P2 只用 exact metrics、ranges、task names 陈述 final `ATR+SMPR rule` 的 threshold portability；reader-facing output 不包含 component comparison。
 - [ ] Training-repeat threshold check 只在 appendix。
-- [ ] Planner panel 明确是 finite-budget mechanism audit，不是 closed-loop population result。
+- [x] Planner panel 对 3072/3073/3074 三 seeds 对称报告，明确是 finite-budget mechanism audit，不是 closed-loop population result。
+- [x] PLDM 完整 sweep 进入 abstract、contributions、setup、main result、Discussion 与 Conclusion；一个 training family 是实验设计描述，不是 reader-facing limitation。
 - [ ] P3 保留 final selective-rule cross-stressor transfer，但完全移除 component comparison。
 - [ ] P3 每个 task 固定使用由其余三个 Gaussian tasks 选择的 three-source threshold pair。
 - [ ] Cross-stressor component-ranking table 不被引用、不被打包。

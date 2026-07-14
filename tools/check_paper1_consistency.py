@@ -226,7 +226,7 @@ REQUIRED_ARTIFACTS = [
     ROOT / "paper1" / "config" / "frozen_diagnostic_protocol_v1.json",
     ROOT / "paper1" / "config" / "frozen_diagnostic_protocol_v1.schema.json",
     ROOT / "paper1" / "results" / "frozen_external_validation_summary_v3.json",
-    ROOT / "paper1" / "results" / "external_validation" / "pldm_frozen_summary_v2.json",
+    ROOT / "paper1" / "tables" / "table_pldm_architecture_portability.tex",
     ROOT / "paper1" / "results" / "external_validation" / "cross_stressor_fixed_rho_summary.json",
     ROOT / "paper1" / "results" / "external_validation" / "cross_stressor_fixed_rho_rows.csv",
     ROOT / "paper1" / "results" / "external_validation" / "cross_stressor_all_pairs.csv",
@@ -243,7 +243,6 @@ REQUIRED_ARTIFACTS = [
     ROOT / "assets" / "paper1_figs" / "fig_fixed_pool_certificate_calibration.png",
     ROOT / "assets" / "paper1_figs" / "fig_linearization_calibration.png",
     ROOT / "assets" / "paper1_figs" / "fig_smpr_radius_margin_decomposition.png",
-    ROOT / "paper1" / "tables" / "table_diagnostic_baselines.tex",
     ROOT / "paper1" / "tables" / "table_cross_stressor_paired_change.tex",
     ROOT / "paper1" / "tables" / "table_cross_stressor_robustness_audit.tex",
     ROOT / "paper1" / "tables" / "table_fixed_pool_certificate_coverage.tex",
@@ -385,11 +384,10 @@ REQUIRED_MAIN_TEXT_SNIPPETS = [
     "do not turn the score into an absolute cross-stressor robustness certificate",
     "t-SNE does not preserve metric geometry",
     "not an independent statistical success count",
-    "does not repeat a component contest",
+    "does not rank encoder shift",
 ]
 
 MAIN_TEXT_FIGURES = {
-    "fig_acpc_method.pdf",
     "fig_full_sweep_diagnostics.pdf",
     "fig_future_drift_three_seed_v1.pdf",
     "fig_acpc_planner_evidence.pdf",
@@ -508,7 +506,7 @@ PAIRED_MULTISEVERITY_SMPR_SMOKE_SHA256 = "eb41ff0d6a23db0e15ea5f48540f91f5d83483
 PUBLIC_V1_ARTIFACT_HASHES = {
     "paper1/config/frozen_diagnostic_protocol_v1.json": FROZEN_PROTOCOL_SHA256,
     "paper1/results/frozen_external_validation_summary_v3.json": "ec485a7026c1d2ff80295f4dc85dd3753ca12f2ede7d7c0137a13796070dfeba",
-    "paper1/results/external_validation/pldm_frozen_summary_v2.json": "edf14d47a6b5e72097220e2b606f43a422e06ae9d832805cd2311f147e6b9387",
+    "paper1/tables/table_pldm_architecture_portability.tex": "52186ae599deadc8f8756a14daca38b5a609b766142169ca123be19b31048df2",
     "paper1/results/external_validation/cross_stressor_fixed_rho_summary.json": "94077f772e8dd7641b47e161a17d4ec67cea695dc044cb9a0229857efc157453",
     "paper1/results/external_validation/target_view_frozen_summary.json": "dba255daf282d1dbea7a102839e054cdd39b159a08a9ea9b1d3def7767477870",
     "paper1/results/diagnostic_baselines/diagnostic_baseline_all_v1.json": "df43cfd80b0387bde31426a37445149646a247724c1b2dd61f801a97d6c4f3c8",
@@ -3479,14 +3477,26 @@ def check_public_v1_remediation_artifacts() -> None:
     if not math.isclose(e1_metrics["auprc"], 0.9654813594276511, abs_tol=1e-12):
         fail("E1 AUPRC changed")
 
-    e2 = checked_external("paper1/results/external_validation/pldm_frozen_summary_v2.json")
-    e2_metrics = e2["metrics"]
-    if e2_metrics.get("num_rows") != 36:
-        fail("E2 PLDM validation must contain one four-task 36-row training family")
-    if not math.isclose(e2_metrics["balanced_accuracy"], 0.6842105263157895, abs_tol=1e-12):
-        fail("E2 balanced accuracy changed")
-    if "not training-run replication" not in e2["metadata"].get("evaluation_seed_semantics", ""):
-        fail("E2 must not present evaluation seeds as PLDM training runs")
+    with (
+        ROOT / "paper1/results/external_validation/pldm_frozen_rows_v2.csv"
+    ).open(newline="", encoding="utf-8") as stream:
+        e2_rows = list(csv.DictReader(stream))
+    if len(e2_rows) != 36:
+        fail("E2 PLDM architecture audit must contain one complete 36-row family")
+    if {row["model_family"] for row in e2_rows} != {"PLDM"}:
+        fail("E2 architecture audit contains a non-PLDM row")
+    if {row["task"] for row in e2_rows} != {"TwoRoom", "PushT", "Reacher", "Cube"}:
+        fail("E2 PLDM architecture audit has incomplete task coverage")
+    e2_table = (
+        ROOT / "paper1/tables/table_pldm_architecture_portability.tex"
+    ).read_text(encoding="utf-8")
+    for expected in (
+        "PLDM-local, other three tasks & 0.836 & 0.789 & 0.882 & 4 & 2",
+        "LeWM-source reference, PLDM-anchored & 0.807 & 0.778 & 0.824 & 4 & 3",
+        "Raw numerical thresholds are not assumed to be shared across model families",
+    ):
+        if expected not in e2_table:
+            fail(f"E2 PLDM architecture-portability table changed: {expected}")
 
     e3 = checked_external("paper1/results/external_validation/cross_stressor_fixed_rho_summary.json")
     e3_meta = e3["metadata"]

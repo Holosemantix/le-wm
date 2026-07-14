@@ -20,7 +20,7 @@
   "metadata": {
     "behavior_blind": true,
     "code_commit": "c943fdf75cd71bc08e5466e1700676069728b7d2",
-    "created_utc": "2026-07-10T11:34:08.143261+00:00",
+    "created_utc": "2026-07-14T07:13:55.906286+00:00",
     "errors": [],
     "evaluation_seed_semantics": "conditional evaluation variability, not training-run replication",
     "missing_rows": [],
@@ -33,8 +33,8 @@
     "script_path": "paper1/scripts/frozen_external_validation.py",
     "script_sha256": "5c54a2cb7e1c6c984eea0fd22f92ba3ce6d2b7447156485a675bf299729b1982",
     "source_hashes": {
-      "blind_rows": "aebbc32a49edc32ce2e27078d46f46166fa870679653d7b37622fdaf2219e807",
-      "diagnostics": "77906f5979a9ecbbe7839e3fe54b2b3d672e48cb32607c14320b9841b1cf13d0",
+      "blind_rows": "0a33736a821324ec900b4685a23a6bcd9d70462005fb1d66d86bb3bead230296",
+      "diagnostics": "624ecaeb0b807e0b7e6cb9d1ef44b889ee1eb54772f1c29f39c6b5fdd10fbeb8",
       "protocol": "edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21"
     },
     "source_paths": {

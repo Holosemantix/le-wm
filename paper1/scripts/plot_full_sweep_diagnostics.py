@@ -185,7 +185,7 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             Line2D([], [], color="#d95f02", marker="s", lw=1.35, ms=3.4, label=r"ATR rel ($\downarrow$)"),
             Line2D([], [], color="#7570b3", marker="^", lw=1.35, ms=3.5, ls="--", label=r"SMPR ($\uparrow$)"),
             Patch(facecolor=RECOVERY_COLOR, edgecolor="none", alpha=0.50, label="Majority recovered"),
-            Patch(facecolor="#777777", edgecolor="none", alpha=0.15, label="Across-seed range"),
+            Patch(facecolor="#777777", edgecolor="none", alpha=0.15, label="Across-run range"),
         ]
         fig.legend(
             handles=legend_handles,

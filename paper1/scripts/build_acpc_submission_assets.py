@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build submission-facing ACPC method/planner figures and compact tables."""
+"""Build submission-facing ACPC planner figure and compact tables."""
 
 from __future__ import annotations
 
@@ -15,20 +15,24 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+
+from paper1.scripts.cross_task_selective_rule import run_all_subsets
 
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_PLANNER = ROOT / "paper1/results/acpc_planner_stability_v2/summary.json"
+DEFAULT_PLANNER = ROOT / "paper1/results/acpc_planner_stability_v4/summary.json"
 DEFAULT_SWEEP = ROOT / "paper1/results/full_sweep_diagnostics_summary.csv"
-DEFAULT_METHOD_FIG = ROOT / "assets/paper1_figs/fig_acpc_method.pdf"
 DEFAULT_PLANNER_FIG = ROOT / "assets/paper1_figs/fig_acpc_planner_evidence.pdf"
 DEFAULT_INCREMENT_TABLE = ROOT / "paper1/tables/table_acpc_planner_increment.tex"
 DEFAULT_ABSOLUTE_TABLE = ROOT / "paper1/tables/table_acpc_planner_absolute.tex"
 DEFAULT_SWEEP_TABLE = ROOT / "paper1/tables/table_full_sweep_compact.tex"
+DEFAULT_PLDM_ROWS = ROOT / "paper1/results/external_validation/pldm_frozen_rows_v2.csv"
+DEFAULT_CROSS_TASK_SUMMARY = ROOT / "paper1/results/cross_task_atr_smpr_all_subsets_summary_v1.json"
+DEFAULT_PLDM_TABLE = ROOT / "paper1/tables/table_pldm_architecture_portability.tex"
 
 TASKS = ("TwoRoom", "PushT", "Reacher", "Cube")
 TASK_MARKERS = {"TwoRoom": "o", "PushT": "s", "Reacher": "^", "Cube": "D"}
+SEED_MARKERS = {3072: "o", 3073: "s", 3074: "^"}
 BASE_COLOR = "#D55E00"
 ENDPOINT_COLOR = "#0072B2"
 GRID_COLOR = "#A7A7A7"
@@ -68,116 +72,6 @@ def _polish(ax: plt.Axes) -> None:
     ax.spines["right"].set_visible(False)
 
 
-def _box(
-    ax: plt.Axes,
-    xy: tuple[float, float],
-    width: float,
-    height: float,
-    text: str,
-    *,
-    face: str,
-    edge: str,
-    fontsize: float = 8.0,
-    weight: str = "normal",
-) -> None:
-    patch = FancyBboxPatch(
-        xy,
-        width,
-        height,
-        boxstyle="round,pad=0.012,rounding_size=0.025",
-        fc=face,
-        ec=edge,
-        lw=0.9,
-    )
-    ax.add_patch(patch)
-    ax.text(
-        xy[0] + width / 2,
-        xy[1] + height / 2,
-        text,
-        ha="center",
-        va="center",
-        fontsize=fontsize,
-        fontweight=weight,
-    )
-
-
-def _arrow(
-    ax: plt.Axes,
-    start: tuple[float, float],
-    end: tuple[float, float],
-    *,
-    color: str = "#3D3D3D",
-    style: str = "-|>",
-    lw: float = 1.0,
-) -> None:
-    ax.add_patch(
-        FancyArrowPatch(
-            start,
-            end,
-            arrowstyle=style,
-            mutation_scale=9,
-            color=color,
-            lw=lw,
-            shrinkA=1,
-            shrinkB=1,
-        )
-    )
-
-
-def plot_method(out: Path) -> None:
-    out.parent.mkdir(parents=True, exist_ok=True)
-    with plt.rc_context(STYLE):
-        fig, ax = plt.subplots(figsize=(6.8, 2.55))
-        ax.set_xlim(0, 1)
-        ax.set_ylim(0, 1)
-        ax.axis("off")
-
-        _box(ax, (0.025, 0.60), 0.145, 0.20, "nominal history\n$h$", face="#E8F1F8", edge=ENDPOINT_COLOR, weight="semibold")
-        _box(ax, (0.025, 0.22), 0.145, 0.20, "visual probe\n$\\tilde h$", face="#FCEFE7", edge=BASE_COLOR, weight="semibold")
-        ax.text(0.098, 0.50, "same underlying state", ha="center", va="center", fontsize=7.2, color="#555555")
-
-        _box(ax, (0.218, 0.41), 0.13, 0.20, "shared encoder\n$E_\\theta$", face="#F4F4F4", edge="#5A5A5A", weight="semibold")
-        _arrow(ax, (0.17, 0.70), (0.218, 0.55), color=ENDPOINT_COLOR)
-        _arrow(ax, (0.17, 0.32), (0.218, 0.47), color=BASE_COLOR)
-
-        _box(ax, (0.396, 0.41), 0.16, 0.20, "shared actions\n$\\mathbf{a}_{1:H}$ + predictor $F_\\theta$", face="#F1ECF8", edge="#6A51A3", weight="semibold")
-        _arrow(ax, (0.348, 0.51), (0.396, 0.51))
-
-        _box(ax, (0.602, 0.60), 0.14, 0.18, "rollout\n$x_{1:H}$", face="#E8F1F8", edge=ENDPOINT_COLOR)
-        _box(ax, (0.602, 0.24), 0.14, 0.18, "rollout\n$\\tilde x_{1:H}$", face="#FCEFE7", edge=BASE_COLOR)
-        _arrow(ax, (0.556, 0.54), (0.602, 0.67), color=ENDPOINT_COLOR)
-        _arrow(ax, (0.556, 0.48), (0.602, 0.35), color=BASE_COLOR)
-        ax.annotate(
-            "",
-            xy=(0.755, 0.66),
-            xytext=(0.755, 0.36),
-            arrowprops=dict(arrowstyle="<->", color="#2F2F2F", lw=1.1),
-        )
-        ax.text(0.67, 0.51, "$\\mathrm{ACPC}_H=\\Vert x-\\tilde x\\Vert_2$", ha="center", va="center", fontsize=7.4, fontweight="semibold")
-
-        right_x = 0.80
-        _box(ax, (right_x, 0.69), 0.175, 0.19, "future-error drift\n$|\\Delta e|\\leq\\mathrm{ACPC}_H$", face="#EDF7ED", edge="#3A7D44", fontsize=7.6)
-        _box(ax, (right_x, 0.405), 0.175, 0.19, "sharp goal-cost bound\n$|\\Delta c_j|\\leq b_j$", face="#FFF7DF", edge="#B8860B", fontsize=7.6)
-        _box(ax, (right_x, 0.12), 0.175, 0.19, "planner decision\nregret / margin / elite bounds", face="#F5ECF5", edge="#8C4A8C", fontsize=7.4)
-        _arrow(ax, (0.785, 0.60), (right_x, 0.78), color="#3A7D44")
-        _arrow(ax, (0.785, 0.51), (right_x, 0.50), color="#B8860B")
-        _arrow(ax, (0.785, 0.42), (right_x, 0.215), color="#8C4A8C")
-
-        ax.text(
-            0.42,
-            0.08,
-            "Scoring uses no realized future or behavior label  |  P1: future only evaluates  |  "
-            "P2: source tasks $\\to$ remaining tasks  |  P3: Gaussian $\\to$ blur/resize",
-            ha="center",
-            va="center",
-            fontsize=6.8,
-            color="#4A4A4A",
-        )
-        fig.subplots_adjust(left=0.01, right=0.995, bottom=0.02, top=0.98)
-        fig.savefig(out, dpi=240)
-        plt.close(fig)
-
-
 def _group_index(summary: dict[str, Any]) -> dict[tuple[str, str, float], dict[str, Any]]:
     return {
         (row["task"], row["checkpoint_role"], float(row["severity"])): row
@@ -185,9 +79,25 @@ def _group_index(summary: dict[str, Any]) -> dict[tuple[str, str, float], dict[s
     }
 
 
+def _group_seed_index(
+    summary: dict[str, Any],
+) -> dict[tuple[int, str, str, float], dict[str, Any]]:
+    return {
+        (
+            int(row["training_seed"]),
+            row["task"],
+            row["checkpoint_role"],
+            float(row["severity"]),
+        ): row
+        for row in summary["group_seed_summary"]
+    }
+
+
 def plot_planner(summary: dict[str, Any], out: Path) -> None:
     index = _group_index(summary)
+    seed_index = _group_seed_index(summary)
     analyses = summary["predeclared_incremental_analyses"]
+    seeds = tuple(int(seed) for seed in summary["training_seeds"])
     severities = (0.02, 0.05, 0.08)
     out.parent.mkdir(parents=True, exist_ok=True)
     with plt.rc_context(STYLE):
@@ -201,20 +111,28 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
             ("base", BASE_COLOR, "fragile base"),
             ("endpoint", ENDPOINT_COLOR, "noise-trained endpoint"),
         ):
-            task_values: list[list[float]] = []
-            for task in TASKS:
-                values = [index[(task, role, s)]["top1_stability_rate"] for s in severities]
-                task_values.append(values)
-                ax_stability.plot(
-                    severities,
-                    values,
-                    color=color,
-                    alpha=0.26,
-                    lw=0.8,
-                    marker=TASK_MARKERS[task],
-                    ms=3.0,
-                )
-            mean = [sum(values[i] for values in task_values) / len(TASKS) for i in range(3)]
+            task_seed_values: list[list[float]] = []
+            for seed in seeds:
+                for task in TASKS:
+                    values = [
+                        seed_index[(seed, task, role, s)]["top1_stability_rate"]
+                        for s in severities
+                    ]
+                    task_seed_values.append(values)
+                    ax_stability.plot(
+                        severities,
+                        values,
+                        color=color,
+                        alpha=0.12,
+                        lw=0.65,
+                        marker=TASK_MARKERS[task],
+                        ms=2.3,
+                    )
+            mean = [
+                sum(values[i] for values in task_seed_values)
+                / len(task_seed_values)
+                for i in range(3)
+            ]
             ax_stability.plot(severities, mean, color=color, lw=2.0, marker="o", ms=4.0, label=label)
         ax_stability.set_title("(a) Fixed-pool top-1 stability", loc="left", fontweight="semibold")
         ax_stability.set_xlabel("probe severity")
@@ -226,20 +144,33 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
         _polish(ax_stability)
 
         for role, color in (("base", BASE_COLOR), ("endpoint", ENDPOINT_COLOR)):
-            task_values = []
-            for task in TASKS:
-                values = [math.log10(1 + index[(task, role, s)]["positive_clean_regret_mean"]) for s in severities]
-                task_values.append(values)
-                ax_regret.plot(
-                    severities,
-                    values,
-                    color=color,
-                    alpha=0.26,
-                    lw=0.8,
-                    marker=TASK_MARKERS[task],
-                    ms=3.0,
-                )
-            mean = [sum(values[i] for values in task_values) / len(TASKS) for i in range(3)]
+            task_seed_values = []
+            for seed in seeds:
+                for task in TASKS:
+                    values = [
+                        math.log10(
+                            1
+                            + seed_index[(seed, task, role, s)][
+                                "positive_clean_regret_mean"
+                            ]
+                        )
+                        for s in severities
+                    ]
+                    task_seed_values.append(values)
+                    ax_regret.plot(
+                        severities,
+                        values,
+                        color=color,
+                        alpha=0.12,
+                        lw=0.65,
+                        marker=TASK_MARKERS[task],
+                        ms=2.3,
+                    )
+            mean = [
+                sum(values[i] for values in task_seed_values)
+                / len(task_seed_values)
+                for i in range(3)
+            ]
             ax_regret.plot(severities, mean, color=color, lw=2.0, marker="o", ms=4.0)
         ax_regret.set_title("(b) Adaptive-CEM decision regret", loc="left", fontweight="semibold")
         ax_regret.set_xlabel("probe severity")
@@ -254,17 +185,42 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
             ("first_action_rms", "action RMS"),
         )
         x = list(range(3))
-        means = [100 * analyses[key]["lobo_ridge"]["equal_task_relative_mae_reduction"] for key, _ in response_specs]
+        means = [
+            100
+            * analyses[key]["three_seed_summary"][
+                "relative_mae_reduction_mean"
+            ]
+            for key, _ in response_specs
+        ]
+        sds = [
+            100
+            * analyses[key]["three_seed_summary"][
+                "relative_mae_reduction_sample_sd"
+            ]
+            for key, _ in response_specs
+        ]
         bars = ax_increment.bar(x, means, width=0.58, color=["#4C78A8", "#59A14F", "#BAB0AC"], zorder=2)
+        ax_increment.errorbar(
+            x,
+            means,
+            yerr=sds,
+            fmt="none",
+            ecolor="#303030",
+            elinewidth=0.9,
+            capsize=2.5,
+            zorder=4,
+        )
         for xpos, (key, _) in zip(x, response_specs):
-            per_task = analyses[key]["lobo_ridge"]["per_task"]
-            offsets = (-0.15, -0.05, 0.05, 0.15)
-            for offset, task in zip(offsets, TASKS):
+            offsets = (-0.13, 0.0, 0.13)
+            for offset, seed in zip(offsets, seeds):
+                value = analyses[key]["per_seed"][str(seed)]["lobo_ridge"][
+                    "equal_task_relative_mae_reduction"
+                ]
                 ax_increment.scatter(
                     xpos + offset,
-                    100 * per_task[task]["relative_mae_reduction"],
-                    marker=TASK_MARKERS[task],
-                    s=18,
+                    100 * value,
+                    marker="o",
+                    s=22,
                     facecolor="white",
                     edgecolor="#303030",
                     lw=0.65,
@@ -274,23 +230,70 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
         ax_increment.axhline(0, color="#555555", lw=0.7)
         ax_increment.set_xticks(x, [label for _, label in response_specs])
         ax_increment.set_ylabel("MAE reduction from adding 5-step ACPC (%)")
-        ax_increment.set_title("(c) Cross-task 5-step increment", loc="left", fontweight="semibold")
-        ax_increment.set_ylim(-15, 27)
-        ax_increment.text(2.38, 5.8, "5% reference", color="#6A2C8C", ha="right", va="bottom", fontsize=7.0)
-        for bar, value in zip(bars, means):
-            ax_increment.text(bar.get_x() + bar.get_width() / 2, value + 0.8, f"{value:.1f}", ha="center", va="bottom", fontsize=7.4)
+        ax_increment.set_title("(c) Increment from 5-step ACPC", loc="left", fontweight="semibold")
+        ax_increment.set_ylim(-1.5, 20.0)
+        ax_increment.text(2.38, 5.5, "5% reference", color="#6A2C8C", ha="right", va="bottom", fontsize=7.0)
+        for bar, value, sd in zip(bars, means, sds):
+            ax_increment.text(
+                bar.get_x() + bar.get_width() / 2,
+                value + sd + 0.7,
+                f"{value:.1f}$\\pm${sd:.1f}",
+                ha="center",
+                va="bottom",
+                fontsize=7.2,
+            )
         _polish(ax_increment)
 
         full_index = {
             (row["task"], row["checkpoint_role"]): row
             for row in summary["full_budget_summary"]
         }
-        for task_index, task in enumerate(TASKS):
+        full_seed_index = {
+            (int(row["training_seed"]), row["task"], row["checkpoint_role"]): row
+            for row in summary["full_budget_seed_summary"]
+        }
+        seed_offsets = {seed: offset for seed, offset in zip(seeds, (-0.045, 0.0, 0.045))}
+        for task in TASKS:
+            for seed in seeds:
+                base_seed = full_seed_index[(seed, task, "base")][
+                    "positive_clean_regret_mean"
+                ]
+                endpoint_seed = full_seed_index[(seed, task, "endpoint")][
+                    "positive_clean_regret_mean"
+                ]
+                offset = seed_offsets[seed]
+                ax_full.plot(
+                    [offset, 1 + offset],
+                    [base_seed, endpoint_seed],
+                    color="#777777",
+                    lw=0.55,
+                    alpha=0.28,
+                )
+                ax_full.scatter(
+                    offset,
+                    base_seed,
+                    marker=TASK_MARKERS[task],
+                    s=15,
+                    color=BASE_COLOR,
+                    alpha=0.38,
+                    edgecolor="none",
+                    zorder=2,
+                )
+                ax_full.scatter(
+                    1 + offset,
+                    endpoint_seed,
+                    marker=TASK_MARKERS[task],
+                    s=15,
+                    color=ENDPOINT_COLOR,
+                    alpha=0.38,
+                    edgecolor="none",
+                    zorder=2,
+                )
             base = full_index[(task, "base")]["positive_clean_regret_mean"]
             endpoint = full_index[(task, "endpoint")]["positive_clean_regret_mean"]
-            ax_full.plot([0, 1], [base, endpoint], color="#777777", lw=0.9, alpha=0.75)
-            ax_full.scatter(0, base, marker=TASK_MARKERS[task], s=31, color=BASE_COLOR, edgecolor="white", lw=0.5, zorder=3)
-            ax_full.scatter(1, endpoint, marker=TASK_MARKERS[task], s=31, color=ENDPOINT_COLOR, edgecolor="white", lw=0.5, zorder=3)
+            ax_full.plot([0, 1], [base, endpoint], color="#555555", lw=1.05, alpha=0.82)
+            ax_full.scatter(0, base, marker=TASK_MARKERS[task], s=34, color=BASE_COLOR, edgecolor="white", lw=0.5, zorder=3)
+            ax_full.scatter(1, endpoint, marker=TASK_MARKERS[task], s=34, color=ENDPOINT_COLOR, edgecolor="white", lw=0.5, zorder=3)
         ax_full.set_yscale("log")
         ax_full.set_xlim(-0.35, 1.35)
         ax_full.set_xticks([0, 1], ["fragile base", "endpoint"])
@@ -318,24 +321,27 @@ def build_increment_table(summary: dict[str, Any]) -> str:
     lines = [
         r"\begin{table}[H]",
         r"\centering",
-        r"\caption{Cross-task ridge analysis on 3,200 reduced-budget history records with matched ACPC and planner outcomes. For each evaluation task, models are fitted on the other three tasks. The reference feature set contains severity, base-versus-noise-trained checkpoint identity, candidate-conditioned one-step ACPC, and nominal top-1 margin; the expanded set adds candidate-conditioned five-step ACPC, matching the candidate evaluation horizon. Positive values are reductions in evaluation-task MAE; the final two columns report Spearman rank correlations.}",
+        r"\caption{Cross-task ridge analysis on 9,600 matched reduced-budget history records. Models are fitted separately within each training run on three tasks and evaluated on the fourth. The reference features are severity, checkpoint role, candidate-conditioned one-step ACPC, and nominal top-1 margin; the expanded model adds candidate-conditioned five-step ACPC. Entries are equal-task MAE reductions; mean $\pm$ sample SD treats the training run as the model-replication unit, and the final column counts improving task--run evaluations.}",
         r"\label{tab:acpc-planner-increment}",
-        r"\footnotesize",
-        r"\setlength{\tabcolsep}{5pt}",
-        r"\begin{tabular}{lrrrr}",
+        r"\scriptsize",
+        r"\setlength{\tabcolsep}{3.7pt}",
+        r"\begin{tabular}{lrrr}",
         r"\toprule",
-        r"Response & MAE reduction & Tasks improved & 1-step Spearman & 5-step Spearman \\",
+        r"Response & Mean $\pm$ SD & Run range & Cells improved \\",
         r"\midrule",
     ]
     for key, label in specs:
-        lobo = analyses[key]["lobo_ridge"]
-        spearman = analyses[key]["spearman"]
-        value = 100 * lobo["equal_task_relative_mae_reduction"]
-        gate = value >= 5 and lobo["tasks_improved"] >= 3
-        display = rf"\textbf{{{value:.1f}\%}}" if gate else rf"{value:.1f}\%"
+        aggregate = analyses[key]["three_seed_summary"]
+        mean = 100 * aggregate["relative_mae_reduction_mean"]
+        sd = 100 * aggregate["relative_mae_reduction_sample_sd"]
+        mean_display = f"{mean:.1f} $\\pm$ {sd:.1f}\\%"
+        run_range = (
+            f"{100 * aggregate['relative_mae_reduction_min']:.1f}--"
+            f"{100 * aggregate['relative_mae_reduction_max']:.1f}\\%"
+        )
         lines.append(
-            f"{label} & {display} & {lobo['tasks_improved']}/4 & "
-            f"{spearman['equal_task_h1']:.3f} & {spearman['equal_task_h5']:.3f} \\\\"
+            f"{label} & {mean_display} & {run_range} & "
+            f"{aggregate['task_seed_cells_improved']}/12 \\\\"
         )
     lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}"])
     return "\n".join(lines)
@@ -347,10 +353,10 @@ def build_absolute_table(summary: dict[str, Any]) -> str:
     lines = [
         r"\begin{table}[H]",
         r"\centering",
-        r"\caption{Absolute planner outcomes at Gaussian severity 0.08. Reduced-budget rows use 100 independent histories, $K=64$, top-8 elites, and eight CEM steps; full-budget rows use 16 histories, $K=300$, top-30 elites, and 30 steps. Regret evaluates the perturbed action in task-specific squared latent goal-cost units under the clean history; it is not closed-loop return, and magnitudes should not be pooled across tasks.}",
+        r"\caption{Absolute planner outcomes at Gaussian severity 0.08, reported as mean $\pm$ sample SD across independent training runs after histories are averaged within run. Reduced-budget rows use 100 histories, $K=64$, top-8 elites, and eight CEM steps; full-budget rows evaluate the same 16 fixed histories per task across roles and runs with $K=300$, top-30 elites, and 30 steps. Regret is clean-history squared latent goal-cost, not closed-loop return, and its scale is task specific.}",
         r"\label{tab:acpc-planner-absolute}",
-        r"\footnotesize",
-        r"\setlength{\tabcolsep}{4.2pt}",
+        r"\scriptsize",
+        r"\setlength{\tabcolsep}{2.2pt}",
         r"\begin{tabular}{lrrrrrr}",
         r"\toprule",
         r"& \multicolumn{2}{c}{Top-1 stability} & \multicolumn{2}{c}{Reduced regret} & \multicolumn{2}{c}{Full-budget regret} \\",
@@ -358,25 +364,87 @@ def build_absolute_table(summary: dict[str, Any]) -> str:
         r"Task & Base & Endpoint & Base & Endpoint & Base & Endpoint \\",
         r"\midrule",
     ]
-    values = []
-    for task in TASKS:
-        row = [
-            index[(task, "base", 0.08)]["top1_stability_rate"],
-            index[(task, "endpoint", 0.08)]["top1_stability_rate"],
-            index[(task, "base", 0.08)]["positive_clean_regret_mean"],
-            index[(task, "endpoint", 0.08)]["positive_clean_regret_mean"],
-            full[(task, "base")]["positive_clean_regret_mean"],
-            full[(task, "endpoint")]["positive_clean_regret_mean"],
-        ]
-        values.append(row)
-        lines.append(
-            f"{task} & {row[0]:.2f} & {row[1]:.2f} & {row[2]:.2f} & {row[3]:.2f} & {row[4]:.2f} & {row[5]:.2f} \\\\"
+    def cell(record: dict[str, Any], field: str) -> str:
+        return (
+            f"{record[field]:.2f}$\\pm$"
+            f"{record[field + '_sample_sd']:.2f}"
         )
-    means = [sum(row[i] for row in values) / len(values) for i in range(6)]
+
+    for task in TASKS:
+        cells = [
+            cell(index[(task, "base", 0.08)], "top1_stability_rate"),
+            cell(index[(task, "endpoint", 0.08)], "top1_stability_rate"),
+            cell(index[(task, "base", 0.08)], "positive_clean_regret_mean"),
+            cell(index[(task, "endpoint", 0.08)], "positive_clean_regret_mean"),
+            cell(full[(task, "base")], "positive_clean_regret_mean"),
+            cell(full[(task, "endpoint")], "positive_clean_regret_mean"),
+        ]
+        lines.append(f"{task} & {' & '.join(cells)} \\\\")
+
+    group_seed_rows = summary["group_seed_summary"]
+    full_seed_rows = summary["full_budget_seed_summary"]
+
+    def seed_macro(
+        rows: list[dict[str, Any]],
+        *,
+        role: str,
+        field: str,
+        severity: float | None = None,
+    ) -> str:
+        values = []
+        for seed in summary["training_seeds"]:
+            selected = [
+                row
+                for row in rows
+                if int(row["training_seed"]) == int(seed)
+                and row["checkpoint_role"] == role
+                and (severity is None or float(row["severity"]) == severity)
+            ]
+            if len(selected) != len(TASKS):
+                raise ValueError("planner seed macro lacks four tasks")
+            values.append(sum(float(row[field]) for row in selected) / len(TASKS))
+        mean = sum(values) / len(values)
+        sd = math.sqrt(
+            sum((value - mean) ** 2 for value in values) / (len(values) - 1)
+        )
+        return f"{mean:.2f}$\\pm${sd:.2f}"
+
+    means = [
+        seed_macro(
+            group_seed_rows,
+            role="base",
+            field="top1_stability_rate",
+            severity=0.08,
+        ),
+        seed_macro(
+            group_seed_rows,
+            role="endpoint",
+            field="top1_stability_rate",
+            severity=0.08,
+        ),
+        seed_macro(
+            group_seed_rows,
+            role="base",
+            field="positive_clean_regret_mean",
+            severity=0.08,
+        ),
+        seed_macro(
+            group_seed_rows,
+            role="endpoint",
+            field="positive_clean_regret_mean",
+            severity=0.08,
+        ),
+        seed_macro(full_seed_rows, role="base", field="positive_clean_regret_mean"),
+        seed_macro(
+            full_seed_rows,
+            role="endpoint",
+            field="positive_clean_regret_mean",
+        ),
+    ]
     lines.extend(
         [
             r"\midrule",
-            "Equal-task mean & " + " & ".join(f"{value:.2f}" for value in means) + r" \\",
+            "Equal-task mean & " + " & ".join(means) + r" \\",
             r"\bottomrule",
             r"\end{tabular}",
             r"\end{table}",
@@ -390,7 +458,7 @@ def build_sweep_table(rows: list[dict[str, str]]) -> str:
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Compact view of the complete nine-level Gaussian training sweep (three training seeds per level). ``Best'' selects the level with highest mean success under observation noise $\sigma=0.08$; the full trajectories over all nine levels remain in Fig.~\ref{fig:full-sweep-diagnostics}. ATR is divided by each task$\times$seed no-noise value (base $=1$) and is lower-is-better; SMPR remains on its original rate scale and is higher-is-better.}",
+        r"\caption{Compact view of the complete nine-level Gaussian training sweep. ``Best'' selects the level with highest mean success under observation noise $\sigma=0.08$; the full trajectories over all nine levels remain in Fig.~\ref{fig:full-sweep-diagnostics}. ATR is divided by each task$\times$run no-noise value (base $=1$) and is lower-is-better; SMPR remains on its original rate scale and is higher-is-better.}",
         r"\label{tab:full-sweep-compact}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{3.5pt}",
@@ -416,31 +484,172 @@ def build_sweep_table(rows: list[dict[str, str]]) -> str:
     return "\n".join(lines)
 
 
+def build_pldm_table(
+    frozen_rows: list[dict[str, str]],
+    lewm_cross_task_summary: dict[str, Any],
+) -> str:
+    """Compare PLDM-local calibration with score-aligned LeWM transfer."""
+    if len(frozen_rows) != 36 or {
+        row.get("model_family") for row in frozen_rows
+    } != {"PLDM"}:
+        raise ValueError("PLDM frozen validation is incomplete")
+
+    seeds = sorted({int(float(row["training_seed"])) for row in frozen_rows})
+    observed = {
+        (row["task"], int(round(100 * float(row["training_rho"]))))
+        for row in frozen_rows
+    }
+    expected = {(task, rho) for task in TASKS for rho in range(9)}
+    if len(seeds) != 1 or observed != expected:
+        raise ValueError("PLDM sweep must contain one complete four-task grid")
+
+    base_atr: dict[str, float] = {}
+    for task in TASKS:
+        base = [
+            row
+            for row in frozen_rows
+            if row["task"] == task and abs(float(row["training_rho"])) < 1e-12
+        ]
+        if len(base) != 1 or float(base[0]["atr_horizon_v2_q90"]) <= 0:
+            raise ValueError(f"invalid PLDM ATR reference for {task}")
+        base_atr[task] = float(base[0]["atr_horizon_v2_q90"])
+
+    local_rows = [
+        {
+            "task": row["task"],
+            "training_seed": seeds[0],
+            "rho": float(row["training_rho"]),
+            "atr_normalized_q90": (
+                float(row["atr_horizon_v2_q90"]) / base_atr[row["task"]]
+            ),
+            "smpr_delta0": float(row["smpr"]),
+            "recovery_label": row["behavior_label"],
+        }
+        for row in frozen_rows
+    ]
+    details, _, local_summary = run_all_subsets(
+        local_rows, expected_seeds=seeds
+    )
+    local_eval = [row for row in details if row["source_coverage"] == 3]
+    if len(local_eval) != len(TASKS):
+        raise ValueError("PLDM leave-one-task-out analysis is incomplete")
+
+    local_confusion = {
+        key: sum(int(row[key]) for row in local_eval)
+        for key in ("tp", "tn", "fp", "fn")
+    }
+
+    def pooled(confusion: dict[str, int]) -> tuple[float, float, float]:
+        tp, tn = confusion["tp"], confusion["tn"]
+        fp, fn = confusion["fp"], confusion["fn"]
+        recall = tp / (tp + fn)
+        specificity = tn / (tn + fp)
+        precision = tp / (tp + fp)
+        return 0.5 * (recall + specificity), precision, recall
+
+    local_ba, local_precision, local_recall = pooled(local_confusion)
+
+    lewm_thresholds: dict[str, tuple[float, float]] = {}
+    for partition in lewm_cross_task_summary.get("partitions", []):
+        if (
+            int(partition.get("source_coverage", -1)) == 3
+            and len(partition.get("evaluation_tasks", [])) == 1
+        ):
+            task = str(partition["evaluation_tasks"][0])
+            lewm_thresholds[task] = (
+                float(partition["tau_atr"]),
+                float(partition["tau_smpr"]),
+            )
+    if set(lewm_thresholds) != set(TASKS):
+        raise ValueError("LeWM three-source thresholds are incomplete")
+
+    relative_lewm_confusion = {key: 0 for key in ("tp", "tn", "fp", "fn")}
+    for row in local_rows:
+        tau_atr, tau_smpr = lewm_thresholds[str(row["task"])]
+        truth = str(row["recovery_label"]).lower() == "true"
+        pred = (
+            float(row["atr_normalized_q90"]) <= tau_atr
+            and float(row["smpr_delta0"]) >= tau_smpr
+        )
+        key = "tp" if truth and pred else "fn" if truth else "fp" if pred else "tn"
+        relative_lewm_confusion[key] += 1
+    relative_ba, relative_precision, relative_recall = pooled(
+        relative_lewm_confusion
+    )
+
+    if not any(
+        item["source_coverage"] == 3 for item in local_summary["coverage"]
+    ):
+        raise ValueError("PLDM three-source summary is missing")
+
+    lines = [
+        r"\begin{table}[H]",
+        r"\centering",
+        r"\caption{PLDM architecture-portability check on the complete four-task, nine-checkpoint Gaussian sweep. Both rows use the current task-relative ATR score: thresholds are selected on the other three PLDM tasks or transferred from the corresponding LeWM split. Metrics pool all 36 evaluation rows. Raw numerical thresholds are not assumed to be shared across model families.}",
+        r"\label{tab:pldm-architecture-portability}",
+        r"\scriptsize",
+        r"\setlength{\tabcolsep}{4.0pt}",
+        r"\begin{tabular}{lrrrrr}",
+        r"\toprule",
+        r"Calibration & BA & Precision & Recall & False pass & False miss \\",
+        r"\midrule",
+        (
+            f"PLDM-local, other three tasks & {local_ba:.3f} & "
+            f"{local_precision:.3f} & {local_recall:.3f} & "
+            f"{local_confusion['fp']} & {local_confusion['fn']} \\\\"
+        ),
+        (
+            f"LeWM-source reference, PLDM-anchored & {relative_ba:.3f} & "
+            f"{relative_precision:.3f} & {relative_recall:.3f} & "
+            f"{relative_lewm_confusion['fp']} & "
+            f"{relative_lewm_confusion['fn']} \\\\"
+        ),
+        r"\bottomrule",
+        r"\end{tabular}",
+        r"\end{table}",
+    ]
+    return "\n".join(lines)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--planner-summary", type=Path, default=DEFAULT_PLANNER)
     parser.add_argument("--full-sweep-summary", type=Path, default=DEFAULT_SWEEP)
-    parser.add_argument("--method-figure", type=Path, default=DEFAULT_METHOD_FIG)
     parser.add_argument("--planner-figure", type=Path, default=DEFAULT_PLANNER_FIG)
     parser.add_argument("--increment-table", type=Path, default=DEFAULT_INCREMENT_TABLE)
     parser.add_argument("--absolute-table", type=Path, default=DEFAULT_ABSOLUTE_TABLE)
     parser.add_argument("--sweep-table", type=Path, default=DEFAULT_SWEEP_TABLE)
+    parser.add_argument("--pldm-rows", type=Path, default=DEFAULT_PLDM_ROWS)
+    parser.add_argument(
+        "--cross-task-summary", type=Path, default=DEFAULT_CROSS_TASK_SUMMARY
+    )
+    parser.add_argument("--pldm-table", type=Path, default=DEFAULT_PLDM_TABLE)
     args = parser.parse_args()
 
     planner = _load_json(args.planner_summary)
-    if planner["validated_shard_count"] != 24 or not planner["invariants"]["pass"]:
+    if (
+        planner["validated_shard_count"] != 72
+        or planner.get("training_seeds") != [3072, 3073, 3074]
+        or not planner["invariants"]["pass"]
+    ):
         raise SystemExit("planner summary is incomplete or failed invariants")
-    plot_method(args.method_figure)
     plot_planner(planner, args.planner_figure)
     _write(args.increment_table, build_increment_table(planner))
     _write(args.absolute_table, build_absolute_table(planner))
     _write(args.sweep_table, build_sweep_table(_read_csv(args.full_sweep_summary)))
+    _write(
+        args.pldm_table,
+        build_pldm_table(
+            _read_csv(args.pldm_rows),
+            _load_json(args.cross_task_summary),
+        ),
+    )
     for path in (
-        args.method_figure,
         args.planner_figure,
         args.increment_table,
         args.absolute_table,
         args.sweep_table,
+        args.pldm_table,
     ):
         print(f"wrote {path}")
     return 0

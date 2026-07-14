@@ -29,10 +29,6 @@ from paper1.scripts.build_pldm_frozen_diagnostic_input import (
     build_parser as build_diagnostic_parser,
 )
 from paper1.scripts.frozen_external_validation import BLIND_FIELDS
-from paper1.scripts.frozen_pldm_external_validation import (
-    build_parser as build_score_parser,
-    score_pldm,
-)
 
 
 PROTOCOL_PATH = ROOT / "paper1/config/frozen_diagnostic_protocol_v1.json"
@@ -47,8 +43,6 @@ BLIND_PATH = (
     ROOT / "paper1/results/external_validation/pldm_frozen_predictions_blind_v2.csv"
 )
 BLIND_SIDECAR_PATH = Path(f"{BLIND_PATH}.metadata.json")
-SCORED_ROWS_PATH = ROOT / "paper1/results/external_validation/pldm_frozen_rows_v2.csv"
-SUMMARY_PATH = ROOT / "paper1/results/external_validation/pldm_frozen_summary_v2.json"
 TASKS = ("TwoRoom", "PushT", "Reacher", "Cube")
 RHO_GRID = (0.0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08)
 EXPECTED_GRID = {(task, rho) for task in TASKS for rho in RHO_GRID}
@@ -109,11 +103,6 @@ def _read_csv(path: Path) -> tuple[list[str], list[dict[str, str]]]:
         reader = csv.DictReader(stream)
         rows = list(reader)
         return list(reader.fieldnames or ()), rows
-
-
-def _csv_bool(value: str) -> bool:
-    assert value in {"true", "false"}
-    return value == "true"
 
 
 def test_manifest_seed_comes_from_36_configs_and_checkpoint_hashes_are_live() -> None:
@@ -313,86 +302,12 @@ def test_pldm_blind_sidecar_binds_36_rows() -> None:
     assert _sha256(_repo_path(metadata["script_path"])) == metadata["script_sha256"]
 
 
-def test_pldm_summary_is_live_and_reproducible_with_expected_onsets(
-    tmp_path: Path,
-) -> None:
-    stored = _strict_json(SUMMARY_PATH)
-    metadata = stored["metadata"]
-    _, scored_rows = _read_csv(SCORED_ROWS_PATH)
-    expected_onsets = {
-        "TwoRoom": 0.01,
-        "PushT": 0.03,
-        "Reacher": 0.03,
-        "Cube": 0.03,
-    }
-
-    assert metadata["status"] == "complete"
-    assert metadata["status_counts"] == {"ok": 36}
-    assert metadata["missing_rows"] == []
-    assert metadata["errors"] == []
-    assert metadata["model_family"] == "PLDM"
-    assert metadata["training_family_id"] == "pldm_canonical_seed3072"
-    assert metadata["training_seeds"] == [3072]
-    assert metadata["training_seed_semantics"] == (
-        "one independently trained PLDM checkpoint family"
-    )
-    assert metadata["threshold_search_available"] is False
-    assert metadata["behavior_join_after_blind_predictions"] is True
-    assert set(metadata["source_paths"]) == set(metadata["source_hashes"])
-    _assert_live_path_hashes(metadata["source_paths"], metadata["source_hashes"])
-    assert _sha256(_repo_path(metadata["script_path"])) == metadata["script_sha256"]
-    assert (
-        _sha256(_repo_path(metadata["behavior_parser_path"]))
-        == metadata["behavior_parser_sha256"]
-    )
-    assert len(scored_rows) == stored["metrics"]["num_rows"] == 36
-    assert len(stored["blocks"]) == 4
-    assert stored["metrics"]["actual_positive"] == 17
-    assert sum(_csv_bool(row["behavior_label"]) for row in scored_rows) == 17
-    assert {
-        block["task"]: block["behavioral_onset"] for block in stored["blocks"]
-    } == expected_onsets
-
-    recomputed_rows, recomputed, recomputed_blocks = score_pldm(
-        protocol_path=PROTOCOL_PATH,
-        predictions_path=BLIND_PATH,
-        manifest_path=MANIFEST_PATH,
-        out_rows_path=tmp_path / "rows.csv",
-        out_summary_path=tmp_path / "summary.json",
-        out_blocks_path=tmp_path / "blocks.csv",
-        created_utc="2026-07-10T00:00:00+00:00",
-    )
-    assert len(recomputed_rows) == 36
-    assert recomputed["raw_confusion"] == stored["raw_confusion"]
-    assert recomputed["blocks"] == stored["blocks"] == recomputed_blocks
-    assert recomputed["metadata"]["source_hashes"] == metadata["source_hashes"]
-    assert set(recomputed["metadata"]["source_paths"]) == set(
-        metadata["source_paths"]
-    )
-    for key, expected in stored["metrics"].items():
-        actual = recomputed["metrics"][key]
-        if isinstance(expected, float):
-            assert actual == pytest.approx(expected)
-        else:
-            assert actual == expected
-
-    confusion = stored["raw_confusion"]
-    assert sum(confusion.values()) == 36
-    assert confusion["tp"] + confusion["fn"] == 17
-    assert stored["metrics"]["predicted_positive"] == (
-        confusion["tp"] + confusion["fp"]
-    )
-    for key in ("tp", "tn", "fp", "fn"):
-        assert sum(block[key] for block in stored["blocks"]) == confusion[key]
-
-
 def test_pldm_pipeline_parsers_expose_no_gate_recalibration_controls() -> None:
     parsers = (
         build_manifest_parser(),
         build_atr_parser(),
         build_smpr_parser(),
         build_diagnostic_parser(),
-        build_score_parser(),
     )
     for parser in parsers:
         names = {

@@ -315,7 +315,7 @@ This is the resume point for the strengthened ACPC mainline described in
 
 - New fixed-pool runner:
   `tools/paper1_acpc_planner_stability_audit.py`. It records same-pool
-  candidate-conditioned H1/H5 ACPC, the exact squared-distance cost bound,
+  candidate-conditioned H1/H5 ACPC, the sharp squared-distance cost bound,
   top-1/elite certificates, and observed fixed-pool stability.
 - New adaptive runner:
   `tools/paper1_acpc_adaptive_cem_audit.py`. It uses a common zero initial
@@ -381,3 +381,241 @@ t-SNE remains in the appendix with an explicitly non-quantitative caption.
 - The v2 cancellation regression and protocol/source-hash tests pass (7/7 in
   the combined v1/v2 freeze check). The next safe action is to commit and push
   this correction freeze before launching any v2 shard.
+
+### Submission-strengthening execution checkpoint (2026-07-13)
+
+This section supersedes the previous live-status paragraph while preserving it
+as execution provenance.
+
+- Planner-v2 freeze commit `99d2a0c` is on both remotes. All 24 v2 shards
+  completed and validate, with 3,200 exactly joined reduced-budget rows.
+  Squared-cost-bound violations, false top-1 certificates, and false elite
+  certificates are all zero; identity H5 ACPC and first-action RMS are zero,
+  and all identity adaptive updates remain aligned.
+- The predeclared leave-one-task-out H5 increment passes for fixed-pool maximum
+  cost drift (9.4965% equal-task MAE reduction; 3/4 tasks) and adaptive
+  positive clean-history regret (12.9230%; 4/4 tasks). First-action RMS is
+  retained but does not clear the 5% effect gate (0.8136%; 4/4 tasks).
+- At severity 0.08, endpoint/base equal-task positive regret is 2.85/208.86 at
+  reduced budget and 1.01/218.69 at the deployed K=300, 30-step budget.
+  Endpoint top-1 certificate coverage spans 19--70% across tasks with no false
+  passes; coverage is zero for the fragile bases at that severity.
+- The paper now has the sharp squared-goal-cost theorem, top-1/elite
+  certificates, conditional adaptive-CEM induction, sharpness examples, a
+  vector method diagram, a four-panel planner figure, a compact full-sweep
+  table, and a per-task planner absolute table. The complete sweep stays in the
+  main paper; the t-SNE stays qualitative in the appendix. Failed repair,
+  PLDM, JVP/local-sensitivity, and other weak branches remain excluded.
+- The current normal build is 14 pages. Appendix ordering was changed so the
+  fixed-pool table fills the former page-13 blank region and the enlarged t-SNE
+  occupies page 14. The method, planner, full-sweep, and t-SNE figures have
+  received local rendered visual inspection.
+- Prospective seed3075 training was interrupted only by the frozen four-hour
+  infrastructure timeout. Exact Lightning resume is explicitly allowed by the
+  frozen protocol and logs confirm `Restored all states`. Checkpoint state at
+  this handoff: TwoRoom is running its final epoch in PTY session `23328`;
+  PushT, Reacher, and Cube retain complete epoch-2 checkpoints. Their earlier
+  short resume attempts were externally SIGTERM-terminated before a new epoch
+  boundary and did not replace the saved checkpoints.
+- Continue training one task at a time in a PTY with the exact protocol command,
+  `STABLEWM_HOME` bound to the task root, its frozen GPU, two native threads,
+  and the existing 14,400-second timeout. Do not change workers, optimizer,
+  seed, data, epoch count, or model parameters. After all epoch-10 object
+  checkpoints exist, run each frozen evaluation command from
+  `p1_prospective_seed3075_protocol_v1.json` serially, then run its seed3075
+  and combined summary commands unchanged.
+- The P1 table renderer is already provenance-aware: seed3075 is prospective,
+  seed3074 is the frozen replication, seed3073 is development-era, and
+  seed3072 remains separate/retrospective. Once results exist, update the
+  abstract, setup, P1 result, discussion, appendix control paragraph,
+  three-pillar bundle, and manifest from generated artifacts rather than
+  hand-entering values.
+- Final remaining gates: targeted and full consistency tests, normal/blind
+  14-page clean builds, warning/citation checks, all-page visual preflight,
+  explicit Paper1-only staging, one final commit, and verified pushes to both
+  remotes.
+
+### Prospective-resume checkpoint (2026-07-13 17:02 UTC)
+
+- TwoRoom exact-resume completed normally at `max_epochs=10`. The frozen
+  epoch-10 object checkpoint is present at the protocol path (72,361,012
+  bytes), alongside the full optimizer/scheduler resume checkpoint.
+- The frozen execution contract explicitly authorizes four parallel jobs with
+  one process per GPU and two native threads per process. The earlier resume
+  instability was specific to non-PTY launches, not parallel execution.
+  PushT, Reacher, and Cube are therefore active in PTY sessions `35415`,
+  `80272`, and `54571` on GPUs 5/6/7, respectively; all three report
+  `Restored all states` and resume from epoch 2. Keep the same 14,400-second
+  hard timeout and exact-resume again at the latest completed epoch if needed.
+- The resolved configs for seeds 3073/3074/3075 all contain the intended
+  `cfg.seed`; in `train.py` it directly seeds the deterministic train/validation
+  split generator. Stable-pretraining separately logs that its own Manager
+  seed is unset after model construction. This is inherited from the frozen
+  historical training pipeline, so it must not be patched mid-protocol. Treat
+  the runs as separately trained checkpoints indexed by `cfg.seed`, and list
+  fully deterministic initialization as a later engineering/reproducibility
+  improvement rather than changing the present evidence after freeze.
+- Submission code now calls the squared-goal-cost result a **sharp** bound,
+  not an exact bound: the proof gives a worst-case equality construction while
+  avoiding the misleading suggestion that the upper bound equals every
+  observed cost drift. The new manifest builder binds the prospective P1
+  protocol/results, planner-v2 protocol/summary, and submission-facing
+  figures/tables once all prospective artifacts exist.
+
+### Theory/visual continuation checkpoint (2026-07-13 21:51 UTC)
+
+- The theory chain now also proves the directly planner-facing fixed-pool
+  clean-history regret bound
+  `0 <= C_{tilde w} - C_w <= b_{tilde w} + b_w`, where `w` and `tilde w` are
+  the nominal and perturbed winners of one shared pool. This is a corollary of
+  the same sharp candidate-wise squared-goal-cost bounds and does not modify a
+  frozen runner or introduce a fitted constant. A new numerical regression
+  test verifies the implication against the existing cost-bound implementation.
+- The Introduction and experiment roadmap now name four distinct questions:
+  future-drift mechanism, planner relevance, family-local calibration, and
+  stressor scope. This removes the stale pre-planner three-question framing.
+  Failed repair, generic Lipschitz/JVP/local-sensitivity, PLDM, and weak
+  candidate-query branches remain excluded.
+- The submission-facing method schematic was removed after final risk/benefit
+  review; the equation and adjacent theorem statements now carry the method
+  definition directly. The complete four-task full-sweep and planner figures
+  were rebuilt on taller native canvases after rendered-page inspection showed
+  excessive float-page whitespace. Curves, ranges, task markers, and labels are
+  unchanged; only layout/plotting area changed. The
+  compact nine-level sweep table and absolute planner table remain in the
+  appendix, and the t-SNE remains explicitly qualitative/non-metric.
+- The current normal PDF still has exactly 14 letter-size pages. Its latest
+  LaTeX pass has no undefined citation/reference, overfull/underfull box,
+  fatal, or undefined-control-sequence diagnostics. Method, theory, full-sweep,
+  and planner pages were visually inspected at rendered submission size.
+- The focused theory/asset shard passes 24/24 tests. The frozen scientific-plan
+  SHA-256 remains
+  `e3f7d4d715c9786489235b46106abe79e4facc9f9a423fc3ab8ac9ae320fa485`;
+  do not edit that source-hash-bound plan.
+- TwoRoom seed3075 training and frozen P1 evaluation are complete; the result
+  artifact passes all recorded invariants. At this checkpoint PushT is in
+  epoch 3, while Reacher and Cube are near the end of epoch 2, in PTY sessions
+  `35415`, `80272`, and `54571`. Continue exact resume if the 14,400-second
+  protection timeout fires. Do not summarize or hand-edit P1 claim numbers
+  until all four frozen evaluations and both protocol summary commands finish.
+
+### Claim/protocol audit checkpoint (2026-07-13 22:35 UTC)
+
+- A 56-test non-GPU shard covering frozen ACPC protocols, planner-v2,
+  adaptive-CEM, theory regret, P1 MVE/summarization, three-pillar reporting,
+  and submission assets passes in full (one unrelated Gymnasium cast warning).
+- The repository-wide consistency checker exposed byte-level drift in the two
+  paired-multiseverity shell wrappers. The exact protocol-bound Git blobs were
+  recovered and compared: each committed wrapper differed only by one removed
+  EOF blank line, with no command, parameter, or execution-semantic change.
+  Restoring that blank line gives the frozen SHA-256 values
+  `0f9fab1257394ac358963da3f5c0be224fd1346d8f450ddc343c0d109faad48e`
+  (behavior) and
+  `38986f63cfce326a5987d676e9d4de81011c77b3396b6f86a08883aa535ec7ba`
+  (ATR); the paired-multiseverity protocol check now passes. The only current
+  consistency failure is the expected stale diagnostic-manifest binding, which
+  must be rebuilt after final P1 tables/results exist.
+- The method text now explicitly separates raw ACPC from checkpoint-level ATR:
+  the raw numerator, future-drift theorem, and planner quantities require no
+  realized future; normalized ATR reuses each fixed logged clean anchor's
+  transition scale for cross-task comparability, so it is an offline logged-data
+  checkpoint audit rather than an online single-history alarm.
+- Earlier weak candidate-H5 failure details were removed from the submission.
+  The paper retains only the necessary estimand boundary between logged-future
+  prediction and the separately frozen same-pool planner panel. The planner-v2
+  first-action-RMS result remains reported because it was predeclared; suppressing
+  that outcome would be selective reporting.
+- Prospective training remains healthy in PTY sessions `35415`, `80272`, and
+  `54571`. Persisted object checkpoints now include PushT epochs 1--4 and
+  Reacher/Cube epochs 1--3. Keep the exact frozen commands and resume only at
+  the latest completed checkpoint if a hard timeout fires.
+
+### Submission-scope checkpoint (2026-07-13 23:17 UTC)
+
+- The blind source bundler no longer copies `tables/*.tex`. It now collects only
+  the six table inputs and four figures actually referenced by `main.tex`, so
+  unused JVP, PLDM, failed-repair, and legacy-baseline tables cannot enter the
+  anonymous source tarball. The collector has a dedicated omission test (4/4
+  tests pass), and the exact isolated blind bundle compiles successfully at 14
+  pages with no identity or layout diagnostics.
+- P1 wording no longer calls the new seed3075 checkpoint behaviorally fragile:
+  the seed3075 protocol adds no closed-loop evaluation. The main claim is now
+  precisely the logged future-drift increment on no-noise bases under the
+  frozen visual-probe grid; the pre-existing seeds3072--3074 full sweep supplies
+  the separate behavioral fragility/recovery context.
+- A short README in `target_aligned_acpc_prospective_v1` binds protocol SHA-256
+  `9976fe09ef6f90f3d7cac898a6452b55339d5107fc2f54b90ee0f518c201102b`,
+  explains the inherited raw-runner `DEV` purpose string, forbids editing raw
+  provenance, and records that all four task outcomes must be retained. The
+  manifest builder hashes this note.
+- Current persisted training state is epoch5 for PushT, Reacher, and Cube; all
+  object checkpoint sizes are normal. PushT's prior PTY exited with code 1 only
+  after its epoch5 object checkpoint was complete; Reacher/Cube then reached
+  their watchdog boundary with complete epoch5 checkpoints. Exact frozen-command
+  resumes have all reported `Restored all states` without traceback and now run
+  in PTYs `72918`, `37401`, and `53095` on GPUs 5/6/7. Read-only monitor session
+  `59288` is waiting for all three epoch6 checkpoints. The final generation
+  order is frozen as P1 summaries, three-pillar tables, prose/tests, submission
+  assets, then the hash manifest last.
+
+### Resume checkpoint (2026-07-14 01:14 UTC)
+
+- The prior PushT resume in PTY `72918` exited during epoch 6 after a single
+  `DataLoader worker` segmentation fault. The last complete epoch-5 object
+  checkpoint remains intact; no model, data, seed, or protocol parameter was
+  changed. Reacher and Cube continue normally in PTYs `37401` and `53095`.
+- PushT was exact-resumed once more with the protocol command on GPU 5 in PTY
+  `35727`. Lightning reports `Restored all states` from the frozen checkpoint,
+  training has re-entered epoch 6, and no traceback was present at startup.
+  Continue to treat any further infrastructure exit as an exact-resume event,
+  never as authorization to change the frozen training configuration.
+- The CairnLab-derived writing/review/figure rules were re-audited during the
+  GPU wait. Finalization must include a reverse-outline and claim--evidence
+  pass, de-AI wording scan, final-size visual inspection, vector/font checks,
+  self-contained captions, blind-source compilation, and explicit omission of
+  unused legacy tables/figures. The t-SNE remains qualitative and the complete
+  four-task sweep remains in scope.
+
+### Three-seed planner completion checkpoint (2026-07-14 06:18 UTC)
+
+- The planner mechanism panel now treats training seeds 3072/3073/3074
+  symmetrically. Seed3074 contributes the 24 validated v2 reference shards;
+  48 matching shards for seeds3072/3073 were executed under the frozen v4
+  extension, giving 72 validated shards and 9,600 joined reduced-budget
+  history records. All 48 new processes exited successfully.
+- The unexecuted v3 freeze was superseded before any v3 result existed because
+  its source manifest omitted the transitive single-seed summarizer. The v4
+  correction changes no checkpoint, seed, candidate budget, response, feature,
+  split, or gate; it adds the missing source binding and records v3 as
+  superseded. Do not edit the v4-bound runner, summarizers, freeze scripts, or
+  tests after this point.
+- Fixed-pool maximum-cost-drift MAE reductions are 6.6%, 7.6%, and 9.5%
+  (7.9 +/- 1.4% across seeds): all three seed means are positive, two of three
+  seed gates pass, and 8/12 task--seed cells improve. This is reported as a
+  directionally consistent, partially replicated increment, not a universal
+  task-level result.
+- Adaptive positive decision-regret reductions are 15.7%, 16.9%, and 12.9%
+  (15.2 +/- 2.0%): all three seed gates and all 12 task--seed cells pass.
+  First-action-RMS remains the predeclared negative result at 1.1 +/- 0.5%,
+  with zero of three seed gates passing.
+- The squared-cost bound, top-1 and elite certificates have zero violations or
+  false passes. Identity probes have zero five-step ACPC and zero first-action
+  RMS, and every active identity adaptive update remains aligned. Re-running
+  the v4 summarizer from all 72 raw/reference shards produced byte-identical
+  JSON and CSV summaries.
+- The paper, Figure 4, both planner tables, submission-asset builder, script
+  README, and final scientific remediation plan now use the three-seed
+  aggregation. The active targeted regression shard passes 13/13 tests. The
+  historical v2 source-hash assertion remains an archived pre-existing failure
+  because its frozen manifest names an earlier summarizer hash; active v4
+  explicitly binds the current transitive source and passes. Do not rewrite a
+  historical frozen manifest to conceal that provenance transition.
+- The rebuilt normal PDF is 19 letter-size pages, matching the immediately
+  preceding arXiv/full-report page count. Figure 2 was reduced to 95% width to
+  avoid a one-page float cascade; the scientific content is unchanged. Final
+  visual inspection found the three-seed planner panel and appendix table
+  readable, and the LaTeX log contains no overfull/underfull, undefined
+  citation/reference, or fatal diagnostics.
+- The only paper-local human blocker remains replacing the arXiv author
+  placeholder. Separately, the previously exposed GitHub PAT must be revoked
+  or rotated on GitHub even though the local remote URL has been sanitized.

@@ -9,6 +9,8 @@ from paper1.scripts.build_three_pillar_evidence import (
     _classification_metrics,
     _clopper_pearson_interval,
     _one_sided_binomial_upper,
+    _render_p1_absolute_table,
+    build,
 )
 from paper1.scripts.summarize_target_aligned_acpc_four_task import (
     _one_sided_sign_p_value,
@@ -93,3 +95,36 @@ def test_generated_three_pillar_bundle_preserves_claim_boundaries() -> None:
     ]["evaluation_target"]
     assert "not an absolute stability label" in p3["boundary"]
     assert "reference checkpoint" in p3["boundary"]
+
+
+def test_failed_prospective_gate_is_reported_not_suppressed(tmp_path: Path) -> None:
+    source = ROOT / (
+        "paper1/results/target_aligned_acpc_dev/"
+        "meta_four_task_seeds3073_3074_goal25_base_endpoint_v1.json"
+    )
+    p1 = json.loads(source.read_text(encoding="utf-8"))
+    p1["primary_logged_fragile_base"][
+        "all_available_seeds_meet_three_task_gate"
+    ] = False
+    failed_meta = tmp_path / "failed_p1_meta.json"
+    failed_meta.write_text(json.dumps(p1), encoding="utf-8")
+
+    payload = build(
+        p1_meta_path=failed_meta,
+        p2_rows_path=ROOT / "paper1/results/frozen_external_validation_rows_v2.csv",
+        p2_summary_path=ROOT
+        / "paper1/results/frozen_external_validation_summary_v3.json",
+        p3_summary_path=ROOT
+        / "paper1/results/external_validation/cross_stressor_fixed_rho_summary.json",
+        p3_rows_path=ROOT
+        / "paper1/results/external_validation/cross_stressor_all_pairs.csv",
+    )
+
+    assert payload["metadata"]["p1_prospective_gate_pass"] is False
+    assert "must be narrowed" in payload["metadata"]["claims"][0]
+    assert payload["P1"]["primary_logged_fragile_base"]["cells"]
+
+    table = _render_p1_absolute_table(payload["P1"])
+    assert "Absolute held-out MAE" in table
+    assert "TwoRoom & 3073" in table
+    assert "Cube & 3074" in table

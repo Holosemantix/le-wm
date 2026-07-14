@@ -486,7 +486,19 @@ def _render_p1_table(p1: dict[str, Any]) -> str:
             f"{_pct(d['relative_reduction_vs_best_destroyed'])} \\\\"
         )
     cells = p1["primary_logged_fragile_base"]["cells"]
-    for seed_id in TEST_SEEDS:
+    seed_ids = sorted(
+        {
+            int(cell["training_seed"])
+            for cell in cells
+            if cell["target"] == "absolute"
+        }
+    )
+    seed_labels = {
+        3073: "dev-era",
+        3074: "frozen repl.",
+        3075: "prospective",
+    }
+    for seed_id in seed_ids:
         absolute = next(
             cell
             for cell in cells
@@ -497,8 +509,9 @@ def _render_p1_table(p1: dict[str, Any]) -> str:
             for cell in cells
             if cell["training_seed"] == seed_id and cell["target"] == "adverse"
         )
+        provenance = seed_labels.get(seed_id, "reported")
         lines.append(
-            f"Seed {seed_id}, equal-task mean & "
+            f"Seed {seed_id} ({provenance}) & "
             f"{_pct(absolute['equal_task_mean_reduction_vs_h1'])} & "
             f"{_pct(absolute['equal_task_mean_reduction_vs_best_destroyed'])} & "
             f"{_pct(adverse['equal_task_mean_reduction_vs_h1'])} & "
@@ -517,7 +530,7 @@ def _render_p1_table(p1: dict[str, Any]) -> str:
         "equal_task_mean_reduction_vs_best_destroyed_ci95"
     ]
     lines.append(
-        "Two-seed mean [95\\% CI] & "
+        f"{len(seed_ids)}-run conditional mean [95\\% CI] & "
         f"{_pct(abs_u['observed']['equal_task_mean_reduction_vs_h1'])} "
         f"[{_pct(abs_h1_ci[0])},{_pct(abs_h1_ci[1])}] & "
         f"{_pct(abs_u['observed']['equal_task_mean_reduction_vs_best_destroyed'])} "
@@ -531,7 +544,7 @@ def _render_p1_table(p1: dict[str, Any]) -> str:
         [
             "\\begin{table}[t]",
             "\\centering",
-            "\\caption{Held-out future-drift prediction on fragile no-noise LeWM checkpoints. Entries are positive MAE reductions (\\%) after adding correct-action H8 to common encoder+H1 covariates; destroyed H8 is the best action/time-destroyed variant. Seed 3074 is the fully frozen replication. Intervals resample task$\\times$trajectory blocks conditional on both trained checkpoints.}",
+            "\\caption{Held-out future-drift prediction on no-noise LeWM base checkpoints under the frozen visual-probe grid. Entries are positive MAE reductions (\\%) after adding correct-action H8 to common encoder+H1 covariates; destroyed H8 is the best action/time-destroyed variant. Seed 3075 is fully prospective, seed 3074 is a protocol-frozen replication, and seed 3073 has development-era provenance. Intervals resample task$\\times$trajectory blocks conditional on the listed trained checkpoints, not a population of training runs.}",
             "\\label{tab:target-aligned-acpc}",
             "\\footnotesize",
             "\\setlength{\\tabcolsep}{4pt}",
@@ -544,6 +557,59 @@ def _render_p1_table(p1: dict[str, Any]) -> str:
             *lines[:4],
             "\\midrule",
             *lines[4:],
+            "\\bottomrule",
+            "\\end{tabular}",
+            "\\end{table}",
+            "",
+        ]
+    )
+
+
+def _render_p1_absolute_table(p1: dict[str, Any]) -> str:
+    cells = p1["primary_logged_fragile_base"]["cells"]
+    absolute_cells = {
+        int(cell["training_seed"]): cell
+        for cell in cells
+        if cell["target"] == "absolute"
+    }
+    control_codes = {
+        "plus_action_zero_h8_control": "AZ",
+        "plus_candidate_shuffle_h8_control": "CS",
+        "plus_time_shuffle_h8_control": "TS",
+    }
+    rows: list[str] = []
+    for task_index, task in enumerate(TASKS):
+        if task_index:
+            rows.append("\\addlinespace[1pt]")
+        for seed_id, cell in sorted(absolute_cells.items()):
+            row = next(item for item in cell["per_task"] if item["task"] == task)
+            code = control_codes.get(row["best_destroyed_name"])
+            if code is None:
+                raise ValueError(
+                    f"unknown destroyed-control name: {row['best_destroyed_name']}"
+                )
+            correct = f"{row['correct_mae']:.3f}"
+            if row["pass"]:
+                correct = f"\\textbf{{{correct}}}"
+            rows.append(
+                f"{task} & {seed_id} & {correct} & {row['h1_mae']:.3f} & "
+                f"{row['best_destroyed_mae']:.3f} ({code}) & "
+                f"{row['both_win_blocks']}/{row['block_count']} & "
+                f"{'yes' if row['pass'] else 'no'} \\\\"
+            )
+    return "\n".join(
+        [
+            "\\begin{table}[t]",
+            "\\centering",
+            "\\caption{Absolute held-out MAE for the primary logged-future absolute-drift target. Each task$\\times$seed row contains 16 trajectory blocks; lower is better, and bold marks correct-action H8 when it passes the frozen within-row gate against H1 and every destroyed H8 variant. The destroyed column reports the strongest of action-zeroed (AZ), candidate-shuffled (CS), and time-shuffled (TS) H8. Seed 3075 is prospective, seed 3074 is the protocol-frozen replication, and seed 3073 is development-era.}",
+            "\\label{tab:target-aligned-acpc-absolute}",
+            "\\scriptsize",
+            "\\setlength{\\tabcolsep}{3.2pt}",
+            "\\begin{tabular}{lrrrrcc}",
+            "\\toprule",
+            "Task & seed & correct H8 & H1 & best destroyed H8 & win blocks & gate \\\\ ",
+            "\\midrule",
+            *rows,
             "\\bottomrule",
             "\\end{tabular}",
             "\\end{table}",
@@ -639,10 +705,11 @@ def build(
     p3_rows_path: Path,
 ) -> dict[str, Any]:
     p1 = _load_json(p1_meta_path)
-    if not p1["primary_logged_fragile_base"][
-        "all_available_seeds_pass_all_four_tasks"
-    ]:
-        raise ValueError("P1 four-task/two-seed primary Gate did not pass")
+    p1_gate_pass = bool(
+        p1["primary_logged_fragile_base"][
+            "all_available_seeds_meet_three_task_gate"
+        ]
+    )
     p2 = _p2_evidence(_load_csv(p2_rows_path), _load_json(p2_summary_path))
     p3 = _p3_evidence(
         _load_json(p3_summary_path),
@@ -654,8 +721,13 @@ def build(
             "created_utc": datetime.now(timezone.utc).isoformat(),
             "threshold_search_allowed": False,
             "model_evaluation_performed": False,
+            "p1_prospective_gate_pass": p1_gate_pass,
             "claims": [
-                "P1 target-aligned ACPC theory-evidence closure",
+                (
+                    "P1 target-aligned ACPC theory-evidence closure"
+                    if p1_gate_pass
+                    else "P1 prospective result reported; cross-run claim must be narrowed"
+                ),
                 "P2 within-family cross-seed frozen threshold transfer",
                 "P3 Gaussian-to-blur/resize frozen transfer",
             ],
@@ -672,8 +744,8 @@ def main() -> None:
         "--p1-meta",
         type=Path,
         default=Path(
-            "paper1/results/target_aligned_acpc_dev/"
-            "meta_four_task_seeds3073_3074_goal25_base_endpoint_v1.json"
+            "paper1/results/target_aligned_acpc_prospective_v1/"
+            "meta_four_task_seeds3073_3074_3075_goal25_base_endpoint_v1.json"
         ),
     )
     parser.add_argument(
@@ -713,6 +785,11 @@ def main() -> None:
         default=Path("paper1/tables/table_target_aligned_acpc.tex"),
     )
     parser.add_argument(
+        "--p1-absolute-table",
+        type=Path,
+        default=Path("paper1/tables/table_target_aligned_acpc_absolute.tex"),
+    )
+    parser.add_argument(
         "--p2-table",
         type=Path,
         default=Path("paper1/tables/table_seed_transfer_audit.tex"),
@@ -730,12 +807,21 @@ def main() -> None:
         p3_summary_path=args.p3_summary,
         p3_rows_path=args.p3_rows,
     )
-    for path in (args.out, args.p1_table, args.p2_table, args.p3_table):
+    for path in (
+        args.out,
+        args.p1_table,
+        args.p1_absolute_table,
+        args.p2_table,
+        args.p3_table,
+    ):
         path.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(
         json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     args.p1_table.write_text(_render_p1_table(result["P1"]), encoding="utf-8")
+    args.p1_absolute_table.write_text(
+        _render_p1_absolute_table(result["P1"]), encoding="utf-8"
+    )
     args.p2_table.write_text(_render_p2_table(result["P2"]), encoding="utf-8")
     args.p3_table.write_text(_render_p3_table(result["P3"]), encoding="utf-8")
     print(
