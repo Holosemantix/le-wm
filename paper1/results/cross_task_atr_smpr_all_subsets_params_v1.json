@@ -26,6 +26,10 @@
     "0.07",
     "0.08"
   ],
+  "diagnostic_fields": {
+    "atr": "horizon-v2 q90 relative to the no-augmentation checkpoint",
+    "smpr": "horizon-v2 q90 tube with strict normalized margin 0.10"
+  },
   "evaluation_outcomes_used_for_selection": false,
   "rule": "ATR_rel <= tau_atr AND SMPR >= tau_smpr",
   "schema_version": "paper1-cross-task-selective-rule-params-1.0",
@@ -49,14 +53,14 @@
       "partition_id": "src1_tworoom",
       "selected_thresholds": {
         "tau_atr": 0.3,
-        "tau_smpr": 0.9
+        "tau_smpr": 0.95
       },
       "selection_objective": {
         "false_early": 0,
-        "false_late": 4,
-        "mean_abs_start_error": 0.013333333333333332,
-        "negative_macro_balanced_accuracy": -0.9136904761904762,
-        "negative_tau_smpr_tiebreak": -0.9,
+        "false_late": 3,
+        "mean_abs_start_error": 0.01,
+        "negative_macro_balanced_accuracy": -0.9345238095238095,
+        "negative_tau_smpr_tiebreak": -0.95,
         "tau_atr_tiebreak": 0.3
       },
       "source_coverage": 1,
@@ -76,7 +80,7 @@
       ],
       "partition_id": "src1_pusht",
       "selected_thresholds": {
-        "tau_atr": 0.2,
+        "tau_atr": 0.3,
         "tau_smpr": 0.95
       },
       "selection_objective": {
@@ -85,7 +89,7 @@
         "mean_abs_start_error": 0.0033333333333333327,
         "negative_macro_balanced_accuracy": -0.9166666666666666,
         "negative_tau_smpr_tiebreak": -0.95,
-        "tau_atr_tiebreak": 0.2
+        "tau_atr_tiebreak": 0.3
       },
       "source_coverage": 1,
       "source_rows": 27,
@@ -104,7 +108,7 @@
       ],
       "partition_id": "src1_reacher",
       "selected_thresholds": {
-        "tau_atr": 0.15,
+        "tau_atr": 0.1,
         "tau_smpr": 0.95
       },
       "selection_objective": {
@@ -113,7 +117,7 @@
         "mean_abs_start_error": 0.0,
         "negative_macro_balanced_accuracy": -0.9444444444444444,
         "negative_tau_smpr_tiebreak": -0.95,
-        "tau_atr_tiebreak": 0.15
+        "tau_atr_tiebreak": 0.1
       },
       "source_coverage": 1,
       "source_rows": 27,
@@ -137,9 +141,9 @@
       },
       "selection_objective": {
         "false_early": 1,
-        "false_late": 2,
-        "mean_abs_start_error": 0.006666666666666667,
-        "negative_macro_balanced_accuracy": -0.7833333333333333,
+        "false_late": 0,
+        "mean_abs_start_error": 0.0033333333333333327,
+        "negative_macro_balanced_accuracy": -0.8583333333333333,
         "negative_tau_smpr_tiebreak": -0.95,
         "tau_atr_tiebreak": 0.3
       },
@@ -160,14 +164,14 @@
       "partition_id": "src2_tworoom_pusht",
       "selected_thresholds": {
         "tau_atr": 0.3,
-        "tau_smpr": 0.9
+        "tau_smpr": 0.95
       },
       "selection_objective": {
         "false_early": 0,
-        "false_late": 5,
-        "mean_abs_start_error": 0.008333333333333331,
-        "negative_macro_balanced_accuracy": -0.9151785714285714,
-        "negative_tau_smpr_tiebreak": -0.9,
+        "false_late": 4,
+        "mean_abs_start_error": 0.006666666666666666,
+        "negative_macro_balanced_accuracy": -0.9255952380952381,
+        "negative_tau_smpr_tiebreak": -0.95,
         "tau_atr_tiebreak": 0.3
       },
       "source_coverage": 2,
@@ -188,14 +192,14 @@
       "partition_id": "src2_tworoom_reacher",
       "selected_thresholds": {
         "tau_atr": 0.3,
-        "tau_smpr": 0.9
+        "tau_smpr": 0.95
       },
       "selection_objective": {
         "false_early": 1,
-        "false_late": 4,
-        "mean_abs_start_error": 0.008333333333333331,
-        "negative_macro_balanced_accuracy": -0.9012896825396826,
-        "negative_tau_smpr_tiebreak": -0.9,
+        "false_late": 3,
+        "mean_abs_start_error": 0.006666666666666666,
+        "negative_macro_balanced_accuracy": -0.9117063492063492,
+        "negative_tau_smpr_tiebreak": -0.95,
         "tau_atr_tiebreak": 0.3
       },
       "source_coverage": 2,
@@ -216,14 +220,14 @@
       "partition_id": "src2_tworoom_cube",
       "selected_thresholds": {
         "tau_atr": 0.3,
-        "tau_smpr": 0.9
+        "tau_smpr": 0.95
       },
       "selection_objective": {
         "false_early": 1,
-        "false_late": 6,
-        "mean_abs_start_error": 0.009999999999999998,
-        "negative_macro_balanced_accuracy": -0.8485119047619047,
-        "negative_tau_smpr_tiebreak": -0.9,
+        "false_late": 3,
+        "mean_abs_start_error": 0.006666666666666666,
+        "negative_macro_balanced_accuracy": -0.8964285714285715,
+        "negative_tau_smpr_tiebreak": -0.95,
         "tau_atr_tiebreak": 0.3
       },
       "source_coverage": 2,
@@ -243,16 +247,16 @@
       ],
       "partition_id": "src2_pusht_reacher",
       "selected_thresholds": {
-        "tau_atr": 0.2,
+        "tau_atr": 0.3,
         "tau_smpr": 0.95
       },
       "selection_objective": {
-        "false_early": 0,
+        "false_early": 1,
         "false_late": 1,
-        "mean_abs_start_error": 0.0016666666666666663,
-        "negative_macro_balanced_accuracy": -0.9305555555555556,
+        "mean_abs_start_error": 0.0033333333333333327,
+        "negative_macro_balanced_accuracy": -0.9027777777777778,
         "negative_tau_smpr_tiebreak": -0.95,
-        "tau_atr_tiebreak": 0.2
+        "tau_atr_tiebreak": 0.3
       },
       "source_coverage": 2,
       "source_rows": 54,
@@ -276,9 +280,9 @@
       },
       "selection_objective": {
         "false_early": 1,
-        "false_late": 3,
-        "mean_abs_start_error": 0.005,
-        "negative_macro_balanced_accuracy": -0.85,
+        "false_late": 1,
+        "mean_abs_start_error": 0.0033333333333333327,
+        "negative_macro_balanced_accuracy": -0.8875,
         "negative_tau_smpr_tiebreak": -0.95,
         "tau_atr_tiebreak": 0.3
       },
@@ -299,16 +303,16 @@
       ],
       "partition_id": "src2_reacher_cube",
       "selected_thresholds": {
-        "tau_atr": 0.2,
+        "tau_atr": 0.3,
         "tau_smpr": 0.95
       },
       "selection_objective": {
-        "false_early": 1,
-        "false_late": 3,
-        "mean_abs_start_error": 0.005,
-        "negative_macro_balanced_accuracy": -0.85,
+        "false_early": 2,
+        "false_late": 0,
+        "mean_abs_start_error": 0.0033333333333333327,
+        "negative_macro_balanced_accuracy": -0.8736111111111111,
         "negative_tau_smpr_tiebreak": -0.95,
-        "tau_atr_tiebreak": 0.2
+        "tau_atr_tiebreak": 0.3
       },
       "source_coverage": 2,
       "source_rows": 54,
@@ -327,14 +331,14 @@
       "partition_id": "src3_tworoom_pusht_reacher",
       "selected_thresholds": {
         "tau_atr": 0.3,
-        "tau_smpr": 0.9
+        "tau_smpr": 0.95
       },
       "selection_objective": {
         "false_early": 1,
-        "false_late": 5,
-        "mean_abs_start_error": 0.006666666666666666,
-        "negative_macro_balanced_accuracy": -0.906415343915344,
-        "negative_tau_smpr_tiebreak": -0.9,
+        "false_late": 4,
+        "mean_abs_start_error": 0.005555555555555555,
+        "negative_macro_balanced_accuracy": -0.9133597883597884,
+        "negative_tau_smpr_tiebreak": -0.95,
         "tau_atr_tiebreak": 0.3
       },
       "source_coverage": 3,
@@ -355,14 +359,14 @@
       "partition_id": "src3_tworoom_pusht_cube",
       "selected_thresholds": {
         "tau_atr": 0.3,
-        "tau_smpr": 0.9
+        "tau_smpr": 0.95
       },
       "selection_objective": {
         "false_early": 1,
-        "false_late": 7,
-        "mean_abs_start_error": 0.0077777777777777776,
-        "negative_macro_balanced_accuracy": -0.8712301587301587,
-        "negative_tau_smpr_tiebreak": -0.9,
+        "false_late": 4,
+        "mean_abs_start_error": 0.005555555555555555,
+        "negative_macro_balanced_accuracy": -0.9031746031746032,
+        "negative_tau_smpr_tiebreak": -0.95,
         "tau_atr_tiebreak": 0.3
       },
       "source_coverage": 3,
@@ -383,14 +387,14 @@
       "partition_id": "src3_tworoom_reacher_cube",
       "selected_thresholds": {
         "tau_atr": 0.3,
-        "tau_smpr": 0.9
+        "tau_smpr": 0.95
       },
       "selection_objective": {
         "false_early": 2,
-        "false_late": 6,
-        "mean_abs_start_error": 0.0077777777777777776,
-        "negative_macro_balanced_accuracy": -0.8619708994708994,
-        "negative_tau_smpr_tiebreak": -0.9,
+        "false_late": 3,
+        "mean_abs_start_error": 0.005555555555555555,
+        "negative_macro_balanced_accuracy": -0.8939153439153439,
+        "negative_tau_smpr_tiebreak": -0.95,
         "tau_atr_tiebreak": 0.3
       },
       "source_coverage": 3,
@@ -410,16 +414,16 @@
       ],
       "partition_id": "src3_pusht_reacher_cube",
       "selected_thresholds": {
-        "tau_atr": 0.2,
+        "tau_atr": 0.3,
         "tau_smpr": 0.95
       },
       "selection_objective": {
-        "false_early": 1,
-        "false_late": 4,
-        "mean_abs_start_error": 0.0044444444444444444,
-        "negative_macro_balanced_accuracy": -0.8722222222222222,
+        "false_early": 2,
+        "false_late": 1,
+        "mean_abs_start_error": 0.0033333333333333327,
+        "negative_macro_balanced_accuracy": -0.887962962962963,
         "negative_tau_smpr_tiebreak": -0.95,
-        "tau_atr_tiebreak": 0.2
+        "tau_atr_tiebreak": 0.3
       },
       "source_coverage": 3,
       "source_rows": 81,

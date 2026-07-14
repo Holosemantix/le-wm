@@ -1,6 +1,6 @@
 \begin{table}[t]
 \centering
-\caption{Transfer of the selective ACPC score from Gaussian noise to blur and resize. For each task, thresholds are selected on the other three Gaussian-noise tasks and then fixed. The table compares the score change with the change in planning success rate between checkpoints trained with and without Gaussian augmentation.}
+\caption{Transfer of the calibrated selective score from Gaussian noise to blur and resize. For each task, thresholds are selected on the other three Gaussian-noise tasks and then fixed. The table compares the score change with the change in planning success rate between checkpoints trained with and without Gaussian augmentation.}
 \label{tab:cross-stressor-selective-transfer}
 \small
 \setlength{\tabcolsep}{4pt}
@@ -8,9 +8,9 @@
 \toprule
 Visual shift & Pairs & BA & Precision / recall & Spearman & Discordant \\
 \midrule
-All pairs & 24 & 0.889 & 0.882 / 1.000 & 0.909 & 2 \\
-Blur & 12 & 0.875 & 0.889 / 1.000 & 0.937 & 1 \\
-Resize & 12 & 0.900 & 0.875 / 1.000 & 0.859 & 1 \\
+All pairs & 24 & 0.889 & 0.882 / 1.000 & 0.835 & 2 \\
+Blur & 12 & 0.875 & 0.889 / 1.000 & 0.873 & 1 \\
+Resize & 12 & 0.900 & 0.875 / 1.000 & 0.746 & 1 \\
 \bottomrule
 \end{tabular}
 \end{table}

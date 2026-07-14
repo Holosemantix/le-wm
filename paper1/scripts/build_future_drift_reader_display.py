@@ -101,7 +101,7 @@ def _write_summary_table(summaries: list[dict[str, Any]]) -> None:
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Predicting the change in eight-step latent error under a visual perturbation. All regressions use the same target and base features; they differ only in the ACPC feature. The recorded-action eight-step feature is compared with one-step ACPC and with the strongest same-horizon feature using zeroed or shuffled actions. Values are relative reductions in held-out MAE after rotating evaluation over 16 trajectory groups; higher is better.}",
+        r"\caption{Predicting the change in eight-step latent error under a visual perturbation. All regressions use the same target and base features; they differ only in the ACPC feature. The recorded-action eight-step feature is compared with one-step ACPC and with the strongest of three same-horizon features using zeroed actions, actions from another trajectory, or time-shuffled actions. Values are relative reductions in held-out MAE after rotating evaluation over 16 trajectory groups; higher is better.}",
         r"\label{tab:target-aligned-acpc}",
         r"\small",
         r"\setlength{\tabcolsep}{6pt}",
@@ -132,7 +132,7 @@ def _write_absolute_table(rows: list[dict[str, Any]]) -> None:
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Held-out MAE for predicting the absolute change in eight-step latent prediction error. Each row contains 16 trajectory groups. The recorded-action column uses eight-step ACPC with the observed actions; the control column uses the strongest eight-step feature with zeroed or shuffled actions. Lower is better.}",
+        r"\caption{Held-out MAE for predicting the absolute change in eight-step latent prediction error. Each row contains 16 trajectory groups. The recorded-action column uses eight-step ACPC with the observed actions; the control column uses the strongest of three eight-step features with zeroed actions, actions from another trajectory, or time-shuffled actions. Lower is better.}",
         r"\label{tab:target-aligned-acpc-absolute}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{3.6pt}",

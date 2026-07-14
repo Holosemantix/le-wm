@@ -150,10 +150,10 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             x = _task_rhos(trs)
             score = _mean_by_rho(trs, "obs_sigma_008_score")
             atr = _mean_by_rho(trs, "atr_normalized_q90")
-            smpr = _mean_by_rho(trs, "smpr_delta0")
+            smpr = _mean_by_rho(trs, "smpr_delta010")
             score_lo, score_hi = _range_by_rho(trs, "obs_sigma_008_score")
             atr_lo, atr_hi = _range_by_rho(trs, "atr_normalized_q90")
-            smpr_lo, smpr_hi = _range_by_rho(trs, "smpr_delta0")
+            smpr_lo, smpr_hi = _range_by_rho(trs, "smpr_delta010")
             recovery = _rate_by_rho(trs, "recovery_label")
 
             _shade_recovery(score_ax, x, recovery)
@@ -289,7 +289,7 @@ def plot_region(rows: list[dict[str, str]], out_fig: Path) -> None:
             recovered = str(row.get("recovery_label", "")).lower() == "true"
             color = "#1f77b4" if recovered else "#8c8c8c"
             marker = "o" if int(float(row["training_seed"])) == 3072 else "s" if int(float(row["training_seed"])) == 3073 else "^"
-            ax.scatter(fnum(row["atr_normalized_q90"]), fnum(row["smpr_delta0"]), s=26, alpha=0.78, c=color, marker=marker)
+            ax.scatter(fnum(row["atr_normalized_q90"]), fnum(row["smpr_delta010"]), s=26, alpha=0.78, c=color, marker=marker)
         ax.set_title(task, fontsize=10)
         ax.grid(True, alpha=0.25)
         ax.set_xlim(-0.02, 1.08)

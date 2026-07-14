@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Build full-sweep Paper1 diagnostics from retained evaluation summaries.
+"""Build the canonical horizon-v2 full-sweep diagnostics for Paper 1.
 
 This script is training-free. It joins existing closed-loop Gaussian evaluation
-summaries, ACPC fixed-pool summaries, and full-sweep SMPR diagnostics. Fields
-that require unavailable raw fixed-pool traces or sample-level ACPC radii are
-left empty rather than inferred from summary statistics.
+summaries, ACPC fixed-pool summaries, and the protocol-bound horizon-v2
+ATR/SMPR artifacts. Fields that require unavailable raw fixed-pool traces or
+unused legacy SMPR margins are left empty rather than inferred.
 """
 from __future__ import annotations
 
@@ -31,7 +31,16 @@ from .utils_paper1_io import (
 
 DEFAULT_EVALS = ROOT / "assets" / "paper1_data" / "three_seed_gaussian_sweep_summary_20260706.json"
 DEFAULT_PHASE0 = ROOT / "assets" / "paper1_data" / "acpc_phase0_lewm_three_seed.json"
-DEFAULT_DIAGNOSTICS = ROOT / "paper1" / "results" / "prospective_diagnostic" / "diagnostics_all_ckpts.csv"
+DEFAULT_CALIBRATION_DIAGNOSTICS = (
+    ROOT / "paper1" / "results" / "frozen_diagnostic_protocol_calibration.json"
+)
+DEFAULT_EXTERNAL_DIAGNOSTICS = (
+    ROOT
+    / "paper1"
+    / "results"
+    / "external_validation"
+    / "lewm_heldout_diagnostic_input_v4.json"
+)
 DEFAULT_OUT = ROOT / "paper1" / "results" / "full_sweep_diagnostics.csv"
 DEFAULT_SUMMARY = ROOT / "paper1" / "results" / "full_sweep_diagnostics_summary.csv"
 
@@ -87,8 +96,8 @@ SUMMARY_FIELDS = [
     "recovery_label_rate",
     "atr_normalized_q90_mean",
     "atr_normalized_q90_pstdev",
-    "smpr_delta0_mean",
-    "smpr_delta0_pstdev",
+    "smpr_delta010_mean",
+    "smpr_delta010_pstdev",
     "proxy_gap_q50q90_mean",
     "proxy_gap_q50q90_pstdev",
     "proxy_gap_positive_rate",
@@ -139,38 +148,70 @@ def _phase0_index(path: Path) -> dict[tuple[str, int, str], dict[str, float]]:
     return out
 
 
-def _diagnostic_index(path: Path) -> dict[tuple[str, int, str], dict[str, float]]:
-    out = {}
-    for row in read_csv(path):
-        key = (row["task"], int(row["train_seed"]), fmt_rho(row["stdmax"]))
+def _diagnostic_index(
+    calibration_path: Path,
+    external_path: Path,
+) -> dict[tuple[str, int, str], dict[str, float]]:
+    calibration = read_json(calibration_path).get("calibration_rows", [])
+    external = read_json(external_path).get("rows", [])
+    out: dict[tuple[str, int, str], dict[str, float]] = {}
+    for row in [*calibration, *external]:
+        if row.get("status", "ok") != "ok":
+            continue
+        key = (
+            str(row["task"]),
+            int(row["training_seed"]),
+            fmt_rho(row["training_rho"]),
+        )
+        if key in out:
+            raise ValueError(f"duplicate canonical diagnostic row: {key}")
+        atr = fnum(row.get("atr_horizon_v2_q90"))
+        smpr = fnum(row.get("smpr"))
+        if not (math.isfinite(atr) and atr > 0 and math.isfinite(smpr)):
+            raise ValueError(f"invalid canonical ATR/SMPR row: {key}")
         out[key] = {
-            "atr_q90": fnum(row.get("atr_q90")),
-            "same_radius_q90": fnum(row.get("same_radius_q90")),
-            "clean_transition_l2_median": fnum(row.get("clean_transition_l2_median")),
-            "smpr_delta0": fnum(row.get("smpr")),
-            "semantic_margin_median": fnum(row.get("semantic_margin_median")),
-            "semantic_pair_count": fnum(row.get("semantic_pair_count")),
+            "atr_q90": atr,
+            "same_radius_q90": atr,
+            "smpr_delta010": smpr,
+            "semantic_pair_count": row.get("semantic_pair_count", ""),
         }
+
+    expected = {
+        (task, seed, rho) for task in TASKS for seed in SEEDS for rho in RHO_GRID
+    }
+    if set(out) != expected:
+        missing = sorted(expected - set(out))
+        extra = sorted(set(out) - expected)
+        raise ValueError(
+            f"canonical diagnostic grid mismatch: missing={missing[:8]}, extra={extra[:8]}"
+        )
     return out
 
 
-def build_rows(eval_path: Path, phase0_path: Path, diagnostics_path: Path) -> list[dict[str, object]]:
+def build_rows(
+    eval_path: Path,
+    phase0_path: Path,
+    calibration_diagnostics_path: Path,
+    external_diagnostics_path: Path,
+) -> list[dict[str, object]]:
     evals = _eval_index(eval_path)
     phase0 = _phase0_index(phase0_path)
-    diagnostics = _diagnostic_index(diagnostics_path)
+    diagnostics = _diagnostic_index(
+        calibration_diagnostics_path, external_diagnostics_path
+    )
     rows: list[dict[str, object]] = []
     for task in TASKS:
         for seed in SEEDS:
             base_diag = diagnostics.get((task, seed, "0.00"), {})
             base_atr = fnum(base_diag.get("atr_q90"))
             if not math.isfinite(base_atr) or base_atr <= 0:
-                base_atr = fnum(phase0.get((task, seed, "0.00"), {}).get("phase0_atr_q90"))
+                raise ValueError(f"missing positive horizon-v2 ATR reference: {task}/{seed}")
             for rho in RHO_GRID:
                 key = (task, seed, rho)
                 e = evals.get(key, {})
                 p = phase0.get(key, {})
                 d = diagnostics.get(key, {})
-                atr = fnum(d.get("atr_q90"), fnum(p.get("phase0_atr_q90")))
+                atr = fnum(d.get("atr_q90"))
                 row = {
                     "task": task,
                     "training_seed": seed,
@@ -181,11 +222,11 @@ def build_rows(eval_path: Path, phase0_path: Path, diagnostics_path: Path) -> li
                     "atr_q95": "",
                     "atr_normalized_q90": atr / base_atr if math.isfinite(base_atr) and base_atr > 0 else "",
                     "same_radius_q90": d.get("same_radius_q90", ""),
-                    "clean_transition_l2_median": d.get("clean_transition_l2_median", ""),
-                    "smpr_delta0": d.get("smpr_delta0", ""),
+                    "clean_transition_l2_median": "",
+                    "smpr_delta0": "",
                     "smpr_delta005": "",
-                    "smpr_delta010": "",
-                    "semantic_margin_median": d.get("semantic_margin_median", ""),
+                    "smpr_delta010": d.get("smpr_delta010", ""),
+                    "semantic_margin_median": "",
                     "semantic_pair_count": d.get("semantic_pair_count", ""),
                     "cost_drift_q50": p.get("cost_drift_q50", ""),
                     "cost_drift_q90": p.get("cost_drift_q90", ""),
@@ -199,7 +240,10 @@ def build_rows(eval_path: Path, phase0_path: Path, diagnostics_path: Path) -> li
                     "top1_agree": p.get("top1_agree", ""),
                     "cert_pass_rate": "",
                     "candidate_count": p.get("candidate_count", ""),
-                    "data_notes": "q80/q95 ATR, q95 drift, q10 margin, and pool cert-pass require raw tails; retained summaries only",
+                    "data_notes": (
+                        "paper-facing ATR/SMPR use the frozen horizon-v2 protocol; "
+                        "legacy delta0/delta005 SMPR and unavailable raw tails are blank"
+                    ),
                 }
                 rows.append(row)
     return label_rows(rows, recovery_fraction=0.8, clean_tolerance=5.0)
@@ -224,8 +268,8 @@ def build_summary(rows: list[dict[str, object]]) -> list[dict[str, object]]:
                 "recovery_label_rate": safe_mean(1.0 if r["recovery_label"] == "true" else 0.0 for r in block),
                 "atr_normalized_q90_mean": safe_mean(r["atr_normalized_q90"] for r in block),
                 "atr_normalized_q90_pstdev": safe_pstdev(r["atr_normalized_q90"] for r in block),
-                "smpr_delta0_mean": safe_mean(r["smpr_delta0"] for r in block),
-                "smpr_delta0_pstdev": safe_pstdev(r["smpr_delta0"] for r in block),
+                "smpr_delta010_mean": safe_mean(r["smpr_delta010"] for r in block),
+                "smpr_delta010_pstdev": safe_pstdev(r["smpr_delta010"] for r in block),
                 "proxy_gap_q50q90_mean": safe_mean(r["proxy_gap_q50q90"] for r in block),
                 "proxy_gap_q50q90_pstdev": safe_pstdev(r["proxy_gap_q50q90"] for r in block),
                 "proxy_gap_positive_rate": safe_mean(1.0 if fnum(r["proxy_gap_q50q90"]) > 0 else 0.0 for r in block),
@@ -241,14 +285,33 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evals", type=Path, default=DEFAULT_EVALS)
     parser.add_argument("--phase0", type=Path, default=DEFAULT_PHASE0)
-    parser.add_argument("--diagnostics", type=Path, default=DEFAULT_DIAGNOSTICS)
+    parser.add_argument(
+        "--calibration-diagnostics",
+        type=Path,
+        default=DEFAULT_CALIBRATION_DIAGNOSTICS,
+    )
+    parser.add_argument(
+        "--external-diagnostics",
+        type=Path,
+        default=DEFAULT_EXTERNAL_DIAGNOSTICS,
+    )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--summary-out", type=Path, default=DEFAULT_SUMMARY)
     args = parser.parse_args()
-    for path in (args.evals, args.phase0, args.diagnostics):
+    for path in (
+        args.evals,
+        args.phase0,
+        args.calibration_diagnostics,
+        args.external_diagnostics,
+    ):
         if not path.exists():
             raise FileNotFoundError(path)
-    rows = build_rows(args.evals, args.phase0, args.diagnostics)
+    rows = build_rows(
+        args.evals,
+        args.phase0,
+        args.calibration_diagnostics,
+        args.external_diagnostics,
+    )
     write_csv(args.out, rows, FIELDNAMES)
     summary = build_summary(rows)
     write_csv(args.summary_out, summary, SUMMARY_FIELDS)

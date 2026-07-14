@@ -140,6 +140,7 @@ REQUIRED_ARTIFACTS = [
     ROOT / "paper1" / "results" / "diagnostic_region" / "robust_fragile_separation.csv",
     ROOT / "paper1" / "results" / "diagnostic_region" / "README.md",
     ROOT / "paper1" / "results" / "diagnostic_manifest.json",
+    ROOT / "paper1" / "results" / "smpr_v2_proxy_metadata_correction_v1.json",
     ROOT / "paper1" / "results" / "full_sweep_diagnostics.csv",
     ROOT / "paper1" / "results" / "full_sweep_diagnostics_summary.csv",
     ROOT / "paper1" / "results" / "heldout_diagnostic_validation.csv",
@@ -259,7 +260,7 @@ REQUIRED_ARTIFACTS = [
 
 LEGACY_REQUIRED_MAIN_TEXT_SNIPPETS = [
     "ACPC Tail Risk (ATR)",
-    "Selective Margin Pass Rate (SMPR)",
+    "Selective Margin Pass Rate",
     "The reported diagnostic uses two metrics matched to this radius--margin logic",
     "ATR and SMPR are empirical diagnostics aligned with the radius and margin sides, not calibrated flip-probability bounds",
     "fixed empirical reporting choice, not a theoretical constant",
@@ -372,11 +373,11 @@ REQUIRED_MAIN_TEXT_SNIPPETS = [
     "This is a diagnostic study of frozen checkpoints, not a new robust-training method",
     "same-state visual perturbation",
     "Common-future error-drift bound",
-    "Selective Margin Pass Rate (SMPR)",
-    "not a candidate-distribution probability",
-    "SMPR is designed to detect gross collapse",
-    "The rule requires the reference and does not imply",
-    "raw thresholds are not assumed to transfer across model architectures",
+    "Selective Margin Pass Rate",
+    "not a candidate-distribution tail guarantee",
+    "so it fails the SMPR test",
+    "does not assign an absolute robustness label",
+    "do not imply shared raw thresholds across architectures",
     "adaptive result is conditional on pool alignment",
     "Evaluation seeds are conditional measurement replicates",
     "No blur- or resize-specific adjustment is made",
@@ -506,7 +507,7 @@ PAIRED_MULTISEVERITY_SMPR_SMOKE_SHA256 = "eb41ff0d6a23db0e15ea5f48540f91f5d83483
 PUBLIC_V1_ARTIFACT_HASHES = {
     "paper1/config/frozen_diagnostic_protocol_v1.json": FROZEN_PROTOCOL_SHA256,
     "paper1/results/frozen_external_validation_summary_v3.json": "ec485a7026c1d2ff80295f4dc85dd3753ca12f2ede7d7c0137a13796070dfeba",
-    "paper1/tables/table_pldm_architecture_portability.tex": "8c4fda0abec11a777249422b08ab7fb3ced11ee5222962f28d0ca6ec4f73309e",
+    "paper1/tables/table_pldm_architecture_portability.tex": "610a8d23b3ee6e9902b11fd5c9b2d734c6997c5fa538329de30e7bf5747549a7",
     "paper1/results/external_validation/cross_stressor_fixed_rho_summary.json": "94077f772e8dd7641b47e161a17d4ec67cea695dc044cb9a0229857efc157453",
     "paper1/results/external_validation/target_view_frozen_summary.json": "dba255daf282d1dbea7a102839e054cdd39b159a08a9ea9b1d3def7767477870",
     "paper1/results/diagnostic_baselines/diagnostic_baseline_all_v1.json": "df43cfd80b0387bde31426a37445149646a247724c1b2dd61f801a97d6c4f3c8",
@@ -987,11 +988,11 @@ def check_visual_text_structure() -> None:
     body, appendix = main_tex.split(marker, 1)
 
     required_headings = (
-        "\\subsection{From visual perturbations to rollout tubes}",
+        "\\subsection{Paired rollout radius}",
         "\\subsection{Common-future error drift}",
-        "\\subsection{Planner flips as radius--margin events}",
-        "\\subsection{Selective consistency and semantic margins}",
-        "\\subsection{From pairwise quantities to checkpoint-level scores}",
+        "\\subsection{Candidate-cost drift and planner stability}",
+        "\\subsection{Why low radius needs a task-proxy margin}",
+        "\\subsection{Checkpoint-level calibration}",
         "\\subsection{Evaluation setup}",
         "\\subsection{Planning performance under observation noise}",
         "\\subsection{Predicting error changes under visual perturbations}",
@@ -1005,8 +1006,12 @@ def check_visual_text_structure() -> None:
             fail(f"paper1/main.tex missing required structural heading: {heading}")
 
     retired_headings = (
-        "\\subsection{Same-state predictive consistency and selective margin}",
-        "\\subsection{Same-state predictive radius and selective margin}",
+        "\\subsection{Predictive consistency and task-relevant separation}",
+        "\\subsection{The radius--margin view}",
+        "\\subsection{From visual perturbations to rollout tubes}",
+        "\\subsection{Planner flips as radius--margin events}",
+        "\\subsection{Selective consistency and semantic margins}",
+        "\\subsection{From pairwise quantities to checkpoint-level scores}",
         "\\paragraph{Full-sweep and held-out evidence.}",
         "\\paragraph{Full-sweep and held-out evidence}",
     )
@@ -1017,6 +1022,28 @@ def check_visual_text_structure() -> None:
     for retired_visual_phrase in ("SMPR failure", "1-\\mathrm{SMPR}"):
         if retired_visual_phrase in body:
             fail(f"main text restored the retired Figure 3 encoding: {retired_visual_phrase}")
+
+    required_theory_objects = (
+        "\\label{eq:acpc-rollout-objects}",
+        "\\label{eq:weighted-rollout-map}",
+        "\\label{eq:normalized-same-state-radius}",
+        "\\label{eq:atr-raw}",
+        "\\label{eq:different-state-distance}",
+        "\\label{eq:smpr}",
+        "\\label{eq:atr-relative}",
+        "\\label{eq:joint-diagnostic-score}",
+        "q35 of all off-diagonal Euclidean distances",
+        "normalized margin $\\delta=0.10$",
+    )
+    for theory_object in required_theory_objects:
+        if theory_object not in body:
+            fail(
+                "paper1/main.tex missing required radius--margin theory object: "
+                f"{theory_object}"
+            )
+
+    if "\\begin{theorem}" in body or "thm:" in body:
+        fail("paper1/main.tex must present the direct diagnostic results as propositions")
 
     include_re = re.compile(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}")
     body_targets = include_re.findall(body)
@@ -3366,6 +3393,24 @@ def check_claim_aligned_three_pillar_evidence() -> None:
     p2 = _load_strict_json(
         ROOT / "paper1/results/cross_task_atr_smpr_all_subsets_summary_v1.json"
     )
+    p2_params = _load_strict_json(
+        ROOT / "paper1/results/cross_task_atr_smpr_all_subsets_params_v1.json"
+    )
+    if p2_params.get("diagnostic_fields") != {
+        "atr": "horizon-v2 q90 relative to the no-augmentation checkpoint",
+        "smpr": "horizon-v2 q90 tube with strict normalized margin 0.10",
+    }:
+        fail("P2 is not bound to the canonical horizon-v2 ATR/SMPR definition")
+    three_source_thresholds = {
+        (
+            split["selected_thresholds"]["tau_atr"],
+            split["selected_thresholds"]["tau_smpr"],
+        )
+        for split in p2_params["splits"]
+        if split["source_coverage"] == 3
+    }
+    if three_source_thresholds != {(0.3, 0.95)}:
+        fail(f"P2 three-source thresholds changed: {three_source_thresholds}")
     if p2.get("schema_version") != "paper1-cross-task-selective-rule-summary-1.0":
         fail("P2 all-subset schema changed")
     if (
@@ -3376,16 +3421,70 @@ def check_claim_aligned_three_pillar_evidence() -> None:
     ):
         fail("P2 all-subset coverage changed")
     coverage = {row["source_coverage"]: row for row in p2["coverage"]}
-    for source_count, expected_ba, expected_onset in (
-        (1, 0.8397156084656084, 0.01111111111111111),
-        (2, 0.8552248677248677, 0.009722222222222222),
-        (3, 0.8540674603174603, 0.01),
+    for source_count, expected_ba, expected_precision, expected_recall, expected_onset in (
+        (1, 0.8545304232804233, 0.9102513227513227, 0.853968253968254, 0.010833333333333334),
+        (2, 0.8996031746031745, 0.9126984126984127, 0.9533730158730158, 0.004999999999999999),
+        (3, 0.8996031746031745, 0.9126984126984127, 0.9533730158730158, 0.004999999999999999),
     ):
         row = coverage[source_count]
         if not math.isclose(row["balanced_accuracy"], expected_ba, abs_tol=1e-12):
             fail(f"P2 balanced accuracy changed for {source_count} source tasks")
+        if not math.isclose(row["precision"], expected_precision, abs_tol=1e-12):
+            fail(f"P2 precision changed for {source_count} source tasks")
+        if not math.isclose(row["recall"], expected_recall, abs_tol=1e-12):
+            fail(f"P2 recall changed for {source_count} source tasks")
         if not math.isclose(row["mean_abs_start_error"], expected_onset, abs_tol=1e-12):
             fail(f"P2 onset error changed for {source_count} source tasks")
+
+    calibration = _load_strict_json(
+        ROOT / "paper1/results/frozen_diagnostic_protocol_calibration.json"
+    )["calibration_rows"]
+    external = _load_strict_json(
+        ROOT / "paper1/results/external_validation/lewm_heldout_diagnostic_input_v4.json"
+    )["rows"]
+    canonical_v2 = {
+        (
+            str(row["task"]),
+            int(row["training_seed"]),
+            f"{float(row['training_rho']):.2f}",
+        ): (float(row["atr_horizon_v2_q90"]), float(row["smpr"]))
+        for row in [*calibration, *external]
+        if row.get("status", "ok") == "ok"
+    }
+    with (ROOT / "paper1/results/full_sweep_diagnostics.csv").open(
+        newline="", encoding="utf-8"
+    ) as stream:
+        full_sweep = list(csv.DictReader(stream))
+    if len(canonical_v2) != 108 or len(full_sweep) != 108:
+        fail("paper-facing canonical-v2 full sweep must contain 108 rows")
+    observed_keys: set[tuple[str, int, str]] = set()
+    for row in full_sweep:
+        key = (row["task"], int(row["training_seed"]), row["rho"])
+        observed_keys.add(key)
+        if key not in canonical_v2:
+            fail(f"paper-facing full sweep contains non-canonical diagnostic row: {key}")
+        expected_atr, expected_smpr = canonical_v2[key]
+        if not math.isclose(float(row["atr_q90"]), expected_atr, abs_tol=1e-12):
+            fail(f"paper-facing full sweep ATR differs from canonical v2: {key}")
+        if not math.isclose(float(row["same_radius_q90"]), expected_atr, abs_tol=1e-12):
+            fail(f"paper-facing full sweep raw radius differs from canonical v2: {key}")
+        if not math.isclose(float(row["smpr_delta010"]), expected_smpr, abs_tol=1e-12):
+            fail(f"paper-facing full sweep SMPR differs from canonical v2: {key}")
+        if row["smpr_delta0"] or row["smpr_delta005"]:
+            fail(f"paper-facing full sweep mixes a legacy SMPR estimand: {key}")
+    if observed_keys != set(canonical_v2):
+        fail("paper-facing full sweep canonical-v2 key coverage changed")
+
+    for script_name in (
+        "plot_full_sweep_diagnostics.py",
+        "cross_task_selective_rule.py",
+        "build_acpc_submission_assets.py",
+    ):
+        script = (ROOT / "paper1/scripts" / script_name).read_text(encoding="utf-8")
+        if "smpr_delta010" not in script or any(
+            token in script for token in ('"smpr_delta0"', "'smpr_delta0'")
+        ):
+            fail(f"paper-facing script mixes legacy SMPR: {script_name}")
 
     p3 = _load_strict_json(
         ROOT
@@ -3397,17 +3496,55 @@ def check_claim_aligned_three_pillar_evidence() -> None:
     overall = p3["overall"]
     if overall.get("n") != 24 or overall.get("discordant_n") != 2:
         fail("P3 pair coverage changed")
-    if not math.isclose(
-        overall["balanced_accuracy"], 0.8888888888888888, abs_tol=1e-12
-    ) or not math.isclose(
-        overall["spearman_delta_behavior_vs_delta_selective_score"],
-        0.9093153287220684,
-        abs_tol=1e-12,
+    for field, expected in (
+        ("balanced_accuracy", 0.8888888888888888),
+        ("precision", 0.8823529411764706),
+        ("recall", 1.0),
+        ("spearman_delta_behavior_vs_delta_selective_score", 0.8352554296598855),
     ):
-        fail("P3 final selective-score transfer changed")
+        if not math.isclose(overall[field], expected, abs_tol=1e-12):
+            fail(f"P3 final selective-score transfer changed: {field}")
+    if any(
+        thresholds != {"tau_atr": 0.3, "tau_smpr": 0.95}
+        for thresholds in p3.get("task_thresholds", {}).values()
+    ) or set(p3.get("task_thresholds", {})) != EXPECTED_TASKS:
+        fail("P3 does not use the four canonical three-source task thresholds")
+    for stressor, expected_ba in (("blur", 0.875), ("resize", 0.9)):
+        if not math.isclose(
+            p3["by_stressor"][stressor]["balanced_accuracy"],
+            expected_ba,
+            abs_tol=1e-12,
+        ):
+            fail(f"P3 {stressor} balanced accuracy changed")
 
     main_text = (ROOT / "paper1/main.tex").read_text(encoding="utf-8")
     lowered = main_text.lower()
+
+    proxy_correction = _load_strict_json(
+        ROOT / "paper1/results/smpr_v2_proxy_metadata_correction_v1.json"
+    )
+    if proxy_correction.get("schema_version") != "paper1-smpr-v2-proxy-metadata-correction-1.0":
+        fail("SMPR-v2 proxy metadata correction schema changed")
+    if proxy_correction.get("numeric_rows_unchanged") is not True:
+        fail("SMPR-v2 proxy metadata correction must not alter numeric rows")
+    if proxy_correction.get("pair_indices_unchanged") is not True:
+        fail("SMPR-v2 proxy metadata correction must not alter selected pairs")
+    implemented_proxies = proxy_correction.get("implemented_proxy_labels", {})
+    if "observation[4:6]" not in implemented_proxies.get("Reacher", {}).get("definition", ""):
+        fail("SMPR-v2 Reacher proxy is not bound to its executed coordinate slice")
+    if "o[0:3]-o[25:28]" not in implemented_proxies.get("Cube", {}).get("definition", ""):
+        fail("SMPR-v2 Cube proxy is not bound to its executed coordinate slice")
+    for required_proxy_text in (
+        r"\code{observation[4:6]}",
+        r"\bar o_{0:3}-\bar o_{25:28}",
+        "not semantic or action-relevance annotations",
+        "q35 of all off-diagonal Euclidean distances",
+    ):
+        if required_proxy_text not in main_text:
+            fail(f"Paper1 omits the executed SMPR-v2 proxy contract: {required_proxy_text}")
+    for false_proxy_text in ("Target--end-effector relation", "Cube--goal relation"):
+        if false_proxy_text in main_text:
+            fail(f"Paper1 restored a false SMPR-v2 proxy description: {false_proxy_text}")
     for token in (
         "seed3075",
         "seed 3075",
@@ -3419,7 +3556,7 @@ def check_claim_aligned_three_pillar_evidence() -> None:
         if token in lowered:
             fail(f"retired paper-facing token restored: {token}")
     for token in (
-        "def:selective-discriminability",
+        "eq:smpr",
         "fig_future_drift_three_seed_v1.pdf",
         "fig_cross_task_atr_smpr_source_coverage_v1.pdf",
         "fig_cross_stressor_selective_transfer_v1.pdf",
@@ -3461,6 +3598,16 @@ def check_public_v1_remediation_artifacts() -> None:
         fail("diagnostic manifest must prohibit external threshold search")
     if diagnostic_manifest.get("public_v1_artifact_sha256") != PUBLIC_V1_ARTIFACT_HASHES:
         fail("diagnostic manifest public-v1 hash map does not match the release contract")
+    claim_extension = diagnostic_manifest.get("claim_aligned_three_pillar_extension", {})
+    extension_hashes = claim_extension.get("artifact_sha256", {})
+    if not extension_hashes:
+        fail("diagnostic manifest is missing claim-aligned extension hashes")
+    for rel, expected_hash in extension_hashes.items():
+        path = ROOT / rel
+        if not path.is_file():
+            fail(f"claim-aligned extension artifact is missing: {rel}")
+        if _sha256_file(path) != expected_hash:
+            fail(f"claim-aligned extension artifact hash is stale: {rel}")
 
     def checked_external(rel: str) -> dict:
         payload = _load_strict_json(ROOT / rel)
@@ -3497,7 +3644,7 @@ def check_public_v1_remediation_artifacts() -> None:
     ).read_text(encoding="utf-8")
     for expected in (
         "PLDM thresholds, other three tasks & 0.836 & 0.789 & 0.882 & 4 & 2",
-        "LeWM thresholds, PLDM-normalized & 0.807 & 0.778 & 0.824 & 4 & 3",
+        "LeWM thresholds, PLDM-normalized & 0.836 & 0.789 & 0.882 & 4 & 2",
         "raw thresholds are not assumed to match across model families",
     ):
         if expected not in e2_table:

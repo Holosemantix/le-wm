@@ -59,7 +59,7 @@ def test_pldm_table_uses_the_current_task_relative_protocol() -> None:
     table = build_pldm_table(rows, cross_task)
     assert "complete PLDM sweep of four tasks and nine augmentation levels" in table
     assert "PLDM thresholds, other three tasks & 0.836 & 0.789 & 0.882 & 4 & 2" in table
-    assert "LeWM thresholds, PLDM-normalized & 0.807 & 0.778 & 0.824 & 4 & 3" in table
+    assert "LeWM thresholds, PLDM-normalized & 0.836 & 0.789 & 0.882 & 4 & 2" in table
     assert "raw thresholds are not assumed" in table
 
 

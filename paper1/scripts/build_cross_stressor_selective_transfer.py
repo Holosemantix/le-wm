@@ -283,7 +283,7 @@ def write_summary_table(summary: dict[str, Any], out: Path) -> None:
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Transfer of the selective ACPC score from Gaussian noise to blur and resize. For each task, thresholds are selected on the other three Gaussian-noise tasks and then fixed. The table compares the score change with the change in planning success rate between checkpoints trained with and without Gaussian augmentation.}",
+        r"\caption{Transfer of the calibrated selective score from Gaussian noise to blur and resize. For each task, thresholds are selected on the other three Gaussian-noise tasks and then fixed. The table compares the score change with the change in planning success rate between checkpoints trained with and without Gaussian augmentation.}",
         r"\label{tab:cross-stressor-selective-transfer}",
         r"\small",
         r"\setlength{\tabcolsep}{4pt}",
@@ -356,7 +356,7 @@ def plot(rows: list[dict[str, Any]], out: Path) -> None:
             )
         ax.axhline(0.0, color="#444444", linewidth=0.8, linestyle="--")
         ax.axvline(0.0, color="#444444", linewidth=0.8, linestyle="--")
-        ax.set_xlabel("Change in selective ACPC score")
+        ax.set_xlabel(r"Change in calibrated selective score, $\Delta S$")
         ax.set_ylabel("Change in success rate under blur/resize\n(percentage points)")
         ax.grid(True, color="#B0B0B0", alpha=0.22, linewidth=0.55)
         ax.spines["top"].set_visible(False)

@@ -81,7 +81,7 @@ def _truth(row: dict[str, Any]) -> bool:
 def _pred(row: dict[str, Any], tau_atr: float, tau_smpr: float) -> bool:
     return (
         fnum(row["atr_normalized_q90"]) <= tau_atr
-        and fnum(row["smpr_delta0"]) >= tau_smpr
+        and fnum(row["smpr_delta010"]) >= tau_smpr
     )
 
 
@@ -242,7 +242,7 @@ def _validate_input(
         raise ValueError(
             f"diagnostic grid mismatch: missing={missing[:8]}, extra={extra[:8]}"
         )
-    for field in ("atr_normalized_q90", "smpr_delta0", "recovery_label"):
+    for field in ("atr_normalized_q90", "smpr_delta010", "recovery_label"):
         if any(row.get(field, "") == "" for row in rows):
             raise ValueError(f"missing required field {field!r}")
 
@@ -393,6 +393,10 @@ def run_all_subsets(
         "training_seeds": seeds,
         "checkpoint_grid": [f"{rho / 100:.2f}" for rho in range(9)],
         "candidate_grid": {"tau_atr": TAU_ATR, "tau_smpr": TAU_SMPR},
+        "diagnostic_fields": {
+            "atr": "horizon-v2 q90 relative to the no-augmentation checkpoint",
+            "smpr": "horizon-v2 q90 tube with strict normalized margin 0.10",
+        },
         "selection_objective_order": [
             "mean_abs_start_error",
             "false_early",
@@ -543,7 +547,7 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
                     ls="",
                     markerfacecolor="white",
                     markeredgecolor=summary_color,
-                    label="mean across evaluation tasks",
+                    label="coverage-level mean",
                 ),
             ],
             loc="lower center",

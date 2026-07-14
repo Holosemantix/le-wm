@@ -479,7 +479,7 @@ def build_sweep_table(rows: list[dict[str, str]]) -> str:
             f"{task} & {float(base['obs_sigma_008_score_mean']):.1f} & "
             f"{float(best['obs_sigma_008_score_mean']):.1f} & {float(best['rho']):.2f} & "
             f"{float(base['atr_normalized_q90_mean']):.2f}$\\to${float(best['atr_normalized_q90_mean']):.2f} & "
-            f"{float(base['smpr_delta0_mean']):.2f}$\\to${float(best['smpr_delta0_mean']):.2f} & "
+            f"{float(base['smpr_delta010_mean']):.2f}$\\to${float(best['smpr_delta010_mean']):.2f} & "
             f"{recovery_text} \\\\"
         )
     lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}"])
@@ -524,7 +524,7 @@ def build_pldm_table(
             "atr_normalized_q90": (
                 float(row["atr_horizon_v2_q90"]) / base_atr[row["task"]]
             ),
-            "smpr_delta0": float(row["smpr"]),
+            "smpr_delta010": float(row["smpr"]),
             "recovery_label": row["behavior_label"],
         }
         for row in frozen_rows
@@ -571,7 +571,7 @@ def build_pldm_table(
         truth = str(row["recovery_label"]).lower() == "true"
         pred = (
             float(row["atr_normalized_q90"]) <= tau_atr
-            and float(row["smpr_delta0"]) >= tau_smpr
+            and float(row["smpr_delta010"]) >= tau_smpr
         )
         key = "tp" if truth and pred else "fn" if truth else "fp" if pred else "tn"
         relative_lewm_confusion[key] += 1

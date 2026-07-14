@@ -166,6 +166,7 @@ Important scope constraints:
 - E3 distinguishes model-family-calibrated absolute screening from a reference-based paired comparison; one zero threshold is shared across fixed LeWM blur/resize stressors, not across absolute model-family scales.
 - The sharp certificate applies only to the sampled ordered candidate pool; zero flips on cert-pass are a deterministic invariant check.
 - SMPR v2 rejects constant collapse but does not establish incremental action, label, progressive-collapse, or four-task oracle relevance.
+- The frozen SMPR-v2 numeric artifacts retain two legacy proxy-description strings. `paper1/results/smpr_v2_proxy_metadata_correction_v1.json` records the exact executed state-coordinate slices; numeric rows and selected pair indices are unchanged. Paper-facing text treats SMPR as a state-coordinate separation guard, not a semantic certificate.
 - Full-sweep diagnostics join existing Gaussian evaluation, ATR, SMPR, and retained fixed-pool summaries.
 - Full-sweep sample-level fixed-pool event rates are recomputed from checkpoints; strict q10/q95 gaps remain negative and are not treated as calibrated probability bounds.
 - Wilson intervals quantify sample event-rate estimation uncertainty; they are not calibrated theorem probability bounds. The event-rate figure is regenerated from `paper1/results/sample_level_event_rate_wilson_ci.csv`.

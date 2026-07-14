@@ -28,9 +28,19 @@ def test_all_source_task_subsets_are_complete_and_directional() -> None:
     by_coverage = {item["source_coverage"]: item for item in summary["coverage"]}
     assert [by_coverage[k]["partition_count"] for k in (1, 2, 3)] == [4, 6, 4]
     assert [by_coverage[k]["evaluation_task_incidence_count"] for k in (1, 2, 3)] == [12, 12, 4]
-    assert by_coverage[1]["balanced_accuracy"] == pytest.approx(0.8397156085)
-    assert by_coverage[2]["balanced_accuracy"] == pytest.approx(0.8552248677)
-    assert by_coverage[3]["balanced_accuracy"] == pytest.approx(0.8540674603)
+    expected_metrics = {
+        1: (0.8545304233, 0.9102513228, 0.8539682540, 0.0108333333),
+        2: (0.8996031746, 0.9126984127, 0.9533730159, 0.005),
+        3: (0.8996031746, 0.9126984127, 0.9533730159, 0.005),
+    }
+    for coverage, (balanced_accuracy, precision, recall, onset_error) in (
+        expected_metrics.items()
+    ):
+        row = by_coverage[coverage]
+        assert row["balanced_accuracy"] == pytest.approx(balanced_accuracy)
+        assert row["precision"] == pytest.approx(precision)
+        assert row["recall"] == pytest.approx(recall)
+        assert row["mean_abs_start_error"] == pytest.approx(onset_error)
 
     for split in params["splits"]:
         assert set(split["source_tasks"]).isdisjoint(split["evaluation_tasks"])
@@ -43,6 +53,65 @@ def test_all_source_task_subsets_are_complete_and_directional() -> None:
         coverage = split["source_coverage"]
         assert split["source_rows"] == coverage * 27
         assert split["evaluation_rows"] == (4 - coverage) * 27
+
+    assert params["diagnostic_fields"] == {
+        "atr": "horizon-v2 q90 relative to the no-augmentation checkpoint",
+        "smpr": "horizon-v2 q90 tube with strict normalized margin 0.10",
+    }
+    assert {
+        (
+            split["selected_thresholds"]["tau_atr"],
+            split["selected_thresholds"]["tau_smpr"],
+        )
+        for split in params["splits"]
+        if split["source_coverage"] == 3
+    } == {(0.3, 0.95)}
+
+
+def test_paper_facing_full_sweep_is_bound_to_canonical_v2_atr_smpr() -> None:
+    calibration = json.loads(
+        (ROOT / "paper1/results/frozen_diagnostic_protocol_calibration.json").read_text(
+            encoding="utf-8"
+        )
+    )["calibration_rows"]
+    external = json.loads(
+        (
+            ROOT
+            / "paper1/results/external_validation/lewm_heldout_diagnostic_input_v4.json"
+        ).read_text(encoding="utf-8")
+    )["rows"]
+    canonical = {
+        (row["task"], int(row["training_seed"]), f"{float(row['training_rho']):.2f}"): (
+            float(row["atr_horizon_v2_q90"]),
+            float(row["smpr"]),
+        )
+        for row in [*calibration, *external]
+        if row.get("status", "ok") == "ok"
+    }
+
+    rows = read_csv(ROOT / "paper1/results/full_sweep_diagnostics.csv")
+    assert len(rows) == len(canonical) == 108
+    observed_keys = set()
+    for row in rows:
+        key = (row["task"], int(row["training_seed"]), row["rho"])
+        observed_keys.add(key)
+        raw_atr, smpr = canonical[key]
+        assert float(row["atr_q90"]) == pytest.approx(raw_atr)
+        assert float(row["same_radius_q90"]) == pytest.approx(raw_atr)
+        assert float(row["smpr_delta010"]) == pytest.approx(smpr)
+        assert row["smpr_delta0"] == ""
+        assert row["smpr_delta005"] == ""
+    assert observed_keys == set(canonical)
+
+    for script_name in (
+        "plot_full_sweep_diagnostics.py",
+        "cross_task_selective_rule.py",
+        "build_acpc_submission_assets.py",
+    ):
+        script = (ROOT / "paper1/scripts" / script_name).read_text(encoding="utf-8")
+        assert "smpr_delta010" in script
+        assert '"smpr_delta0"' not in script
+        assert "'smpr_delta0'" not in script
 
 
 def test_three_source_thresholds_drive_cross_stressor_final_rule() -> None:
@@ -60,17 +129,20 @@ def test_three_source_thresholds_drive_cross_stressor_final_rule() -> None:
 
     assert len(rows) == 24
     assert summary["threshold_search_on_blur_or_resize"] is False
-    assert summary["task_thresholds"]["TwoRoom"] == {
-        "tau_atr": 0.2,
-        "tau_smpr": 0.95,
-    }
+    assert set(summary["task_thresholds"]) == {"TwoRoom", "PushT", "Reacher", "Cube"}
+    assert all(
+        thresholds == {"tau_atr": 0.3, "tau_smpr": 0.95}
+        for thresholds in summary["task_thresholds"].values()
+    )
     assert summary["overall"]["balanced_accuracy"] == pytest.approx(8 / 9)
     assert summary["overall"]["precision"] == pytest.approx(15 / 17)
     assert summary["overall"]["recall"] == pytest.approx(1.0)
     assert summary["overall"]["discordant_n"] == 2
     assert summary["overall"][
         "spearman_delta_behavior_vs_delta_selective_score"
-    ] == pytest.approx(0.9093153287)
+    ] == pytest.approx(0.8352554297)
+    assert summary["by_stressor"]["blur"]["balanced_accuracy"] == pytest.approx(0.875)
+    assert summary["by_stressor"]["resize"]["balanced_accuracy"] == pytest.approx(0.9)
 
     forbidden = {
         "encoder_q90",
