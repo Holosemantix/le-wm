@@ -1,16 +1,16 @@
 \begin{table}[t]
 \centering
-\caption{Predicting the perturbation-induced difference between nominal and perturbed eight-step prediction errors on non-augmented checkpoints. Each regression is fitted on 15 of 16 trajectory groups and evaluated on the omitted group, rotating over all groups. The one-step baseline contains perturbation severity, clean--perturbed encoder-history distance, and recorded-action one-step ACPC. The two nested eight-step models retain that baseline and add either an oracle action control or recorded-action eight-step ACPC. Within each task--run cell, the oracle control is the lowest-MAE choice among zeroed, batch-permuted, and time-shuffled action features over the same 16 rotations. Values are relative reductions in cross-validated regression MAE; higher is better.}
+\caption{Relative reduction in out-of-group MAE from Base+ACPC$_8$ when predicting the error drift $d$ on the unaugmented checkpoints (protocol and model definitions in \Cref{sec:exp-target-aligned}). Base+Control$_8$ uses the per-cell oracle control; higher is better. The last column counts task--run cells in which Base+ACPC$_8$ is best.}
 \label{tab:target-aligned-acpc}
 \small
 \setlength{\tabcolsep}{6pt}
 \begin{tabular}{lrrc}
 \toprule
-Training run & vs. one-step baseline & vs. eight-step action control & Task--run cells improved \\
+Training run (seed) & vs. Base & vs. Base+Control$_8$ & Task--run cells improved \\
 \midrule
-seed 3072 & 55.5\% & 51.4\% & 4/4 \\
-seed 3073 & 60.8\% & 54.8\% & 4/4 \\
-seed 3074 & 51.4\% & 47.7\% & 4/4 \\
+3072 & 55.5\% & 51.4\% & 4/4 \\
+3073 & 60.8\% & 54.8\% & 4/4 \\
+3074 & 51.4\% & 47.7\% & 4/4 \\
 \midrule
 mean $\pm$ SD & 55.9 $\pm$ 4.7\% & 51.3 $\pm$ 3.5\% & 12/12 \\
 \bottomrule

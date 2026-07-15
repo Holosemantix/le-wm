@@ -1,6 +1,6 @@
 \begin{table}[H]
 \centering
-\caption{Leave-one-task-out prediction gain from candidate-conditioned five-step ACPC in the reduced-budget CEM audit (9,600 history records). Both ridge models include perturbation severity, training condition, one-step ACPC, and the nominal top-1 margin; the expanded model adds five-step ACPC. Within each independent training run, the models are fitted on three tasks and evaluated on the fourth, rotating over all four tasks. Test MAE on the fitted $\log(1+\mathrm{target})$ response is averaged equally across these four evaluations for each model, and the relative decrease between those two equal-task MAEs is then computed. Entries report the across-run mean $\pm$ sample standard deviation of these run-level decreases; the final column counts positive task--run cases out of 12. Higher is better. Decision regret is measured in the model's squared latent goal cost, not simulator return.}
+\caption{Leave-one-task-out MAE decrease from adding candidate-conditioned five-step ACPC to the baseline regression of \Cref{sec:exp-planner} (reduced-budget CEM audit, 9{,}600 records). Entries are the mean $\pm$ sample SD of run-level equal-task decreases on the fitted $\log(1+\mathrm{target})$ scale; the last column counts positive task--run cells out of 12. Higher is better.}
 \label{tab:acpc-planner-increment}
 \scriptsize
 \setlength{\tabcolsep}{4.5pt}

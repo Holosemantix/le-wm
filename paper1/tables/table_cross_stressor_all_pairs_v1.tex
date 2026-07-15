@@ -1,12 +1,12 @@
 \begin{table*}[t]
 \centering
-\caption{All 24 LeWM checkpoint pairs evaluated under blur and resize. ATR$_{\rm rel}$ and SMPR are measured for the checkpoint trained with Gaussian augmentation. $\Delta P$ is its change in planning success rate relative to the checkpoint trained without augmentation, and $\Delta S$ is the corresponding selective-score change. A success-rate change is positive when $\Delta P\geq5$ percentage points and the clean success rate decreases by at most five points. Outcome lists the success-rate classification followed by the score classification.}
+\caption{All 24 LeWM checkpoint pairs evaluated under blur and resize. ATR$_{\rm rel}$ and SMPR are measured for the checkpoint trained with Gaussian augmentation ($\stdmax{}=0.08$); $\Delta P$ and $\Delta S$ are its success-rate and selective-score changes relative to the unaugmented checkpoint. A pair is positive when $\Delta P\geq5$ percentage points with at most a five-point clean loss. Daggers mark the two discordant pairs.}
 \label{tab:cross-stressor-all-pairs}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{lrlrrrrrl}
 \toprule
-Task & Seed & Shift & ATR$_{\rm rel}$ & SMPR & $\Delta P$ & $\Delta S$ & Outcome \\
+Task & Seed & Shift & ATR$_{\rm rel}$ & SMPR & $\Delta P$ & $\Delta S$ & Outcome (success / score) \\
 \midrule
 TwoRoom & 3072 & blur & 0.499 & 0.885 & 55.7 & 1.670 & positive / positive \\
 TwoRoom & 3072 & resize & 0.336 & 0.967 & 52.3 & 2.214 & positive / positive \\
@@ -15,10 +15,10 @@ TwoRoom & 3073 & resize & 0.691 & 0.361 & 40.0 & 1.030 & positive / positive \\
 TwoRoom & 3074 & blur & 0.636 & 0.541 & 37.7 & 1.212 & positive / positive \\
 TwoRoom & 3074 & resize & 0.617 & 0.656 & 34.3 & 1.277 & positive / positive \\
 PushT & 3072 & blur & 0.943 & 0.939 & 10.7 & 0.189 & positive / positive \\
-PushT & 3072 & resize & 0.814 & 0.969 & 4.0 & 0.620 & nonpositive / positive \\
+PushT & 3072 & resize & 0.814 & 0.969 & 4.0 & 0.620 & nonpositive / positive$^\dag$ \\
 PushT & 3073 & blur & 0.846 & 0.918 & 7.3 & 0.515 & positive / positive \\
 PushT & 3073 & resize & 0.682 & 0.969 & 24.3 & 1.060 & positive / positive \\
-PushT & 3074 & blur & 0.781 & 0.959 & 4.0 & 0.729 & nonpositive / positive \\
+PushT & 3074 & blur & 0.781 & 0.959 & 4.0 & 0.729 & nonpositive / positive$^\dag$ \\
 PushT & 3074 & resize & 1.173 & 0.939 & -19.7 & -0.577 & nonpositive / nonpositive \\
 Reacher & 3072 & blur & 0.155 & 0.990 & 50.7 & 2.375 & positive / positive \\
 Reacher & 3072 & resize & 0.210 & 0.990 & 29.7 & 2.375 & positive / positive \\

@@ -1,27 +1,27 @@
 \begin{table*}[t]
 \centering
-\caption{Cross-task evaluation of the selective ACPC rule. Thresholds are selected on the source tasks and applied unchanged to all remaining tasks. Metrics first average training runs within each evaluation task and then weight tasks equally. Onset error is measured in Gaussian-augmentation grid units.}
+\caption{Cross-task evaluation of the selective ACPC rule over all 14 source/evaluation partitions. Thresholds $(t_R,t_M)$ are selected on the source tasks and applied unchanged to all remaining tasks; metrics first average training runs within each evaluation task and then weight tasks equally. Onset error is in Gaussian-augmentation grid steps (one step is $0.01$ in $\stdmax{}$).}
 \label{tab:cross-task-all-subsets}
 \small
 \setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.17\textwidth}rrrrr}
 \toprule
-Source tasks & Evaluation tasks & $\tau_R$ & $\tau_M$ & BA & P / R & \shortstack{Onset error\\mean / max} \\
+Source tasks & Evaluation tasks & $t_R$ & $t_M$ & BA & P / R & \shortstack{Onset error (steps)\\mean / max} \\
 \midrule
-TwoRoom & PushT, Reacher, Cube & 0.3 & 0.95 & 0.888 & 0.884 / 0.981 & 0.003 / 0.010 \\
-PushT & TwoRoom, Reacher, Cube & 0.3 & 0.95 & 0.894 & 0.902 / 0.956 & 0.006 / 0.010 \\
-Reacher & TwoRoom, PushT, Cube & 0.1 & 0.95 & 0.723 & 0.906 / 0.540 & 0.029 / 0.050 \\
-Cube & TwoRoom, PushT, Reacher & 0.3 & 0.95 & 0.913 & 0.950 / 0.938 & 0.006 / 0.010 \\
-TwoRoom, PushT & Reacher, Cube & 0.3 & 0.95 & 0.874 & 0.853 / 1.000 & 0.003 / 0.010 \\
-TwoRoom, Reacher & PushT, Cube & 0.3 & 0.95 & 0.887 & 0.873 / 0.972 & 0.003 / 0.010 \\
-TwoRoom, Cube & PushT, Reacher & 0.3 & 0.95 & 0.903 & 0.925 / 0.972 & 0.003 / 0.010 \\
-PushT, Reacher & TwoRoom, Cube & 0.3 & 0.95 & 0.896 & 0.901 / 0.935 & 0.007 / 0.010 \\
-PushT, Cube & TwoRoom, Reacher & 0.3 & 0.95 & 0.912 & 0.952 / 0.935 & 0.007 / 0.010 \\
-Reacher, Cube & TwoRoom, PushT & 0.3 & 0.95 & 0.926 & 0.972 / 0.907 & 0.007 / 0.010 \\
-TwoRoom, PushT, Reacher & Cube & 0.3 & 0.95 & 0.858 & 0.802 / 1.000 & 0.003 / 0.010 \\
-TwoRoom, PushT, Cube & Reacher & 0.3 & 0.95 & 0.889 & 0.905 / 1.000 & 0.003 / 0.010 \\
-TwoRoom, Reacher, Cube & PushT & 0.3 & 0.95 & 0.917 & 0.944 / 0.944 & 0.003 / 0.010 \\
-PushT, Reacher, Cube & TwoRoom & 0.3 & 0.95 & 0.935 & 1.000 / 0.869 & 0.010 / 0.010 \\
+TwoRoom & PushT, Reacher, Cube & 0.3 & 0.95 & 0.888 & 0.884 / 0.981 & 0.3 / 1.0 \\
+PushT & TwoRoom, Reacher, Cube & 0.3 & 0.95 & 0.894 & 0.902 / 0.956 & 0.6 / 1.0 \\
+Reacher & TwoRoom, PushT, Cube & 0.1 & 0.95 & 0.723 & 0.906 / 0.540 & 2.9 / 5.0 \\
+Cube & TwoRoom, PushT, Reacher & 0.3 & 0.95 & 0.913 & 0.950 / 0.938 & 0.6 / 1.0 \\
+TwoRoom, PushT & Reacher, Cube & 0.3 & 0.95 & 0.874 & 0.853 / 1.000 & 0.3 / 1.0 \\
+TwoRoom, Reacher & PushT, Cube & 0.3 & 0.95 & 0.887 & 0.873 / 0.972 & 0.3 / 1.0 \\
+TwoRoom, Cube & PushT, Reacher & 0.3 & 0.95 & 0.903 & 0.925 / 0.972 & 0.3 / 1.0 \\
+PushT, Reacher & TwoRoom, Cube & 0.3 & 0.95 & 0.896 & 0.901 / 0.935 & 0.7 / 1.0 \\
+PushT, Cube & TwoRoom, Reacher & 0.3 & 0.95 & 0.912 & 0.952 / 0.935 & 0.7 / 1.0 \\
+Reacher, Cube & TwoRoom, PushT & 0.3 & 0.95 & 0.926 & 0.972 / 0.907 & 0.7 / 1.0 \\
+TwoRoom, PushT, Reacher & Cube & 0.3 & 0.95 & 0.858 & 0.802 / 1.000 & 0.3 / 1.0 \\
+TwoRoom, PushT, Cube & Reacher & 0.3 & 0.95 & 0.889 & 0.905 / 1.000 & 0.3 / 1.0 \\
+TwoRoom, Reacher, Cube & PushT & 0.3 & 0.95 & 0.917 & 0.944 / 0.944 & 0.3 / 1.0 \\
+PushT, Reacher, Cube & TwoRoom & 0.3 & 0.95 & 0.935 & 1.000 / 0.869 & 1.0 / 1.0 \\
 \bottomrule
 \end{tabular}
 \end{table*}

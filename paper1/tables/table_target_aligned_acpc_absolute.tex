@@ -1,28 +1,28 @@
 \begin{table}[t]
 \centering
-\caption{Leave-one-trajectory-group-out regression MAE for predicting the perturbation-induced difference between nominal and perturbed eight-step prediction errors on non-augmented checkpoints. Each row contains 16 trajectory groups. All models include perturbation severity, clean--perturbed encoder-history distance, and recorded-action one-step ACPC. The two eight-step columns add either the oracle action control or recorded-action eight-step ACPC. Within each task--run row, the oracle control is the lowest-MAE choice among zeroed, batch-permuted, and time-shuffled action features over the same 16 rotations. Lower is better.}
+\caption{Out-of-group MAE (16-fold leave-one-trajectory-group-out) for predicting the error drift $d$ on the unaugmented checkpoints; lower is better, model definitions in \Cref{sec:exp-target-aligned}. ``Selected control'' is the destroyed-action control chosen by the per-cell oracle; ``paired wins'' counts the folds (of 16) in which Base+ACPC$_8$ beats Base+Control$_8$.}
 \label{tab:target-aligned-acpc-absolute}
 \scriptsize
 \setlength{\tabcolsep}{3.2pt}
 \begin{tabular}{lrrrrlc}
 \toprule
-Task & seed & \shortstack{one-step\\baseline} & \shortstack{$+$ eight-step\\action control} & \shortstack{$+$ recorded-action\\eight-step ACPC} & \shortstack{selected\\control} & \shortstack{paired\\wins} \\
+Task & \shortstack{run\\(seed)} & Base & \shortstack{Base\\$+$Control$_8$} & \shortstack{Base\\$+$ACPC$_8$} & \shortstack{selected\\control} & \shortstack{paired\\wins} \\
 \midrule
-TwoRoom & 3072 & 2.535 & 2.099 & \textbf{0.755} & time-shuffled actions & 15/16 \\
-TwoRoom & 3073 & 2.336 & 2.015 & \textbf{0.866} & time-shuffled actions & 15/16 \\
-TwoRoom & 3074 & 2.075 & 1.911 & \textbf{1.006} & batch-permuted actions & 13/16 \\
+TwoRoom & 3072 & 2.535 & 2.099 & \textbf{0.755} & shuffled actions & 15/16 \\
+TwoRoom & 3073 & 2.336 & 2.015 & \textbf{0.866} & shuffled actions & 15/16 \\
+TwoRoom & 3074 & 2.075 & 1.911 & \textbf{1.006} & swapped actions & 13/16 \\
 \addlinespace[1pt]
-PushT & 3072 & 2.068 & 2.068 & \textbf{1.762} & time-shuffled actions & 11/16 \\
-PushT & 3073 & 1.969 & 2.008 & \textbf{1.315} & zero actions & 13/16 \\
-PushT & 3074 & 1.909 & 1.833 & \textbf{1.439} & zero actions & 13/16 \\
+PushT & 3072 & 2.068 & 2.068 & \textbf{1.762} & shuffled actions & 11/16 \\
+PushT & 3073 & 1.969 & 2.008 & \textbf{1.315} & zeroed actions & 13/16 \\
+PushT & 3074 & 1.909 & 1.833 & \textbf{1.439} & zeroed actions & 13/16 \\
 \addlinespace[1pt]
-Reacher & 3072 & 1.358 & 1.097 & \textbf{0.288} & time-shuffled actions & 16/16 \\
-Reacher & 3073 & 1.399 & 0.793 & \textbf{0.247} & time-shuffled actions & 16/16 \\
-Reacher & 3074 & 1.409 & 1.136 & \textbf{0.263} & time-shuffled actions & 16/16 \\
+Reacher & 3072 & 1.358 & 1.097 & \textbf{0.288} & shuffled actions & 16/16 \\
+Reacher & 3073 & 1.399 & 0.793 & \textbf{0.247} & shuffled actions & 16/16 \\
+Reacher & 3074 & 1.409 & 1.136 & \textbf{0.263} & shuffled actions & 16/16 \\
 \addlinespace[1pt]
-Cube & 3072 & 1.171 & 1.037 & \textbf{0.489} & zero actions & 14/16 \\
-Cube & 3073 & 1.416 & 1.212 & \textbf{0.500} & zero actions & 14/16 \\
-Cube & 3074 & 1.061 & 1.008 & \textbf{0.552} & time-shuffled actions & 14/16 \\
+Cube & 3072 & 1.171 & 1.037 & \textbf{0.489} & zeroed actions & 14/16 \\
+Cube & 3073 & 1.416 & 1.212 & \textbf{0.500} & zeroed actions & 14/16 \\
+Cube & 3074 & 1.061 & 1.008 & \textbf{0.552} & shuffled actions & 14/16 \\
 \bottomrule
 \end{tabular}
 \end{table}
