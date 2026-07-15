@@ -281,13 +281,14 @@ r_{i,\mathcal V}^{\mathrm{vis}}+r_{j,\mathcal V}^{\mathrm{vis}}
 \quad\text{for every }j\neq i.
 \label{eq:local-cloud-disjoint}
 \end{equation}
-The two tests produce three mutually exclusive categories: (i)
-\emph{reaches/exceeds spacing} when $r_{i,\mathcal V}^{\mathrm{vis}}\geq
-d_{i,\mathcal V}^{\mathrm{NN}}$; (ii) \emph{within spacing, not disjoint}
-when the first inequality is reversed but \Cref{eq:local-cloud-disjoint} does
-not hold; and (iii) \emph{fully disjoint} when it does hold. The second
-category does not mean that sampled points overlap. It means only that the
-enclosing-ball test cannot certify their separation.
+Across the sampled anchors, we report three summaries: the median
+$r/\mathrm{NN}$ ratio; the count and fraction satisfying
+$r_{i,\mathcal V}^{\mathrm{vis}}<d_{i,\mathcal V}^{\mathrm{NN}}$; and the count
+and fraction satisfying the fully-disjoint condition in
+\Cref{eq:local-cloud-disjoint}. The second is a one-sided nearest-center test,
+whereas the third is a symmetric certificate for the enclosing balls in the
+original high-dimensional representation. It is unrelated to whether the
+qualitative t-SNE display ellipses overlap.
 
 These quantities show local contraction and separation, but they cannot
 determine whether a perturbation changes a prediction or planning decision.
@@ -779,13 +780,16 @@ qualitative only.
 comparison. The fixed PushT case study uses LeWM training run 3072. Rows
 compare the unaugmented and $\stdmax{}=0.08$ Gaussian-augmented checkpoints;
 columns show the encoder output and the representation after eight
-autoregressive rollout steps. Colors highlight a fixed subset of 16 anchors,
-while gray points and all reported statistics cover all 128 anchors. The
-metric subtitles are computed in the original 192-dimensional projected
-latent space. The t-SNE visualization is qualitative because t-SNE
-does not preserve metric geometry. Each panel retains the projection settings
-of the original Appendix visualization; coordinates are not compared across
-panels, and neither coordinates nor ellipses enter any reported metric.}
+autoregressive rollout steps. Each color identifies one of 16 highlighted
+histories: the large black-rimmed marker is the clean anchor, the smaller
+same-color markers are its 18 perturbed views, and the faint ellipse is their
+90\% t-SNE display envelope. Gray points show the remaining histories and
+views. Under strong contraction, perturbed markers and their envelope can lie
+beneath the clean marker. Across all 128 anchors, each subtitle reports the
+median $r/\mathrm{NN}$, the count and fraction with $r<\mathrm{NN}$, and the
+count and fraction whose high-dimensional enclosing balls are fully disjoint.
+The t-SNE coordinates and ellipses are qualitative, are not compared across
+panels, and enter none of these metrics.}
 \label{fig:local-geometry-highd}
 \end{figure}
 

@@ -293,9 +293,9 @@ def build_figure(
         radius_count = int(audit["radius_lt_nn_count"])
         disjoint_count = int(audit["fully_disjoint_count"])
         metric_subtitle = (
-            f"median r/NN = {audit['median_radius_over_nn']:.2f}  ·  "
-            f"r < NN: {radius_count}/{total} ({_format_percent(radius_count, total)})  ·  "
-            f"disjoint: {disjoint_count}/{total} ({_format_percent(disjoint_count, total)})"
+            f"median r/NN {audit['median_radius_over_nn']:.2f}  ·  "
+            f"r < NN {radius_count}/{total} ({_format_percent(radius_count, total)})  ·  "
+            f"fully disjoint {disjoint_count}/{total} ({_format_percent(disjoint_count, total)})"
         )
         ax.text(
             0.5,
@@ -317,28 +317,78 @@ def build_figure(
         ax.grid(True, color="#ECECEC", linewidth=0.45)
         ax.set_aspect("equal", adjustable="box")
 
-    from matplotlib.lines import Line2D
+    from matplotlib.patches import Ellipse
 
-    state_handles = [
-        Line2D([], [], marker="o", linestyle="none", markersize=4.2, markerfacecolor="#858585", markeredgecolor="none", label="Unselected states/views"),
-        Line2D([], [], marker="o", linestyle="none", markersize=6.0, markerfacecolor="#4C78A8", markeredgecolor="#111111", markeredgewidth=0.6, label="Selected clean anchor"),
-        Line2D([], [], marker="o", linestyle="none", markersize=4.2, markerfacecolor="#4C78A8", markeredgecolor="white", markeredgewidth=0.3, label="Perturbed view"),
-        Line2D([], [], color="#4C78A8", linewidth=1.2, label="90% t-SNE covariance envelope"),
-    ]
-    fig.legend(
-        handles=state_handles,
-        loc="upper center",
-        bbox_to_anchor=(0.5, 0.995),
-        ncol=4,
-        frameon=False,
-        fontsize=6.8,
-        handletextpad=0.4,
-        columnspacing=1.1,
+    key_ax = fig.add_axes([0.10, 0.948, 0.80, 0.043])
+    key_ax.set_xlim(0.0, 1.0)
+    key_ax.set_ylim(0.0, 1.0)
+    key_ax.axis("off")
+    key_ax.scatter([0.015], [0.50], s=12, c="#858585", alpha=0.75, linewidths=0)
+    key_ax.text(
+        0.035,
+        0.50,
+        "Other histories/views",
+        ha="left",
+        va="center",
+        fontsize=7.1,
+        color="#222222",
+    )
+
+    key_color = "#4C78A8"
+    key_center = (0.315, 0.50)
+    key_ax.add_patch(
+        Ellipse(
+            xy=(0.335, 0.50),
+            width=0.090,
+            height=0.66,
+            facecolor=key_color,
+            edgecolor=key_color,
+            linewidth=0.8,
+            alpha=0.16,
+            zorder=1,
+        )
+    )
+    key_views = ((0.335, 0.73), (0.360, 0.43), (0.342, 0.27))
+    for view_x, view_y in key_views:
+        key_ax.plot(
+            [key_center[0], view_x],
+            [key_center[1], view_y],
+            color=key_color,
+            alpha=0.55,
+            linewidth=0.7,
+            zorder=2,
+        )
+    key_ax.scatter(
+        [point[0] for point in key_views],
+        [point[1] for point in key_views],
+        s=14,
+        c=key_color,
+        edgecolors="white",
+        linewidths=0.35,
+        zorder=3,
+    )
+    key_ax.scatter(
+        [key_center[0]],
+        [key_center[1]],
+        s=34,
+        c=key_color,
+        edgecolors="#111111",
+        linewidths=0.7,
+        zorder=4,
+    )
+    key_ax.text(
+        0.395,
+        0.50,
+        "One color = one highlighted history: clean anchor + perturbed views + 90% display envelope",
+        ha="left",
+        va="center",
+        fontsize=7.1,
+        color="#222222",
     )
     fig.text(
         0.5,
         0.008,
-        "NN denotes the nearest other clean anchor in the original high-dimensional representation.",
+        "NN denotes nearest clean-anchor spacing; all subtitle metrics use the original high-dimensional representation.",
         ha="center",
         va="bottom",
         fontsize=6.7,
