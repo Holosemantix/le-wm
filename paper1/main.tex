@@ -768,7 +768,9 @@ draws at each probe standard deviation in $\{0.01,0.04,0.08\}$. We compare the
 encoder output with the representation after eight autoregressive rollout
 steps. All ratios and counts use the original 192-dimensional projected
 latent space in which the planner computes costs. The t-SNE
-visualization~\cite{vandermaaten2008tsne} is qualitative only.
+visualization~\cite{vandermaaten2008tsne} reproduces the deterministic
+per-panel projections used in the original Appendix visualization and is
+qualitative only.
 
 \begin{figure}[H]
 \centering
@@ -781,8 +783,9 @@ autoregressive rollout steps. Colors highlight a fixed subset of 16 anchors,
 while gray points and all reported statistics cover all 128 anchors. The
 callouts and category strips are computed in the original 192-dimensional
 projected latent space. The t-SNE visualization is qualitative because t-SNE
-does not preserve metric geometry; neither its coordinates nor ellipses enter
-any reported metric.}
+does not preserve metric geometry. Each panel retains the projection settings
+of the original Appendix visualization; coordinates are not compared across
+panels, and neither coordinates nor ellipses enter any reported metric.}
 \label{fig:local-geometry-highd}
 \end{figure}
 

@@ -244,27 +244,26 @@ def build_figure(
     colors = plt.cm.turbo(np.linspace(0.05, 0.95, len(anchors)))
     audit_rows: list[dict[str, Any]] = []
 
-    # Fit one qualitative embedding per representation space so the two
-    # training conditions in a column share a coordinate system.  Encoder
-    # and rollout representations are still embedded separately and must not
-    # be compared by their 2-D scale.
+    # Reproduce the original Appendix visualization: each panel has its own
+    # deterministic t-SNE fit, using the same panel order and seeds as
+    # ``paper1_selective_contraction.py``.  The coordinates are qualitative
+    # and are not compared across panels; all reported metrics are computed
+    # from the original high-dimensional arrays below.
     projected_by_key: dict[str, np.ndarray] = {}
-    limits_by_feature: dict[str, tuple[tuple[float, float], tuple[float, float]]] = {}
-    for feature_index, feature in enumerate(("encoder", "predictor")):
-        joint = np.concatenate(
-            [arrays[f"base_{feature}"], arrays[f"fullseq_robust_{feature}"]],
-            axis=1,
-        )
-        projected_joint = _tsne_fit_transform_2d(
-            joint,
-            seed=int(sidecar["seed"]) + 17 * (feature_index + 1),
+    limits_by_key: dict[str, tuple[tuple[float, float], tuple[float, float]]] = {}
+    panel_seeds: dict[str, int] = {}
+    for panel_index, (label, feature, _, _) in enumerate(PANEL_SPECS):
+        key = f"{label}_{feature}"
+        panel_seed = int(sidecar["seed"]) + 17 * (panel_index + 1)
+        projected = _tsne_fit_transform_2d(
+            arrays[key],
+            seed=panel_seed,
             perplexity=perplexity,
             max_iter=tsne_max_iter,
         )
-        split = int(arrays[f"base_{feature}"].shape[1])
-        projected_by_key[f"base_{feature}"] = projected_joint[:, :split]
-        projected_by_key[f"fullseq_robust_{feature}"] = projected_joint[:, split:]
-        limits_by_feature[feature] = _axis_limits_2d_single(projected_joint)
+        projected_by_key[key] = projected
+        limits_by_key[key] = _axis_limits_2d_single(projected)
+        panel_seeds[f"{label}:{feature}"] = panel_seed
 
     for panel_index, (label, feature, row_title, column_title) in enumerate(PANEL_SPECS):
         key = f"{label}_{feature}"
@@ -291,7 +290,7 @@ def build_figure(
         projected = projected_by_key[key]
         origin = projected[0]
         perturbed = projected[1:]
-        xlim, ylim = limits_by_feature[feature]
+        xlim, ylim = limits_by_key[key]
         min_radius = 0.018 * max(xlim[1] - xlim[0], ylim[1] - ylim[0])
 
         ax.scatter(origin[:, 0], origin[:, 1], s=8, c="#6F6F6F", alpha=0.30, linewidths=0)
@@ -437,7 +436,8 @@ def build_figure(
         "tsne": {
             "perplexity": float(perplexity),
             "max_iter": int(tsne_max_iter),
-            "fit": "joint across training conditions within each representation column",
+            "fit": "independent per panel, matching the original Appendix visualization",
+            "panel_seeds": panel_seeds,
             "purpose": "qualitative visualization only",
         },
         "panels": audit_rows,

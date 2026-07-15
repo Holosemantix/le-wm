@@ -52,7 +52,13 @@
   "tsne": {
     "perplexity": 35.0,
     "max_iter": 650,
-    "fit": "joint across training conditions within each representation column",
+    "fit": "independent per panel, matching the original Appendix visualization",
+    "panel_seeds": {
+      "base:encoder": 3089,
+      "base:predictor": 3106,
+      "fullseq_robust:encoder": 3123,
+      "fullseq_robust:predictor": 3140
+    },
     "purpose": "qualitative visualization only"
   },
   "panels": [
