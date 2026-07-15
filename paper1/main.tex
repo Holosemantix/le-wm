@@ -122,10 +122,10 @@ lower cross-validated MAE than the strongest of three same-horizon controls
 with destroyed action information. Candidate-specific ACPC also improves
 cross-task prediction of CEM selection regret: cross-task test MAE
 decreases by $15.2\pm2.0\%$, with an improvement in all 12 task--run
-evaluations. ATR--SMPR thresholds chosen on some tasks screen checkpoints
-from tasks excluded from threshold selection, order
-checkpoint pairs correctly under blur and resize at the tested severities,
-and apply to PLDM after model-family recalibration.
+evaluations. A single ATR--SMPR threshold range, recovered from almost any subset of
+tasks, screens checkpoints across the four tasks to within one augmentation
+level, orders checkpoint pairs correctly under blur and resize at the tested
+severities, and applies to PLDM after model-family recalibration.
 
 \smallskip
 \noindent\textbf{Keywords:} visual world models; predictive stability; action-conditioned diagnostics; cross-task screening; visual corruption.
@@ -186,7 +186,7 @@ The contributions are:
 \begin{enumerate}[leftmargin=1.4em]
   \item \textbf{A paired-rollout diagnostic} (\Cref{sec:acpc}). ACPC measures how same-state visual changes propagate through action-conditioned predictions; ATR summarizes the checkpoint-level radius, and SMPR guards against constant-representation collapse.
   \item \textbf{Exact links to prediction and planning quantities} (\Cref{prop:target-free-error-drift,prop:exact-cost-certificate}). Samplewise inequalities connect rollout disagreement to common-future error drift and to squared latent goal-cost movement.
-  \item \textbf{Controlled evidence beyond threshold-selection tasks} (\Cref{sec:exp}). Experiments show that ACPC predicts perturbation-induced error changes and CEM selection regret, that thresholds selected on some tasks can screen checkpoints from other tasks, and that the diagnostic can be evaluated under blur, resize, and a second model family.
+  \item \textbf{Controlled evidence beyond threshold-selection tasks} (\Cref{sec:exp}). Experiments show that ACPC predicts perturbation-induced error changes and CEM selection regret, that a common threshold range recovered from almost any subset of tasks screens checkpoints across tasks, and that the diagnostic can be evaluated under blur, resize, and a second model family.
 \end{enumerate}
 \section{Related Work}\label{sec:related}
 
@@ -820,7 +820,9 @@ evaluation noise $\sigma=0.08$, relative ATR, and SMPR. Lines are across-run
 means; shaded ranges span the three run means; green bands mark levels
 meeting the success-rate criterion (\Cref{sec:bg}) in a majority of runs.
 Lower ATR (relative to the unaugmented checkpoint) and higher SMPR are
-favorable.}
+favorable. Dotted horizontal lines mark the common thresholds $t_R=0.3$
+(ATR) and $t_M=0.95$ (SMPR) shared across tasks
+(\Cref{sec:exp-frozen-external}).}
 \label{fig:full-sweep-diagnostics}
 \end{figure}
 
@@ -974,55 +976,45 @@ of a perturbation-induced CEM selection change across tasks. It does not show
 that ACPC changes the selected action or improves environment performance.
 
 
-\subsection{Screening checkpoints with thresholds chosen on other tasks}\label{sec:exp-frozen-external}
+\subsection{A common threshold range across tasks}\label{sec:exp-frozen-external}
 
-How closely can thresholds chosen from some tasks reproduce the recovery
-labels on tasks that did not influence that choice? We call the former
-\emph{threshold-selection tasks} and the latter \emph{test tasks}. Thresholds
-are selected on every nonempty proper subset of the four tasks and applied
-unchanged to the remaining tasks. This produces the 14 directional
-partitions described in \Cref{sec:bg} (\Cref{fig:cross-task-source-coverage}).
-A checkpoint's recovery label is positive when it meets the success-rate
-criterion in \Cref{sec:bg}. Balanced accuracy measures agreement with these
-labels. The \emph{recovery-onset mismatch} is the absolute difference, in
-training-augmentation grid levels, between the first checkpoint accepted by
-the diagnostic and the first checkpoint that meets the success-rate
-criterion. Thus, it directly measures whether the diagnostic locates recovery
-within a nearby range rather than requiring an identical boundary.
+Both the augmentation sweep and the threshold grid are discrete, so we do
+not ask whether tasks share an exact decision boundary. The useful question
+is coarser: does one \emph{range} of thresholds screen checkpoints correctly
+on every evaluated task? Agreement is measured in two ways. A checkpoint is
+screened correctly when its pass/fail decision matches the success-rate
+criterion of \Cref{sec:bg}, and the \emph{recovery-onset mismatch} is the
+distance, in training-augmentation grid levels, between the first checkpoint
+the diagnostic accepts and the first checkpoint that meets that criterion;
+it asks the diagnostic to locate recovery within a nearby range rather than
+to reproduce an identical boundary.
 
-This evaluation concerns the joint ATR--SMPR checkpoint screen. It is not a
-standalone test for representation collapse: SMPR guards only against the
-constant-representation failure mode on the supplied state-coordinate
-proxies, while ATR tests sensitivity to same-state visual changes.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\linewidth]{fig_cross_task_atr_smpr_source_coverage_v1.pdf}
-\caption{Reliability of checkpoint screening when ATR--SMPR thresholds are
-chosen on other tasks. A checkpoint passes when relative ATR $\le t_R$ and
-SMPR $\ge t_M$. (a) Agreement with recovery labels on test tasks, measured by
-balanced accuracy (chance is $0.5$). (b) Distance between the diagnostic and
-behavioral recovery onsets, measured in training-augmentation grid levels
-(one level is $0.01$ in $\stdmax{}$). Gray points are individual
-threshold-selection/test partitions; diamonds average test tasks equally for
-each number of threshold-selection tasks.}
-\label{fig:cross-task-source-coverage}
-\end{figure}
-
-Balanced accuracy is $0.855$, $0.900$, and $0.900$ when thresholds are
-selected from one, two, and three threshold-selection tasks, respectively, with
-precision/recall of $0.910/0.854$, $0.913/0.953$, and $0.913/0.953$. Mean
-recovery-onset mismatches are $1.1$, $0.5$, and $0.5$ grid levels; the largest
-individual partition--task--run mismatches are $5$, $1$, and $1$ levels. With one
-threshold-selection task, balanced accuracy ranges from $0.723$ to $0.913$ across the four
-possible choices---the weakest single choice is Reacher
-(\Cref{tab:cross-task-all-subsets})---so calibration depends on task
-composition. With two or three threshold-selection tasks, the diagnostic
-locates recovery within $0.5$ grid levels on average and at most one level in
-every test case. \textbf{Takeaway:} thresholds chosen on other tasks provide
-an approximate checkpoint screen over these four tasks, not evidence for one
-exact cross-task boundary, a universal threshold, or a general collapse detector.
+Such a range exists, and \Cref{fig:full-sweep-diagnostics} shows it
+directly: at the dotted thresholds $t_R=0.3$ and $t_M=0.95$, the
+relative-ATR curve of every task drops below its line, and the SMPR curve
+rises above its line, within one grid level of the point where planning
+success recovers. The leave-task-out evaluation over the 14
+threshold-selection/test partitions of \Cref{sec:bg} confirms that this
+range is not an artifact of any single task: 13 of the 14 partitions select
+exactly this pair, and with two or three threshold-selection tasks the
+diagnostic locates recovery on test tasks within $0.5$ grid levels on
+average and one level at most (balanced accuracy $0.900$, precision/recall
+$0.913/0.953$). Calibration on a single task is less reliable (balanced
+accuracy $0.855$ on average, ranging from $0.723$ to $0.913$): Reacher alone
+selects $t_R=0.1$ and produces mismatches of up to five levels, so a task
+whose diagnostics sit far from the others can miss the shared range.
 \Cref{sec:appendix-cross-task} reports every partition.
+
+Two limits keep this claim modest. First, $t_R=0.3$ is the largest value in
+the evaluated grid (\Cref{sec:appendix-A}), so the upper edge of the
+workable range is unresolved; looser thresholds might begin to accept
+visually sensitive checkpoints. Second, the evaluation concerns the joint
+ATR--SMPR screen, not a standalone collapse test: SMPR guards only against
+the constant-representation failure mode on the supplied state-coordinate
+proxies. \textbf{Takeaway:} one threshold range, recovered from almost any
+subset of tasks, screens checkpoints across the four tasks to within one
+augmentation level; this supports a shared operating range, not an exact
+universal boundary or a general collapse detector.
 \FloatBarrier
 
 \subsection{Application to PLDM}
@@ -1055,12 +1047,12 @@ thresholds architecture-invariant.
 \subsection{Transfer to blur and resize}
 \label{sec:exp-cross-stressor}
 
-Finally, we ask whether a score calibrated with Gaussian noise can rank
-checkpoint pairs under previously unseen visual shifts. We test blur
-($k=15$) and resize (scale $0.25$), each at one fixed severity. For each task,
-we select thresholds on the other three Gaussian-noise tasks and apply them to
-the 24 checkpoint pairs in \Cref{sec:bg}. No blur or resize result is used to
-select or adjust a threshold.
+The last experiment tests whether the same Gaussian-chosen thresholds remain
+useful under previously unseen visual shifts: blur ($k=15$) and resize
+(scale $0.25$), each at one fixed severity. For each task, thresholds
+selected on the other three Gaussian-noise tasks are applied unchanged to
+the 24 checkpoint pairs in \Cref{sec:bg}. No blur or resize result is used
+to select or adjust a threshold.
 
 \begin{figure}[H]
 \centering

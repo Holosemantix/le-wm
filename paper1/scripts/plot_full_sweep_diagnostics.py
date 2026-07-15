@@ -20,6 +20,12 @@ DEFAULT_FIG = ROOT / "assets" / "paper1_figs" / "fig_full_sweep_diagnostics.pdf"
 DEFAULT_REGION_FIG = ROOT / "assets" / "paper1_figs" / "fig_full_sweep_diagnostic_region.pdf"
 DEFAULT_PLANNER_FIG = ROOT / "assets" / "paper1_figs" / "fig_full_sweep_planner_guard.pdf"
 
+# Common threshold pair selected by 13 of the 14 cross-task partitions
+# (paper Sec. "A common threshold range across tasks"); drawn as dotted
+# reference lines on every diagnostic panel.
+COMMON_TR = 0.30
+COMMON_TM = 0.95
+
 PLOT_STYLE = {
     "font.family": "serif",
     "font.serif": ["DejaVu Serif", "Times New Roman", "Times"],
@@ -166,6 +172,29 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             diagnostic_ax.plot(
                 x, smpr, color="#7570b3", marker="^", lw=1.35, ms=3.5, ls="--", zorder=2
             )
+            diagnostic_ax.axhline(COMMON_TR, color="#d95f02", ls=":", lw=1.0, zorder=1.6)
+            diagnostic_ax.axhline(COMMON_TM, color="#7570b3", ls=":", lw=1.0, zorder=1.6)
+            if index == 0:
+                diagnostic_ax.annotate(
+                    r"$t_R{=}0.3$",
+                    xy=(0.081, COMMON_TR),
+                    xytext=(0, 1.6),
+                    textcoords="offset points",
+                    ha="right",
+                    va="bottom",
+                    fontsize=6.0,
+                    color="#d95f02",
+                )
+                diagnostic_ax.annotate(
+                    r"$t_M{=}0.95$",
+                    xy=(0.081, COMMON_TM),
+                    xytext=(0, -1.6),
+                    textcoords="offset points",
+                    ha="right",
+                    va="top",
+                    fontsize=6.0,
+                    color="#7570b3",
+                )
 
             score_ax.set_title(f"({chr(97 + index)}) {task}", loc="left", fontweight="semibold")
             if index % 2 == 0:
