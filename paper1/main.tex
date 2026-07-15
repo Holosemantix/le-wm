@@ -780,16 +780,15 @@ qualitative only.
 comparison. The fixed PushT case study uses LeWM training run 3072. Rows
 compare the unaugmented and $\stdmax{}=0.08$ Gaussian-augmented checkpoints;
 columns show the encoder output and the representation after eight
-autoregressive rollout steps. Each color identifies one of 16 highlighted
-histories: the large black-rimmed marker is the clean anchor, the smaller
+autoregressive rollout steps. Each color denotes one of 16 highlighted
+histories: the large black-rimmed marker is its clean anchor, smaller
 same-color markers are its 18 perturbed views, and the faint ellipse is their
-90\% t-SNE display envelope. Gray points show the remaining histories and
-views. Under strong contraction, perturbed markers and their envelope can lie
-beneath the clean marker. Across all 128 anchors, each subtitle reports the
-median $r/\mathrm{NN}$, the count and fraction with $r<\mathrm{NN}$, and the
-count and fraction whose high-dimensional enclosing balls are fully disjoint.
-The t-SNE coordinates and ellipses are qualitative, are not compared across
-panels, and enter none of these metrics.}
+90\% t-SNE envelope; gray points show all other histories and views. Under
+strong contraction, smaller markers and ellipses can lie beneath the clean
+marker. Each subtitle reports, across all 128 anchors, the median
+$r/\mathrm{NN}$, the count and fraction with $r<\mathrm{NN}$, and the count and
+fraction whose high-dimensional enclosing balls are fully disjoint. The t-SNE
+coordinates and ellipses are qualitative and enter none of these metrics.}
 \label{fig:local-geometry-highd}
 \end{figure}
 

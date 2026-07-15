@@ -32,14 +32,19 @@ DEFAULT_OUTPUT = ROOT / "assets/paper1_figs/fig_local_geometry_highd_audit.pdf"
 DEFAULT_AUDIT_OUTPUT = ROOT / "assets/paper1_figs/fig_local_geometry_highd_audit.json"
 
 PANEL_SPECS = (
-    ("base", "encoder", "No augmentation", "Encoder"),
-    ("base", "predictor", "No augmentation", "After eight rollout steps"),
-    ("fullseq_robust", "encoder", "Gaussian augmentation", "Encoder"),
+    ("base", "encoder", "Origin LeWM", "Encoder features"),
+    (
+        "base",
+        "predictor",
+        "Origin LeWM",
+        "8-step rollout predicted features",
+    ),
+    ("fullseq_robust", "encoder", "Noise-trained LeWM", "Encoder features"),
     (
         "fullseq_robust",
         "predictor",
-        "Gaussian augmentation",
-        "After eight rollout steps",
+        "Noise-trained LeWM",
+        "8-step rollout predicted features",
     ),
 )
 
@@ -196,7 +201,7 @@ def build_figure(
         left=0.065,
         right=0.985,
         bottom=0.07,
-        top=0.91,
+        top=0.94,
         hspace=0.26,
         wspace=0.14,
     )
@@ -308,7 +313,7 @@ def build_figure(
             color="#202020",
             zorder=8,
         )
-        ax.set_title(f"({chr(97 + panel_index)}) {row_title} · {column_title}", pad=14.0)
+        ax.set_title(f"{row_title}: {column_title}", pad=14.0)
         ax.set_xlim(*xlim)
         ax.set_ylim(*ylim)
         ax.set_xlabel("t-SNE coordinate 1", labelpad=1.5)
@@ -317,74 +322,6 @@ def build_figure(
         ax.grid(True, color="#ECECEC", linewidth=0.45)
         ax.set_aspect("equal", adjustable="box")
 
-    from matplotlib.patches import Ellipse
-
-    key_ax = fig.add_axes([0.10, 0.948, 0.80, 0.043])
-    key_ax.set_xlim(0.0, 1.0)
-    key_ax.set_ylim(0.0, 1.0)
-    key_ax.axis("off")
-    key_ax.scatter([0.015], [0.50], s=12, c="#858585", alpha=0.75, linewidths=0)
-    key_ax.text(
-        0.035,
-        0.50,
-        "Other histories/views",
-        ha="left",
-        va="center",
-        fontsize=7.1,
-        color="#222222",
-    )
-
-    key_color = "#4C78A8"
-    key_center = (0.315, 0.50)
-    key_ax.add_patch(
-        Ellipse(
-            xy=(0.335, 0.50),
-            width=0.090,
-            height=0.66,
-            facecolor=key_color,
-            edgecolor=key_color,
-            linewidth=0.8,
-            alpha=0.16,
-            zorder=1,
-        )
-    )
-    key_views = ((0.335, 0.73), (0.360, 0.43), (0.342, 0.27))
-    for view_x, view_y in key_views:
-        key_ax.plot(
-            [key_center[0], view_x],
-            [key_center[1], view_y],
-            color=key_color,
-            alpha=0.55,
-            linewidth=0.7,
-            zorder=2,
-        )
-    key_ax.scatter(
-        [point[0] for point in key_views],
-        [point[1] for point in key_views],
-        s=14,
-        c=key_color,
-        edgecolors="white",
-        linewidths=0.35,
-        zorder=3,
-    )
-    key_ax.scatter(
-        [key_center[0]],
-        [key_center[1]],
-        s=34,
-        c=key_color,
-        edgecolors="#111111",
-        linewidths=0.7,
-        zorder=4,
-    )
-    key_ax.text(
-        0.395,
-        0.50,
-        "One color = one highlighted history: clean anchor + perturbed views + 90% display envelope",
-        ha="left",
-        va="center",
-        fontsize=7.1,
-        color="#222222",
-    )
     fig.text(
         0.5,
         0.008,

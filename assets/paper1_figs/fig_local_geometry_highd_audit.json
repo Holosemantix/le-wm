@@ -64,8 +64,8 @@
   "panels": [
     {
       "panel": "base:encoder",
-      "condition": "No augmentation",
-      "representation": "Encoder",
+      "condition": "Origin LeWM",
+      "representation": "Encoder features",
       "n_states": 128,
       "n_views": 19,
       "median_radius_over_nn": 1.4079948194681327,
@@ -86,8 +86,8 @@
     },
     {
       "panel": "base:predictor",
-      "condition": "No augmentation",
-      "representation": "After eight rollout steps",
+      "condition": "Origin LeWM",
+      "representation": "8-step rollout predicted features",
       "n_states": 128,
       "n_views": 19,
       "median_radius_over_nn": 1.8627083417690424,
@@ -108,8 +108,8 @@
     },
     {
       "panel": "fullseq_robust:encoder",
-      "condition": "Gaussian augmentation",
-      "representation": "Encoder",
+      "condition": "Noise-trained LeWM",
+      "representation": "Encoder features",
       "n_states": 128,
       "n_views": 19,
       "median_radius_over_nn": 0.09578736701805869,
@@ -130,8 +130,8 @@
     },
     {
       "panel": "fullseq_robust:predictor",
-      "condition": "Gaussian augmentation",
-      "representation": "After eight rollout steps",
+      "condition": "Noise-trained LeWM",
+      "representation": "8-step rollout predicted features",
       "n_states": 128,
       "n_views": 19,
       "median_radius_over_nn": 0.19360597603070212,
