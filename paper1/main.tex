@@ -778,12 +778,12 @@ qualitative only.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.94\linewidth]{fig_local_geometry_highd_audit.pdf}
+\includegraphics[width=\linewidth]{fig_local_geometry_highd_audit.pdf}
 \caption{Descriptive local-geometry case study motivating the controlled ACPC
-comparison. Rows compare a matched pair of PushT checkpoints: one unaugmented
-and one trained with Gaussian augmentation at $\stdmax{}=0.08$;
-columns show the encoder output and the representation after eight
-autoregressive rollout steps. Each color denotes one of 16 highlighted
+comparison. Panels compare a matched pair of PushT checkpoints---the left
+two unaugmented, the right two trained with Gaussian augmentation at
+$\stdmax{}=0.08$---at the encoder output and after eight autoregressive
+rollout steps. Each color denotes one of 16 highlighted
 histories: the large black-rimmed marker is its clean anchor, smaller
 same-color markers are its 18 perturbed views, and the faint ellipse is their
 90\% t-SNE envelope; gray points show all other histories and views. Under
@@ -1065,21 +1065,28 @@ enters threshold selection.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.92\linewidth]{fig_cross_stressor_selective_transfer_v1.pdf}
-\caption{Observed change in planning success under blur and resize for all
-24 checkpoint pairs (unaugmented versus $\stdmax{}=0.08$), grouped by task
-and ordered by training run. Bar color gives the diagnostic verdict from the
-common Gaussian-calibrated thresholds; hatched bars are resize, plain bars
-blur. The dashed line is the five-point observed-label threshold; daggers
-mark the two discordant pairs, both at $+4$ points. The clean-loss condition
-of the label changes no label among these pairs.}
+\caption{Correspondence between planning gains and the diagnostic under blur
+and resize for all 24 checkpoint pairs (unaugmented versus
+$\stdmax{}=0.08$), grouped by task and ordered by training run. Top:
+success-rate change under the shift; the dashed line is the five-point
+observed-label threshold, and daggers mark the two discordant pairs, both at
+$+4$ points. Bottom: selective-score change $\Delta S$ of the same pairs
+under the common thresholds. Bar color gives the diagnostic verdict; hatched
+bars are resize. The label's clean-loss condition changes no label among
+these pairs.}
 \label{fig:cross-stressor-selective-transfer}
 \end{figure}
 
 The verdict agrees with the observed label on 22 of 24 pairs
-(\Cref{fig:cross-stressor-selective-transfer}). Both disagreements are
-borderline rather than sign errors: two PushT pairs improve by exactly four
-percentage points, one point below the label threshold, while the score
-improves. The magnitude of the score change also tracks the size of the
+(\Cref{fig:cross-stressor-selective-transfer}). The two rows of the figure
+make the task-level correspondence visible: TwoRoom and Reacher transfer
+strongly, with success-rate gains of $29$--$56$ points and large positive
+score changes; Cube shows no gain and uniformly negative score changes; and
+PushT sits between the two groups on both rows---mixed success changes and
+small score changes---and contributes both borderline pairs. Both
+disagreements are borderline rather than sign errors: two PushT pairs
+improve by exactly four percentage points, one point below the label
+threshold, while the score improves. The magnitude of the score change also tracks the size of the
 success change (Spearman's $\rho=0.835$); per-shift classification metrics
 are in \Cref{sec:appendix-cross-stressor}. \textbf{Takeaway:} the common
 threshold range, fixed on Gaussian noise, still separates improved from

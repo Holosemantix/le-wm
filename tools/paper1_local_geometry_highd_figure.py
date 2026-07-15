@@ -186,24 +186,23 @@ def build_figure(
         {
             "font.family": "sans-serif",
             "font.size": 8.0,
-            "axes.titlesize": 9.0,
-            "axes.labelsize": 7.5,
-            "xtick.labelsize": 6.4,
-            "ytick.labelsize": 6.4,
+            "axes.titlesize": 7.1,
+            "axes.labelsize": 6.8,
+            "xtick.labelsize": 5.8,
+            "ytick.labelsize": 5.8,
             "pdf.fonttype": 42,
             "ps.fonttype": 42,
         }
     )
-    fig = plt.figure(figsize=(7.65, 7.10), constrained_layout=False)
+    fig = plt.figure(figsize=(7.65, 2.30), constrained_layout=False)
     outer = fig.add_gridspec(
-        2,
-        2,
-        left=0.065,
-        right=0.985,
-        bottom=0.04,
-        top=0.96,
-        hspace=0.18,
-        wspace=0.14,
+        1,
+        4,
+        left=0.05,
+        right=0.99,
+        bottom=0.085,
+        top=0.88,
+        wspace=0.16,
     )
     colors = plt.cm.turbo(np.linspace(0.05, 0.95, len(anchors)))
     audit_rows: list[dict[str, Any]] = []
@@ -246,7 +245,7 @@ def build_figure(
             }
         )
 
-        ax = fig.add_subplot(outer[panel_index // 2, panel_index % 2])
+        ax = fig.add_subplot(outer[0, panel_index])
         projected = projected_by_key[key]
         origin = projected[0]
         perturbed = projected[1:]
@@ -309,7 +308,7 @@ def build_figure(
             transform=ax.transAxes,
             ha="left",
             va="top",
-            fontsize=6.4,
+            fontsize=5.4,
             linespacing=1.12,
             color="#202020",
             bbox={
@@ -321,11 +320,12 @@ def build_figure(
             },
             zorder=8,
         )
-        ax.set_title(f"{row_title}: {column_title}", pad=4.0)
+        ax.set_title(f"{row_title}\n{column_title}", pad=3.0)
         ax.set_xlim(*xlim)
         ax.set_ylim(*ylim)
         ax.set_xlabel("t-SNE coordinate 1", labelpad=1.5)
-        ax.set_ylabel("t-SNE coordinate 2", labelpad=1.5)
+        if panel_index == 0:
+            ax.set_ylabel("t-SNE coordinate 2", labelpad=1.5)
         ax.tick_params(pad=1)
         ax.grid(True, color="#ECECEC", linewidth=0.45)
         ax.set_aspect("equal", adjustable="box")
