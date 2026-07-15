@@ -1,16 +1,19 @@
 \begin{table}[H]
 \centering
-\caption{Leave-one-task-out MAE decrease from adding candidate-conditioned five-step ACPC to the baseline regression of \Cref{sec:exp-planner} (reduced-budget CEM audit, 9{,}600 records). Entries are the mean $\pm$ sample SD of run-level equal-task decreases on the fitted $\log(1+\mathrm{target})$ scale; the last column counts positive task--run cells out of 12. Higher is better.}
+\caption{Reduction in prediction MAE after adding candidate-specific five-step ACPC. Models are fitted on three tasks and evaluated on the remaining task; higher is better.}
 \label{tab:acpc-planner-increment}
 \scriptsize
 \setlength{\tabcolsep}{4.5pt}
 \begin{tabularx}{\linewidth}{Xcc}
 \toprule
-Prediction target & \shortstack{Leave-one-task-out MAE decrease\\(\%, mean $\pm$ sample SD, $\uparrow$)} & \shortstack{Positive task--run\\cases (/12)} \\
+Prediction target & \shortstack{MAE reduction (\%) $\uparrow$\\mean $\pm$ run-to-run std. dev.} & \shortstack{Task--run evaluations\\improved (/12)} \\
 \midrule
-Maximum fixed-pool cost movement & 7.9 $\pm$ 1.4 & 8/12 \\
+Largest candidate-cost change in the shared pool & 7.9 $\pm$ 1.4 & 8/12 \\
 Adaptive-CEM decision regret & 15.2 $\pm$ 2.0 & 12/12 \\
-Adaptive-CEM first-action change (RMS) & 1.1 $\pm$ 0.5 & 10/12 \\
+RMS change in the first planned action & 1.1 $\pm$ 0.5 & 10/12 \\
 \bottomrule
 \end{tabularx}
+\vspace{2pt}
+
+\parbox{0.98\linewidth}{\scriptsize MAE is computed on the $\log(1+\mathrm{target})$ scale. The four evaluation tasks are weighted equally within each training run; entries then report the mean and standard deviation across three runs. The final column counts the 12 task--run evaluations separately.}
 \end{table}

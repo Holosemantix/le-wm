@@ -998,7 +998,7 @@ def check_visual_text_structure() -> None:
         "\\subsection{Local representation geometry before and after an eight-step rollout}",
         "\\subsection{Planning performance under observation noise}",
         "\\subsection{Predicting the perturbation-induced error drift}",
-        "\\subsection{ACPC and CEM decisions}",
+        "\\subsection{Relating ACPC to CEM cost and decision changes}",
         "\\subsection{Cross-task threshold transfer}",
         "\\subsection{Application to PLDM}",
         "\\subsection{Transfer to blur and resize}",
