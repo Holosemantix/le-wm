@@ -32,6 +32,9 @@ def test_submission_planner_tables_are_bound_to_validated_three_seed_summary() -
     assert r"15.2 $\pm$ 2.0 & 12/12" in increment
     assert r"1.1 $\pm$ 0.5 & 10/12" in increment
     assert "sample standard deviation" in increment
+    assert "Leave-one-task-out MAE decrease" in increment
+    assert "fitted on three tasks and evaluated on the fourth" in increment
+    assert "Held-out" not in increment
     assert "Positive task--run" in increment
     assert "Run range" not in increment
     assert "seed 3072" not in increment

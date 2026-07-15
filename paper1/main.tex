@@ -102,7 +102,7 @@
 \maketitle
 
 \begin{abstract}
-Latent predictive world models avoid reconstructing every pixel, but latent prediction alone does not show whether state-preserving visual changes remain harmless after learned dynamics and planning. We introduce Action-Conditioned Predictive Consistency (ACPC), a frozen-checkpoint diagnostic that compares the predicted latent trajectories produced by nominal and visually perturbed views of the same trajectory under shared actions. Because a constant representation can make this disagreement vanish, we pair ACPC with a state-coordinate proxy test for different-state separation. Exact samplewise inequalities relate ACPC to error differences against a shared observed future and to movement in squared latent goal cost. Across LeWM checkpoints on four control tasks, recorded-action eight-step ACPC predicts perturbation-induced future-error change with $51.3\pm3.5\%$ lower held-out MAE than the best same-horizon control without the recorded actions. Across fixed-pool and adaptive-CEM evaluations, candidate-conditioned five-step ACPC also improves held-out prediction of cost movement and model-cost decision regret. Source-task thresholds retain checkpoint-screening accuracy on held-out tasks, while score changes remain rank-correlated with planning-success changes at the tested blur and resize severities. We repeat the analysis on PLDM using the same procedure, with numerical thresholds recalibrated for that model family.
+Latent predictive world models avoid reconstructing every pixel, but latent prediction alone does not show whether state-preserving visual changes remain harmless after learned dynamics and planning. We introduce Action-Conditioned Predictive Consistency (ACPC), a frozen-checkpoint diagnostic that compares the predicted latent trajectories produced by nominal and visually perturbed views of the same trajectory under shared actions. Because a constant representation can make this disagreement vanish, we pair ACPC with a state-coordinate proxy test for different-state separation. Exact samplewise inequalities relate ACPC to error differences against a shared observed future and to movement in squared latent goal cost. Across non-augmented LeWM checkpoints on four control tasks, adding recorded-action eight-step ACPC to a one-step baseline reduces cross-validated MAE for predicting perturbation-induced eight-step error differences by $51.3\pm3.5\%$ relative to an oracle best-of-three same-horizon control that disrupts the recorded-action alignment. Across fixed-pool and adaptive-CEM evaluations, candidate-conditioned five-step ACPC also improves leave-one-task-out prediction of cost movement and model-cost decision regret. Source-task thresholds retain checkpoint-screening accuracy on tasks excluded from calibration, while score changes remain rank-correlated with planning-success changes at the tested blur and resize severities. We repeat the analysis on PLDM using the same procedure, with numerical thresholds recalibrated for that model family.
 
 \smallskip
 \noindent\textbf{Keywords:} visual world models; predictive stability; action-conditioned diagnostics; calibration transfer; visual corruption.
@@ -126,7 +126,7 @@ Low rollout disagreement alone is not enough. A model that maps every observatio
 
 We introduce Action-Conditioned Predictive Consistency (ACPC) to quantify same-state rollout stability. ACPC propagates nominal and visually perturbed histories of one trajectory under a shared action sequence and measures the distance between their predicted latent trajectories; the pairwise score itself requires neither a realized future nor a task outcome. Evaluating both predictions against the same logged future gives an exact bound on the difference between their errors. For LeWM's squared latent goal cost, a second bound limits candidate-cost movement and yields fixed-pool stability certificates when combined with the clean candidate margins. At the checkpoint level, Action-Conditioned Trajectory Radius (ATR) summarizes high-quantile normalized disagreement, while Selective Margin Pass Rate (SMPR) checks whether coordinate-labeled different-state pairs remain outside the raw same-state radius by a prescribed margin. A calibrated score combining ATR and SMPR screens frozen checkpoints for visual predictive sensitivity. ACPC is an evaluation tool, not a new training objective.
 
-We evaluate this diagnostic on LeWM~\cite{maes2026lewm} across TwoRoom, PushT, Reacher, and Cube, using Gaussian observation noise for calibration. Using recorded-action eight-step ACPC lowers held-out MAE for predicting the change in future error by $51.3\pm3.5\%$ relative to the strongest same-horizon control that destroys the recorded action sequence. Candidate-conditioned five-step ACPC consistently improves prediction of adaptive-CEM model-cost decision regret; its improvement for maximum fixed-pool cost movement is positive on three of the four tasks. Aggregated over all 14 directional partitions, balanced accuracy is $0.855$ with one source task and $0.900$ with either two or three. Gaussian-calibrated score changes also track planning-success changes at one tested severity for each of blur and resize. The same analysis can be instantiated on PLDM, but its numerical thresholds require model-family-specific recalibration.
+We evaluate this diagnostic on LeWM~\cite{maes2026lewm} across TwoRoom, PushT, Reacher, and Cube, using Gaussian observation noise for calibration. On the non-augmented checkpoints, adding recorded-action eight-step ACPC to a one-step baseline lowers cross-validated MAE for predicting perturbation-induced eight-step error differences by $51.3\pm3.5\%$ relative to an oracle best-of-three same-horizon control that disrupts the recorded-action alignment. Candidate-conditioned five-step ACPC consistently improves prediction of adaptive-CEM model-cost decision regret; its improvement for maximum fixed-pool cost movement is positive on three of the four tasks. Aggregated over all 14 directional partitions, balanced accuracy is $0.855$ with one source task and $0.900$ with either two or three. Gaussian-calibrated score changes also track planning-success changes at one tested severity for each of blur and resize. The same analysis can be instantiated on PLDM, but its numerical thresholds require model-family-specific recalibration.
 
 The contributions are:
 \begin{enumerate}[leftmargin=1.4em]
@@ -528,7 +528,27 @@ ATR uses 100 logged anchors, five perturbation draws, eight predicted steps, uni
 The raw ATR defines the tube in SMPR; checkpoint thresholding uses the task-relative ATR in \Cref{eq:atr-relative}.
 
 \paragraph{Prediction and CEM analyses.}
-To test prediction-error changes, we use 16 trajectory groups per task, four perturbation severities, and two perturbation draws. The target is the absolute change in eight-step latent prediction error between nominal and perturbed histories. A ridge model is fitted on 15 groups and evaluated on the remaining group, rotating through all 16. Every regression uses perturbation severity, encoder shift, action magnitude, and nominal dynamics. The regressions differ only in the added ACPC feature: one-step ACPC; the strongest of three eight-step controls using zeroed actions, actions from another trajectory, or time-shuffled actions; or eight-step ACPC using the recorded actions.
+To test perturbation-induced prediction-error differences, we use the
+non-augmented checkpoint from each task and training run, with 16 trajectory
+groups per task, two perturbation draws, and Gaussian probe severities
+$\{0,0.02,0.05,0.08\}$. The zero-severity rows serve as identity checks; the
+regressions use the three nonzero severities. For
+each nominal/perturbed history pair, the target is
+$d=|e_{\tilde h}-e_h|$, where both eight-step errors are measured against the
+same logged future. A ridge model is fitted on 15 groups and evaluated on the
+remaining group, rotating through all 16. Every model contains perturbation
+severity and the clean--perturbed encoder-history distance. The one-step
+baseline additionally contains recorded-action $\mathrm{ACPC}_1$. The two
+eight-step models retain this baseline and add either the strongest action
+control---$\mathrm{ACPC}_8$ under zeroed, batch-permuted, or time-shuffled
+actions---or $\mathrm{ACPC}_8$ under the recorded actions. All eight-step
+features use the uniform weights $\alpha_k=1/8$ in
+\Cref{eq:acpc-h}. Only the recorded-action feature uses the sequence that
+generated the logged future and therefore directly matches the right-hand side
+of \Cref{prop:target-free-error-drift} for this target. The action-control
+column is an oracle comparator: within each task--run cell, it reports the
+lowest 16-fold regression MAE among the three control features rather than a
+control fixed in advance.
 
 For the CEM analysis, checkpoints trained without noise augmentation and with $\stdmax{}=0.08$ are evaluated on the same candidate pools. The reduced-budget analysis uses 100 histories per task and training run, $K=64$, top-eight elites, and eight CEM steps. The full-budget analysis uses the same 16 histories per task with the deployed $K=300$, top-30, 30-step configuration. Within each training run, ridge models are fitted on three tasks and evaluated on the fourth. We test whether candidate-conditioned five-step ACPC improves prediction of the maximum candidate-cost change, first-action RMS, and clean-history decision regret beyond perturbation severity, training condition, one-step ACPC, and the nominal top-1 margin.
 
@@ -555,43 +575,50 @@ tracks a planning-relevant quantity. The next two experiments examine those
 questions.
 \FloatBarrier
 
-\subsection{Predicting error changes under visual perturbations}\label{sec:exp-target-aligned}
+\subsection{Predicting perturbation-induced error differences}\label{sec:exp-target-aligned}
 
-We ask whether ACPC helps predict how much a visual perturbation changes an
-eight-step prediction error, the quantity bounded by
-\Cref{prop:target-free-error-drift}. Both predictions are compared with the
-same observed future, and the target is the absolute difference between their
-errors. Every regression uses the same perturbation severity, encoder shift,
-action magnitude, and nominal-dynamics features. The regressions differ only
-in their ACPC feature: one-step ACPC; the strongest of three same-horizon
-destroyed-action controls using zeroed actions, actions from another
-trajectory, or time-shuffled actions; or eight-step ACPC under the recorded
-actions. The same-horizon comparison isolates the recorded action information
-from rollout length.
+We ask whether the theory-matched eight-step feature helps predict the error
+difference bounded by \Cref{prop:target-free-error-drift}. Figure~\ref{fig:future-drift-runs}
+compares nested regressions, not raw ACPC values. The first is the one-step
+baseline defined above. The second retains that baseline and adds the strongest
+of the three eight-step action controls as an oracle comparator. The third instead adds eight-step ACPC
+under the recorded actions. Comparing the last two holds rollout length fixed
+and isolates whether the feature uses the action sequence associated with the
+logged future.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{fig_future_drift_three_seed_v1.pdf}
-\caption{All regressions predict the same target: the absolute change in
-prediction error against one observed eight-step future. The vertical axis is
-held-out MAE, so lower is better. Each task panel reports regressions using
-one-step ACPC, the best same-horizon destroyed-action control, and
-recorded-action eight-step ACPC. Small points are individual training runs,
-thin lines join results from the same run, and diamonds are task means. All
-regressions use identical base covariates. The control is selected from zeroed,
-cross-trajectory, and time-shuffled actions. Latent-error scales are
-task-specific, so comparisons should be made within a panel.}
+\caption{Predicting the perturbation-induced difference between nominal and
+perturbed eight-step prediction errors on the non-augmented checkpoints. For each history pair, the regression
+target is $d=|e_{\tilde h}-e_h|$, with both errors measured against the same
+logged future. Each model is fitted on 15 of 16 trajectory groups and evaluated
+on the omitted group, rotating over all groups. The vertical axis is therefore
+regression MAE, not the world model's forecast error; lower is better. All
+models contain perturbation severity and encoder-history distance. The
+one-step baseline adds recorded-action $\mathrm{ACPC}_1$; the other models
+retain it and add either an oracle eight-step action control or recorded-action
+$\mathrm{ACPC}_8$. Within each task--run cell, the oracle is the lowest-MAE
+choice among zeroed, batch-permuted, and time-shuffled action features over the
+same 16 rotations. Small points are independent training runs, thin lines join
+the same run, and diamonds are task means. Recorded-action eight-step ACPC is
+lowest in all 12 task--run cells. Latent-error scales are task-specific, so
+comparisons should be made within a panel.}
 \label{fig:future-drift-runs}
 \end{figure}
 
-The regression using recorded-action eight-step ACPC has the lowest held-out
-MAE in all 12 task--run cells. Relative to one-step ACPC, the equal-task MAE reduction is
-$55.9\pm4.7\%$; relative to the strongest same-horizon control it is
-$51.3\pm3.5\%$ (mean $\pm$ sample standard deviation across run-level
-equal-task summaries). These results concern the ability to predict a change
-in eight-step error; they do not compare the absolute accuracy of one-step and
-eight-step forecasts. Appendix~\ref{sec:appendix-p1-controls} reports the
-task-level values and selected controls.
+The nested regression that adds recorded-action eight-step ACPC has the lowest
+leave-one-trajectory-group-out MAE in all 12 task--run cells. Relative to the
+one-step baseline, the equal-task MAE reduction is $55.9\pm4.7\%$; relative
+to the oracle best-of-three same-horizon control that disrupts the
+recorded-action alignment, it is $51.3\pm3.5\%$ (mean $\pm$ sample standard deviation across run-level
+equal-task summaries). Each run-level summary first averages the four
+task-specific relative MAE reductions equally; the displayed standard
+deviation is then computed across training runs. These results concern prediction of the
+perturbation-induced difference between two eight-step errors; they do not
+compare the absolute forecast accuracy of one-step and eight-step world
+models. Appendix~\ref{sec:appendix-p1-controls} reports the task-level values
+and selected controls.
 
 \subsection{ACPC and CEM decisions}\label{sec:exp-planner}
 
@@ -606,18 +633,19 @@ also remain aligned, as required by Corollary~\ref{cor:adaptive-cem-alignment}.
 We then ask whether candidate-conditioned five-step ACPC adds predictive
 information beyond perturbation severity, training condition, one-step ACPC,
 and the nominal top-1 margin. Table~\ref{tab:acpc-planner-increment} reports
-the reduction in held-out prediction error, and
-Fig.~\ref{fig:acpc-planner-evidence} shows paired held-out errors for the
-baseline and expanded regressions.
+the reduction in leave-one-task-out prediction error, and
+Fig.~\ref{fig:acpc-planner-evidence} shows paired errors on the task omitted
+from fitting for the baseline and expanded regressions.
 
 \input{tables/table_acpc_planner_increment}
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\linewidth]{fig_acpc_planner_evidence.pdf}
-\caption{Direct held-out prediction errors for two planner-facing quantities;
-lower is better. Each panel compares two nested ridge models fitted and
-evaluated on the same task--run split, without and with candidate-conditioned
+\caption{Leave-one-task-out prediction errors for two planner-facing
+quantities; lower is better. Within each training run, each ridge model is
+fitted on three tasks and evaluated on the fourth, rotating over all tasks.
+Each panel compares the same split without and with candidate-conditioned
 five-step ACPC. The base model already includes perturbation severity,
 training condition, one-step ACPC, and the nominal top-1 margin. Thin lines
 connect the two errors for the same task--run evaluation; the heavy black pair
@@ -630,9 +658,9 @@ simulator return.}
 \label{fig:acpc-planner-evidence}
 \end{figure}
 
-Adding candidate-conditioned five-step ACPC reduces held-out MAE for maximum
+Adding candidate-conditioned five-step ACPC reduces leave-one-task-out MAE for maximum
 fixed-pool cost movement by $7.9\pm1.4\%$; the reduction is positive on three
-of the four tasks. For adaptive CEM, it reduces held-out MAE for positive
+of the four tasks. For adaptive CEM, it reduces leave-one-task-out MAE for positive
 decision regret by $15.2\pm2.0\%$, with an improvement in every task--run cell.
 The $1.1\pm0.5\%$ reduction for first-action change is too small to support an
 incremental claim. In all three analyses, the rank association is higher for
@@ -664,7 +692,8 @@ remaining tasks. This gives 14 directional source/evaluation partitions
 source/evaluation partitions. Thresholds are selected using source tasks only
 and then applied unchanged to the remaining tasks; a checkpoint passes when
 relative ATR $\le t_R$ and SMPR $\ge t_M$. Panel (a) reports balanced accuracy
-on held-out checkpoints (higher is better; chance is $0.5$). Panel (b) reports
+on checkpoints from evaluation tasks excluded from threshold selection
+(higher is better; chance is $0.5$). Panel (b) reports
 the absolute gap between the first augmentation level accepted by the
 diagnostic and the first level meeting the success-rate criterion, measured in
 Gaussian-augmentation grid steps (lower is better; one step is $0.01$ in
@@ -752,14 +781,14 @@ the tested severity. They do not establish an absolute robustness classifier.
 \section{Discussion and limitations}\label{sec:disc}
 
 The prediction experiment asks whether ACPC is informative about the error
-change bounded in \Cref{prop:target-free-error-drift}. Recorded-action
-eight-step ACPC adds predictive information beyond common covariates that already include
-encoder shift, and it predicts the change in latent error better than one-step
-ACPC and the three same-horizon destroyed-action controls. Because every
-regression uses the same eight-step target, the result cannot be attributed
-only to comparing different rollout horizons. The direction is consistent
-across all tasks and runs, although the available runs do not support a precise
-estimate of population-level training variability.
+difference bounded in \Cref{prop:target-free-error-drift}. Recorded-action
+eight-step ACPC adds predictive information beyond perturbation severity,
+encoder-history distance, and recorded-action one-step ACPC. It also predicts
+the error difference better than the oracle best-of-three eight-step control
+with disrupted recorded-action alignment. Because these controls use the same
+horizon, the result cannot be attributed only to rollout length. The direction is
+consistent across all tasks and runs, although the available runs do not
+support a precise estimate of population-level training variability.
 
 The CEM experiment verifies the deterministic cost bound and tests whether
 candidate-conditioned ACPC explains decision changes beyond simpler features.
@@ -797,7 +826,7 @@ this change to prediction error and squared goal cost, and a state-coordinate
 margin rejects constant-representation collapse on the tested proxies. Across four tasks, recorded-action
 ACPC adds information beyond one-step and same-horizon action controls, relates
 to CEM cost and decision changes, and supports thresholds that transfer to
-held-out tasks. The same analysis applies to PLDM, and a Gaussian-calibrated
+tasks excluded from calibration. The same analysis applies to PLDM, and a Gaussian-calibrated
 score retains useful checkpoint ordering under blur and resize. Numerical
 thresholds remain model-family specific.
 \bibliographystyle{plain}

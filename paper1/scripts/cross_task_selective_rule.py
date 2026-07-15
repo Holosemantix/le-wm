@@ -476,7 +476,7 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
         metrics = (
             (
                 "balanced_accuracy",
-                r"(a) Held-out balanced accuracy $\uparrow$",
+                r"(a) Evaluation-task balanced accuracy $\uparrow$",
                 "Balanced accuracy",
             ),
             (

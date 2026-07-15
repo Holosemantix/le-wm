@@ -169,7 +169,10 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
             ax.set_xlim(-0.20, 1.20)
             ax.set_xticks(
                 [0.0, 1.0],
-                ["Base model\n(includes H1 ACPC)", "+ candidate\nH5 ACPC"],
+                [
+                    "Base regression\n(includes 1-step ACPC)",
+                    "+ candidate-level\n5-step ACPC",
+                ],
             )
             _polish(ax)
 
@@ -209,7 +212,7 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
             columnspacing=1.2,
         )
         fig.supylabel(
-            r"Held-out MAE on fitted $\log(1+\mathrm{target})$ ($\downarrow$)",
+            r"Leave-one-task-out MAE ($\downarrow$)",
             x=0.01,
             fontsize=8,
         )
@@ -234,13 +237,13 @@ def build_increment_table(summary: dict[str, Any]) -> str:
     lines = [
         r"\begin{table}[H]",
         r"\centering",
-        r"\caption{Held-out prediction gain from candidate-conditioned five-step ACPC in the reduced-budget CEM audit (9,600 history records). Both ridge models include perturbation severity, training condition, one-step ACPC, and the nominal top-1 margin; the expanded model adds five-step ACPC. Within each independent training run, held-out MAE on the fitted $\log(1+\mathrm{target})$ response is averaged equally across the four leave-one-task-out evaluations for each model, and the relative decrease between those two equal-task MAEs is then computed. Entries report the across-run mean $\pm$ sample standard deviation of these run-level decreases; the final column counts positive task--run cases out of 12. Higher is better. Decision regret is measured in the model's squared latent goal cost, not simulator return.}",
+        r"\caption{Leave-one-task-out prediction gain from candidate-conditioned five-step ACPC in the reduced-budget CEM audit (9,600 history records). Both ridge models include perturbation severity, training condition, one-step ACPC, and the nominal top-1 margin; the expanded model adds five-step ACPC. Within each independent training run, the models are fitted on three tasks and evaluated on the fourth, rotating over all four tasks. Test MAE on the fitted $\log(1+\mathrm{target})$ response is averaged equally across these four evaluations for each model, and the relative decrease between those two equal-task MAEs is then computed. Entries report the across-run mean $\pm$ sample standard deviation of these run-level decreases; the final column counts positive task--run cases out of 12. Higher is better. Decision regret is measured in the model's squared latent goal cost, not simulator return.}",
         r"\label{tab:acpc-planner-increment}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{4.5pt}",
         r"\begin{tabularx}{\linewidth}{Xcc}",
         r"\toprule",
-        r"Prediction target & \shortstack{Held-out MAE decrease\\(\%, mean $\pm$ sample SD, $\uparrow$)} & \shortstack{Positive task--run\\cases (/12)} \\",
+        r"Prediction target & \shortstack{Leave-one-task-out MAE decrease\\(\%, mean $\pm$ sample SD, $\uparrow$)} & \shortstack{Positive task--run\\cases (/12)} \\",
         r"\midrule",
     ]
     for key, label in specs:

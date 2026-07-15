@@ -34,20 +34,52 @@ def test_future_drift_summary_uses_three_symmetric_training_runs() -> None:
     )
 
 
-def test_future_drift_text_describes_all_three_destroyed_action_controls() -> None:
+def test_future_drift_text_describes_nested_models_and_all_action_controls() -> None:
     text = (ROOT / "paper1/main.tex").read_text()
     normalized = " ".join(text.split())
-    assert "strongest of three same-horizon destroyed-action controls" in normalized
+    assert "The two eight-step models retain this baseline" in normalized
     assert (
-        "zeroed actions, actions from another trajectory, or time-shuffled actions"
+        "zeroed, batch-permuted, or time-shuffled actions"
         in normalized
     )
+    assert "Only the recorded-action feature uses the sequence that generated" in normalized
+    assert "oracle comparator" in normalized
+    assert "non-augmented checkpoint from each task and training run" in normalized
+    assert "actions from another trajectory" not in normalized
     assert "better of the two" not in normalized
+
+
+def test_future_drift_figure_names_the_estimand_and_feature_sets() -> None:
+    script = (
+        ROOT / "paper1/scripts/build_future_drift_reader_display.py"
+    ).read_text()
+    assert "Regression MAE" in script
+    assert "both eight-step models retain the one-step baseline" in script
+    assert r"baseline = recorded-action ACPC$_1$" in script
+    assert r"oracle control = $+$ best-of-three ACPC$_8$ control" in script
+    assert r"recorded = $+$ recorded-action ACPC$_8$" in script
+    assert "oracle control is the lowest-MAE choice" in script
+    assert "Held-out MAE" not in script
+
+
+def test_future_drift_appendix_tables_avoid_internal_shorthand() -> None:
+    combined = "\n".join(
+        (ROOT / path).read_text()
+        for path in (
+            "paper1/tables/table_target_aligned_acpc.tex",
+            "paper1/tables/table_target_aligned_acpc_absolute.tex",
+        )
+    )
+    assert "clean--perturbed encoder-history distance" in combined
+    assert "encoder response" not in combined
+    assert "H8" not in combined
+    assert "oracle" in combined
 
 
 def test_main_text_uses_reader_facing_data_flow_language() -> None:
     text = (ROOT / "paper1/main.tex").read_text()
     lowered = text.lower()
+    normalized = " ".join(lowered.split())
 
     for excluded in (
         "seed3075",
@@ -60,7 +92,12 @@ def test_main_text_uses_reader_facing_data_flow_language() -> None:
     ):
         assert excluded not in lowered
 
-    assert "absolute change in eight-step latent prediction error" in lowered
+    assert (
+        "perturbation-induced difference between nominal and perturbed "
+        "eight-step prediction errors"
+        in normalized
+    )
+    assert "held-out mae" not in lowered
     assert "this gives 14 directional" in lowered
     assert "selected from one, two, and three source tasks" in lowered
     assert "action-conditioned predictive consistency" in lowered
