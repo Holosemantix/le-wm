@@ -102,7 +102,28 @@
 \maketitle
 
 \begin{abstract}
-Latent predictive world models avoid reconstructing pixels, but latent prediction alone does not show whether a state-preserving visual change---noise, blur, degraded resolution---remains harmless once the model rolls the state forward and a planner acts on the prediction. We introduce Action-Conditioned Predictive Consistency (ACPC), a diagnostic for frozen checkpoints: encode a clean and a visually perturbed view of the same history, roll both forward under the same actions, and measure how far the two predicted latent trajectories separate. Exact samplewise inequalities tie this separation to the resulting change in multi-step prediction error and to the movement of planner candidate costs. Because a collapsed representation would make the separation vanish, we pair the checkpoint-level radius (ATR) with a separation test on pairs whose logged task states differ (SMPR). On LeWM across four control tasks, eight-step ACPC under the recorded actions predicts perturbation-induced error changes with $51.3\pm3.5\%$ lower cross-validated MAE than the strongest of three same-horizon controls whose action information is destroyed, so the signal comes from the recorded actions rather than from rollout length. ACPC also improves cross-task prediction of CEM cost movement and decision regret; ATR--SMPR thresholds calibrated on source tasks screen checkpoints from tasks excluded from calibration, order checkpoint pairs correctly under blur and resize at the tested severities, and port to PLDM after model-family recalibration.
+Latent predictive world models avoid reconstructing pixels, but this does not
+guarantee robust predictions when visual appearance changes without a change
+in state. Noise, blur, or reduced resolution may alter the encoded history;
+the resulting error can then grow as the model predicts forward and a planner
+acts on those predictions. We introduce Action-Conditioned Predictive
+Consistency (ACPC), a diagnostic for frozen checkpoints. ACPC encodes clean
+and perturbed views of the same history, predicts both forward under the same
+actions, and measures the distance between the two latent trajectories. Exact
+samplewise inequalities relate this distance to changes in multi-step
+prediction error and planner candidate costs. A collapsed representation
+would make ACPC artificially small, so we complement it with two
+checkpoint-level summaries: Action-Conditioned Trajectory Radius (ATR)
+measures sensitivity to same-state visual perturbations, and Selective Margin
+Pass Rate (SMPR) tests whether pairs with different logged task states remain
+separated. Across four LeWM control tasks, eight-step ACPC under the recorded
+actions predicts perturbation-induced error changes with $51.3\pm3.5\%$
+lower cross-validated MAE than the strongest of three same-horizon controls
+with destroyed action information. ACPC also improves cross-task prediction
+of CEM cost movement and decision regret. ATR--SMPR thresholds calibrated on
+source tasks screen checkpoints from tasks excluded from calibration, order
+checkpoint pairs correctly under blur and resize at the tested severities,
+and apply to PLDM after model-family recalibration.
 
 \smallskip
 \noindent\textbf{Keywords:} visual world models; predictive stability; action-conditioned diagnostics; calibration transfer; visual corruption.
@@ -120,13 +141,42 @@ Latent predictive world models avoid reconstructing pixels, but latent predictio
 
 World models support control by predicting how candidate actions change the environment~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. Joint-embedding predictive architectures (JEPAs) move this prediction problem from pixels to learned representations~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa}. By avoiding pixel reconstruction, they can reduce pressure to model nuisance detail~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}. This is appealing for visual control, where lighting, texture, or image quality may change even when the physical situation does not. Latent prediction alone, however, does not establish that a trained world model will produce stable action-conditioned predictions under such changes.
 
-For control, whether a visual difference is irrelevant depends on the state and the actions being considered. A background texture can be ignored, whereas a contact pose, doorway state, or object--goal relation may determine which action is useful. Encoder invariance cannot resolve this distinction on its own because a planner does not act directly on the encoder output. It rolls the representation forward under candidate actions and ranks the resulting predictions with a cost. A small encoder discrepancy may grow through this computation, whereas a larger one may contract before it affects the cost. This motivates the central question: after the same action sequence is applied, do nominal and perturbed views of one trajectory still produce similar predicted futures?
+For control, whether a visual difference is irrelevant depends on the state and the actions being considered. A background texture can be ignored, whereas a contact pose, doorway state, or object--goal relation may determine which action is useful. Encoder invariance cannot resolve this distinction on its own because a planner does not act directly on the encoder output. It rolls the representation forward under candidate actions and ranks the resulting predictions with a cost. A small encoder discrepancy may grow through this computation, whereas a larger one may contract before it affects the cost. This motivates the central question: after the same action sequence is applied, do clean and perturbed views of one trajectory still produce similar predicted futures?
 
-We begin by examining the local representation geometry induced by visual perturbations. This descriptive view asks whether the perturbation cloud around one history reaches nearby clean representations, both at the encoder output and after prediction. It reveals contraction and separation, but the nearest clean representation need not mark a task-relevant boundary, and a final-step comparison does not describe the intervening rollout. These limitations motivate a controlled, shared-action comparison over the full predicted trajectory.
+We first use a local geometric comparison to make the problem concrete. For
+each clean history, we generate several perturbed views and ask how far their
+representations spread from the clean representation. We compare this spread
+with the distance to the nearest other clean history, both at the encoder
+output and after prediction. This comparison shows whether visual
+perturbations contract or expand in representation space. It is only
+descriptive, however: the nearest clean history need not define a
+task-relevant boundary, and the final predicted step does not describe the
+full rollout. We therefore need a controlled comparison that follows one
+history under one shared action sequence.
 
-We introduce Action-Conditioned Predictive Consistency (ACPC) to quantify same-state rollout stability. ACPC propagates the nominal and visually perturbed histories of one trajectory under a shared action sequence and measures the distance between the two predicted latent trajectories; computing the score requires neither a realized future nor a task outcome. Two exact inequalities make the score interpretable: evaluating both predictions against the same logged future bounds how much the perturbation can change the prediction error, and, for LeWM's squared latent goal cost, a second bound limits how far each candidate's cost can move and yields fixed-pool stability certificates from the clean candidate margins.
+Action-Conditioned Predictive Consistency (ACPC) provides this comparison. It
+predicts forward from clean and perturbed views of the same history under the
+same actions, then measures the distance between the two predicted latent
+trajectories. The score requires neither an observed future nor a task
+outcome. Two exact inequalities connect it to quantities that do. First, when
+both predictions are evaluated against the same logged future, ACPC bounds
+the change in multi-step prediction error. Second, for LeWM's squared latent
+goal cost, it bounds the movement of each candidate cost and provides
+fixed-pool stability certificates based on the clean candidate margins.
 
-Small ACPC alone does not establish that the representation remains discriminative. A model that maps every observation to a constant representation would make all paired rollouts identical while retaining no state information for control. We therefore summarize checkpoints with two complementary numbers. Action-Conditioned Trajectory Radius (ATR) reports the high-quantile normalized disagreement over logged evaluation windows, while Selective Margin Pass Rate (SMPR) checks that pairs labeled as different states by task coordinates remain outside the same-state radius by a margin. This state-coordinate test is a deliberately limited collapse guard: it assesses only the supplied coordinate labels and does not certify every semantic or action-relevant distinction. A calibrated score combining ATR and SMPR screens frozen checkpoints for visual predictive sensitivity. ACPC is an evaluation tool, not a new training objective.
+A small ACPC value is useful only if the representation still distinguishes
+different states. For example, mapping every observation to a constant would
+make all paired rollouts identical but discard all state information. We
+therefore summarize each checkpoint with two complementary quantities.
+Action-Conditioned Trajectory Radius (ATR) reports a high quantile of the
+normalized ACPC values across logged evaluation windows. Selective Margin
+Pass Rate (SMPR) reports how often pairs labeled as different by task-state
+coordinates remain outside that same-state radius by a fixed margin. SMPR is
+a deliberately limited guard against constant-representation collapse: it
+tests only the supplied coordinate labels, not every semantic or
+action-relevant distinction. We combine ATR and SMPR into a calibrated score
+for screening frozen checkpoints. ACPC is an evaluation tool, not a training
+objective.
 
 We evaluate this diagnostic on LeWM~\cite{maes2026lewm} across TwoRoom, PushT, Reacher, and Cube, using Gaussian observation noise for calibration. On the unaugmented checkpoints, eight-step ACPC under the recorded actions predicts the perturbation-induced change in prediction error about $51\%$ better, in cross-validated MAE, than the strongest control with the same rollout length but destroyed action information (\Cref{sec:exp-target-aligned}). ACPC computed along planner candidates consistently improves prediction of CEM decision regret (\Cref{sec:exp-planner}). Thresholds selected on source tasks screen checkpoints from tasks excluded from calibration with balanced accuracy $0.86$--$0.90$ across all cross-task calibration splits (\Cref{sec:exp-frozen-external}), and the calibrated score orders checkpoint pairs correctly under blur and resize at the tested severities (\Cref{sec:exp-cross-stressor}). The same analysis applies to PLDM after model-family recalibration (\Cref{sec:exp-pldm-portability}).
 
@@ -149,27 +199,47 @@ DrQ, DrQ-v2, and SODA improve visual control through training-time augmentation~
 Control-aware representation learning also explains why robustness cannot mean removing every difference. Bisimulation-based methods preserve distinctions in rewards and transitions~\cite{gelada2019deepmdp,zhang2021dbc,bsmpc,toso2026bisimjepa}, while value-equivalent and value-aware models preserve distinctions that matter to downstream value or planning~\cite{grimm2020valueequivalence,voelcker2025calibratedvalueaware}. This motivates the two-sided structure of our diagnostic: same-state visual views should agree after prediction, but low disagreement is considered meaningful only when pairs marked as different by task state coordinates remain separated. Our state-coordinate test is narrower than a learned bisimulation or semantic criterion; its role is to expose the constant-representation failure mode.
 
 \paragraph{Diagnostics of learned dynamics.}
-Recent work audits whether learned dynamics retain action or temporal structure using inverse prediction, latent action decoding, cycle consistency, group-action tests, or compatibility with generated futures~\cite{chen2026atm,zhang2026deltajepa,seo2026acid,ruan2026futurecompatible,wang2026groupactions}. Related approaches place action-conditioned consistency inside the training objective~\cite{yan2026mwm} or diagnose kinematic failures in long-horizon rollouts~\cite{schaefer2026kinematic}. Together, these studies motivate evaluating the predictor directly rather than inferring its behavior from encoder geometry alone. ACPC adds a complementary paired-view test: under one shared action sequence, it measures how much a state-preserving visual change moves the predicted rollout. We then test how that displacement relates to the change in prediction error against a common observed future, to fixed-pool candidate-cost movement, and to adaptive-CEM decision regret. For checkpoint screening, ATR and SMPR combine the rollout radius with the limited state-coordinate proxy guard; their numerical calibration is performed within each model family.
+Recent work tests whether learned dynamics retain action or temporal structure
+through inverse prediction, latent action decoding, cycle consistency,
+group-action tests, or compatibility with generated futures~\cite{chen2026atm,zhang2026deltajepa,seo2026acid,ruan2026futurecompatible,wang2026groupactions}.
+Other methods use action-conditioned consistency as a training
+objective~\cite{yan2026mwm} or diagnose kinematic failures in long-horizon
+rollouts~\cite{schaefer2026kinematic}. These studies motivate testing the
+predictor directly instead of inferring its behavior from encoder geometry.
+
+ACPC contributes a complementary paired-view test. It holds the action
+sequence fixed and measures how much a state-preserving visual change alters
+the predicted trajectory. We then relate this change to prediction-error
+drift against a common observed future, cost movement within a fixed candidate
+pool, and adaptive-CEM decision regret. For checkpoint screening, ATR
+summarizes visual sensitivity and SMPR tests separation on selected task-state
+coordinates. We calibrate their numerical thresholds separately within each
+model family.
 
 \section{Action-Conditioned Predictive Consistency as a Diagnostic}\label{sec:acpc}
 
-A visual perturbation can change pixels without changing the underlying
-control state. It nevertheless displaces the encoded history, and learned
-dynamics can amplify, rotate, or contract that displacement before a planner
-reads out a cost. We analyze this effect at three levels. Local representation
-geometry first shows how a perturbation cloud compares with nearby clean
-representations. ACPC then replaces that descriptive comparison with a
-same-history, shared-action distance over the full predicted rollout. Finally,
-ATR aggregates this distance across logged anchors, while SMPR checks whether
-declared proxy-different histories remain separated from the resulting tube.
-The last two quantities must be read together: a small same-state radius is
-useful only if selected state distinctions are retained.
+A visual perturbation can change the pixels without changing the underlying
+control state. Even so, it can move the encoded history, and the learned
+dynamics can amplify or contract that change before the planner computes a
+cost. We study this process at three levels. First, a local geometric analysis
+compares perturbed versions of one history with other clean histories. Second,
+ACPC follows a clean--perturbed pair through the complete predicted rollout
+under the same actions. Third, ATR summarizes ACPC across logged histories,
+while SMPR checks whether selected pairs with different task-state labels
+remain separated. ATR and SMPR must be interpreted together: low visual
+sensitivity is useful only if the representation retains relevant state
+distinctions.
 
 \subsection{Local representation geometry under visual perturbations}\label{sec:local-geometry-audit}
 
-Before defining a controlled rollout quantity, consider a descriptive
-question: how large is the representation cloud induced by repeated visual
-perturbations relative to the spacing among sampled clean anchors? Let
+Start with one clean history and generate several visually perturbed versions
+of it. After encoding or rolling forward each version, how far do the
+perturbed representations spread from the clean representation? In
+particular, is this spread smaller or larger than the distance to the nearest
+other clean history? This comparison provides a descriptive view of local
+representation geometry before we introduce the controlled rollout metric.
+
+Let
 $\mathcal V\in\{\mathrm{enc},\mathrm{roll}\}$ denote either the encoder output
 or the representation after eight autoregressive rollout steps. For anchor
 history $i$, let $v_{i,\mathcal V}^{(0)}$ be its clean representation and
@@ -191,17 +261,19 @@ d_{i,\mathcal V}^{\mathrm{NN}}
 {d_{i,\mathcal V}^{\mathrm{NN}}}.
 \label{eq:local-radius-spacing}
 \end{align}
-The figure shorthand $r/\mathrm{NN}$ refers to
-$\rho_{i,\mathcal V}^{\mathrm{local}}$. A value below one says that the
-sampled perturbation radius is smaller than the distance to the nearest other
-clean center; a value at least one says that it reaches or exceeds that local
-spacing. Neither statement identifies a semantic boundary.
+The figures abbreviate $\rho_{i,\mathcal V}^{\mathrm{local}}$ as
+$r/\mathrm{NN}$. When this ratio is below one, every sampled perturbed view of
+anchor $i$ lies closer to its clean representation than that representation
+lies to the nearest other clean anchor. A ratio of at least one means that the
+largest sampled displacement reaches or exceeds this nearest-clean distance.
+This is a geometric comparison; the nearest clean anchor need not lie across
+a semantic or task-relevant boundary.
 
-The ratio considers one neighboring center but not the neighbor's own visual
-radius. To account for both cloud sizes, we call the sampled cloud around
-anchor $i$
-\emph{fully disjoint} when its enclosing ball is separated from every other
-sampled ball:
+The ratio uses only anchor $i$'s perturbation radius. It does not account for
+the perturbation radius around the neighboring anchor. We therefore add a
+symmetric test: the enclosing ball around anchor $i$ is \emph{fully
+disjoint} if it is separated from the enclosing ball around every other
+anchor:
 \begin{equation}
 \left\|v_{i,\mathcal V}^{(0)}-v_{j,\mathcal V}^{(0)}\right\|_2
 >
@@ -209,24 +281,25 @@ r_{i,\mathcal V}^{\mathrm{vis}}+r_{j,\mathcal V}^{\mathrm{vis}}
 \quad\text{for every }j\neq i.
 \label{eq:local-cloud-disjoint}
 \end{equation}
-This gives three mutually exclusive anchor categories: (i)
+The two tests produce three mutually exclusive categories: (i)
 \emph{reaches/exceeds spacing} when $r_{i,\mathcal V}^{\mathrm{vis}}\geq
 d_{i,\mathcal V}^{\mathrm{NN}}$; (ii) \emph{within spacing, not disjoint}
 when the first inequality is reversed but \Cref{eq:local-cloud-disjoint} does
 not hold; and (iii) \emph{fully disjoint} when it does hold. The second
-category means only that enclosing-ball separation is not certified; it does
-not assert that sampled points overlap.
+category does not mean that sampled points overlap. It means only that the
+enclosing-ball test cannot certify their separation.
 
-These quantities reveal local contraction and separation, but they do not
+These quantities show local contraction and separation, but they cannot
 determine whether a perturbation changes a prediction or planning decision.
 The nearest clean anchor is chosen in learned space and need not represent a
 task-relevant or semantic difference. Different clean rollout centers also
 come from their own recorded action sequences, so their spacing can mix state
-and action effects. Moreover, the encoder output and final rollout step omit
-the intermediate predictions, while the sampled maximum and nearest spacing
-depend on the number of views, anchor density, and representation scale. Most
-importantly, neither quantity bounds future-error drift or planner-cost
-movement, and representation collapse can make every radius small.
+and action effects. The encoder output and final rollout step also omit all
+intermediate predictions. In addition, the sampled maximum and nearest-clean
+distance depend on the number of views, the density of clean anchors, and the
+representation scale. Neither quantity bounds changes in future prediction
+error or planner cost, and a collapsed representation can make every radius
+small.
 
 These limitations motivate ACPC, which compares clean and perturbed views of
 the same history under exactly the same action sequence throughout the
@@ -237,9 +310,11 @@ but does not replace, the complete action-conditioned comparison.
 
 \subsection{Paired rollout radius}\label{sec:acpc-def}
 
-Let $h$ be a clean observation--action history---the input the checkpoint's
-encoder consumes---and let $\tilde h$ be a visually perturbed view of the same
-underlying state trajectory. A frozen encoder gives $z=E_\theta(h)$ and
+ACPC asks a direct question: if only the visual appearance of a history
+changes, how much does the model's predicted future change under a fixed
+action sequence? Let $h$ be the clean observation--action history consumed by
+the checkpoint's encoder, and let $\tilde h$ be a visually perturbed view of
+the same underlying state trajectory. A frozen encoder gives $z=E_\theta(h)$ and
 $\tilde z=E_\theta(\tilde h)$. Both branches receive the same action sequence
 $\mathbf a=(a_0,\ldots,a_{H-1})$. For its length-$k$ prefix, define
 \begin{equation}
@@ -278,13 +353,12 @@ two weighted predicted rollouts:
 \right)^{1/2}.
 \label{eq:acpc-h}
 \end{equation}
-In plain terms, ACPC asks how differently the model predicts the future when
-only the visual appearance of the observed history changes. Encoder shift
-$\|z-\tilde z\|_2$ measures the upstream displacement before prediction; ACPC
-measures what remains after both histories are propagated under the same
-actions. Sharing actions isolates visual sensitivity under a fixed
-intervention; it does not by itself establish correct responses to other
-actions. Unless stated otherwise we use uniform weights $\alpha_k=1/H$ and
+Encoder shift $\|z-\tilde z\|_2$ measures the effect of the visual change
+before prediction. ACPC measures its effect on the predicted trajectory after
+both histories have been propagated under the same actions. Holding the
+actions fixed isolates sensitivity to the visual perturbation; it does not
+establish whether the model responds correctly to other actions. Unless
+stated otherwise we use uniform weights $\alpha_k=1/H$ and
 the fixed protocol horizon $H=8$, the longest horizon for which every logged
 evaluation window contains a complete observed future
 (\Cref{sec:appendix-A}). The planner analyses in \Cref{sec:exp-planner}
@@ -293,7 +367,9 @@ CEM configuration.
 
 \subsection{Common-future error drift}
 
-The rollout radius has a direct consequence for prediction error. Let
+ACPC can be computed without observing the true future. When a logged future
+is available, however, the same quantity bounds how much the visual
+perturbation can change prediction error. Let
 $Y_{\mathbf a}^H$ be one actually observed future under the same recorded
 action sequence, projected, stacked, and weighted exactly as in
 \Cref{eq:weighted-rollout-map}. This target is not produced by either prediction
@@ -321,20 +397,22 @@ Apply the reverse triangle inequality in the weighted projected-rollout space.
 Both errors must use the same $Y_{\mathbf a}^H$.
 \end{proof}
 
-This proposition controls a change in error, not prediction accuracy. A small
-ACPC value can coexist with two inaccurate predictions; it says only that the
-two errors to the common future cannot differ by more than the paired-rollout
-radius. ACPC itself does not require the realized future. The prediction
+The proposition bounds the difference between two errors, not either
+prediction's absolute error. Both predictions may be inaccurate even when
+ACPC is small. The result states only that their errors relative to the same
+future cannot differ by more than ACPC. ACPC itself still does not require the
+realized future. The prediction
 experiment in \Cref{sec:exp-target-aligned} uses that future only to evaluate
 whether ACPC is informative about the bounded quantity, which we call the
 \emph{error drift} $d=|e_{\tilde h}-e_h|$.
 
 \subsection{Candidate-cost drift and planner stability}
 
-The planner link is a radius--margin argument: the perturbation can move each
-candidate's cost by at most a bounded amount, so a fixed-pool decision can
-change only when some cost moves far enough to cross the gap that separated
-the clean candidates. For candidate action sequence $\mathbf a^j$, let
+We next connect ACPC to planning. A visual perturbation moves each candidate's
+predicted endpoint and therefore may change its cost. If no candidate can
+move far enough to cross the clean cost gap, the selected candidate remains
+unchanged. This is the radius--margin argument formalized below. For candidate
+action sequence $\mathbf a^j$, let
 \[
 x_j=\Pi(F_\theta^H(E_\theta(h),\mathbf a^j)),
 \qquad
@@ -405,17 +483,17 @@ specifies the fixed-pool and adaptive-CEM evaluation contract.
 
 \subsection{Checkpoint-level radius and proxy separation}\label{sec:acpc-radius-margin}
 
-ACPC provides one controlled measurement for a paired history. Evaluating a
-checkpoint requires aggregating these measurements, and interpreting a small
-aggregate requires checking that the representation retains selected state
-distinctions. A constant representation makes every ACPC value zero while
-destroying all such distinctions. We therefore aggregate the same-state
-radius and pair it with an explicit separation test on declared
-state-coordinate proxies.
+ACPC measures one clean--perturbed history pair. To evaluate a checkpoint, we
+must summarize many such measurements. We must also distinguish genuine
+visual stability from representation collapse: a constant representation
+makes every ACPC value zero but removes all state distinctions. We therefore
+use ATR to summarize sensitivity across histories and SMPR to test whether
+selected pairs with different task-state labels remain separated.
 
-First convert pairwise ACPC to a checkpoint-level radius. Evaluation uses a
-fixed set of \emph{anchors}: an anchor is one logged history window together
-with its $H$-step observed future and recorded actions. Throughout this
+Evaluation uses a fixed set of \emph{anchors}. Each anchor consists of one
+logged history window, its $H$-step observed future, and its recorded actions.
+We first normalize ACPC separately for each anchor and then aggregate across
+anchors. Throughout this
 section, $Q_q$ denotes the empirical $q$-quantile, $n$ is the number of
 anchors, and $M$ is the number of perturbation draws per anchor. For anchor
 $i$, let $u^{\mathrm{obs}}_{i,0}$ be the embedding of the last clean history
@@ -450,14 +528,16 @@ The raw \emph{Action-Conditioned Trajectory Radius} (ATR) is
 =Q_q\!\left(\{\bar R_i\}_{i=1}^{n}\right).
 \label{eq:atr-raw}
 \end{equation}
-ATR is one number per checkpoint: it reports the upper-quantile radius of the
-same-state rollout tube. We use q90 because a mean can hide a small set of
-high-radius anchors; checkpoint-level conclusions are stable across horizons
+ATR is one number per checkpoint. It reports a high quantile of normalized
+ACPC across the sampled histories and therefore emphasizes histories with
+relatively high visual sensitivity. We use q90 because a mean can hide a
+small set of high-radius anchors; checkpoint-level conclusions are stable across horizons
 $H\in\{1,2,4,8\}$ and quantiles q80--q95
 (\Cref{tab:horizon-quantile-sensitivity}). This is a descriptive summary, not
 a candidate-distribution tail guarantee.
 
-For the complementary test, let $y_i$ be the standardized logged task-state
+ATR alone cannot rule out a collapsed representation. SMPR provides the
+complementary separation test. Let $y_i$ be the standardized logged task-state
 vector at the end of anchor $i$'s observed $H$-step future, and let
 $\ell(y_i)$ be a declared task-specific coordinate label. Let $d_{0.35}$ be
 the q35 of all off-diagonal Euclidean distances among the standardized
@@ -477,9 +557,10 @@ D_i^{\mathrm{diff}}
 }{s_i+\varepsilon_{\mathrm{norm}}}.
 \label{eq:different-state-distance}
 \end{equation}
-Using the same rollout metric, anchor action sequence, and anchor scale on both
-sides makes the comparison direct. The \emph{Selective Margin Pass Rate}
-(SMPR) is
+Both histories use the same rollout metric, the same action sequence
+$\mathbf a_i$, and the same normalization $s_i$. This ensures that visual
+sensitivity and state separation are measured on a comparable scale. The
+\emph{Selective Margin Pass Rate} (SMPR) is
 \begin{equation}
 \mathrm{SMPR}_{q,\delta}(\theta)
 =
@@ -494,17 +575,18 @@ D_i^{\mathrm{diff}}
 \end{equation}
 where $\mathcal I$ contains anchors with an eligible label-crossing neighbor.
 The reported protocol fixes $q=0.90$ and normalized margin $\delta=0.10$.
-SMPR is the fraction of tested proxy-different pairs that remain outside the
-same-state tube by more than that margin.
+SMPR is the fraction of tested pairs with different proxy labels whose
+rollout distance exceeds the same-state radius by more than this margin.
 
-Local ball separation and SMPR share a radius--margin intuition, but answer
-different questions. The local analysis compares sampled maximum radii around
-clean anchors at the encoder output or final rollout step and uses a symmetric
-two-ball condition. SMPR instead selects neighbors through a declared
-task-coordinate proxy, rolls both histories under the anchor's action
-sequence, compares their complete weighted rollouts, and tests a one-sided
-margin beyond the checkpoint-level q90 same-state tube. The former describes
-local representation geometry; ATR and SMPR provide the checkpoint-level
+The local ball analysis and SMPR both compare a radius with a margin, but they
+answer different questions. The local analysis uses distances in learned
+space to describe the sampled neighborhood around each clean anchor. It
+examines either the encoder output or the final rollout step and applies a
+symmetric two-ball test. SMPR instead selects nearby histories using a
+declared task-state label. It rolls both histories under the anchor's actions,
+compares their complete weighted trajectories, and asks whether their distance
+exceeds the checkpoint-level q90 same-state radius. Thus, the local analysis
+is a geometric case study, whereas ATR and SMPR form the checkpoint-level
 diagnostic.
 
 ATR and SMPR must be read together. A constant representation makes both ATR
@@ -517,11 +599,11 @@ rules and eligible-pair counts.
 
 \subsection{Checkpoint-level calibration}\label{sec:acpc-diag}
 
-The raw ATR in \Cref{eq:atr-raw} defines the tube used by SMPR. To compare
-augmentation levels across tasks, the experiments also use a task-relative
-ATR. Let $\theta_0$ be the corresponding unaugmented checkpoint for the same
-task, training run, and model family (its raw ATR is strictly positive in
-every evaluated setting, so the ratio is well defined), and set
+The raw ATR in \Cref{eq:atr-raw} is the same-state reference used by SMPR.
+Raw ATR scales differ across tasks, so comparisons between augmentation levels
+use a relative value. Let $\theta_0$ be the unaugmented checkpoint for the
+same task, training run, and model family. Its raw ATR is strictly positive in
+every evaluated setting, so the following ratio is well defined:
 \begin{equation}
 \widetilde{\mathrm{ATR}}_{q}(\theta;\theta_0)
 =
@@ -529,14 +611,15 @@ every evaluated setting, so the ratio is well defined), and set
 {\mathrm{ATR}^{\mathrm{raw}}_{q}(\theta_0)}.
 \label{eq:atr-relative}
 \end{equation}
-The raw quantity remains inside \Cref{eq:smpr}; the relative quantity equals
-one at the reference checkpoint and is used for cross-checkpoint calibration.
+Raw ATR remains in the SMPR definition (\Cref{eq:smpr}). Relative ATR equals
+one for the unaugmented reference and is used only to compare and calibrate
+checkpoints.
 
+We combine relative ATR and SMPR only after calibrating one threshold for each.
 For model family $\mathcal F$ and visual shift $\upsilon$ (Gaussian noise,
-blur, or resize), thresholds $t_R$ and $t_M$ combine the two sides; every
-quantity entering the score is measured under that shift. With a small
-constant $\varepsilon_{\mathrm{score}}$ (value in \Cref{sec:appendix-A}),
-define
+blur, or resize), let these thresholds be $t_R$ and $t_M$. Every quantity in
+the score is measured under the same shift. With a small constant
+$\varepsilon_{\mathrm{score}}$ (value in \Cref{sec:appendix-A}), define
 \begin{equation}
 S_{\mathcal F,\upsilon}(\theta;\theta_0)
 =
@@ -548,12 +631,12 @@ S_{\mathcal F,\upsilon}(\theta;\theta_0)
 \right\}.
 \label{eq:joint-diagnostic-score}
 \end{equation}
-Thus $S\geq0$ exactly when both weak inequalities pass: relative ATR is at
-most $t_R$ and SMPR is at least $t_M$. Computing the score for a fixed
-checkpoint uses no task outcome. Planning success rates enter only when the
-thresholds are selected on source tasks and evaluated on other tasks.
-Thresholds are selected separately within each model family; the equations do
-not imply shared raw thresholds across architectures.
+The score satisfies $S\geq0$ exactly when both conditions pass: relative ATR
+is at most $t_R$, and SMPR is at least $t_M$. No task outcome is needed to score
+a checkpoint once the thresholds are fixed. Planning success rates are used
+only to select thresholds on source tasks and evaluate them on other tasks.
+We calibrate thresholds separately for each model family; the equations do not
+imply that architectures share numerical thresholds.
 
 For a comparison with reference checkpoint $\theta_0$, define
 \begin{equation}
@@ -621,30 +704,81 @@ favorable.}
 \subsection{Evaluation setup}\label{sec:bg}
 
 \paragraph{Models, tasks, and planning evaluation.}
-LeWM~\cite{maes2026lewm} is the primary model family; PLDM~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting} provides a second joint-embedding dynamics architecture. We evaluate TwoRoom navigation, PushT planar manipulation, Reacher arm control, and OGBench-Cube (Cube) 3D manipulation. We follow the standard LeWM latent-space MPC evaluation: CEM optimizes five-action candidate sequences with the frozen world model (plan horizon 5), and performance is the percentage of evaluation episodes that reach the task goal, reported as \emph{planning success rate}. Throughout, a \emph{visual perturbation} is one sampled change to the observations of one history, and a \emph{visual shift} is the corresponding distribution (Gaussian noise, blur, or resize). The main evaluation adds Gaussian noise $\sigma=0.08$ to observations while keeping the goal image clean; additional evaluations use Gaussian blur ($k=15$) and resize (scale $0.25$).
+LeWM~\cite{maes2026lewm} is the primary model family, and
+PLDM~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting}
+tests whether the diagnostic applies to a second joint-embedding dynamics
+architecture. We evaluate four control tasks: TwoRoom navigation, PushT
+planar manipulation, Reacher arm control, and OGBench-Cube (Cube) 3D
+manipulation. Following the standard LeWM latent-space MPC evaluation, CEM
+uses the frozen world model to optimize candidate sequences of five actions
+(plan horizon 5).
+We report \emph{planning success rate}, the percentage of evaluation episodes
+that reach the task goal.
 
-For each model family, the Gaussian-augmentation sweep contains nine checkpoints per task: the \emph{unaugmented checkpoint} (trained without noise augmentation) and checkpoints trained with full-sequence noise $\stdmax{}\in\{0.01,\ldots,0.08\}$. Each LeWM task--augmentation setting is trained three times (\emph{training runs}, seeds 3072/3073/3074) and evaluated with seeds 42/43/44 using 100 episodes per evaluation seed; a \emph{task--run cell} is one task and one training run. The training run is the unit of replication throughout, the three evaluation seeds only measure within-run variability, and reported across-run means and dispersions are descriptive rather than population inference. The PLDM sweep trains one run for each of its 36 task--augmentation settings, with the same evaluation seeds and episode count.
+We use \emph{visual perturbation} for one sampled change to a history and
+\emph{visual shift} for the distribution from which that change is drawn. The
+main evaluation adds Gaussian noise with $\sigma=0.08$ to the observations
+while keeping the goal image clean. Additional evaluations use Gaussian blur
+($k=15$) and resize (scale $0.25$).
+
+For each model family and task, the Gaussian-augmentation sweep contains nine
+checkpoints: one \emph{unaugmented checkpoint}, trained without noise
+augmentation, and eight checkpoints trained with full-sequence noise
+$\stdmax{}\in\{0.01,\ldots,0.08\}$. Each LeWM task--augmentation setting has
+three training runs (seeds 3072/3073/3074). Each run is evaluated with seeds
+42/43/44 and 100 episodes per evaluation seed. We use \emph{task--run cell}
+for one task and one training run.
+
+The training run is the unit of replication. The three evaluation seeds
+measure only within-run variability, so the reported means and dispersions
+across runs are descriptive rather than population estimates. The PLDM sweep
+has one run for each of its 36 task--augmentation settings, with the same
+evaluation seeds and episode count.
 
 \paragraph{Diagnostic measurements.}
-ATR uses 100 logged anchors, five perturbation draws, eight predicted steps, uniform horizon weights, within-anchor draw averaging, and a q90 summary across anchors. SMPR uses the same-state q90 tube, a global q35 radius among standardized endpoint states for selecting coordinate-proxy pairs, and margin $0.10$. Appendix~\ref{sec:appendix-A} gives the complete normalization and threshold protocol.
+ATR uses 100 logged anchors, five perturbation draws, eight predicted steps,
+uniform horizon weights, within-anchor draw averaging, and a q90 summary
+across anchors. SMPR selects pairs within a global q35 radius among
+standardized endpoint states and tests their separation from the same-state
+q90 reference with margin $0.10$. Appendix~\ref{sec:appendix-A} gives the
+complete normalization and threshold protocol.
 The raw ATR defines the tube in SMPR; checkpoint thresholding uses the task-relative ATR in \Cref{eq:atr-relative}.
 
 \paragraph{Threshold evaluation.}
-A Gaussian-sweep checkpoint meets the \emph{success-rate criterion} when it attains at least 80\% of the improvement from the unaugmented checkpoint to the best checkpoint at evaluation noise $\sigma=0.08$, while losing no more than five percentage points on clean observations; both constants were fixed a priori. We select $(t_R,t_M)$ on every nonempty proper subset of the four tasks and apply the thresholds unchanged to the remaining tasks, giving $4+6+4=14$ directional source/evaluation partitions from one, two, or three source tasks. Metrics first average training runs within each evaluation task and then weight tasks equally; checkpoint rows are never treated as independent replicates. Success rates are used to select and evaluate thresholds, but they are not inputs to ACPC, ATR, or SMPR.
+A Gaussian-sweep checkpoint meets the \emph{success-rate criterion} if it
+recovers at least 80\% of the improvement from the unaugmented checkpoint to
+the best checkpoint at evaluation noise $\sigma=0.08$, while losing no more
+than five percentage points on clean observations. Both constants were fixed
+a priori. We select $(t_R,t_M)$ on every nonempty proper subset of the four
+tasks and apply the thresholds unchanged to the remaining tasks. The one-,
+two-, and three-source-task settings produce $4+6+4=14$ directional
+source/evaluation partitions. Metrics first average training runs within each
+evaluation task and then weight tasks equally; checkpoint rows are never
+treated as independent replicates. Success rates are used to select and
+evaluate thresholds, but they are not inputs to ACPC, ATR, or SMPR.
 
-For blur and resize, each task uses the Gaussian thresholds selected on the other three tasks. We compare 24 checkpoint pairs (four tasks $\times$ three runs $\times$ two shifts), each pairing the unaugmented checkpoint with the checkpoint trained at $\stdmax{}=0.08$. A pair is labeled positive when success rate under the shift improves by at least five percentage points while clean success rate decreases by no more than five points. No blur- or resize-specific adjustment is made, and this analysis does not benchmark alternative signals such as encoder shift or one-step ACPC.
+For blur and resize, each task uses the Gaussian thresholds selected on the
+other three tasks. We compare 24 checkpoint pairs (four tasks $\times$ three
+runs $\times$ two shifts). Each pair contains the unaugmented checkpoint and
+the checkpoint trained at $\stdmax{}=0.08$. A pair is positive when success
+under the shift improves by at least five percentage points and clean success
+decreases by no more than five points. We make no blur- or resize-specific
+adjustment. This analysis also does not benchmark alternative signals such as
+encoder shift or one-step ACPC.
 
 \subsection{Local representation geometry before and after an eight-step rollout}\label{sec:exp-local-geometry}
 
-We use a fixed PushT case study to visualize the quantities in
-\Cref{sec:local-geometry-audit}. The pair consists of LeWM training run 3072
-before augmentation and after full-sequence Gaussian augmentation with
-$\stdmax{}=0.08$. For each of 128 logged anchor histories, we generate one
-clean view and 18 perturbed views---six draws at each probe standard deviation
-in $\{0.01,0.04,0.08\}$. We compare the encoder output with the representation
-after eight autoregressive rollout steps. All ratios and counts are computed
-in the original 192-dimensional projected latent space used by the planner
-cost; the t-SNE visualization~\cite{vandermaaten2008tsne} is qualitative only.
+We first ask whether augmentation makes perturbed views of the same history
+more compact relative to other clean histories. We answer this descriptive
+question with a fixed PushT case study (\Cref{sec:local-geometry-audit}) using
+LeWM training run 3072 before and
+after full-sequence Gaussian augmentation with $\stdmax{}=0.08$. For each of
+128 logged histories, we generate one clean view and 18 perturbed views---six
+draws at each probe standard deviation in $\{0.01,0.04,0.08\}$. We compare the
+encoder output with the representation after eight autoregressive rollout
+steps. All ratios and counts use the original 192-dimensional projected
+latent space in which the planner computes costs. The t-SNE
+visualization~\cite{vandermaaten2008tsne} is qualitative only.
 
 \begin{figure}[H]
 \centering
@@ -666,8 +800,9 @@ $1.86$ after eight rollout steps, and none of the 128 anchor clouds is fully
 disjoint. After Gaussian augmentation, the corresponding ratios fall to
 $0.10$ and $0.19$; the fully disjoint fractions rise to $95.3\%$ at the
 encoder and $84.4\%$ after the rollout. Thus, in this fixed case study,
-augmentation contracts same-anchor visual clouds relative to nearby clean
-representations and preserves much of that separation after prediction.
+augmentation makes perturbed views of the same history substantially more
+compact relative to nearby clean histories. Much of this separation remains
+after prediction.
 
 This local analysis does not establish task-semantic separation or planning
 robustness. The remaining experiments use ACPC to control the history and
@@ -684,21 +819,22 @@ location differs by task. \Cref{fig:full-sweep-diagnostics} compares success
 rate with ATR and SMPR across the complete sweep.
 
 Every augmentation level that meets the success-rate criterion has lower ATR
-and higher SMPR than the corresponding unaugmented checkpoint, although
-neither diagnostic needs to change monotonically with augmentation strength.
-\textbf{Takeaway:} both diagnostics move with recovered planning performance,
-which motivates the combined score; whether ACPC actually uses action
-information and tracks planning-relevant quantities is established by the
-next two experiments (\Cref{sec:exp-target-aligned,sec:exp-planner}).
+and higher SMPR than the corresponding unaugmented checkpoint. Neither
+diagnostic, however, changes monotonically at every augmentation level.
+\textbf{Takeaway:} recovered planning performance coincides with lower visual
+sensitivity and greater separation of the tested state pairs. This motivates
+combining ATR and SMPR. The next two experiments separately test whether ACPC
+uses action information and whether it tracks planning-relevant quantities
+(\Cref{sec:exp-target-aligned,sec:exp-planner}).
 \FloatBarrier
 
 \subsection{Predicting the perturbation-induced error drift}\label{sec:exp-target-aligned}
 
-\Cref{prop:target-free-error-drift} bounds, for each history pair, the
-perturbation-induced change in prediction error: the two $H$-step errors
-against the same logged future can differ by at most $\mathrm{ACPC}_H$. This
-section tests whether measured ACPC is informative about that bounded change,
-the error drift $d=|e_{\tilde h}-e_h|$. We evaluate at the protocol horizon
+Does ACPC help predict how much a visual perturbation changes multi-step
+prediction error? For each history pair, \Cref{prop:target-free-error-drift}
+shows that the two errors against the same logged future can differ by at most
+$\mathrm{ACPC}_H$. We test whether measured ACPC is informative about this
+bounded quantity, the error drift $d=|e_{\tilde h}-e_h|$. We evaluate at the protocol horizon
 $H=8$, the longest horizon with a complete logged common future for every
 anchor; \Cref{tab:horizon-quantile-sensitivity} shows that the
 checkpoint-level conclusions are stable for $H\in\{1,2,4,8\}$.
@@ -767,21 +903,20 @@ any same-horizon destroyed-action control provides.
 
 \subsection{Relating ACPC to CEM cost and decision changes}\label{sec:exp-planner}
 
-Does ACPC indicate how much a visual perturbation will change CEM candidate
-costs and the resulting decision? We answer this question in two ways. First,
-we verify the deterministic bounds in \Cref{prop:exact-cost-certificate} on
-paired clean and perturbed candidate pools. Second, we ask whether ACPC
-improves prediction of measured cost and decision changes beyond simple
-baseline features. Both analyses compare the unaugmented checkpoint with the
-checkpoint trained at $\stdmax{}=0.08$ on identical candidate pools.
+We next ask whether ACPC indicates how much a visual perturbation changes CEM
+candidate costs and decisions. We answer in two steps. First, we verify the
+deterministic bounds in \Cref{prop:exact-cost-certificate} using paired clean
+and perturbed candidate pools. Second, we test whether ACPC improves the
+prediction of observed cost and decision changes beyond simple baseline
+features. Both analyses use identical candidate pools and compare the
+unaugmented checkpoint with the checkpoint trained at $\stdmax{}=0.08$.
 
-The broad analysis uses 100 histories per task and training run at a reduced
-CEM budget. A separate confirmation uses the same fixed 16 histories per task
-with the deployed CEM budget. For each candidate, we compute
-\emph{candidate-specific five-step ACPC} using that candidate's own action
-sequence; five predicted steps match the evaluated planning horizon. Complete
-candidate, elite, and iteration counts are reported in
-\Cref{sec:appendix-fixed-pool-details}.
+The broad analysis uses 100 histories per task and training run with a reduced
+CEM budget. A separate confirmation uses the same fixed set of 16 histories
+per task with the deployed CEM budget. For each candidate, we compute
+five-step ACPC under that candidate's own action sequence, matching the
+evaluated planning horizon. \Cref{sec:appendix-fixed-pool-details} reports the
+complete candidate, elite, and iteration counts.
 
 \paragraph{Verifying the deterministic bounds.}
 The reduced-budget analysis contains 9{,}600 records (100 histories $\times$
@@ -866,15 +1001,15 @@ regret.
 
 \subsection{Cross-task threshold transfer}\label{sec:exp-frozen-external}
 
-This experiment tests whether ATR--SMPR thresholds selected on some tasks
-(\emph{source tasks}) screen checkpoints from tasks excluded from calibration
-(\emph{evaluation tasks}). Thresholds are selected on every nonempty proper
-subset of the four tasks and applied unchanged to the remaining tasks, giving
-the 14 directional partitions of \Cref{sec:bg}
-(\Cref{fig:cross-task-source-coverage}). A checkpoint counts as positive when
-it meets the success-rate criterion, and the \emph{onset error} is the gap,
-in augmentation grid steps, between the first level accepted by the
-diagnostic and the first level meeting the criterion.
+Can thresholds calibrated on some tasks screen checkpoints from unseen tasks?
+We treat the calibration tasks as \emph{source tasks} and the held-out tasks
+as \emph{evaluation tasks}. Thresholds are selected on every nonempty proper
+subset of the four tasks and applied unchanged to the remaining tasks. This
+produces the 14 directional partitions described in \Cref{sec:bg}
+(\Cref{fig:cross-task-source-coverage}). A checkpoint is positive if it meets
+the success-rate criterion. We also report \emph{onset error}: the difference,
+in augmentation grid steps, between the first level accepted by the diagnostic
+and the first level that meets the criterion.
 
 \begin{figure}[!t]
 \centering
@@ -905,13 +1040,14 @@ value does not. \Cref{sec:appendix-cross-task} reports every partition.
 \subsection{Application to PLDM}
 \label{sec:exp-pldm-portability}
 
-We apply the same paired-history construction, eight-step rollout, ATR
-normalization, SMPR guard, success-rate criterion, and threshold-selection
-procedure to the complete PLDM Gaussian sweep (one training run per setting,
-so run-to-run variability is not estimated here). The analysis uses PLDM's
-encoder and predictor and does not depend on LeWM layers or training losses.
-For each PLDM evaluation task, thresholds are selected on the other three
-PLDM tasks and then fixed for its nine checkpoints.
+We next ask whether the same diagnostic procedure applies to a different
+joint-embedding dynamics architecture. We use the complete PLDM Gaussian
+sweep with the same paired histories, eight-step rollouts, ATR normalization,
+SMPR guard, success-rate criterion, and threshold-selection procedure. The
+analysis uses PLDM's encoder and predictor and does not depend on LeWM layers
+or training losses. Each setting has one training run, so we cannot estimate
+run-to-run variability. For each PLDM evaluation task, we select thresholds on
+the other three PLDM tasks and then fix them for its nine checkpoints.
 
 Pooling all 36 task--checkpoint evaluations (four evaluation tasks $\times$
 nine checkpoints) gives $0.836$ balanced accuracy, $0.789$ precision, and
@@ -930,13 +1066,12 @@ thresholds architecture-invariant.
 \subsection{Transfer to blur and resize}
 \label{sec:exp-cross-stressor}
 
-The last experiment tests whether a Gaussian-calibrated change in the
-selective score orders checkpoint pairs in the same direction as planning
-success under visual shifts never used for calibration: blur ($k=15$) and
-resize (scale $0.25$), each at one fixed severity. For each task, thresholds
-selected on the other three Gaussian-noise tasks are applied to the 24
-checkpoint pairs of \Cref{sec:bg}; no blur or resize result is used to select
-or adjust any threshold.
+Finally, we ask whether a score calibrated with Gaussian noise can rank
+checkpoint pairs under previously unseen visual shifts. We test blur
+($k=15$) and resize (scale $0.25$), each at one fixed severity. For each task,
+we select thresholds on the other three Gaussian-noise tasks and apply them to
+the 24 checkpoint pairs in \Cref{sec:bg}. No blur or resize result is used to
+select or adjust a threshold.
 
 \begin{figure}[H]
 \centering
@@ -967,32 +1102,34 @@ classifier.
 \section{Discussion and limitations}\label{sec:disc}
 
 \paragraph{What the evidence shows.}
-The prediction experiment (\Cref{sec:exp-target-aligned}) shows that
-recorded-action eight-step ACPC is informative about the error drift bounded
-by \Cref{prop:target-free-error-drift}, beyond encoder shift, one-step ACPC,
-and the strongest same-horizon destroyed-action control; because the controls
-share the eight-step horizon, the gain cannot be attributed to rollout length
-alone. The CEM experiment (\Cref{sec:exp-planner}) verifies the deterministic
-cost bound exactly and shows that candidate-specific ACPC adds cross-task
-predictive information about decision regret, with a smaller gain for maximum
-cost movement and none for the first action. The transfer experiments
-(\Cref{sec:exp-frozen-external,sec:exp-pldm-portability,sec:exp-cross-stressor})
-show that the threshold-selection procedure---not any single threshold
-value---transfers across tasks, to blur and resize, and to PLDM after
-per-family recalibration.
+The evidence supports three conclusions. First, eight-step ACPC under recorded
+actions predicts the error drift bounded by
+\Cref{prop:target-free-error-drift} beyond encoder shift, one-step ACPC, and
+the strongest same-horizon destroyed-action control
+(\Cref{sec:exp-target-aligned}). Because every control also uses eight rollout
+steps, rollout length alone cannot explain this gain. Second, the CEM
+experiment verifies the deterministic cost bound and shows that
+candidate-specific ACPC adds cross-task information about decision regret
+(\Cref{sec:exp-planner}). The gain is smaller for maximum cost movement and
+absent for the first action. Third, the threshold-selection procedure---not a
+single numerical threshold---transfers across tasks, to blur and resize, and
+to PLDM after per-family recalibration
+(\Cref{sec:exp-frozen-external,sec:exp-pldm-portability,sec:exp-cross-stressor}).
 
 \paragraph{Scope and limitations.}
-All planner results are model-cost and candidate-selection statements under
-paired evaluations, not environment success rates, and the adaptive-CEM
-guarantee is conditional on pool alignment up to the first failed elite
-certificate. SMPR guards only the declared coordinate proxies, so stable but
-incorrect predictions remain possible. Three training runs per task (and a
-single run per PLDM setting) support consistency checks rather than precise
-variability estimates; the full-budget CEM analysis reuses 16 histories per
-task; and no matched runs without diagnostic computation were collected, so
-incremental wall-clock overhead is not estimated. Blur and resize are each
-tested at one severity, and the one-source calibration range in
-\Cref{sec:exp-frozen-external} shows that source-task composition matters.
+The results have several limits. The planner claims concern model costs and
+candidate selection under paired evaluations, not environment success. The
+adaptive-CEM guarantee also requires the candidate pools to remain aligned and
+stops at the first failed elite certificate. SMPR tests only the declared
+coordinate proxies, so a model can still make stable but incorrect
+predictions. Three training runs per LeWM task, and one run per PLDM setting,
+support consistency checks but not precise variability estimates. The
+full-budget CEM analysis reuses 16 histories per task. We did not collect
+matched runs without the diagnostic computation and therefore cannot estimate
+its incremental wall-clock overhead. Finally, blur and resize are each tested
+at one severity, and the one-source results in
+\Cref{sec:exp-frozen-external} show that calibration depends on source-task
+composition.
 
 \paragraph{Future work.}
 Important next steps are direct task outcomes for ACPC-informed planner
@@ -1002,18 +1139,19 @@ interfaces.
 
 \section{Conclusion}\label{sec:conc}
 
-ACPC measures how a same-state visual perturbation changes a world model's
-predicted trajectory under fixed actions, exact inequalities relate that
-change to prediction error and to squared latent goal cost, and a
-state-coordinate margin rejects constant-representation collapse on the
-tested proxies. Across four tasks, recorded-action ACPC predicts
+ACPC measures how much a same-state visual perturbation changes a world
+model's predicted trajectory when the actions are held fixed. Exact
+inequalities relate this change to prediction error and squared latent goal
+cost. ATR summarizes the perturbation sensitivity of a checkpoint, while
+SMPR rejects constant-representation collapse on the tested state-coordinate
+proxies. Across four tasks, ACPC under recorded actions predicts
 perturbation-induced error changes beyond one-step and destroyed-action
-controls, tracks CEM cost and decision changes, and supports thresholds that
-transfer to tasks excluded from calibration, to blur and resize, and---after model-family
-recalibration---to PLDM. We see ACPC as a low-cost audit step before a
-checkpoint is deployed behind a planner: it flags visual predictive
-sensitivity that encoder-level checks cannot see, using only logged data and
-the frozen model.
+controls and tracks changes in CEM costs and decisions. The calibrated
+ATR--SMPR thresholds transfer to tasks excluded from calibration, to blur and
+resize, and---after model-family recalibration---to PLDM. ACPC therefore
+provides a low-cost audit before deploying a frozen checkpoint behind a
+planner: using only the model and logged data, it detects visual sensitivity
+that encoder-level checks can miss.
 \bibliographystyle{plain}
 \bibliography{references}
 
@@ -1082,8 +1220,8 @@ $|\tilde C-C|=|b-a|(a+b)=r(\|x-g\|_2+\|\tilde x-g\|_2)$.
 
 \section{Evaluation and Diagnostic Protocol}\label{sec:appendix-A}
 
-These details define the fixed evaluation and diagnostic protocol used by the
-main tables.
+This appendix specifies the fixed evaluation and diagnostic protocol used in
+the main tables.
 
 \paragraph{Evaluation grid.}
 LeWM is evaluated on PushT, TwoRoom, Reacher, and Cube with evaluation seeds
@@ -1093,14 +1231,14 @@ image clean. Checkpoints trained with noise use full-sequence input-side
 Gaussian augmentation with $\stdmax{}\in\{0.01,\ldots,0.08\}$.
 
 \paragraph{PLDM instantiation.}
-PLDM uses the same four-task, nine-checkpoint Gaussian grid, evaluation seeds,
-trajectory count, paired-history construction, $H=8$ rollout statistic, and
-SMPR definition. For its cross-task analysis, ATR is divided by its value for
-the corresponding unaugmented PLDM checkpoint, and thresholds are selected on
-the other three PLDM tasks. The evaluation task's success rates never enter
-threshold selection. A second test applies the corresponding LeWM threshold
-pair after this within-task PLDM normalization. Raw thresholds are not
-assumed to be shared across model families.
+PLDM uses the same four tasks, nine-checkpoint Gaussian grid, evaluation
+seeds, trajectory count, paired-history construction, $H=8$ rollout
+statistic, and SMPR definition. For cross-task analysis, we divide ATR by the
+value of the corresponding unaugmented PLDM checkpoint. We then select
+thresholds on the other three PLDM tasks. Success rates from the evaluation
+task never enter threshold selection. A second test applies the corresponding
+LeWM threshold pair after the same within-task PLDM normalization. We do not
+assume that model families share raw thresholds.
 
 \paragraph{Success-rate criterion.}
 Within each task and training run, let $B$ and $M$ be the success rates at
@@ -1113,16 +1251,17 @@ unaugmented checkpoint. The green spans in
 runs.
 
 \paragraph{ATR protocol.}
-ATR is computed for each task, training run, and checkpoint from one
-weighted-stacked horizon radius per anchor. The default is $H=8$ with uniform
-$\alpha_k=1/H$. Each radius is divided by that anchor's q50 clean
-observed-transition scale, including the transition from the last history
-observation to the first future observation; multiple noise draws are first
-averaged within the anchor, and q90 is then taken across anchors. This is the
-raw ATR in \Cref{eq:atr-raw}. It defines the same-state tube used by SMPR. For
-the sweep display and within-family cross-task calibration, raw ATR is divided
-by the corresponding unaugmented value as in \Cref{eq:atr-relative}
-before thresholds or run summaries are computed. The numerical stabilizers
+We compute ATR separately for each task, training run, and checkpoint. Each
+anchor contributes one weighted radius over the rollout horizon. The default
+uses $H=8$ and uniform weights $\alpha_k=1/H$. We divide each radius by the
+anchor's q50 clean observed-transition scale, including the transition from
+the final history observation to the first future observation. We then
+average multiple noise draws within each anchor and take q90 across anchors.
+This gives the raw ATR in \Cref{eq:atr-raw}, which SMPR uses as its same-state
+reference. For sweep plots and within-family cross-task calibration, we
+divide raw ATR by the corresponding unaugmented value as in
+\Cref{eq:atr-relative} before computing thresholds or run summaries. The
+numerical stabilizers
 are $\varepsilon_{\mathrm{norm}}=10^{-8}$ in
 \Cref{eq:normalized-same-state-radius} and
 $\varepsilon_{\mathrm{score}}=10^{-12}$ in
@@ -1133,12 +1272,12 @@ reduction depends on the rollout horizon and the summary quantile.
 \input{tables/table_horizon_quantile_sensitivity}
 
 \paragraph{SMPR protocol.}
-SMPR follows \Cref{eq:smpr}. For each eligible anchor, the pair is its nearest
-proxy-label-crossing neighbor whose standardized state distance is no greater
-than the global q35 radius. The two clean histories are rolled out under the anchor's recorded
-action sequence, their distance is normalized by the anchor's clean transition
-scale, and the pair passes only when that distance is strictly greater than the
-raw q90 same-state tube plus $0.10$.
+SMPR follows \Cref{eq:smpr}. For each eligible anchor, we find the nearest
+history with a different proxy label and a standardized state distance no
+greater than the global q35 radius. We roll both clean histories forward under
+the anchor's recorded actions and normalize their distance by the anchor's
+clean transition scale. The pair passes only if this distance is strictly
+greater than raw q90 ATR plus $0.10$.
 
 \Cref{tab:smpr-proxies} makes the pairing rule explicit. The logged state
 is taken at the end of the observed eight-step future and standardized
@@ -1147,11 +1286,11 @@ Euclidean distances in that task's full standardized state vector and use
 their global q35 as the neighborhood radius. Proxy labels use median splits
 computed within the fixed 100-endpoint anchor batch (anchor seed 9101); each
 label therefore describes the endpoint reached by that trajectory's own
-recorded actions. After neighbor selection, both starting histories are rolled
-out under the anchor's actions for the latent-distance test. An anchor is
-skipped only when no label-crossing state lies inside the neighborhood. The eligible counts are
-constant across the evaluated checkpoints and training runs because pairing
-is fixed by the logged states.
+recorded actions. After selecting a neighbor, we roll both starting histories
+under the anchor's actions for the latent-distance test. We skip an anchor
+only when no state with a different label lies inside the neighborhood.
+Pairing depends only on the logged states, so the eligible counts remain
+constant across checkpoints and training runs.
 
 \begin{table}[H]
 \centering
@@ -1184,7 +1323,10 @@ selected pair is applied without modification to every evaluation task. No
 evaluation-task label or blur/resize outcome enters threshold selection.
 
 \paragraph{Reproducibility.}
-All summary figures and tables are rebuilt deterministically by the scripts documented in \codebrk{paper1/scripts/README.md}. Checkpoint-level diagnostics additionally require the released checkpoints and datasets. Machine-readable summaries record training seeds, evaluation seeds, and protocol hashes.
+The scripts documented in \codebrk{paper1/scripts/README.md} rebuild all
+summary figures and tables deterministically. Checkpoint-level diagnostics
+also require the released checkpoints and datasets. Machine-readable
+summaries record training seeds, evaluation seeds, and protocol hashes.
 
 \input{tables/table_full_sweep_compact}
 
