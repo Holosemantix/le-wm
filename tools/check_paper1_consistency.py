@@ -370,7 +370,7 @@ LEGACY_REQUIRED_MAIN_TEXT_SNIPPETS = [
 # Public-v1 gates are structural and claim-oriented.  The longer list above is
 # retained only to document the pre-remediation wording contract.
 REQUIRED_MAIN_TEXT_SNIPPETS = [
-    "This is a diagnostic study of frozen checkpoints, not a new robust-training method",
+    "ACPC is an evaluation tool, not a new training objective",
     "same-state visual perturbation",
     "Common-future error-drift bound",
     "Selective Margin Pass Rate",
@@ -378,18 +378,19 @@ REQUIRED_MAIN_TEXT_SNIPPETS = [
     "so it fails the SMPR test",
     "does not assign an absolute robustness label",
     "do not imply shared raw thresholds across architectures",
-    "adaptive result is conditional on pool alignment",
-    "Evaluation seeds are conditional measurement replicates",
+    "guarantee is conditional on pool alignment up to the first failed elite",
+    "the three evaluation seeds only measure within-run variability",
     "No blur- or resize-specific adjustment is made",
-    "not one numerical threshold for every task or model family",
-    "They do not establish an absolute robustness classifier",
+    "a single universal threshold value does not",
+    "it is not an absolute robustness classifier",
     "t-SNE does not preserve metric geometry",
     "not an independent statistical success count",
-    "does not rank encoder shift",
+    "does not benchmark alternative signals such as encoder shift",
 ]
 
 MAIN_TEXT_FIGURES = {
     "fig_full_sweep_diagnostics.pdf",
+    "fig_local_geometry_highd_audit.pdf",
     "fig_future_drift_three_seed_v1.pdf",
     "fig_acpc_planner_evidence.pdf",
     "fig_cross_task_atr_smpr_source_coverage_v1.pdf",
@@ -397,7 +398,6 @@ MAIN_TEXT_FIGURES = {
 }
 
 APPENDIX_FIGURES = {
-    "fig_acpc_basin_tsne.png",
     "fig_gaussian_sensitivity_main.png",
 }
 
@@ -507,7 +507,7 @@ PAIRED_MULTISEVERITY_SMPR_SMOKE_SHA256 = "eb41ff0d6a23db0e15ea5f48540f91f5d83483
 PUBLIC_V1_ARTIFACT_HASHES = {
     "paper1/config/frozen_diagnostic_protocol_v1.json": FROZEN_PROTOCOL_SHA256,
     "paper1/results/frozen_external_validation_summary_v3.json": "ec485a7026c1d2ff80295f4dc85dd3753ca12f2ede7d7c0137a13796070dfeba",
-    "paper1/tables/table_pldm_architecture_portability.tex": "610a8d23b3ee6e9902b11fd5c9b2d734c6997c5fa538329de30e7bf5747549a7",
+    "paper1/tables/table_pldm_architecture_portability.tex": "5fae4948ac832bf0f2a53dd9dac13182f6cd1031a8a057255b3b08cda22c6906",
     "paper1/results/external_validation/cross_stressor_fixed_rho_summary.json": "94077f772e8dd7641b47e161a17d4ec67cea695dc044cb9a0229857efc157453",
     "paper1/results/external_validation/target_view_frozen_summary.json": "dba255daf282d1dbea7a102839e054cdd39b159a08a9ea9b1d3def7767477870",
     "paper1/results/diagnostic_baselines/diagnostic_baseline_all_v1.json": "df43cfd80b0387bde31426a37445149646a247724c1b2dd61f801a97d6c4f3c8",
@@ -988,14 +988,16 @@ def check_visual_text_structure() -> None:
     body, appendix = main_tex.split(marker, 1)
 
     required_headings = (
+        "\\subsection{Local visual geometry as an initial audit}",
         "\\subsection{Paired rollout radius}",
         "\\subsection{Common-future error drift}",
         "\\subsection{Candidate-cost drift and planner stability}",
         "\\subsection{Why low radius needs a task-proxy margin}",
         "\\subsection{Checkpoint-level calibration}",
         "\\subsection{Evaluation setup}",
+        "\\subsection{Local visual geometry before and after eight rollout steps}",
         "\\subsection{Planning performance under observation noise}",
-        "\\subsection{Predicting error changes under visual perturbations}",
+        "\\subsection{Predicting the perturbation-induced error drift}",
         "\\subsection{ACPC and CEM decisions}",
         "\\subsection{Cross-task threshold transfer}",
         "\\subsection{Application to PLDM}",
@@ -3645,7 +3647,7 @@ def check_public_v1_remediation_artifacts() -> None:
     for expected in (
         "PLDM thresholds, other three tasks & 0.836 & 0.789 & 0.882 & 4 & 2",
         "LeWM thresholds, PLDM-normalized & 0.836 & 0.789 & 0.882 & 4 & 2",
-        "raw thresholds are not assumed to match across model families",
+        "after within-task ATR normalization",
     ):
         if expected not in e2_table:
             fail(f"E2 PLDM architecture-portability table changed: {expected}")

@@ -34,7 +34,8 @@ rg -n "Overfull|undefined references|Citation .* undefined|Reference .* undefine
 | `tools/paper1_three_seed_gaussian_sweep.py` | 汇总三训练种子完整 Gaussian sweep | `assets/paper1_data/training_seed_eval_manifests/lewm_seed*_evals.json` | `assets/paper1_data/three_seed_gaussian_sweep_summary_20260706.{json,md}`；主文 Figure 1 和附录 Gaussian sweep 表的源数据 |
 | `tools/paper1_figs.py` | 渲染主文 noise-sweep 图 | `assets/paper1_data/three_seed_gaussian_sweep_summary_20260706.json` | 默认只输出 `assets/paper1_figs/fig2_sweep.png`；已下线的 `fig3_pareto.png`, `fig4_radar.png`, `fig5_scatter.png`, `fig6_mechanism.png` 仍可用 `--only` 生成但当前不进正文 |
 | `tools/paper1_atr_smpr_figure.py` | Legacy diagnostic-plane renderer | `assets/paper1_data/compressed_metrics_summary_20260706.json` | 当前主文使用 ATR/SMPR 表，不再引用 diagnostic-plane 图 |
-| `tools/paper1_feature_neighborhood_figure.py` | Legacy PCA-style feature-neighborhood renderer | cached PushT feature arrays, compressed metric summary | 当前主文使用 `tools/paper1_selective_contraction.py --cluster-paper-facing` 生成 ACPC neighborhood t-SNE 图；该 legacy renderer 不再作为主文图源 |
+| `tools/paper1_feature_neighborhood_figure.py` | Legacy PCA-style feature-neighborhood renderer | cached PushT feature arrays, compressed metric summary | Legacy renderer，不再作为主文图源 |
+| `tools/paper1_local_geometry_highd_figure.py` | 生成 local-geometry qualitative/high-D composite，并核验 `r/NN`、`r<NN`、disjoint 与三类 state counts | cached PushT 19-view features + frozen point-count sidecar | `assets/paper1_figs/fig_local_geometry_highd_audit.{pdf,json}`；t-SNE 仅用于 qualitative display，所有数字在 high-D 计算 |
 | `tools/build_partial_corr_bootstrap.py` | 为 partial Spearman 相关计算 95% percentile bootstrap CI | LeWM/PLDM canonical eval + diagnostics artifact | `assets/paper1_data/partial_corr_bootstrap_20260523.json`，用于主文 partial-correlation tables 和 PLDM appendix |
 | `tools/pldm_correlation_analysis.py` | 复算 LeWM/PLDM within-method 与 joint partial correlation | LeWM/PLDM canonical eval + diagnostics artifact | `assets/paper1_data/cross_method_corr_pldm_20260522.json`，用于 PLDM appendix 和 consistency checker |
 | `tools/paper1_acpc_basin.py` | Paper-facing Gaussian-noise ACPC basin runner：dense std 0.01--0.08 same-state views，统计 encoder radius / rollout-feature radius / contraction | LeWM/PLDM canonical eval manifest + 本地 epoch-10 model object checkpoints | `assets/paper1_data/acpc_basin_diagnostics.json`；PLDM appendix 的 full-sweep replication 用 `assets/paper1_data/acpc_basin_diagnostics_pldm.json` |
@@ -121,6 +122,10 @@ python -m tools.paper1_selective_contraction \
   --cluster-envelope ellipse --cluster-envelope-coverage 0.90 \
   --metric-summary assets/paper1_data/compressed_metrics_summary_20260706.json \
   --cluster-paper-facing
+
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+MPLCONFIGDIR=/tmp/paper1_mplconfig \
+python tools/paper1_local_geometry_highd_figure.py
 
 DATA_ROOT=/path/to/world_model/quentinll \
 python -m tools.paper1_unseen_eval_grid --dry-run

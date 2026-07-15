@@ -1,0 +1,483 @@
+"""Build the Paper 1 local-geometry audit figure from cached features.
+
+The t-SNE panels in this figure are qualitative.  Every displayed ratio,
+fraction, and state-category count is recomputed in the original feature
+space and checked against the frozen sidecar produced by
+``paper1_selective_contraction.py``.
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+from pathlib import Path
+from typing import Any, Mapping
+
+import numpy as np
+
+from paper1_selective_contraction import (
+    _axis_limits_2d_single,
+    _draw_cluster_envelope,
+    _draw_cluster_links,
+    _ensure_plot_deps,
+    _tsne_fit_transform_2d,
+)
+
+
+ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_CACHE_DIR = Path("/tmp/paper1_selective_contraction_cache")
+DEFAULT_SIDECAR = ROOT / "assets/paper1_figs/fig_acpc_basin_tsne_point_counts.json"
+DEFAULT_OUTPUT = ROOT / "assets/paper1_figs/fig_local_geometry_highd_audit.pdf"
+DEFAULT_AUDIT_OUTPUT = ROOT / "assets/paper1_figs/fig_local_geometry_highd_audit.json"
+
+PANEL_SPECS = (
+    ("base", "encoder", "No augmentation", "Encoder"),
+    ("base", "predictor", "No augmentation", "After eight rollout steps"),
+    ("fullseq_robust", "encoder", "Gaussian augmentation", "Encoder"),
+    (
+        "fullseq_robust",
+        "predictor",
+        "Gaussian augmentation",
+        "After eight rollout steps",
+    ),
+)
+
+CATEGORY_COLORS = ("#D55E00", "#999999", "#0072B2")
+CATEGORY_LABELS = (
+    "Reaches/exceeds spacing",
+    "Within spacing, not disjoint",
+    "Fully disjoint",
+)
+
+
+def _load_json(path: Path) -> Any:
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def _load_matching_cache(cache_dir: Path, sidecar: Mapping[str, Any]) -> tuple[Path, dict[str, Any], dict[str, np.ndarray]]:
+    candidates: list[tuple[Path, dict[str, Any], dict[str, np.ndarray]]] = []
+    for path in sorted(cache_dir.glob("pusht_lewm_fullseq_features_*.npz")):
+        with np.load(path, allow_pickle=False) as data:
+            metadata = json.loads(str(data["metadata"].item()))
+            arrays = {
+                key: np.asarray(data[key])
+                for key in (
+                    "base_encoder",
+                    "base_predictor",
+                    "fullseq_robust_encoder",
+                    "fullseq_robust_predictor",
+                )
+            }
+        expected_views = [float(value) for value in sidecar["expanded_view_stds"]]
+        if (
+            metadata.get("task") == sidecar.get("task") == "PushT"
+            and metadata.get("method") == sidecar.get("method") == "LeWM"
+            and int(metadata.get("n_sequences", -1)) == int(sidecar["n_sequences"])
+            and int(metadata.get("rollout_horizon", -1)) == int(sidecar["rollout_horizon"])
+            and int(metadata.get("seed", -1)) == int(sidecar["seed"])
+            and [float(value) for value in metadata.get("view_stds", [])] == expected_views
+        ):
+            candidates.append((path, metadata, arrays))
+    if len(candidates) != 1:
+        raise RuntimeError(
+            "Expected exactly one cache matching the frozen PushT audit; "
+            f"found {len(candidates)} in {cache_dir}."
+        )
+    return candidates[0]
+
+
+def _high_d_audit(array: np.ndarray) -> dict[str, Any]:
+    if array.ndim != 3 or array.shape[0] < 2:
+        raise ValueError(f"Expected [views, states, features], got {array.shape}")
+    origin = np.asarray(array[0], dtype=np.float64)
+    perturbed = np.asarray(array[1:], dtype=np.float64)
+    radius = np.max(np.linalg.norm(perturbed - origin[None, :, :], axis=-1), axis=0)
+    center_dist = np.linalg.norm(origin[:, None, :] - origin[None, :, :], axis=-1)
+    np.fill_diagonal(center_dist, np.inf)
+    nearest = np.min(center_dist, axis=1)
+    ratio = radius / np.maximum(nearest, 1e-12)
+
+    disjoint = np.all(center_dist > radius[:, None] + radius[None, :], axis=1)
+    reaches_spacing = ratio >= 1.0
+    within_not_disjoint = (~reaches_spacing) & (~disjoint)
+    if np.any(disjoint & reaches_spacing):
+        raise AssertionError("A fully disjoint ball cannot reach its nearest clean center.")
+
+    counts = np.asarray(
+        [
+            int(np.sum(reaches_spacing)),
+            int(np.sum(within_not_disjoint)),
+            int(np.sum(disjoint)),
+        ],
+        dtype=int,
+    )
+    n_states = int(array.shape[1])
+    if int(np.sum(counts)) != n_states:
+        raise AssertionError(f"State categories do not partition all states: {counts}")
+
+    return {
+        "n_states": n_states,
+        "n_views": int(array.shape[0]),
+        "median_radius_over_nn": float(np.median(ratio)),
+        "radius_lt_nn_count": int(np.sum(ratio < 1.0)),
+        "radius_lt_nn_fraction": float(np.mean(ratio < 1.0)),
+        "fully_disjoint_count": int(np.sum(disjoint)),
+        "fully_disjoint_fraction": float(np.mean(disjoint)),
+        "category_counts": [int(value) for value in counts],
+        "category_fractions": [float(value / n_states) for value in counts],
+    }
+
+
+def _expected_by_panel(sidecar: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
+    return {
+        str(row["panel"]): row
+        for row in sidecar["panel_high_d_stats"]
+    }
+
+
+def _validate_audit(panel: str, audit: Mapping[str, Any], expected: Mapping[str, Any]) -> None:
+    pairs = (
+        ("median_radius_over_nn", "median_radius_over_nn"),
+        ("radius_lt_nn_fraction", "frac_radius_lt_nn"),
+        ("fully_disjoint_fraction", "frac_nonoverlap_balls"),
+    )
+    for actual_key, expected_key in pairs:
+        actual = float(audit[actual_key])
+        target = float(expected[expected_key])
+        if not np.isclose(actual, target, rtol=1e-6, atol=1e-8):
+            raise AssertionError(
+                f"{panel} {actual_key}={actual} disagrees with frozen sidecar {target}."
+            )
+
+
+def _format_percent(count: int, total: int) -> str:
+    return f"{100.0 * count / total:.1f}%"
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _draw_category_strip(ax, audit: Mapping[str, Any]) -> None:
+    total = int(audit["n_states"])
+    counts = [int(value) for value in audit["category_counts"]]
+    left = 0
+    for count, color in zip(counts, CATEGORY_COLORS):
+        ax.barh(0, count, left=left, height=0.62, color=color, edgecolor="white", linewidth=0.5)
+        if count >= 8:
+            ax.text(
+                left + count / 2,
+                0,
+                str(count),
+                ha="center",
+                va="center",
+                color="white" if color != "#999999" else "#111111",
+                fontsize=7.0,
+                fontweight="bold",
+            )
+        elif count > 0:
+            ax.annotate(
+                str(count),
+                xy=(left + count / 2, 0.31),
+                xytext=(left + count / 2, 0.63),
+                ha="center",
+                va="bottom",
+                fontsize=6.5,
+                arrowprops={"arrowstyle": "-", "color": color, "linewidth": 0.6},
+            )
+        left += count
+    ax.set_xlim(0, total)
+    ax.set_ylim(-0.55, 0.85)
+    ax.axis("off")
+
+
+def build_figure(
+    *,
+    cache_dir: Path,
+    sidecar_path: Path,
+    output_path: Path,
+    audit_output_path: Path,
+    perplexity: float,
+    tsne_max_iter: int,
+) -> None:
+    plt = _ensure_plot_deps()
+    sidecar = _load_json(sidecar_path)
+    cache_path, metadata, arrays = _load_matching_cache(cache_dir, sidecar)
+    anchors = np.asarray(sidecar["anchor_indices"], dtype=int)
+    expanded_stds = [float(value) for value in sidecar["expanded_view_stds"]]
+    expected = _expected_by_panel(sidecar)
+
+    if len(anchors) != 16 or len(set(anchors.tolist())) != len(anchors):
+        raise AssertionError("The frozen qualitative display must use 16 unique anchors.")
+    if int(sidecar["perturb_repeats"]) != 6 or len(expanded_stds) != 19:
+        raise AssertionError("Expected one clean and 18 perturbed views per state.")
+
+    plt.rcParams.update(
+        {
+            "font.family": "sans-serif",
+            "font.size": 8.0,
+            "axes.titlesize": 9.0,
+            "axes.labelsize": 7.5,
+            "xtick.labelsize": 6.4,
+            "ytick.labelsize": 6.4,
+            "pdf.fonttype": 42,
+            "ps.fonttype": 42,
+        }
+    )
+    fig = plt.figure(figsize=(7.65, 8.65), constrained_layout=False)
+    outer = fig.add_gridspec(
+        2,
+        2,
+        left=0.065,
+        right=0.985,
+        bottom=0.115,
+        top=0.94,
+        hspace=0.25,
+        wspace=0.17,
+    )
+    colors = plt.cm.turbo(np.linspace(0.05, 0.95, len(anchors)))
+    audit_rows: list[dict[str, Any]] = []
+
+    # Fit one qualitative embedding per representation space so the two
+    # training conditions in a column share a coordinate system.  Encoder
+    # and rollout representations are still embedded separately and must not
+    # be compared by their 2-D scale.
+    projected_by_key: dict[str, np.ndarray] = {}
+    limits_by_feature: dict[str, tuple[tuple[float, float], tuple[float, float]]] = {}
+    for feature_index, feature in enumerate(("encoder", "predictor")):
+        joint = np.concatenate(
+            [arrays[f"base_{feature}"], arrays[f"fullseq_robust_{feature}"]],
+            axis=1,
+        )
+        projected_joint = _tsne_fit_transform_2d(
+            joint,
+            seed=int(sidecar["seed"]) + 17 * (feature_index + 1),
+            perplexity=perplexity,
+            max_iter=tsne_max_iter,
+        )
+        split = int(arrays[f"base_{feature}"].shape[1])
+        projected_by_key[f"base_{feature}"] = projected_joint[:, :split]
+        projected_by_key[f"fullseq_robust_{feature}"] = projected_joint[:, split:]
+        limits_by_feature[feature] = _axis_limits_2d_single(projected_joint)
+
+    for panel_index, (label, feature, row_title, column_title) in enumerate(PANEL_SPECS):
+        key = f"{label}_{feature}"
+        panel_name = f"{label}:{feature}"
+        array = arrays[key]
+        if array.shape[:2] != (19, 128):
+            raise AssertionError(f"{panel_name} has unexpected shape {array.shape}.")
+        audit = _high_d_audit(array)
+        _validate_audit(panel_name, audit, expected[panel_name])
+        audit_rows.append(
+            {
+                "panel": panel_name,
+                "condition": row_title,
+                "representation": column_title,
+                **audit,
+            }
+        )
+
+        inner = outer[panel_index // 2, panel_index % 2].subgridspec(
+            2, 1, height_ratios=(11.5, 1.0), hspace=0.02
+        )
+        ax = fig.add_subplot(inner[0])
+        strip_ax = fig.add_subplot(inner[1])
+        projected = projected_by_key[key]
+        origin = projected[0]
+        perturbed = projected[1:]
+        xlim, ylim = limits_by_feature[feature]
+        min_radius = 0.018 * max(xlim[1] - xlim[0], ylim[1] - ylim[0])
+
+        ax.scatter(origin[:, 0], origin[:, 1], s=8, c="#6F6F6F", alpha=0.30, linewidths=0)
+        ax.scatter(
+            perturbed.reshape(-1, 2)[:, 0],
+            perturbed.reshape(-1, 2)[:, 1],
+            s=5,
+            c="#B8B8B8",
+            alpha=0.12,
+            linewidths=0,
+        )
+        for color, state_index in zip(colors, anchors):
+            points = projected[:, state_index, :]
+            _draw_cluster_envelope(
+                plt,
+                ax,
+                points,
+                color=color,
+                mode="ellipse",
+                coverage=0.90,
+                min_radius=min_radius,
+            )
+            _draw_cluster_links(ax, points, expanded_stds, color)
+            ax.scatter(
+                points[1:, 0],
+                points[1:, 1],
+                s=17,
+                color=color,
+                alpha=0.77,
+                edgecolor="white",
+                linewidth=0.18,
+                zorder=3,
+            )
+            ax.scatter(
+                points[0, 0],
+                points[0, 1],
+                s=48,
+                color=color,
+                edgecolor="#111111",
+                linewidth=0.5,
+                zorder=4,
+            )
+
+        total = int(audit["n_states"])
+        radius_count = int(audit["radius_lt_nn_count"])
+        disjoint_count = int(audit["fully_disjoint_count"])
+        callout = (
+            r"$\bf{High\!\!-\!dimensional\ audit}$" "\n"
+            f"median r/NN = {audit['median_radius_over_nn']:.2f}\n"
+            f"r < NN: {radius_count}/{total} ({_format_percent(radius_count, total)})\n"
+            f"fully disjoint: {disjoint_count}/{total} ({_format_percent(disjoint_count, total)})"
+        )
+        ax.text(
+            0.025,
+            0.975,
+            callout,
+            transform=ax.transAxes,
+            ha="left",
+            va="top",
+            fontsize=6.9,
+            linespacing=1.12,
+            color="#202020",
+            bbox={
+                "boxstyle": "round,pad=0.28",
+                "facecolor": "white",
+                "edgecolor": "#C8C8C8",
+                "linewidth": 0.55,
+                "alpha": 0.90,
+            },
+            zorder=8,
+        )
+        ax.set_title(f"({chr(97 + panel_index)}) {row_title} · {column_title}", pad=4.0)
+        ax.set_xlim(*xlim)
+        ax.set_ylim(*ylim)
+        ax.set_xlabel("t-SNE coordinate 1", labelpad=1.5)
+        ax.set_ylabel("t-SNE coordinate 2", labelpad=1.5)
+        ax.tick_params(pad=1)
+        ax.grid(True, color="#ECECEC", linewidth=0.45)
+        ax.set_aspect("equal", adjustable="box")
+        _draw_category_strip(strip_ax, audit)
+
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Patch
+
+    state_handles = [
+        Line2D([], [], marker="o", linestyle="none", markersize=4.2, markerfacecolor="#858585", markeredgecolor="none", label="Unselected states/views"),
+        Line2D([], [], marker="o", linestyle="none", markersize=6.0, markerfacecolor="#4C78A8", markeredgecolor="#111111", markeredgewidth=0.6, label="Selected clean anchor"),
+        Line2D([], [], marker="o", linestyle="none", markersize=4.2, markerfacecolor="#4C78A8", markeredgecolor="white", markeredgewidth=0.3, label="Perturbed view"),
+        Line2D([], [], color="#4C78A8", linewidth=1.2, label="90% t-SNE covariance envelope"),
+    ]
+    category_handles = [Patch(facecolor=color, edgecolor="none", label=label) for color, label in zip(CATEGORY_COLORS, CATEGORY_LABELS)]
+    legend_one = fig.legend(
+        handles=state_handles,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 0.988),
+        ncol=4,
+        frameon=False,
+        fontsize=6.8,
+        handletextpad=0.4,
+        columnspacing=1.1,
+    )
+    fig.add_artist(legend_one)
+    fig.legend(
+        handles=category_handles,
+        title="High-dimensional state categories (counts shown in each strip)",
+        loc="lower center",
+        bbox_to_anchor=(0.5, 0.025),
+        ncol=3,
+        frameon=False,
+        fontsize=7.0,
+        title_fontsize=7.2,
+        handletextpad=0.45,
+        columnspacing=1.4,
+    )
+    fig.text(
+        0.5,
+        0.006,
+        "NN denotes the nearest other clean anchor in the original high-dimensional representation.",
+        ha="center",
+        va="bottom",
+        fontsize=6.7,
+        color="#333333",
+    )
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, bbox_inches="tight", pad_inches=0.04)
+    plt.close(fig)
+
+    audit_payload = {
+        "schema_version": "paper1-local-geometry-highd-audit-1.0",
+        "figure": str(output_path.relative_to(ROOT)),
+        "feature_cache": cache_path.name,
+        "feature_cache_sha256": _sha256(cache_path),
+        "source_sidecar": str(sidecar_path.relative_to(ROOT)),
+        "task": sidecar["task"],
+        "method": sidecar["method"],
+        "seed": int(sidecar["seed"]),
+        "rollout_horizon": int(sidecar["rollout_horizon"]),
+        "n_states": int(sidecar["n_sequences"]),
+        "n_perturbation_views_per_state": len(expanded_stds) - 1,
+        "view_stds": expanded_stds,
+        "anchor_indices": [int(value) for value in anchors],
+        "tsne": {
+            "perplexity": float(perplexity),
+            "max_iter": int(tsne_max_iter),
+            "fit": "joint across training conditions within each representation column",
+            "purpose": "qualitative visualization only",
+        },
+        "panels": audit_rows,
+        "note": (
+            "All metrics and category counts are computed in the original "
+            "high-dimensional arrays; t-SNE coordinates are used only for display."
+        ),
+        "cache_metadata": metadata,
+    }
+    audit_output_path.parent.mkdir(parents=True, exist_ok=True)
+    with audit_output_path.open("w", encoding="utf-8") as handle:
+        json.dump(audit_payload, handle, indent=2)
+        handle.write("\n")
+
+    print(f"Wrote {output_path}")
+    print(f"Wrote {audit_output_path}")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--cache-dir", type=Path, default=DEFAULT_CACHE_DIR)
+    parser.add_argument("--sidecar", type=Path, default=DEFAULT_SIDECAR)
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--audit-output", type=Path, default=DEFAULT_AUDIT_OUTPUT)
+    parser.add_argument("--perplexity", type=float, default=35.0)
+    parser.add_argument("--tsne-max-iter", type=int, default=650)
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+    build_figure(
+        cache_dir=args.cache_dir.expanduser().resolve(),
+        sidecar_path=args.sidecar.expanduser().resolve(),
+        output_path=args.output.expanduser().resolve(),
+        audit_output_path=args.audit_output.expanduser().resolve(),
+        perplexity=args.perplexity,
+        tsne_max_iter=args.tsne_max_iter,
+    )
+
+
+if __name__ == "__main__":
+    main()
