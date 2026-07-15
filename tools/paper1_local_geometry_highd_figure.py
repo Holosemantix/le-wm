@@ -298,9 +298,9 @@ def build_figure(
         radius_count = int(audit["radius_lt_nn_count"])
         disjoint_count = int(audit["fully_disjoint_count"])
         metric_text = (
-            f"median r/NN {audit['median_radius_over_nn']:.2f}\n"
-            f"r < NN {_format_percent(radius_count, total)}\n"
-            f"fully disjoint {_format_percent(disjoint_count, total)}"
+            f"median r/NN: {audit['median_radius_over_nn']:.2f}\n"
+            f"r < NN: {_format_percent(radius_count, total)}\n"
+            f"fully disjoint: {_format_percent(disjoint_count, total)}"
         )
         ax.text(
             0.025,

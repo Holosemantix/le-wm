@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate the ATR+SMPR rule across every source/evaluation task partition."""
+"""Evaluate ATR+SMPR screening across threshold-selection/test task partitions."""
 
 from __future__ import annotations
 
@@ -439,25 +439,28 @@ def _json_ready(value: Any) -> Any:
 
 
 def write_table(summary: dict[str, Any], out: Path) -> None:
+    grid_step = 0.01
     lines = [
         r"\begin{table*}[t]",
         r"\centering",
-        r"\caption{Cross-task evaluation of the selective ACPC rule. Thresholds are selected on the source tasks and applied unchanged to all remaining tasks. Metrics first average training runs within each evaluation task and then weight tasks equally. Onset error is measured in Gaussian-augmentation grid units.}",
+        r"\caption{Checkpoint screening with thresholds chosen on other tasks. Thresholds are selected on the threshold-selection tasks and applied unchanged to all test tasks. Metrics first average training runs within each test task and then weight tasks equally. Recovery-onset mismatch is measured in training-augmentation grid levels (one level is $0.01$ in $\stdmax{}$).}",
         r"\label{tab:cross-task-all-subsets}",
         r"\small",
         r"\setlength{\tabcolsep}{3.5pt}",
         r"\begin{tabular}{>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.17\textwidth}rrrrr}",
         r"\toprule",
-        r"Source tasks & Evaluation tasks & $\tau_R$ & $\tau_M$ & BA & P / R & \shortstack{Onset error\\mean / max} \\",
+        r"Selection tasks & Test tasks & $t_R$ & $t_M$ & BA & P / R & \shortstack{Onset mismatch\\mean / max} \\",
         r"\midrule",
     ]
     for item in summary["partitions"]:
         source = ", ".join(item["source_tasks"])
         evaluation = ", ".join(item["evaluation_tasks"])
+        mean_mismatch = item["mean_abs_start_error"] / grid_step
+        max_mismatch = item["max_abs_start_error"] / grid_step
         lines.append(
             f"{source} & {evaluation} & {item['tau_atr']:.3g} & {item['tau_smpr']:.2f} & "
             f"{item['balanced_accuracy']:.3f} & {item['precision']:.3f} / {item['recall']:.3f} & "
-            f"{item['mean_abs_start_error']:.3f} / {item['max_abs_start_error']:.3f} \\\\"
+            f"{mean_mismatch:.1f} / {max_mismatch:.1f} \\\\"
         )
     lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table*}"])
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -476,13 +479,13 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
         metrics = (
             (
                 "balanced_accuracy",
-                r"(a) Evaluation-task balanced accuracy $\uparrow$",
+                r"(a) Agreement with recovery labels $\uparrow$",
                 "Balanced accuracy",
             ),
             (
                 "mean_abs_start_error",
-                r"(b) Recovery-onset error $\downarrow$",
-                "Mean absolute error (grid steps)",
+                r"(b) Distance from recovery onset $\downarrow$",
+                "Mean absolute mismatch (grid levels)",
             ),
         )
         for ax, (metric, title, ylabel) in zip(axes, metrics):
@@ -544,7 +547,7 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
                     zorder=4,
                 )
             ax.set_title(title, loc="left", fontweight="semibold")
-            ax.set_xlabel("Tasks used for calibration")
+            ax.set_xlabel("Tasks used to choose thresholds")
             ax.set_ylabel(ylabel)
             ax.set_xticks((1, 2, 3))
             ax.set_xlim(0.65, 3.35)
@@ -564,7 +567,7 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
         axes[0].set_ylim(0.48, 0.965)
         axes[1].set_ylim(0.0, 3.25)
         fig.suptitle(
-            "Cross-task transfer of calibrated thresholds",
+            "Reliability of cross-task checkpoint screening",
             y=0.985,
             fontsize=9.0,
             fontweight="semibold",
@@ -577,7 +580,7 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
                     marker="o",
                     ls="",
                     color=individual_color,
-                    label="source/evaluation split",
+                    label="threshold-selection/test split",
                 ),
                 plt.Line2D(
                     [],
@@ -586,7 +589,7 @@ def plot_source_coverage(summary: dict[str, Any], out: Path) -> None:
                     ls="",
                     markerfacecolor="white",
                     markeredgecolor=summary_color,
-                    label="equal-task summary",
+                    label="equal-test-task average",
                 ),
             ],
             loc="lower center",

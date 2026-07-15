@@ -95,7 +95,7 @@
 \date{July 2026}
 \hypersetup{
   pdftitle={Action-Conditioned Predictive Diagnostics for JEPA World Models},
-  pdfkeywords={JEPA world models, predictive stability, action-conditioned diagnostics, cross-task calibration, visual corruption}
+  pdfkeywords={JEPA world models, predictive stability, action-conditioned diagnostics, cross-task screening, visual corruption}
 }
 
 \begin{document}
@@ -119,14 +119,16 @@ Pass Rate (SMPR) tests whether pairs with different logged task states remain
 separated. Across four LeWM control tasks, eight-step ACPC under the recorded
 actions predicts perturbation-induced error changes with $51.3\pm3.5\%$
 lower cross-validated MAE than the strongest of three same-horizon controls
-with destroyed action information. ACPC also improves cross-task prediction
-of CEM cost movement and decision regret. ATR--SMPR thresholds calibrated on
-source tasks screen checkpoints from tasks excluded from calibration, order
+with destroyed action information. Candidate-specific ACPC also improves
+cross-task prediction of CEM selection regret: cross-task test MAE
+decreases by $15.2\pm2.0\%$, with an improvement in all 12 task--run
+evaluations. ATR--SMPR thresholds chosen on some tasks screen checkpoints
+from tasks excluded from threshold selection, order
 checkpoint pairs correctly under blur and resize at the tested severities,
 and apply to PLDM after model-family recalibration.
 
 \smallskip
-\noindent\textbf{Keywords:} visual world models; predictive stability; action-conditioned diagnostics; calibration transfer; visual corruption.
+\noindent\textbf{Keywords:} visual world models; predictive stability; action-conditioned diagnostics; cross-task screening; visual corruption.
 \end{abstract}
 
 \smallskip
@@ -178,13 +180,13 @@ action-relevant distinction. We combine ATR and SMPR into a calibrated score
 for screening frozen checkpoints. ACPC is an evaluation tool, not a training
 objective.
 
-We evaluate this diagnostic on LeWM~\cite{maes2026lewm} across TwoRoom, PushT, Reacher, and Cube, using Gaussian observation noise for calibration. On the unaugmented checkpoints, eight-step ACPC under the recorded actions predicts the perturbation-induced change in prediction error about $51\%$ better, in cross-validated MAE, than the strongest control with the same rollout length but destroyed action information (\Cref{sec:exp-target-aligned}). ACPC computed along planner candidates consistently improves prediction of CEM decision regret (\Cref{sec:exp-planner}). Thresholds selected on source tasks screen checkpoints from tasks excluded from calibration with balanced accuracy $0.86$--$0.90$ across all cross-task calibration splits (\Cref{sec:exp-frozen-external}), and the calibrated score orders checkpoint pairs correctly under blur and resize at the tested severities (\Cref{sec:exp-cross-stressor}). The same analysis applies to PLDM after model-family recalibration (\Cref{sec:exp-pldm-portability}).
+We evaluate this diagnostic on LeWM~\cite{maes2026lewm} across TwoRoom, PushT, Reacher, and Cube, using Gaussian observation noise for calibration. On the unaugmented checkpoints, eight-step ACPC under the recorded actions predicts the perturbation-induced change in prediction error about $51\%$ better, in cross-validated MAE, than the strongest control with the same rollout length but destroyed action information (\Cref{sec:exp-target-aligned}). ACPC computed along planner candidates consistently improves prediction of CEM selection regret (\Cref{sec:exp-planner}). Thresholds chosen on some tasks screen checkpoints from tasks excluded from threshold selection with balanced accuracy $0.86$--$0.90$ across all cross-task partitions (\Cref{sec:exp-frozen-external}), and the calibrated score orders checkpoint pairs correctly under blur and resize at the tested severities (\Cref{sec:exp-cross-stressor}). The same analysis applies to PLDM after model-family recalibration (\Cref{sec:exp-pldm-portability}).
 
 The contributions are:
 \begin{enumerate}[leftmargin=1.4em]
   \item \textbf{A paired-rollout diagnostic} (\Cref{sec:acpc}). ACPC measures how same-state visual changes propagate through action-conditioned predictions; ATR summarizes the checkpoint-level radius, and SMPR guards against constant-representation collapse.
   \item \textbf{Exact links to prediction and planning quantities} (\Cref{prop:target-free-error-drift,prop:exact-cost-certificate}). Samplewise inequalities connect rollout disagreement to common-future error drift and to squared latent goal-cost movement.
-  \item \textbf{Controlled evidence beyond the calibration tasks} (\Cref{sec:exp}). Experiments show that ACPC predicts perturbation-induced error changes and CEM decision regret, and that calibrated thresholds transfer to tasks excluded from calibration, to blur and resize, and to a second model family.
+  \item \textbf{Controlled evidence beyond threshold-selection tasks} (\Cref{sec:exp}). Experiments show that ACPC predicts perturbation-induced error changes and CEM selection regret, that thresholds selected on some tasks can screen checkpoints from other tasks, and that the diagnostic can be evaluated under blur, resize, and a second model family.
 \end{enumerate}
 \section{Related Work}\label{sec:related}
 
@@ -209,9 +211,10 @@ predictor directly instead of inferring its behavior from encoder geometry.
 
 ACPC contributes a complementary paired-view test. It holds the action
 sequence fixed and measures how much a state-preserving visual change alters
-the predicted trajectory. We then relate this change to prediction-error
-drift against a common observed future, cost movement within a fixed candidate
-pool, and adaptive-CEM decision regret. For checkpoint screening, ATR
+the predicted trajectory. We relate this change theoretically to
+prediction-error drift and fixed-pool candidate-cost movement, and test
+empirically whether it helps predict adaptive-CEM selection regret. For
+checkpoint screening, ATR
 summarizes visual sensitivity and SMPR tests separation on selected task-state
 coordinates. We calibrate their numerical thresholds separately within each
 model family.
@@ -435,7 +438,7 @@ b_j=r_j\bigl(\|x_j-g\|_2+\|\tilde x_j-g\|_2\bigr).
 Then every candidate satisfies $|\tilde C_j-C_j|\leq b_j$.
 
 Let $w$ and $\tilde w$ be the clean and perturbed winners of the same pool.
-The clean-history decision regret obeys
+The clean-reference selection regret obeys
 \begin{equation}
 0\leq C_{\tilde w}-C_w\leq b_{\tilde w}+b_w.
 \label{eq:fixed-pool-regret-bound}
@@ -479,8 +482,7 @@ pools, proposals, and final actions remain aligned by induction.
 
 The guarantee stops at the first iteration for which the elite condition
 fails. It concerns candidate selection and model cost under paired planner
-evaluations; it is not a statement about simulator return. Appendix~\ref{sec:appendix-fixed-pool-details}
-specifies the fixed-pool and adaptive-CEM evaluation contract.
+evaluations; it is not a statement about simulator return.
 
 \subsection{Checkpoint-level radius and proxy separation}\label{sec:acpc-radius-margin}
 
@@ -635,7 +637,8 @@ S_{\mathcal F,\upsilon}(\theta;\theta_0)
 The score satisfies $S\geq0$ exactly when both conditions pass: relative ATR
 is at most $t_R$, and SMPR is at least $t_M$. No task outcome is needed to score
 a checkpoint once the thresholds are fixed. Planning success rates are used
-only to select thresholds on source tasks and evaluate them on other tasks.
+only to select thresholds on threshold-selection tasks and evaluate them on
+test tasks.
 We calibrate thresholds separately for each model family; the equations do not
 imply that architectures share numerical thresholds.
 
@@ -654,9 +657,9 @@ robustness label to either checkpoint.
 \Cref{tab:acpc-object-guide} summarizes the chain. The prediction experiment
 (\Cref{sec:exp-target-aligned}) evaluates whether ACPC is informative about
 the error drift bounded by \Cref{prop:target-free-error-drift}; the CEM
-experiment (\Cref{sec:exp-planner}) analyzes the candidate-cost and selection
-quantities in \Cref{prop:exact-cost-certificate,cor:adaptive-cem-alignment};
-and the cross-task, PLDM, and blur/resize analyses
+experiment (\Cref{sec:exp-planner}) asks whether candidate-specific ACPC helps
+predict adaptive-CEM selection regret; and the cross-task, PLDM, and
+blur/resize analyses
 (\Cref{sec:exp-frozen-external,sec:exp-pldm-portability,sec:exp-cross-stressor})
 evaluate the calibrated ATR--SMPR score. These are related but distinct
 empirical claims.
@@ -673,7 +676,7 @@ Object & Plain-language meaning & Empirical role \\
 \midrule
 Local $r/\mathrm{NN}$ and ball separation & Size of a visual perturbation cloud relative to nearby clean representations. & PushT geometry case study \\
 ACPC & Distance between the clean and perturbed predicted futures of one history under shared actions. & Prediction and planner analyses \\
-$b_j$ & Upper bound on how far candidate $j$'s squared goal cost can move. & Fixed-pool planner audit \\
+$b_j$ & Upper bound on how far candidate $j$'s squared goal cost can move. & Planner cost bound \\
 $\mathrm{ATR}^{\mathrm{raw}}$ & q90 radius of the normalized same-state rollout tube. & Tube used by SMPR \\
 $D_i^{\mathrm{diff}}$ & Rollout distance to a nearby state with a different coordinate-proxy label. & Proxy-separation test \\
 SMPR & Fraction of proxy-different pairs that stay outside the tube by the margin. & Collapse guard \\
@@ -688,7 +691,7 @@ $\Delta S$ & Change in the calibrated score relative to a reference checkpoint. 
 We first state the common evaluation protocol. We then begin with a
 descriptive local-geometry case study that motivates the controlled ACPC
 comparison, before evaluating checkpoint-level behavior, prediction-error
-drift, planning consequences, and transfer.
+drift, planning consequences, and cross-task screening.
 
 \subsection{Evaluation setup}\label{sec:bg}
 
@@ -740,9 +743,9 @@ the best checkpoint at evaluation noise $\sigma=0.08$, while losing no more
 than five percentage points on clean observations. Both constants were fixed
 a priori. We select $(t_R,t_M)$ on every nonempty proper subset of the four
 tasks and apply the thresholds unchanged to the remaining tasks. The one-,
-two-, and three-source-task settings produce $4+6+4=14$ directional
-source/evaluation partitions. Metrics first average training runs within each
-evaluation task and then weight tasks equally; checkpoint rows are never
+two-, and three-task selection settings produce $4+6+4=14$ directional
+threshold-selection/test partitions. Metrics first average training runs
+within each test task and then weight tasks equally; checkpoint rows are never
 treated as independent replicates. Success rates are used to select and
 evaluate thresholds, but they are not inputs to ACPC, ATR, or SMPR.
 
@@ -761,10 +764,10 @@ We begin with the descriptive geometric audit introduced in
 \Cref{sec:local-geometry-audit}. Its purpose is to visualize the phenomenon
 that motivates ACPC, not to establish task-level robustness. Using a fixed
 PushT case study, we ask whether augmentation makes perturbed views of the
-same history more compact relative to other clean histories. We compare LeWM
-training run 3072 before and after full-sequence Gaussian augmentation with
-$\stdmax{}=0.08$. For each of 128 logged histories, we generate one clean
-view and 18 perturbed views---six
+same history more compact relative to other clean histories. We compare a
+matched pair of LeWM checkpoints: one unaugmented and one trained with
+full-sequence Gaussian augmentation at $\stdmax{}=0.08$. For each of 128
+logged histories, we generate one clean view and 18 perturbed views---six
 draws at each probe standard deviation in $\{0.01,0.04,0.08\}$. We compare the
 encoder output with the representation after eight autoregressive rollout
 steps. All ratios and counts use the original 192-dimensional projected
@@ -777,8 +780,8 @@ qualitative only.
 \centering
 \includegraphics[width=0.94\linewidth]{fig_local_geometry_highd_audit.pdf}
 \caption{Descriptive local-geometry case study motivating the controlled ACPC
-comparison. The fixed PushT case study uses LeWM training run 3072. Rows
-compare the unaugmented and $\stdmax{}=0.08$ Gaussian-augmented checkpoints;
+comparison. Rows compare a matched pair of PushT checkpoints: one unaugmented
+and one trained with Gaussian augmentation at $\stdmax{}=0.08$;
 columns show the encoder output and the representation after eight
 autoregressive rollout steps. Each color denotes one of 16 highlighted
 histories: the large black-rimmed marker is its clean anchor, smaller
@@ -915,140 +918,111 @@ and selected controls. \textbf{Takeaway:} eight-step ACPC carries information
 about the bounded error change that neither encoder shift, one-step ACPC, nor
 any same-horizon destroyed-action control provides.
 
-\subsection{Relating ACPC to CEM cost and decision changes}\label{sec:exp-planner}
+\subsection{Predicting CEM selection regret across tasks}\label{sec:exp-planner}
 
-We next ask whether ACPC indicates how much a visual perturbation changes CEM
-candidate costs and decisions. We answer in two steps. First, we verify the
-deterministic bounds in \Cref{prop:exact-cost-certificate} using paired clean
-and perturbed candidate pools. Second, we test whether ACPC improves the
-prediction of observed cost and decision changes beyond simple baseline
-features. Both analyses use identical candidate pools and compare the
-unaugmented checkpoint with the checkpoint trained at $\stdmax{}=0.08$.
-
-The broad analysis uses 100 histories per task and training run with a reduced
-CEM budget. A separate confirmation uses the same fixed set of 16 histories
-per task with the deployed CEM budget. For each candidate, we compute
-five-step ACPC under that candidate's own action sequence, matching the
-evaluated planning horizon. \Cref{sec:appendix-fixed-pool-details} reports the
-complete candidate, elite, and iteration counts.
-
-\paragraph{Verifying the deterministic bounds.}
-The reduced-budget analysis contains 9{,}600 records (100 histories $\times$
-four tasks $\times$ three runs $\times$ two training conditions $\times$ four
-perturbation severities). The candidate-cost bound has no numerical
-violations. Here, the \emph{winner} is the lowest-cost candidate, and the
-\emph{elite set} contains the candidates used for the next CEM update. The
-winner and elite-set certificates never predict stability when the
-corresponding selection changes. Identity probes, which duplicate the clean
-history at zero perturbation severity, give exactly zero five-step ACPC and
-zero RMS change in the first planned action. Whenever the elite-set
-certificate holds, the clean and perturbed CEM updates also remain aligned,
-as \Cref{cor:adaptive-cem-alignment} requires. These checks validate the
-paired model-cost calculation; they are not guarantees about environment
+A prediction change matters to planning only if it affects the plan that CEM
+selects. We therefore test one downstream quantity: \emph{clean-reference
+selection regret}.
+Let $\mathbf a$ and $\tilde{\mathbf a}$ be the final plans selected from the
+clean and perturbed histories, respectively. We measure
+$[C_h(\tilde{\mathbf a})-C_h(\mathbf a)]_+$: the extra clean-history model
+cost incurred by selecting the perturbed-history plan. We refer to this
+single-decision quantity as \emph{CEM selection regret}. It uses the model's
+squared latent goal cost; it is neither cumulative regret nor simulator
 return.
 
-\paragraph{Predicting cost and decision changes.}
-We next ask whether five-step ACPC adds information beyond a baseline that
-already contains perturbation severity, training condition, one-step
-candidate-specific ACPC, and the clean cost gap between the best and
-second-best candidates. The three prediction targets are:
-\begin{itemize}[leftmargin=1.4em]
-  \item the \emph{largest candidate-cost change}: the maximum absolute cost
-  change among candidates shared by the clean and perturbed pools;
-  \item \emph{decision regret}: the additional clean-history model cost of
-  the plan selected from the perturbed history, relative to the plan selected
-  from the clean history; and
-  \item the \emph{first-action change}: the root-mean-square (RMS) difference
-  between the first actions of the final clean and perturbed plans---the
-  actions that MPC would execute.
-\end{itemize}
-Decision regret uses the model's squared latent goal cost, not simulator
-return. For each training run, we fit a ridge model on three tasks and
-evaluate it on the remaining task, repeating the procedure for all four
-choices of evaluation task. \Cref{tab:acpc-planner-increment} reports how much
-adding five-step ACPC reduces prediction MAE; \Cref{fig:acpc-planner-evidence}
-shows the paired errors.
+We run the clean and perturbed CEM branches from the same proposal with common
+random numbers, while allowing each branch to update from its own elites. For
+every candidate, we compute one- and five-step ACPC along that candidate's
+action sequence, then take the 90th percentile (q90) across the candidate
+pool. The five-step score matches the model-prediction horizon used by the
+planner. We compare two ridge regressions. The baseline uses perturbation
+severity, training condition, candidate-level one-step ACPC q90, and the clean
+gap between the best and second-best candidates. The expanded model adds
+candidate-level five-step ACPC q90. Within each training run, both regressions
+are fitted on three tasks and tested on the remaining task, rotating which
+task is excluded from fitting. We evaluate MAE on
+$\log(1+\text{selection regret})$; Appendix~\ref{sec:appendix-planner-protocol}
+gives the CEM budget and sample counts.
 
-\input{tables/table_acpc_planner_increment}
-
-\begin{figure}[!t]
+\begin{figure}[H]
 \centering
-\includegraphics[width=\linewidth]{fig_acpc_planner_evidence.pdf}
-\caption{Prediction MAE before and after adding candidate-specific five-step
-ACPC; lower is better. For each point pair, the model is fitted on three tasks
-and evaluated on the remaining task for one training run; thin lines connect
-the two errors from that same evaluation. The thick black pair averages the
-four evaluation tasks equally within each run and then averages the three
-runs. Annotations give the corresponding relative MAE reduction. Errors are
-computed on the $\log(1+\mathrm{target})$ scale. The first-action target is
-not shown because its improvement is negligible.}
+\includegraphics[width=0.76\linewidth]{fig_acpc_planner_evidence.pdf}
+\caption{Adding planner-horizon ACPC improves prediction of adaptive-CEM
+selection regret on tasks excluded from regression fitting. Each colored line
+connects the baseline and expanded-model errors for one test task in one
+training run; the thick black line is the equal-task average across the three
+runs. The added feature is candidate-specific ACPC q90 at the planner's
+five-step prediction horizon. The baseline already contains severity,
+training condition, one-step ACPC q90, and the clean best--second-best cost
+gap. MAE is computed on
+$\log(1+\text{selection regret})$.}
 \label{fig:acpc-planner-evidence}
 \end{figure}
 
-Five-step ACPC gives the clearest improvement for adaptive-CEM decision
-regret: prediction MAE decreases by $15.2\pm2.0\%$ (mean $\pm$ standard
-deviation across training runs), with an improvement in all 12 task--run
-evaluations. For the largest candidate-cost change, MAE decreases by
-$7.9\pm1.4\%$, with improvements in 8 of 12 task--run evaluations and in the
-task-level mean for three of four tasks. The $1.1\pm0.5\%$ reduction for the
-first-action change is negligible and does not support an incremental claim.
-In all three analyses, five-step ACPC has a higher Spearman rank correlation
-with the target than one-step ACPC in every task--run evaluation.
-
-\paragraph{Effect of augmentation on CEM decisions.}
-At perturbation severity 0.08, the task-level mean rate of retaining the best
-fixed-pool candidate is $0.92$--$0.96$ after Gaussian-augmented training,
-compared with $0.02$--$0.13$ for the unaugmented checkpoints. Mean positive
-decision regret is also lower with augmentation in every task--run cell:
-$3.64\pm0.68$ versus $227.04\pm16.92$ at reduced budget and $2.65\pm1.43$
-versus $244.89\pm27.08$ at full budget. Each value first averages histories
-and the four tasks equally within a training run, then reports the mean and
-standard deviation across the three runs.
-Regret is measured in the model's squared latent goal cost, not simulator
-return, and latent-cost scales differ by task, so these contrasts are
-descriptive; \Cref{sec:appendix-fixed-pool-details} gives the task-level
-values. \textbf{Takeaway:} the deterministic certificates hold exactly, and
-candidate-specific ACPC adds cross-task predictive information about the
-model-cost consequences of a visual perturbation, most clearly for decision
-regret.
+Adding planner-horizon ACPC lowers cross-task test MAE by
+$15.2\pm2.0\%$ (mean $\pm$ sample standard deviation across training runs).
+The error decreases in all 12 task--run test cases
+(\Cref{fig:acpc-planner-evidence}). Because the baseline already includes
+severity, training condition, one-step ACPC, and the clean candidate margin,
+this gain shows that the planner-horizon rollout carries additional cross-task
+predictive information. The comparison does not separate action conditioning
+from horizon length; it tests the incremental value of the configured
+planner-horizon ACPC feature.
+\textbf{Takeaway:} candidate-specific ACPC helps predict the clean-model cost
+of a perturbation-induced CEM selection change across tasks. It does not show
+that ACPC changes the selected action or improves environment performance.
 
 
-\subsection{Cross-task threshold transfer}\label{sec:exp-frozen-external}
+\subsection{Screening checkpoints with thresholds chosen on other tasks}\label{sec:exp-frozen-external}
 
-Can thresholds calibrated on some tasks screen checkpoints from unseen tasks?
-We treat the calibration tasks as \emph{source tasks} and the held-out tasks
-as \emph{evaluation tasks}. Thresholds are selected on every nonempty proper
-subset of the four tasks and applied unchanged to the remaining tasks. This
-produces the 14 directional partitions described in \Cref{sec:bg}
-(\Cref{fig:cross-task-source-coverage}). A checkpoint is positive if it meets
-the success-rate criterion. We also report \emph{onset error}: the difference,
-in augmentation grid steps, between the first level accepted by the diagnostic
-and the first level that meets the criterion.
+How closely can thresholds chosen from some tasks reproduce the recovery
+labels on tasks that did not influence that choice? We call the former
+\emph{threshold-selection tasks} and the latter \emph{test tasks}. Thresholds
+are selected on every nonempty proper subset of the four tasks and applied
+unchanged to the remaining tasks. This produces the 14 directional
+partitions described in \Cref{sec:bg} (\Cref{fig:cross-task-source-coverage}).
+A checkpoint's recovery label is positive when it meets the success-rate
+criterion in \Cref{sec:bg}. Balanced accuracy measures agreement with these
+labels. The \emph{recovery-onset mismatch} is the absolute difference, in
+training-augmentation grid levels, between the first checkpoint accepted by
+the diagnostic and the first checkpoint that meets the success-rate
+criterion. Thus, it directly measures whether the diagnostic locates recovery
+within a nearby range rather than requiring an identical boundary.
 
-\begin{figure}[!t]
+This evaluation concerns the joint ATR--SMPR checkpoint screen. It is not a
+standalone test for representation collapse: SMPR guards only against the
+constant-representation failure mode on the supplied state-coordinate
+proxies, while ATR tests sensitivity to same-state visual changes.
+
+\begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{fig_cross_task_atr_smpr_source_coverage_v1.pdf}
-\caption{Cross-task transfer of ATR--SMPR thresholds over all 14
-source/evaluation partitions; a checkpoint passes when relative ATR $\le t_R$
-and SMPR $\ge t_M$. (a) Balanced accuracy on checkpoints from evaluation
-tasks (chance is $0.5$). (b) Absolute onset error in Gaussian-augmentation
-grid steps (one step is $0.01$ in $\stdmax{}$). Gray points are individual
-partitions; diamonds are equal-task summaries per number of source tasks.}
+\caption{Reliability of checkpoint screening when ATR--SMPR thresholds are
+chosen on other tasks. A checkpoint passes when relative ATR $\le t_R$ and
+SMPR $\ge t_M$. (a) Agreement with recovery labels on test tasks, measured by
+balanced accuracy (chance is $0.5$). (b) Distance between the diagnostic and
+behavioral recovery onsets, measured in training-augmentation grid levels
+(one level is $0.01$ in $\stdmax{}$). Gray points are individual
+threshold-selection/test partitions; diamonds average test tasks equally for
+each number of threshold-selection tasks.}
 \label{fig:cross-task-source-coverage}
 \end{figure}
 
 Balanced accuracy is $0.855$, $0.900$, and $0.900$ when thresholds are
-selected from one, two, and three source tasks, respectively, with
+selected from one, two, and three threshold-selection tasks, respectively, with
 precision/recall of $0.910/0.854$, $0.913/0.953$, and $0.913/0.953$. Mean
-absolute onset errors are $1.1$, $0.5$, and $0.5$ grid steps; the largest
-individual partition--task--run errors are $5$, $1$, and $1$ steps. With one
-source task, balanced accuracy ranges from $0.723$ to $0.913$ across the four
-possible sources---the weakest single source is Reacher
+recovery-onset mismatches are $1.1$, $0.5$, and $0.5$ grid levels; the largest
+individual partition--task--run mismatches are $5$, $1$, and $1$ levels. With one
+threshold-selection task, balanced accuracy ranges from $0.723$ to $0.913$ across the four
+possible choices---the weakest single choice is Reacher
 (\Cref{tab:cross-task-all-subsets})---so calibration depends on task
-composition, while two and three source tasks perform similarly on average in
-this four-task study. \textbf{Takeaway:} the threshold-selection
-\emph{procedure} transfers across these tasks; a single universal threshold
-value does not. \Cref{sec:appendix-cross-task} reports every partition.
+composition. With two or three threshold-selection tasks, the diagnostic
+locates recovery within $0.5$ grid levels on average and at most one level in
+every test case. \textbf{Takeaway:} thresholds chosen on other tasks provide
+an approximate checkpoint screen over these four tasks, not evidence for one
+exact cross-task boundary, a universal threshold, or a general collapse detector.
+\Cref{sec:appendix-cross-task} reports every partition.
 \FloatBarrier
 
 \subsection{Application to PLDM}
@@ -1060,15 +1034,16 @@ sweep with the same paired histories, eight-step rollouts, ATR normalization,
 SMPR guard, success-rate criterion, and threshold-selection procedure. The
 analysis uses PLDM's encoder and predictor and does not depend on LeWM layers
 or training losses. Each setting has one training run, so we cannot estimate
-run-to-run variability. For each PLDM evaluation task, we select thresholds on
+run-to-run variability. For each PLDM test task, we select thresholds on
 the other three PLDM tasks and then fix them for its nine checkpoints.
 
-Pooling all 36 task--checkpoint evaluations (four evaluation tasks $\times$
+Pooling all 36 task--checkpoint evaluations (four test tasks $\times$
 nine checkpoints) gives $0.836$ balanced accuracy, $0.789$ precision, and
 $0.882$ recall. Task-level balanced accuracies are $0.938$, $0.750$, $0.500$,
-and $0.875$ for TwoRoom, PushT, Reacher, and Cube: on Reacher the transferred
-thresholds perform at chance. After normalizing ATR within each PLDM task,
-applying the LeWM thresholds selected on the corresponding three source tasks
+and $0.875$ for TwoRoom, PushT, Reacher, and Cube: on Reacher the thresholds
+chosen on the other tasks perform at chance. After normalizing ATR within each
+PLDM task, applying the LeWM thresholds selected on the corresponding three
+threshold-selection tasks
 gives the same aggregate values ($0.836$/$0.789$/$0.882$).
 \textbf{Takeaway:} the equations and evaluation procedure carry over to a
 second joint-embedding architecture, but numerical calibration remains
@@ -1121,27 +1096,25 @@ actions predicts the error drift bounded by
 \Cref{prop:target-free-error-drift} beyond encoder shift, one-step ACPC, and
 the strongest same-horizon destroyed-action control
 (\Cref{sec:exp-target-aligned}). Because every control also uses eight rollout
-steps, rollout length alone cannot explain this gain. Second, the CEM
-experiment verifies the deterministic cost bound and shows that
-candidate-specific ACPC adds cross-task information about decision regret
-(\Cref{sec:exp-planner}). The gain is smaller for maximum cost movement and
-absent for the first action. Third, the threshold-selection procedure---not a
-single numerical threshold---transfers across tasks, to blur and resize, and
-to PLDM after per-family recalibration
+steps, rollout length alone cannot explain this gain. Second, candidate-level
+five-step ACPC lowers cross-task test error for CEM selection regret
+beyond severity, training condition, one-step ACPC, and the clean candidate
+margin, with an improvement in all 12 task--run evaluations
+(\Cref{sec:exp-planner}). Third, thresholds chosen on some tasks retain useful
+checkpoint-screening accuracy on the other tasks; the same diagnostic is also
+evaluated under blur and resize and on PLDM after per-family recalibration
 (\Cref{sec:exp-frozen-external,sec:exp-pldm-portability,sec:exp-cross-stressor}).
 
 \paragraph{Scope and limitations.}
-The results have several limits. The planner claims concern model costs and
-candidate selection under paired evaluations, not environment success. The
-adaptive-CEM guarantee also requires the candidate pools to remain aligned and
+The results have several limits. The planner experiment predicts a
+clean-model cost under paired evaluations; it does not show that using ACPC
+changes the planner or improves environment success. The theoretical
+adaptive-CEM guarantee requires the candidate pools to remain aligned and
 stops at the first failed elite certificate. SMPR tests only the declared
 coordinate proxies, so a model can still make stable but incorrect
 predictions. Three training runs per LeWM task, and one run per PLDM setting,
-support consistency checks but not precise variability estimates. The
-full-budget CEM analysis reuses 16 histories per task. We did not collect
-matched runs without the diagnostic computation and therefore cannot estimate
-its incremental wall-clock overhead. Finally, blur and resize are each tested
-at one severity, and the one-source results in
+support consistency checks but not precise variability estimates. Finally,
+blur and resize are each tested at one severity, and the one-source results in
 \Cref{sec:exp-frozen-external} show that calibration depends on source-task
 composition.
 
@@ -1160,9 +1133,10 @@ cost. ATR summarizes the perturbation sensitivity of a checkpoint, while
 SMPR rejects constant-representation collapse on the tested state-coordinate
 proxies. Across four tasks, ACPC under recorded actions predicts
 perturbation-induced error changes beyond one-step and destroyed-action
-controls and tracks changes in CEM costs and decisions. The calibrated
-ATR--SMPR thresholds transfer to tasks excluded from calibration, to blur and
-resize, and---after model-family recalibration---to PLDM. ACPC therefore
+controls and improves cross-task prediction of CEM selection regret. The
+calibrated ATR--SMPR screen approximately reproduces recovery labels on tasks
+excluded from threshold selection. The same diagnostic can also be evaluated
+under blur and resize and---after model-family recalibration---on PLDM. ACPC therefore
 provides a low-cost audit before deploying a frozen checkpoint behind a
 planner: using only the model and logged data, it detects visual sensitivity
 that encoder-level checks can miss.
@@ -1330,11 +1304,12 @@ Cube & \code{observation} (28) & For standardized observation $\bar o$, let $r=\
 \paragraph{Threshold grids.}
 For cross-task evaluation, candidate thresholds are
 $t_R\in\{0.05,0.075,0.10,0.15,0.20,0.30\}$ for task-relative ATR and
-$t_M\in\{0.80,0.85,0.90,0.95\}$ for SMPR. Within each source-task subset, the
-selection criterion lexicographically minimizes mean absolute onset error,
+$t_M\in\{0.80,0.85,0.90,0.95\}$ for SMPR. Within each threshold-selection
+task subset, the selection criterion lexicographically minimizes mean absolute
+recovery-onset mismatch,
 false-early and false-late counts, then maximizes balanced accuracy. The
-selected pair is applied without modification to every evaluation task. No
-evaluation-task label or blur/resize outcome enters threshold selection.
+selected pair is applied without modification to every test task. No
+test-task label or blur/resize outcome enters threshold selection.
 
 \paragraph{Reproducibility.}
 The scripts documented in \codebrk{paper1/scripts/README.md} rebuild all
@@ -1416,44 +1391,29 @@ performance.}
 \label{fig:local-gaussian-sensitivity}
 \end{figure}
 
-\section{Fixed-Pool Candidate Stability}\label{sec:appendix-fixed-pool-details}
+\section{Adaptive-CEM Selection-Regret Protocol}\label{sec:appendix-planner-protocol}
 
-The CEM analysis does not use task-success labels. It compares checkpoints
-unaugmented and $\stdmax{}=0.08$ checkpoints on all four tasks.
-Fixed-pool shards capture the ordered initial proposal, evaluate the nominal
-and perturbed histories through one shared cost path, and record exact
-same-winner and elite-set events for 100 histories per task, run, and training
-condition at severities $0,0.02,0.05,0.08$. Adaptive shards use a common
-initial proposal and common random numbers. Proposal alignment is asserted
-only while all preceding elite updates remain certified.
+The selection-regret analysis uses no task-success labels. It evaluates the
+unaugmented and $\stdmax{}=0.08$ checkpoints on 100 histories per task,
+training run, and training condition at perturbation severities
+$0.02,0.05,0.08$. Each CEM branch uses $K=64$ candidates, eight elites, eight
+iterations, and a five-step model-prediction horizon. The clean and perturbed
+branches start from the same proposal and use common random numbers, but each
+branch updates its proposal from its own elites.
 
-For nominal final plan $\mathbf a$ and perturbed plan $\tilde{\mathbf a}$, the reported positive clean-history regret is
+For every candidate, we compute ACPC along that candidate's action sequence
+and summarize the pool by its q90 at horizons one and five. For clean plan
+$\mathbf a$ and perturbed-history plan $\tilde{\mathbf a}$, the prediction
+target is the clean-reference selection regret
 \[
 \bigl[C_h(\tilde{\mathbf a})-C_h(\mathbf a)\bigr]_+.
 \]
-It measures decision degradation in the model's latent goal cost, not an
-environment outcome. The RMS change in the first planned action is reported
-separately. The full-budget
-evaluation keeps the same definitions but uses 16 fixed histories per task
-shared across training conditions and runs, $K=300$, top-30 elites, and 30 CEM
-steps. Whole-shard runtimes and forward-call counts are retained for
-provenance, but without matched timing runs that omit the diagnostic they do
-not estimate incremental overhead.
-
-Across 9,600 joined reduced-budget rows there are zero
-squared-distance-bound violations, zero false top-1 certificates, and zero
-false elite certificates. Identity probes have zero five-step displacement
-and zero RMS change in the first planned action; all identity updates remain
-aligned. These checks
-establish implementation soundness and are not additional independent
-statistical samples.
-
-At severity $0.08$, the sufficient top-1 certificate covers $10$--$70\%$ of
-histories from checkpoints trained with augmentation across task--run blocks
-(and none from the unaugmented checkpoints); elite-set coverage
-is $0$--$30\%$ with augmentation. Coverage is lower than realized stability
-because these conditions are sufficient but not necessary.
-
-\input{tables/table_acpc_planner_absolute}
+Within each training run, ridge regressions are fitted on three tasks and
+evaluated on the fourth. MAE is computed on the log-transformed target and
+averaged equally across the four tasks excluded from fitting in turn. The
+reported relative MAE decrease is computed within each run before taking the
+mean and sample standard deviation across the three runs. This protocol
+evaluates prediction of a clean-model cost; it does not evaluate simulator
+return.
 
 \end{document}

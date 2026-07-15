@@ -83,98 +83,101 @@ def _group_index(summary: dict[str, Any]) -> dict[tuple[str, str, float], dict[s
 
 
 def plot_planner(summary: dict[str, Any], out: Path) -> None:
-    analyses = summary["predeclared_incremental_analyses"]
+    analysis = summary["predeclared_incremental_analyses"]["positive_clean_regret"]
     seeds = tuple(int(seed) for seed in summary["training_seeds"])
-    response_specs = (
-        ("cost_drift", "(a) Maximum fixed-pool cost movement"),
-        ("positive_clean_regret", "(b) Adaptive-CEM decision regret"),
-    )
     seed_offsets = {
         seed: offset for seed, offset in zip(seeds, (-0.045, 0.0, 0.045))
     }
     out.parent.mkdir(parents=True, exist_ok=True)
     with plt.rc_context(STYLE):
-        fig, axes = plt.subplots(1, 2, figsize=(6.8, 3.15))
-        for ax, (key, title) in zip(axes, response_specs):
-            analysis = analyses[key]
-            for task in TASKS:
-                color = TASK_COLORS[task]
-                marker = TASK_MARKERS[task]
-                for seed in seeds:
-                    task_result = analysis["per_seed"][str(seed)]["lobo_ridge"][
-                        "per_task"
-                    ][task]
-                    offset = seed_offsets[seed]
-                    xs = [offset, 1.0 + offset]
-                    ys = [
-                        task_result["baseline_log1p_mae"],
-                        task_result["plus_h5_log1p_mae"],
-                    ]
-                    ax.plot(xs, ys, color=color, lw=0.75, alpha=0.42, zorder=1)
-                    ax.scatter(
-                        xs,
-                        ys,
-                        marker=marker,
-                        s=22,
-                        facecolor=color,
-                        edgecolor="white",
-                        linewidth=0.45,
-                        alpha=0.78,
-                        zorder=2,
-                    )
+        fig, ax = plt.subplots(figsize=(5.2, 3.1))
+        for task in TASKS:
+            color = TASK_COLORS[task]
+            marker = TASK_MARKERS[task]
+            for seed in seeds:
+                task_result = analysis["per_seed"][str(seed)]["lobo_ridge"][
+                    "per_task"
+                ][task]
+                offset = seed_offsets[seed]
+                xs = [offset, 1.0 + offset]
+                ys = [
+                    task_result["baseline_log1p_mae"],
+                    task_result["plus_h5_log1p_mae"],
+                ]
+                ax.plot(xs, ys, color=color, lw=0.8, alpha=0.45, zorder=1)
+                ax.scatter(
+                    xs,
+                    ys,
+                    marker=marker,
+                    s=24,
+                    facecolor=color,
+                    edgecolor="white",
+                    linewidth=0.45,
+                    alpha=0.82,
+                    zorder=2,
+                )
 
-            base_run_means = [
-                analysis["per_seed"][str(seed)]["lobo_ridge"][
-                    "equal_task_baseline_log1p_mae"
-                ]
-                for seed in seeds
+        base_run_means = [
+            analysis["per_seed"][str(seed)]["lobo_ridge"][
+                "equal_task_baseline_log1p_mae"
             ]
-            h5_run_means = [
-                analysis["per_seed"][str(seed)]["lobo_ridge"][
-                    "equal_task_plus_h5_log1p_mae"
-                ]
-                for seed in seeds
+            for seed in seeds
+        ]
+        h5_run_means = [
+            analysis["per_seed"][str(seed)]["lobo_ridge"][
+                "equal_task_plus_h5_log1p_mae"
             ]
-            equal_task_means = [
-                sum(base_run_means) / len(base_run_means),
-                sum(h5_run_means) / len(h5_run_means),
-            ]
-            ax.plot(
-                [0.0, 1.0],
-                equal_task_means,
-                color="#111111",
-                lw=2.4,
-                marker="D",
-                markersize=5.4,
-                markerfacecolor="white",
-                markeredgecolor="#111111",
-                markeredgewidth=1.1,
-                zorder=4,
-            )
-            reduction = 100.0 * analysis["three_seed_summary"][
-                "relative_mae_reduction_mean"
-            ]
-            ax.text(
-                0.97,
-                0.96,
-                f"Mean decrease: {reduction:.1f}%",
-                transform=ax.transAxes,
-                ha="right",
-                va="top",
-                fontsize=7.2,
-                fontweight="semibold",
-                bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.82, "pad": 1.5},
-            )
-            ax.set_title(title, loc="left", fontweight="semibold")
-            ax.set_xlim(-0.20, 1.20)
-            ax.set_xticks(
-                [0.0, 1.0],
-                [
-                    "Base regression\n(includes 1-step ACPC)",
-                    "+ candidate-level\n5-step ACPC",
-                ],
-            )
-            _polish(ax)
+            for seed in seeds
+        ]
+        equal_task_means = [
+            sum(base_run_means) / len(base_run_means),
+            sum(h5_run_means) / len(h5_run_means),
+        ]
+        ax.plot(
+            [0.0, 1.0],
+            equal_task_means,
+            color="#111111",
+            lw=2.5,
+            marker="D",
+            markersize=5.6,
+            markerfacecolor="white",
+            markeredgecolor="#111111",
+            markeredgewidth=1.1,
+            zorder=4,
+        )
+        aggregate = analysis["three_seed_summary"]
+        reduction = 100.0 * aggregate["relative_mae_reduction_mean"]
+        reduction_sd = 100.0 * aggregate["relative_mae_reduction_sample_sd"]
+        improved = aggregate["task_seed_cells_improved"]
+        total = aggregate["task_seed_cell_count"]
+        ax.text(
+            0.97,
+            0.96,
+            f"{reduction:.1f} ± {reduction_sd:.1f}% lower MAE\n"
+            f"{improved}/{total} cross-task tests improve",
+            transform=ax.transAxes,
+            ha="right",
+            va="top",
+            fontsize=7.5,
+            fontweight="semibold",
+            linespacing=1.25,
+            bbox={
+                "facecolor": "white",
+                "edgecolor": "none",
+                "alpha": 0.84,
+                "pad": 1.8,
+            },
+        )
+        ax.set_xlim(-0.20, 1.20)
+        ax.set_xticks(
+            [0.0, 1.0],
+            [
+                "Baseline factors",
+                "Baseline +\nplanner-horizon ACPC",
+            ],
+        )
+        ax.set_ylabel(r"Cross-task test MAE ($\downarrow$)")
+        _polish(ax)
 
         task_handles = [
             Line2D(
@@ -211,17 +214,11 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
             handlelength=1.5,
             columnspacing=1.2,
         )
-        fig.supylabel(
-            r"Leave-one-task-out MAE ($\downarrow$)",
-            x=0.01,
-            fontsize=8,
-        )
         fig.subplots_adjust(
-            left=0.10,
+            left=0.15,
             right=0.985,
-            bottom=0.19,
-            top=0.83,
-            wspace=0.28,
+            bottom=0.20,
+            top=0.82,
         )
         fig.savefig(out, dpi=240)
         plt.close(fig)
