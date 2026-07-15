@@ -381,7 +381,7 @@ REQUIRED_MAIN_TEXT_SNIPPETS = [
     "adaptive-CEM guarantee requires the candidate pools to remain aligned",
     "The three evaluation seeds measure only within-run variability",
     "We make no blur- or resize-specific adjustment",
-    "exact cross-task boundary, a universal threshold, or a general collapse detector",
+    "not an exact universal boundary or a general collapse detector",
     "it is not an absolute robustness classifier",
     "The t-SNE coordinates and ellipses are qualitative and enter none of these metrics",
     "not an independent statistical success count",
@@ -393,7 +393,6 @@ MAIN_TEXT_FIGURES = {
     "fig_local_geometry_highd_audit.pdf",
     "fig_future_drift_three_seed_v1.pdf",
     "fig_acpc_planner_evidence.pdf",
-    "fig_cross_task_atr_smpr_source_coverage_v1.pdf",
     "fig_cross_stressor_selective_transfer_v1.pdf",
 }
 
@@ -999,9 +998,9 @@ def check_visual_text_structure() -> None:
         "\\subsection{Planning performance under observation noise}",
         "\\subsection{Predicting the perturbation-induced error drift}",
         "\\subsection{Predicting CEM selection regret across tasks}",
-        "\\subsection{Screening checkpoints with thresholds chosen on other tasks}",
+        "\\subsection{A common threshold range across tasks}",
         "\\subsection{Application to PLDM}",
-        "\\subsection{Transfer to blur and resize}",
+        "\\subsection{The common threshold range under blur and resize}",
     )
     for heading in required_headings:
         if heading not in body:
@@ -1109,6 +1108,14 @@ def check_visual_text_structure() -> None:
     sweep_plot = (ROOT / "tools" / "paper1_figs.py").read_text(encoding="utf-8")
     if not re.search(r"plt\.subplots\(1,\s*4,\s*figsize=\(6\.7,\s*2\.45\)", sweep_plot):
         fail("Figure 1 generator must retain the compact native-width four-across layout")
+
+    local_geometry_plot = (ROOT / "tools" / "paper1_local_geometry_highd_figure.py").read_text(encoding="utf-8")
+    if 'panel_letter = chr(ord("a") + panel_index)' not in local_geometry_plot:
+        fail("Figure 1 generator must retain panel labels (a)--(d)")
+
+    full_sweep_dynamics = (ROOT / "paper1" / "scripts" / "plot_full_sweep_diagnostics.py").read_text(encoding="utf-8")
+    if not re.search(r"fig\.add_gridspec\(\s*1,\s*4,", full_sweep_dynamics):
+        fail("Figure 2 generator must retain the one-row four-task layout")
 
     heldout_generator = (ROOT / "paper1" / "scripts" / "heldout_diagnostic_validation.py").read_text(encoding="utf-8")
     if r"\shortstack{mean absolute\\recovery-onset error}" not in heldout_generator:
@@ -3560,7 +3567,6 @@ def check_claim_aligned_three_pillar_evidence() -> None:
     for token in (
         "eq:smpr",
         "fig_future_drift_three_seed_v1.pdf",
-        "fig_cross_task_atr_smpr_source_coverage_v1.pdf",
         "fig_cross_stressor_selective_transfer_v1.pdf",
         "tables/table_cross_task_atr_smpr_all_subsets_v1",
         "tables/table_cross_stressor_all_pairs_v1",
@@ -3570,7 +3576,6 @@ def check_claim_aligned_three_pillar_evidence() -> None:
 
     for rel in (
         "assets/paper1_figs/fig_future_drift_three_seed_v1.pdf",
-        "assets/paper1_figs/fig_cross_task_atr_smpr_source_coverage_v1.pdf",
         "assets/paper1_figs/fig_cross_stressor_selective_transfer_v1.pdf",
     ):
         if (ROOT / rel).stat().st_size < 5_000:

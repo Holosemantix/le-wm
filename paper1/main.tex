@@ -146,27 +146,22 @@ World models support control by predicting how candidate actions change the envi
 For control, whether a visual difference is irrelevant depends on the state and the actions being considered. A background texture can be ignored, whereas a contact pose, doorway state, or object--goal relation may determine which action is useful. Encoder invariance cannot resolve this distinction on its own because a planner does not act directly on the encoder output. It rolls the representation forward under candidate actions and ranks the resulting predictions with a cost. A small encoder discrepancy may grow through this computation, whereas a larger one may contract before it affects the cost. This motivates the central question: after the same action sequence is applied, do clean and perturbed views of one trajectory still produce similar predicted futures? A descriptive PushT case study (\Cref{sec:exp-local-geometry}) shows what is at stake: for an unaugmented checkpoint, the representations of a history's perturbed views spread wider than its distance to the nearest other history, both at the encoder and after prediction, so visual noise entangles distinct states.
 
 Action-Conditioned Predictive Consistency (ACPC) turns the central question
-into a measurement. It predicts forward from clean and perturbed views of the
-same history under the same actions, then measures the distance between the
-two predicted latent trajectories. The score requires neither an observed
-future nor a task outcome. Two exact inequalities connect it to quantities that do. First, when
-both predictions are evaluated against the same logged future, ACPC bounds
-the change in multi-step prediction error. Second, for LeWM's squared latent
-goal cost, it bounds the movement of each candidate cost and provides
-fixed-pool stability certificates based on the clean candidate margins.
-
-A small ACPC value is useful only if the representation still distinguishes
-different states. For example, mapping every observation to a constant would
-make all paired rollouts identical but discard all state information. We
-therefore summarize each checkpoint with two complementary quantities.
-Action-Conditioned Trajectory Radius (ATR) reports a high quantile of the
-normalized ACPC values across logged evaluation windows. Selective Margin
-Pass Rate (SMPR) reports how often pairs labeled as different by task-state
-coordinates remain outside that same-state radius by a fixed margin. SMPR is
-a deliberately limited collapse guard: it certifies only the supplied
-coordinate labels, not every action-relevant distinction. We combine ATR and
-SMPR into a calibrated score for screening frozen checkpoints. ACPC is an
-evaluation tool, not a training objective.
+into a measurement: roll the clean and perturbed views of one history
+forward under the same actions and measure the distance between the two
+predicted latent trajectories. Computing the score needs neither an observed
+future nor a task outcome, yet two exact inequalities connect it to both:
+ACPC bounds how much the perturbation can change the multi-step prediction
+error against a common logged future, and it bounds how far each planner
+candidate's cost can move, which yields fixed-pool stability certificates.
+A small ACPC value alone can still be trivial---a constant representation
+makes every paired rollout identical---so we summarize each checkpoint with
+two complementary numbers: Action-Conditioned Trajectory Radius (ATR), a
+high quantile of the normalized ACPC values over logged evaluation windows,
+and Selective Margin Pass Rate (SMPR), the fraction of pairs labeled as
+different states by task coordinates that remain outside that same-state
+radius by a margin. SMPR certifies only the supplied coordinate labels. A
+calibrated score combining ATR and SMPR screens frozen checkpoints; ACPC is
+an evaluation tool, not a training objective.
 
 We evaluate this diagnostic on LeWM~\cite{maes2026lewm} across TwoRoom, PushT, Reacher, and Cube, using Gaussian observation noise for calibration. On the unaugmented checkpoints, eight-step ACPC under the recorded actions predicts the perturbation-induced change in prediction error about $51\%$ better, in cross-validated MAE, than the strongest control with the same rollout length but destroyed action information (\Cref{sec:exp-target-aligned}). ACPC computed along planner candidates consistently improves prediction of CEM selection regret (\Cref{sec:exp-planner}). Thresholds chosen on some tasks screen checkpoints from tasks excluded from threshold selection with balanced accuracy $0.86$--$0.90$ across all cross-task partitions (\Cref{sec:exp-frozen-external}), and the calibrated score orders checkpoint pairs correctly under blur and resize at the tested severities (\Cref{sec:exp-cross-stressor}). The same analysis applies to PLDM after model-family recalibration (\Cref{sec:exp-pldm-portability}).
 
@@ -659,7 +654,7 @@ experiments.}
 \label{tab:acpc-object-guide}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\linewidth}{p{0.18\linewidth}X p{0.25\linewidth}}
+\begin{tabularx}{\linewidth}{p{0.18\linewidth}X >{\raggedright\arraybackslash}p{0.25\linewidth}}
 \toprule
 Object & Plain-language meaning & Empirical role \\
 \midrule
@@ -769,8 +764,8 @@ qualitative only.
 \centering
 \includegraphics[width=\linewidth]{fig_local_geometry_highd_audit.pdf}
 \caption{Descriptive local-geometry case study motivating the controlled ACPC
-comparison. Panels compare a matched pair of PushT checkpoints---the left
-two unaugmented, the right two trained with Gaussian augmentation at
+comparison. Panels (a)--(d) compare a matched pair of PushT checkpoints---the
+left two unaugmented, the right two trained with Gaussian augmentation at
 $\stdmax{}=0.08$---at the encoder output and after eight autoregressive
 rollout steps. Each color denotes one of 16 highlighted
 histories: the large black-rimmed marker is its clean anchor, smaller
@@ -802,7 +797,7 @@ sweep (\Cref{fig:full-sweep-diagnostics}).
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\linewidth]{fig_full_sweep_diagnostics.pdf}
+\includegraphics[width=\linewidth]{fig_full_sweep_diagnostics.pdf}
 \caption{Checkpoint-level planning performance and diagnostics across the
 complete Gaussian-augmentation sweep. We report planning success rate at
 evaluation noise $\sigma=0.08$, relative ATR, and SMPR. Lines are across-run

@@ -320,7 +320,8 @@ def build_figure(
             },
             zorder=8,
         )
-        ax.set_title(f"{row_title}\n{column_title}", pad=3.0)
+        panel_letter = chr(ord("a") + panel_index)
+        ax.set_title(f"({panel_letter}) {row_title}\n{column_title}", pad=3.0)
         ax.set_xlim(*xlim)
         ax.set_ylim(*ylim)
         ax.set_xlabel("t-SNE coordinate 1", labelpad=1.5)

@@ -137,17 +137,26 @@ def _polish_axis(ax: plt.Axes) -> None:
 
 def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
     out_fig.parent.mkdir(parents=True, exist_ok=True)
-    with plt.rc_context(PLOT_STYLE):
-        # Keep all four task blocks legible while fitting the figure beside its
-        # result text in a standard paper page.
-        fig = plt.figure(figsize=(6.7, 5.4))
+    compact_style = {
+        **PLOT_STYLE,
+        "font.size": 7.0,
+        "axes.labelsize": 7.0,
+        "axes.titlesize": 7.8,
+        "xtick.labelsize": 6.5,
+        "ytick.labelsize": 6.5,
+        "legend.fontsize": 6.2,
+    }
+    with plt.rc_context(compact_style):
+        # Arrange the four task blocks left to right; each block retains its
+        # success-rate axis above the joint ATR--SMPR axis.
+        fig = plt.figure(figsize=(6.7, 2.75))
         outer = fig.add_gridspec(
-            2, 2, left=0.09, right=0.985, bottom=0.09, top=0.90, wspace=0.27, hspace=0.34
+            1, 4, left=0.075, right=0.995, bottom=0.19, top=0.76, wspace=0.14
         )
         by_task = _by_task(rows)
 
         for index, task in enumerate(TASKS):
-            block = outer[index // 2, index % 2].subgridspec(
+            block = outer[0, index].subgridspec(
                 2, 1, height_ratios=(0.92, 1.08), hspace=0.08
             )
             score_ax = fig.add_subplot(block[0])
@@ -197,9 +206,12 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
                 )
 
             score_ax.set_title(f"({chr(97 + index)}) {task}", loc="left", fontweight="semibold")
-            if index % 2 == 0:
+            if index == 0:
                 score_ax.set_ylabel("Planning\nsuccess rate (%)")
                 diagnostic_ax.set_ylabel("Relative ATR\n/ SMPR")
+            else:
+                score_ax.tick_params(axis="y", labelleft=False)
+                diagnostic_ax.tick_params(axis="y", labelleft=False)
             score_ax.set_ylim(0, 102)
             score_ax.set_yticks([0, 25, 50, 75, 100])
             score_ax.tick_params(axis="x", labelbottom=False, length=0)
@@ -242,12 +254,11 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             loc="upper center",
             ncol=5,
             frameon=False,
-            fontsize=6.7,
-            columnspacing=0.85,
-            handletextpad=0.45,
-            bbox_to_anchor=(0.5, 0.985),
+            columnspacing=0.65,
+            handletextpad=0.35,
+            bbox_to_anchor=(0.5, 0.99),
         )
-        fig.supxlabel(r"Gaussian augmentation level $\sigma_{\max}^{\mathrm{train}}$", y=0.015)
+        fig.supxlabel(r"Gaussian augmentation level $\sigma_{\max}^{\mathrm{train}}$", y=0.035)
         fig.savefig(out_fig, dpi=230)
         plt.close(fig)
 
