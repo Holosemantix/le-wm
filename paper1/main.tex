@@ -684,22 +684,10 @@ $\Delta S$ & Change in the calibrated score relative to a reference checkpoint. 
 
 \section{Experiments}\label{sec:exp}
 
-\Cref{fig:full-sweep-diagnostics} provides an overview of planning success
-and the two checkpoint-level diagnostics across the Gaussian sweep. We first
-state the common evaluation protocol, then examine prediction, planning, and
-transfer claims separately.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.95\linewidth]{fig_full_sweep_diagnostics.pdf}
-\caption{Planning success rate (evaluation noise $\sigma=0.08$), relative
-ATR, and SMPR across the Gaussian-augmentation sweep. Lines are across-run
-means; shaded ranges span the three run means; green bands mark levels
-meeting the success-rate criterion (\Cref{sec:bg}) in a majority of runs.
-Lower ATR (relative to the unaugmented checkpoint) and higher SMPR are
-favorable.}
-\label{fig:full-sweep-diagnostics}
-\end{figure}
+We first state the common evaluation protocol. We then begin with a
+descriptive local-geometry case study that motivates the controlled ACPC
+comparison, before evaluating checkpoint-level behavior, prediction-error
+drift, planning consequences, and transfer.
 
 \subsection{Evaluation setup}\label{sec:bg}
 
@@ -766,14 +754,16 @@ decreases by no more than five points. We make no blur- or resize-specific
 adjustment. This analysis also does not benchmark alternative signals such as
 encoder shift or one-step ACPC.
 
-\subsection{Local representation geometry before and after an eight-step rollout}\label{sec:exp-local-geometry}
+\subsection{Motivating case study: local geometry before and after prediction}\label{sec:exp-local-geometry}
 
-We first ask whether augmentation makes perturbed views of the same history
-more compact relative to other clean histories. We answer this descriptive
-question with a fixed PushT case study (\Cref{sec:local-geometry-audit}) using
-LeWM training run 3072 before and
-after full-sequence Gaussian augmentation with $\stdmax{}=0.08$. For each of
-128 logged histories, we generate one clean view and 18 perturbed views---six
+We begin with the descriptive geometric audit introduced in
+\Cref{sec:local-geometry-audit}. Its purpose is to visualize the phenomenon
+that motivates ACPC, not to establish task-level robustness. Using a fixed
+PushT case study, we ask whether augmentation makes perturbed views of the
+same history more compact relative to other clean histories. We compare LeWM
+training run 3072 before and after full-sequence Gaussian augmentation with
+$\stdmax{}=0.08$. For each of 128 logged histories, we generate one clean
+view and 18 perturbed views---six
 draws at each probe standard deviation in $\{0.01,0.04,0.08\}$. We compare the
 encoder output with the representation after eight autoregressive rollout
 steps. All ratios and counts use the original 192-dimensional projected
@@ -783,15 +773,16 @@ visualization~\cite{vandermaaten2008tsne} is qualitative only.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.94\linewidth]{fig_local_geometry_highd_audit.pdf}
-\caption{Local representation geometry for a fixed PushT case study using
-LeWM training run 3072. Rows compare the unaugmented and $\stdmax{}=0.08$
-Gaussian-augmented checkpoints; columns show the encoder output and the
-representation after eight autoregressive rollout steps. Colors highlight a
-fixed subset of 16 anchors, while gray points and all reported statistics
-cover all 128 anchors. The callouts and category strips are computed in the
-original 192-dimensional projected latent space. The t-SNE visualization is
-qualitative because t-SNE does not preserve metric geometry; neither its
-coordinates nor ellipses enter any reported metric.}
+\caption{Descriptive local-geometry case study motivating the controlled ACPC
+comparison. The fixed PushT case study uses LeWM training run 3072. Rows
+compare the unaugmented and $\stdmax{}=0.08$ Gaussian-augmented checkpoints;
+columns show the encoder output and the representation after eight
+autoregressive rollout steps. Colors highlight a fixed subset of 16 anchors,
+while gray points and all reported statistics cover all 128 anchors. The
+callouts and category strips are computed in the original 192-dimensional
+projected latent space. The t-SNE visualization is qualitative because t-SNE
+does not preserve metric geometry; neither its coordinates nor ellipses enter
+any reported metric.}
 \label{fig:local-geometry-highd}
 \end{figure}
 
@@ -804,14 +795,31 @@ augmentation makes perturbed views of the same history substantially more
 compact relative to nearby clean histories. Much of this separation remains
 after prediction.
 
-This local analysis does not establish task-semantic separation or planning
-robustness. The remaining experiments use ACPC to control the history and
-actions over the full rollout, ATR to summarize its normalized upper tail,
-and SMPR to test declared proxy-different pairs.
+This case study shows that augmentation can contract perturbation-induced
+variation relative to nearby clean histories, including after prediction. It
+does not establish task-semantic separation or planning robustness. We
+therefore turn to the checkpoint-level ATR--SMPR diagnostic and its
+relationship with planning performance across the complete augmentation
+sweep (\Cref{fig:full-sweep-diagnostics}).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{fig_full_sweep_diagnostics.pdf}
+\caption{Checkpoint-level planning performance and diagnostics across the
+complete Gaussian-augmentation sweep. We report planning success rate at
+evaluation noise $\sigma=0.08$, relative ATR, and SMPR. Lines are across-run
+means; shaded ranges span the three run means; green bands mark levels
+meeting the success-rate criterion (\Cref{sec:bg}) in a majority of runs.
+Lower ATR (relative to the unaugmented checkpoint) and higher SMPR are
+favorable.}
+\label{fig:full-sweep-diagnostics}
+\end{figure}
 
 \subsection{Planning performance under observation noise}\label{sec:exp-gaussian-panel}
 
-At evaluation noise $\sigma=0.08$, the unaugmented LeWM checkpoints lose
+Do ATR and SMPR track the recovery of planning performance across the full
+Gaussian-augmentation sweep? At evaluation noise $\sigma=0.08$, the
+unaugmented LeWM checkpoints lose
 $25.9\pm2.4$, $74.6\pm5.6$, $41.0\pm1.4$, and $22.1\pm2.8$ percentage points
 in success rate on TwoRoom, PushT, Reacher, and Cube, respectively. Gaussian
 augmentation recovers performance over a range of training levels whose
