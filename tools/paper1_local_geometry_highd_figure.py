@@ -43,14 +43,6 @@ PANEL_SPECS = (
     ),
 )
 
-CATEGORY_COLORS = ("#D55E00", "#999999", "#0072B2")
-CATEGORY_LABELS = (
-    "Reaches/exceeds spacing",
-    "Within spacing, not disjoint",
-    "Fully disjoint",
-)
-
-
 def _load_json(path: Path) -> Any:
     with path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -164,39 +156,6 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _draw_category_strip(ax, audit: Mapping[str, Any]) -> None:
-    total = int(audit["n_states"])
-    counts = [int(value) for value in audit["category_counts"]]
-    left = 0
-    for count, color in zip(counts, CATEGORY_COLORS):
-        ax.barh(0, count, left=left, height=0.62, color=color, edgecolor="white", linewidth=0.5)
-        if count >= 8:
-            ax.text(
-                left + count / 2,
-                0,
-                str(count),
-                ha="center",
-                va="center",
-                color="white" if color != "#999999" else "#111111",
-                fontsize=7.0,
-                fontweight="bold",
-            )
-        elif count > 0:
-            ax.annotate(
-                str(count),
-                xy=(left + count / 2, 0.31),
-                xytext=(left + count / 2, 0.63),
-                ha="center",
-                va="bottom",
-                fontsize=6.5,
-                arrowprops={"arrowstyle": "-", "color": color, "linewidth": 0.6},
-            )
-        left += count
-    ax.set_xlim(0, total)
-    ax.set_ylim(-0.55, 0.85)
-    ax.axis("off")
-
-
 def build_figure(
     *,
     cache_dir: Path,
@@ -230,16 +189,16 @@ def build_figure(
             "ps.fonttype": 42,
         }
     )
-    fig = plt.figure(figsize=(7.65, 8.65), constrained_layout=False)
+    fig = plt.figure(figsize=(7.65, 7.10), constrained_layout=False)
     outer = fig.add_gridspec(
         2,
         2,
         left=0.065,
         right=0.985,
-        bottom=0.115,
-        top=0.94,
-        hspace=0.25,
-        wspace=0.17,
+        bottom=0.07,
+        top=0.91,
+        hspace=0.26,
+        wspace=0.14,
     )
     colors = plt.cm.turbo(np.linspace(0.05, 0.95, len(anchors)))
     audit_rows: list[dict[str, Any]] = []
@@ -282,11 +241,7 @@ def build_figure(
             }
         )
 
-        inner = outer[panel_index // 2, panel_index % 2].subgridspec(
-            2, 1, height_ratios=(11.5, 1.0), hspace=0.02
-        )
-        ax = fig.add_subplot(inner[0])
-        strip_ax = fig.add_subplot(inner[1])
+        ax = fig.add_subplot(outer[panel_index // 2, panel_index % 2])
         projected = projected_by_key[key]
         origin = projected[0]
         perturbed = projected[1:]
@@ -337,32 +292,23 @@ def build_figure(
         total = int(audit["n_states"])
         radius_count = int(audit["radius_lt_nn_count"])
         disjoint_count = int(audit["fully_disjoint_count"])
-        callout = (
-            r"$\bf{Original\!\!-\!space\ metrics}$" "\n"
-            f"median r/NN = {audit['median_radius_over_nn']:.2f}\n"
-            f"r < NN: {radius_count}/{total} ({_format_percent(radius_count, total)})\n"
-            f"fully disjoint: {disjoint_count}/{total} ({_format_percent(disjoint_count, total)})"
+        metric_subtitle = (
+            f"median r/NN = {audit['median_radius_over_nn']:.2f}  ·  "
+            f"r < NN: {radius_count}/{total} ({_format_percent(radius_count, total)})  ·  "
+            f"disjoint: {disjoint_count}/{total} ({_format_percent(disjoint_count, total)})"
         )
         ax.text(
-            0.025,
-            0.975,
-            callout,
+            0.5,
+            1.01,
+            metric_subtitle,
             transform=ax.transAxes,
-            ha="left",
-            va="top",
-            fontsize=6.9,
-            linespacing=1.12,
+            ha="center",
+            va="bottom",
+            fontsize=6.2,
             color="#202020",
-            bbox={
-                "boxstyle": "round,pad=0.28",
-                "facecolor": "white",
-                "edgecolor": "#C8C8C8",
-                "linewidth": 0.55,
-                "alpha": 0.90,
-            },
             zorder=8,
         )
-        ax.set_title(f"({chr(97 + panel_index)}) {row_title} · {column_title}", pad=4.0)
+        ax.set_title(f"({chr(97 + panel_index)}) {row_title} · {column_title}", pad=14.0)
         ax.set_xlim(*xlim)
         ax.set_ylim(*ylim)
         ax.set_xlabel("t-SNE coordinate 1", labelpad=1.5)
@@ -370,10 +316,8 @@ def build_figure(
         ax.tick_params(pad=1)
         ax.grid(True, color="#ECECEC", linewidth=0.45)
         ax.set_aspect("equal", adjustable="box")
-        _draw_category_strip(strip_ax, audit)
 
     from matplotlib.lines import Line2D
-    from matplotlib.patches import Patch
 
     state_handles = [
         Line2D([], [], marker="o", linestyle="none", markersize=4.2, markerfacecolor="#858585", markeredgecolor="none", label="Unselected states/views"),
@@ -381,33 +325,19 @@ def build_figure(
         Line2D([], [], marker="o", linestyle="none", markersize=4.2, markerfacecolor="#4C78A8", markeredgecolor="white", markeredgewidth=0.3, label="Perturbed view"),
         Line2D([], [], color="#4C78A8", linewidth=1.2, label="90% t-SNE covariance envelope"),
     ]
-    category_handles = [Patch(facecolor=color, edgecolor="none", label=label) for color, label in zip(CATEGORY_COLORS, CATEGORY_LABELS)]
-    legend_one = fig.legend(
+    fig.legend(
         handles=state_handles,
         loc="upper center",
-        bbox_to_anchor=(0.5, 0.988),
+        bbox_to_anchor=(0.5, 0.995),
         ncol=4,
         frameon=False,
         fontsize=6.8,
         handletextpad=0.4,
         columnspacing=1.1,
     )
-    fig.add_artist(legend_one)
-    fig.legend(
-        handles=category_handles,
-        title="Original-space anchor categories (counts shown in each strip)",
-        loc="lower center",
-        bbox_to_anchor=(0.5, 0.025),
-        ncol=3,
-        frameon=False,
-        fontsize=7.0,
-        title_fontsize=7.2,
-        handletextpad=0.45,
-        columnspacing=1.4,
-    )
     fig.text(
         0.5,
-        0.006,
+        0.008,
         "NN denotes the nearest other clean anchor in the original high-dimensional representation.",
         ha="center",
         va="bottom",
