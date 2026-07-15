@@ -151,7 +151,7 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
         # success-rate axis above the joint ATR--SMPR axis.
         fig = plt.figure(figsize=(6.7, 2.75))
         outer = fig.add_gridspec(
-            1, 4, left=0.075, right=0.995, bottom=0.19, top=0.76, wspace=0.14
+            1, 4, left=0.075, right=0.995, bottom=0.19, top=0.84, wspace=0.14
         )
         by_task = _by_task(rows)
 
@@ -246,17 +246,15 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             ),
             Line2D([], [], color="#d95f02", marker="s", lw=1.35, ms=3.4, label=r"Relative ATR ($\downarrow$)"),
             Line2D([], [], color="#7570b3", marker="^", lw=1.35, ms=3.5, ls="--", label=r"SMPR ($\uparrow$)"),
-            Patch(facecolor=RECOVERY_COLOR, edgecolor="none", alpha=0.50, label="Success-rate criterion"),
-            Patch(facecolor="#777777", edgecolor="none", alpha=0.15, label="Training-run range"),
         ]
         fig.legend(
             handles=legend_handles,
             loc="upper center",
-            ncol=5,
+            ncol=3,
             frameon=False,
-            columnspacing=0.65,
+            columnspacing=1.1,
             handletextpad=0.35,
-            bbox_to_anchor=(0.5, 0.99),
+            bbox_to_anchor=(0.5, 1.0),
         )
         fig.supxlabel(r"Gaussian augmentation level $\sigma_{\max}^{\mathrm{train}}$", y=0.035)
         fig.savefig(out_fig, dpi=230)
