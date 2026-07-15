@@ -17,6 +17,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 from .utils_paper1_io import ROOT, SEEDS, TASKS, write_csv
 
@@ -283,7 +284,7 @@ def write_summary_table(summary: dict[str, Any], out: Path) -> None:
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Transfer of the calibrated selective score from Gaussian noise to blur and resize. For each task, thresholds are selected on the other three Gaussian-noise tasks and then fixed. The table compares the score change with the change in planning success rate between checkpoints trained with and without Gaussian augmentation.}",
+        r"\caption{Transfer of the Gaussian-calibrated selective score to blur and resize. For each task, thresholds are selected on the other three Gaussian-noise tasks and fixed; each pair compares the $\stdmax{}=0.08$ checkpoint with its unaugmented counterpart. ``Discordant'' counts pairs whose score-change sign disagrees with the observed success-rate label (\Cref{sec:exp-cross-stressor}).}",
         r"\label{tab:cross-stressor-selective-transfer}",
         r"\small",
         r"\setlength{\tabcolsep}{4pt}",
@@ -308,13 +309,13 @@ def write_all_pairs_table(rows: list[dict[str, Any]], out: Path) -> None:
     lines = [
         r"\begin{table*}[t]",
         r"\centering",
-        r"\caption{All 24 LeWM checkpoint pairs evaluated under blur and resize. ATR$_{\rm rel}$ and SMPR are measured for the checkpoint trained with Gaussian augmentation. $\Delta P$ is its change in planning success rate relative to the checkpoint trained without augmentation, and $\Delta S$ is the corresponding selective-score change. A success-rate change is positive when $\Delta P\geq5$ percentage points and the clean success rate decreases by at most five points. Outcome lists the success-rate classification followed by the score classification.}",
+        r"\caption{All 24 LeWM checkpoint pairs evaluated under blur and resize. ATR$_{\rm rel}$ and SMPR are measured for the checkpoint trained with Gaussian augmentation ($\stdmax{}=0.08$); $\Delta P$ and $\Delta S$ are its success-rate and selective-score changes relative to the unaugmented checkpoint. A pair is positive when $\Delta P\geq5$ percentage points with at most a five-point clean loss. Daggers mark the two discordant pairs.}",
         r"\label{tab:cross-stressor-all-pairs}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{3pt}",
         r"\begin{tabular}{lrlrrrrrl}",
         r"\toprule",
-        r"Task & Seed & Shift & ATR$_{\rm rel}$ & SMPR & $\Delta P$ & $\Delta S$ & Outcome \\",
+        r"Task & Seed & Shift & ATR$_{\rm rel}$ & SMPR & $\Delta P$ & $\Delta S$ & Outcome (success / score) \\",
         r"\midrule",
     ]
     labels = {
@@ -328,7 +329,9 @@ def write_all_pairs_table(rows: list[dict[str, Any]], out: Path) -> None:
             f"{row['task']} & {row['training_seed']} & {row['stressor']} & "
             f"{row['endpoint_atr_rel']:.3f} & {row['endpoint_smpr']:.3f} & "
             f"{row['delta_behavior']:.1f} & {row['delta_selective_score']:.3f} & "
-            f"{labels[row['discordance']]} \\\\"
+            f"{labels[row['discordance']]}"
+            + ("$^\\dag$" if row["discordance"].startswith("false_") else "")
+            + r" \\"
         )
     lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table*}"])
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -336,180 +339,91 @@ def write_all_pairs_table(rows: list[dict[str, Any]], out: Path) -> None:
 
 
 def plot(rows: list[dict[str, Any]], out: Path) -> None:
+    """Verdict bar chart: observed success change for every checkpoint pair,
+    colored by the diagnostic prediction from the common Gaussian-calibrated
+    thresholds."""
     out.parent.mkdir(parents=True, exist_ok=True)
+    predicted_color = "#2166ac"
+    nonpredicted_color = "#b8b8b8"
     with plt.rc_context(STYLE):
-        fig, ax = plt.subplots(figsize=(5.1, 3.25))
-        x_values = [row["delta_selective_score"] for row in rows]
-        y_values = [row["delta_behavior"] for row in rows]
-        x_min = min(x_values) - 0.25
-        x_max = max(x_values) + 0.25
-        y_min = min(y_values) - 6.0
-        y_max = max(y_values) + 7.0
+        fig, ax = plt.subplots(figsize=(6.7, 2.75))
 
-        agreement_color = "#DCEED7"
-        disagreement_color = "#F6DDDA"
-        ax.fill_between([x_min, 0.0], y_min, 5.0, color=agreement_color, alpha=0.42, zorder=0)
-        ax.fill_between([0.0, x_max], 5.0, y_max, color=agreement_color, alpha=0.42, zorder=0)
-        ax.fill_between([x_min, 0.0], 5.0, y_max, color=disagreement_color, alpha=0.34, zorder=0)
-        ax.fill_between([0.0, x_max], y_min, 5.0, color=disagreement_color, alpha=0.34, zorder=0)
+        positions: list[float] = []
+        task_positions: dict[str, list[float]] = {}
+        cursor = 0.0
+        previous_task = None
         for row in rows:
-            style = STRESSOR_STYLE[row["stressor"]]
-            facecolor = style["color"] if style["filled"] else "white"
-            ax.scatter(
-                row["delta_selective_score"],
+            if previous_task is not None and row["task"] != previous_task:
+                cursor += 1.5
+            positions.append(cursor)
+            task_positions.setdefault(row["task"], []).append(cursor)
+            previous_task = row["task"]
+            cursor += 1.0
+
+        for position, row in zip(positions, rows):
+            color = predicted_color if row["predicted_positive"] else nonpredicted_color
+            hatched = row["stressor"] == "resize"
+            ax.bar(
+                position,
                 row["delta_behavior"],
-                marker=TASK_MARKER[row["task"]],
-                s=42,
-                facecolor=facecolor,
-                edgecolor=style["color"],
-                linewidth=1.0,
-                alpha=0.88,
-                zorder=3,
+                width=0.82,
+                color=color,
+                hatch="///" if hatched else None,
+                edgecolor="white" if hatched else color,
+                linewidth=0.4,
+                zorder=2,
             )
+            if row["discordance"].startswith("false_"):
+                offset = 1.0 if row["delta_behavior"] >= 0 else -1.0
+                ax.annotate(
+                    r"$\dag$",
+                    xy=(position, row["delta_behavior"] + offset),
+                    ha="center",
+                    va="bottom" if offset > 0 else "top",
+                    fontsize=8.5,
+                    color="#8E1B2C",
+                    zorder=4,
+                )
 
-        discordant_rows = [row for row in rows if row["discordance"].startswith("false_")]
-        for row in discordant_rows:
-            ax.scatter(
-                row["delta_selective_score"],
-                row["delta_behavior"],
-                marker=TASK_MARKER[row["task"]],
-                s=92,
-                facecolor="none",
-                edgecolor="#A51C30",
-                linewidth=1.25,
-                zorder=4,
-            )
-
-        agreement_n = sum(row["observed_positive"] == row["predicted_positive"] for row in rows)
-        rho = _spearman(
-            [row["delta_behavior"] for row in rows],
-            [row["delta_selective_score"] for row in rows],
-        )
-        rho_label = f"{rho:.3f}"
+        ax.axhline(0.0, color="#444444", linewidth=0.8, zorder=3)
+        ax.axhline(5.0, color="#444444", linewidth=0.8, linestyle="--", zorder=3)
         ax.text(
-            0.025,
-            0.965,
-            rf"Agreement: {agreement_n}/{len(rows)}"
-            + "\n"
-            + rf"Spearman $\rho={rho_label}$",
-            transform=ax.transAxes,
-            ha="left",
-            va="top",
-            fontsize=7.2,
-            color="#333333",
-            bbox={"facecolor": "white", "edgecolor": "#BDBDBD", "alpha": 0.88, "pad": 2.0},
-            zorder=5,
-        )
-        if discordant_rows:
-            target_x = mean(row["delta_selective_score"] for row in discordant_rows)
-            target_y = mean(row["delta_behavior"] for row in discordant_rows)
-            ax.annotate(
-                "Two PushT pairs at +4 pp\n(borderline observed outcome)",
-                xy=(target_x, target_y),
-                xytext=(1.15, -8.0),
-                textcoords="data",
-                ha="center",
-                va="top",
-                fontsize=6.8,
-                color="#8E1B2C",
-                arrowprops={"arrowstyle": "->", "color": "#8E1B2C", "lw": 0.8},
-                bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.82, "pad": 1.0},
-                zorder=5,
-            )
-
-        ax.axhline(5.0, color="#444444", linewidth=0.8, linestyle="--", zorder=2)
-        ax.axvline(0.0, color="#444444", linewidth=0.8, linestyle="--", zorder=2)
-        ax.text(
-            x_max - 0.03,
-            5.7,
-            "+5 pp observed threshold",
+            cursor - 0.4,
+            6.2,
+            "+5 pp observed-label threshold",
             ha="right",
             va="bottom",
-            fontsize=6.5,
+            fontsize=6.6,
             color="#555555",
-        )
-        ax.text(
-            0.04,
-            y_min + 1.0,
-            r"$\Delta S=0$",
-            ha="left",
-            va="bottom",
-            fontsize=6.5,
-            color="#555555",
-        )
-        ax.text(x_min + 0.08, y_min + 1.0, "agreement", fontsize=6.5, color="#567A50")
-        ax.text(
-            x_max - 0.08,
-            y_max - 1.0,
-            "agreement",
-            ha="right",
-            va="top",
-            fontsize=6.5,
-            color="#567A50",
-        )
-        ax.text(
-            -0.05,
-            y_max - 1.0,
-            "disagreement",
-            ha="right",
-            va="top",
-            fontsize=6.5,
-            color="#9B5A54",
         )
 
-        ax.set_xlim(x_min, x_max)
-        ax.set_ylim(y_min, y_max)
-        ax.set_title(
-            "Cross-stressor diagnostic–planning agreement",
-            loc="left",
-            fontweight="semibold",
-        )
-        ax.set_xlabel(
-            r"Selective-score change, $\Delta S$"
-            "\n(right favors augmented checkpoint)"
-        )
-        ax.set_ylabel(
-            "Observed planning-success change (pp)\n"
-            "(up favors augmented checkpoint)"
-        )
-        ax.grid(True, color="#B0B0B0", alpha=0.22, linewidth=0.55)
+        ax.set_xticks([mean(values) for values in task_positions.values()])
+        ax.set_xticklabels(list(task_positions.keys()))
+        ax.tick_params(axis="x", length=0)
+        ax.set_xlim(-0.9, cursor - 0.1)
+        y_values = [row["delta_behavior"] for row in rows]
+        ax.set_ylim(min(y_values) - 5.0, max(y_values) + 7.0)
+        ax.set_ylabel("Success-rate change under\nthe visual shift (pp)")
+        ax.grid(True, axis="y", color="#B0B0B0", alpha=0.22, linewidth=0.55)
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
-        stressor_handles = [
-            Line2D(
-                [],
-                [],
-                marker="o",
-                linestyle="none",
-                markersize=5.5,
-                markerfacecolor=(style["color"] if style["filled"] else "white"),
-                markeredgecolor=style["color"],
-                label=style["label"],
-            )
-            for style in STRESSOR_STYLE.values()
+
+        legend_handles = [
+            Patch(facecolor=predicted_color, label=r"Predicts improvement ($\Delta S>0$)"),
+            Patch(facecolor=nonpredicted_color, label="Predicts no improvement"),
+            Patch(facecolor="#8a8a8a", label="Blur"),
+            Patch(facecolor="#8a8a8a", hatch="///", edgecolor="white", label="Resize"),
         ]
-        task_handles = [
-            Line2D(
-                [],
-                [],
-                marker=marker,
-                linestyle="none",
-                markersize=5.0,
-                markerfacecolor="#777777",
-                markeredgecolor="#777777",
-                label=task,
-            )
-            for task, marker in TASK_MARKER.items()
-        ]
-        first = ax.legend(
-            handles=stressor_handles,
-            loc="upper left",
-            bbox_to_anchor=(0.01, 0.79),
-            frameon=False,
+        ax.legend(
+            handles=legend_handles,
+            loc="upper right",
             ncol=2,
+            frameon=False,
+            fontsize=6.5,
+            handlelength=1.5,
+            columnspacing=0.9,
+            handletextpad=0.5,
         )
-        ax.add_artist(first)
-        ax.legend(handles=task_handles, loc="lower right", frameon=False, ncol=2)
         fig.tight_layout(pad=0.65)
         fig.savefig(out)
         plt.close(fig)

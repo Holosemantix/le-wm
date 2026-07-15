@@ -1001,8 +1001,11 @@ diagnostic locates recovery on test tasks within $0.5$ grid levels on
 average and one level at most (balanced accuracy $0.900$, precision/recall
 $0.913/0.953$). Calibration on a single task is less reliable (balanced
 accuracy $0.855$ on average, ranging from $0.723$ to $0.913$): Reacher alone
-selects $t_R=0.1$ and produces mismatches of up to five levels, so a task
-whose diagnostics sit far from the others can miss the shared range.
+selects $t_R=0.1$ and produces mismatches of up to five levels on the other
+tasks. This exception is a tie-break in fit rather than a failure of the
+shared pair---under $(0.3,0.95)$ Reacher's own onset mismatch is also at
+most one level---but calibrating on Reacher alone prefers the tighter
+$t_R=0.1$ that fits it exactly and does not carry over.
 \Cref{sec:appendix-cross-task} reports every partition.
 
 Two limits keep this claim modest. First, $t_R=0.3$ is the largest value in
@@ -1044,40 +1047,44 @@ thresholds architecture-invariant.
 
 \input{tables/table_pldm_architecture_portability}
 
-\subsection{Transfer to blur and resize}
+\subsection{The common threshold range under blur and resize}
 \label{sec:exp-cross-stressor}
 
-The last experiment tests whether the same Gaussian-chosen thresholds remain
-useful under previously unseen visual shifts: blur ($k=15$) and resize
-(scale $0.25$), each at one fixed severity. For each task, thresholds
-selected on the other three Gaussian-noise tasks are applied unchanged to
-the 24 checkpoint pairs in \Cref{sec:bg}. No blur or resize result is used
-to select or adjust a threshold.
+Blur ($k=15$) and resize (scale $0.25$), each at one fixed severity, test
+whether the common range of \Cref{sec:exp-frozen-external} survives visual
+shifts that never entered calibration. For every task, the thresholds
+selected on the other three Gaussian-noise tasks are exactly the common pair
+$(t_R,t_M)=(0.3,0.95)$, so the screen carries over without adjustment. For
+each of the 24 checkpoint pairs in \Cref{sec:bg}, we recompute ATR and SMPR
+under the new shift, insert them into the same calibrated score, and predict
+improvement when the augmented checkpoint scores higher ($\Delta S>0$); the
+observed label requires a success-rate gain of at least five percentage
+points with at most a five-point clean loss. No blur or resize outcome
+enters threshold selection.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.92\linewidth]{fig_cross_stressor_selective_transfer_v1.pdf}
-\caption{Gaussian-calibrated selective-score change $\Delta S$ versus the
-observed change in planning success under blur and resize. Each of the 24
-points pairs an unaugmented checkpoint with its $\stdmax{}=0.08$ counterpart;
-marker shape denotes task, color/fill denotes the shift. The diagnostic
-predicts improvement when $\Delta S>0$; the observed positive label
-additionally requires no more than a five-point clean loss, which these axes
-cannot show. Background regions mark agreement.}
+\caption{Observed change in planning success under blur and resize for all
+24 checkpoint pairs (unaugmented versus $\stdmax{}=0.08$), grouped by task
+and ordered by training run. Bar color gives the diagnostic verdict from the
+common Gaussian-calibrated thresholds; hatched bars are resize, plain bars
+blur. The dashed line is the five-point observed-label threshold; daggers
+mark the two discordant pairs, both at $+4$ points. The clean-loss condition
+of the label changes no label among these pairs.}
 \label{fig:cross-stressor-selective-transfer}
 \end{figure}
 
-The sign of $\Delta S$ agrees with the observed label on 22 of 24 pairs
-($0.889$ balanced accuracy, $0.882$ precision, $1.000$ recall; balanced
-accuracy is $0.875$ for blur and $0.900$ for resize alone), and the
-continuous score change has Spearman's $\rho=0.835$ with the change in
-success rate. The two discordant cases are both PushT pairs whose success
-rate improves by exactly four percentage points---one point below the fixed
-five-point label---while the selective score improves
-(\Cref{sec:appendix-cross-stressor}). \textbf{Takeaway:} the
-Gaussian-calibrated score preserves relative checkpoint ordering under these
-two shifts at the tested severities; it is not an absolute robustness
-classifier.
+The verdict agrees with the observed label on 22 of 24 pairs
+(\Cref{fig:cross-stressor-selective-transfer}). Both disagreements are
+borderline rather than sign errors: two PushT pairs improve by exactly four
+percentage points, one point below the label threshold, while the score
+improves. The magnitude of the score change also tracks the size of the
+success change (Spearman's $\rho=0.835$); per-shift classification metrics
+are in \Cref{sec:appendix-cross-stressor}. \textbf{Takeaway:} the common
+threshold range, fixed on Gaussian noise, still separates improved from
+unimproved checkpoints under blur and resize at the tested severities; it is
+not an absolute robustness classifier.
 \FloatBarrier
 
 \section{Discussion and limitations}\label{sec:disc}
