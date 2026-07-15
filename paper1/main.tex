@@ -143,24 +143,13 @@ severities, and applies to PLDM after model-family recalibration.
 
 World models support control by predicting how candidate actions change the environment~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. Joint-embedding predictive architectures (JEPAs) move this prediction problem from pixels to learned representations~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa}. By avoiding pixel reconstruction, they can reduce pressure to model nuisance detail~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}. This is appealing for visual control, where lighting, texture, or image quality may change even when the physical situation does not. Latent prediction alone, however, does not establish that a trained world model will produce stable action-conditioned predictions under such changes.
 
-For control, whether a visual difference is irrelevant depends on the state and the actions being considered. A background texture can be ignored, whereas a contact pose, doorway state, or object--goal relation may determine which action is useful. Encoder invariance cannot resolve this distinction on its own because a planner does not act directly on the encoder output. It rolls the representation forward under candidate actions and ranks the resulting predictions with a cost. A small encoder discrepancy may grow through this computation, whereas a larger one may contract before it affects the cost. This motivates the central question: after the same action sequence is applied, do clean and perturbed views of one trajectory still produce similar predicted futures?
+For control, whether a visual difference is irrelevant depends on the state and the actions being considered. A background texture can be ignored, whereas a contact pose, doorway state, or object--goal relation may determine which action is useful. Encoder invariance cannot resolve this distinction on its own because a planner does not act directly on the encoder output. It rolls the representation forward under candidate actions and ranks the resulting predictions with a cost. A small encoder discrepancy may grow through this computation, whereas a larger one may contract before it affects the cost. This motivates the central question: after the same action sequence is applied, do clean and perturbed views of one trajectory still produce similar predicted futures? A descriptive PushT case study (\Cref{sec:exp-local-geometry}) shows what is at stake: for an unaugmented checkpoint, the representations of a history's perturbed views spread wider than its distance to the nearest other history, both at the encoder and after prediction, so visual noise entangles distinct states.
 
-We first use a local geometric comparison to make the problem concrete. For
-each clean history, we generate several perturbed views and ask how far their
-representations spread from the clean representation. We compare this spread
-with the distance to the nearest other clean history, both at the encoder
-output and after prediction. This comparison shows whether visual
-perturbations contract or expand in representation space. It is only
-descriptive, however: the nearest clean history need not define a
-task-relevant boundary, and the final predicted step does not describe the
-full rollout. We therefore need a controlled comparison that follows one
-history under one shared action sequence.
-
-Action-Conditioned Predictive Consistency (ACPC) provides this comparison. It
-predicts forward from clean and perturbed views of the same history under the
-same actions, then measures the distance between the two predicted latent
-trajectories. The score requires neither an observed future nor a task
-outcome. Two exact inequalities connect it to quantities that do. First, when
+Action-Conditioned Predictive Consistency (ACPC) turns the central question
+into a measurement. It predicts forward from clean and perturbed views of the
+same history under the same actions, then measures the distance between the
+two predicted latent trajectories. The score requires neither an observed
+future nor a task outcome. Two exact inequalities connect it to quantities that do. First, when
 both predictions are evaluated against the same logged future, ACPC bounds
 the change in multi-step prediction error. Second, for LeWM's squared latent
 goal cost, it bounds the movement of each candidate cost and provides
@@ -174,11 +163,10 @@ Action-Conditioned Trajectory Radius (ATR) reports a high quantile of the
 normalized ACPC values across logged evaluation windows. Selective Margin
 Pass Rate (SMPR) reports how often pairs labeled as different by task-state
 coordinates remain outside that same-state radius by a fixed margin. SMPR is
-a deliberately limited guard against constant-representation collapse: it
-tests only the supplied coordinate labels, not every semantic or
-action-relevant distinction. We combine ATR and SMPR into a calibrated score
-for screening frozen checkpoints. ACPC is an evaluation tool, not a training
-objective.
+a deliberately limited collapse guard: it certifies only the supplied
+coordinate labels, not every action-relevant distinction. We combine ATR and
+SMPR into a calibrated score for screening frozen checkpoints. ACPC is an
+evaluation tool, not a training objective.
 
 We evaluate this diagnostic on LeWM~\cite{maes2026lewm} across TwoRoom, PushT, Reacher, and Cube, using Gaussian observation noise for calibration. On the unaugmented checkpoints, eight-step ACPC under the recorded actions predicts the perturbation-induced change in prediction error about $51\%$ better, in cross-validated MAE, than the strongest control with the same rollout length but destroyed action information (\Cref{sec:exp-target-aligned}). ACPC computed along planner candidates consistently improves prediction of CEM selection regret (\Cref{sec:exp-planner}). Thresholds chosen on some tasks screen checkpoints from tasks excluded from threshold selection with balanced accuracy $0.86$--$0.90$ across all cross-task partitions (\Cref{sec:exp-frozen-external}), and the calibrated score orders checkpoint pairs correctly under blur and resize at the tested severities (\Cref{sec:exp-cross-stressor}). The same analysis applies to PLDM after model-family recalibration (\Cref{sec:exp-pldm-portability}).
 
@@ -666,7 +654,8 @@ empirical claims.
 
 \begin{table}[H]
 \centering
-\caption{Reader guide to the analysis and diagnostic quantities.}
+\caption{Reader guide to the analysis quantities and where each enters the
+experiments.}
 \label{tab:acpc-object-guide}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -674,14 +663,14 @@ empirical claims.
 \toprule
 Object & Plain-language meaning & Empirical role \\
 \midrule
-Local $r/\mathrm{NN}$ and ball separation & Size of a visual perturbation cloud relative to nearby clean representations. & PushT geometry case study \\
-ACPC & Distance between the clean and perturbed predicted futures of one history under shared actions. & Prediction and planner analyses \\
-$b_j$ & Upper bound on how far candidate $j$'s squared goal cost can move. & Planner cost bound \\
+Local $r/\mathrm{NN}$ and ball separation & Size of a visual perturbation cloud relative to nearby clean representations. & Geometry case study (\Cref{sec:exp-local-geometry}) \\
+ACPC & Distance between the clean and perturbed predicted futures of one history under shared actions. & Prediction and planner analyses (\Cref{sec:exp-target-aligned,sec:exp-planner}) \\
+$b_j$ & Upper bound on how far candidate $j$'s squared goal cost can move. & Planner cost bound (\Cref{sec:exp-planner}) \\
 $\mathrm{ATR}^{\mathrm{raw}}$ & q90 radius of the normalized same-state rollout tube. & Tube used by SMPR \\
 $D_i^{\mathrm{diff}}$ & Rollout distance to a nearby state with a different coordinate-proxy label. & Proxy-separation test \\
-SMPR & Fraction of proxy-different pairs that stay outside the tube by the margin. & Collapse guard \\
-$\widetilde{\mathrm{ATR}}$, $S$ & Task-relative radius; the smaller (worse) of the two calibrated margins. & Sweep and cross-task screening \\
-$\Delta S$ & Change in the calibrated score relative to a reference checkpoint. & Blur/resize ordering \\
+SMPR & Fraction of proxy-different pairs that stay outside the tube by the margin. & Collapse guard (\Cref{sec:exp-gaussian-panel}) \\
+$\widetilde{\mathrm{ATR}}$, $S$ & Task-relative radius; the smaller (worse) of the two calibrated margins. & Sweep and cross-task screening (\Cref{sec:exp-gaussian-panel,sec:exp-frozen-external}) \\
+$\Delta S$ & Change in the calibrated score relative to a reference checkpoint. & Blur/resize ordering (\Cref{sec:exp-cross-stressor}) \\
 \bottomrule
 \end{tabularx}
 \end{table}
