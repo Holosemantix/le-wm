@@ -988,14 +988,14 @@ def check_visual_text_structure() -> None:
     body, appendix = main_tex.split(marker, 1)
 
     required_headings = (
-        "\\subsection{Local visual geometry as an initial audit}",
+        "\\subsection{Local representation geometry under visual perturbations}",
         "\\subsection{Paired rollout radius}",
         "\\subsection{Common-future error drift}",
         "\\subsection{Candidate-cost drift and planner stability}",
-        "\\subsection{Why low radius needs a task-proxy margin}",
+        "\\subsection{Checkpoint-level radius and proxy separation}",
         "\\subsection{Checkpoint-level calibration}",
         "\\subsection{Evaluation setup}",
-        "\\subsection{Local visual geometry before and after eight rollout steps}",
+        "\\subsection{Local representation geometry before and after an eight-step rollout}",
         "\\subsection{Planning performance under observation noise}",
         "\\subsection{Predicting the perturbation-induced error drift}",
         "\\subsection{ACPC and CEM decisions}",

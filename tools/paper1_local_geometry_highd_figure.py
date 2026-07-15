@@ -1,4 +1,4 @@
-"""Build the Paper 1 local-geometry audit figure from cached features.
+"""Build the Paper 1 local-geometry figure from cached features.
 
 The t-SNE panels in this figure are qualitative.  Every displayed ratio,
 fraction, and state-category count is recomputed in the original feature
@@ -339,7 +339,7 @@ def build_figure(
         radius_count = int(audit["radius_lt_nn_count"])
         disjoint_count = int(audit["fully_disjoint_count"])
         callout = (
-            r"$\bf{High\!\!-\!dimensional\ audit}$" "\n"
+            r"$\bf{Original\!\!-\!space\ metrics}$" "\n"
             f"median r/NN = {audit['median_radius_over_nn']:.2f}\n"
             f"r < NN: {radius_count}/{total} ({_format_percent(radius_count, total)})\n"
             f"fully disjoint: {disjoint_count}/{total} ({_format_percent(disjoint_count, total)})"
@@ -396,7 +396,7 @@ def build_figure(
     fig.add_artist(legend_one)
     fig.legend(
         handles=category_handles,
-        title="High-dimensional state categories (counts shown in each strip)",
+        title="Original-space anchor categories (counts shown in each strip)",
         loc="lower center",
         bbox_to_anchor=(0.5, 0.025),
         ncol=3,

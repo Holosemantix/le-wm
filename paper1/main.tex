@@ -122,13 +122,11 @@ World models support control by predicting how candidate actions change the envi
 
 For control, whether a visual difference is irrelevant depends on the state and the actions being considered. A background texture can be ignored, whereas a contact pose, doorway state, or object--goal relation may determine which action is useful. Encoder invariance cannot resolve this distinction on its own because a planner does not act directly on the encoder output. It rolls the representation forward under candidate actions and ranks the resulting predictions with a cost. A small encoder discrepancy may grow through this computation, whereas a larger one may contract before it affects the cost. This motivates the central question: after the same action sequence is applied, do nominal and perturbed views of one trajectory still produce similar predicted futures?
 
-We use local visual geometry as an intuitive entry point: it shows whether same-state perturbation clouds reach the spacing between nearby clean representations, both at the encoder and after prediction. Because an arbitrary learned-space neighbor need not encode a task-relevant distinction and an endpoint view omits the intervening rollout, we then replace this descriptive comparison with a shared-action, full-rollout quantity.
-
-Low rollout disagreement alone is not enough. A model that maps every observation to a constant representation would make all paired rollouts identical while retaining no state information for control. A useful diagnostic must therefore test two properties together: same-state visual views should remain close throughout the predicted rollout, while pairs identified as different by task state coordinates should remain separated. The latter test is a deliberately limited collapse guard. It assesses only the supplied coordinate labels and does not certify every semantic or action-relevant distinction.
+We begin by examining the local representation geometry induced by visual perturbations. This descriptive view asks whether the perturbation cloud around one history reaches nearby clean representations, both at the encoder output and after prediction. It reveals contraction and separation, but the nearest clean representation need not mark a task-relevant boundary, and a final-step comparison does not describe the intervening rollout. These limitations motivate a controlled, shared-action comparison over the full predicted trajectory.
 
 We introduce Action-Conditioned Predictive Consistency (ACPC) to quantify same-state rollout stability. ACPC propagates the nominal and visually perturbed histories of one trajectory under a shared action sequence and measures the distance between the two predicted latent trajectories; computing the score requires neither a realized future nor a task outcome. Two exact inequalities make the score interpretable: evaluating both predictions against the same logged future bounds how much the perturbation can change the prediction error, and, for LeWM's squared latent goal cost, a second bound limits how far each candidate's cost can move and yields fixed-pool stability certificates from the clean candidate margins.
 
-A small rollout radius alone is still not sufficient, so we summarize checkpoints with two complementary numbers. Action-Conditioned Trajectory Radius (ATR) reports the high-quantile normalized disagreement over logged evaluation windows, while Selective Margin Pass Rate (SMPR) checks that pairs labeled as different states by task coordinates remain outside the same-state radius by a margin. A calibrated score combining ATR and SMPR screens frozen checkpoints for visual predictive sensitivity. ACPC is an evaluation tool, not a new training objective.
+Small ACPC alone does not establish that the representation remains discriminative. A model that maps every observation to a constant representation would make all paired rollouts identical while retaining no state information for control. We therefore summarize checkpoints with two complementary numbers. Action-Conditioned Trajectory Radius (ATR) reports the high-quantile normalized disagreement over logged evaluation windows, while Selective Margin Pass Rate (SMPR) checks that pairs labeled as different states by task coordinates remain outside the same-state radius by a margin. This state-coordinate test is a deliberately limited collapse guard: it assesses only the supplied coordinate labels and does not certify every semantic or action-relevant distinction. A calibrated score combining ATR and SMPR screens frozen checkpoints for visual predictive sensitivity. ACPC is an evaluation tool, not a new training objective.
 
 We evaluate this diagnostic on LeWM~\cite{maes2026lewm} across TwoRoom, PushT, Reacher, and Cube, using Gaussian observation noise for calibration. On the unaugmented checkpoints, eight-step ACPC under the recorded actions predicts the perturbation-induced change in prediction error about $51\%$ better, in cross-validated MAE, than the strongest control with the same rollout length but destroyed action information (\Cref{sec:exp-target-aligned}). ACPC computed along planner candidates consistently improves prediction of CEM decision regret (\Cref{sec:exp-planner}). Thresholds selected on source tasks screen checkpoints from held-out tasks with balanced accuracy $0.86$--$0.90$ across all cross-task calibration splits (\Cref{sec:exp-frozen-external}), and the calibrated score orders checkpoint pairs correctly under blur and resize at the tested severities (\Cref{sec:exp-cross-stressor}). The same analysis applies to PLDM after model-family recalibration (\Cref{sec:exp-pldm-portability}).
 
@@ -158,30 +156,26 @@ Recent work audits whether learned dynamics retain action or temporal structure 
 A visual perturbation can change pixels without changing the underlying
 control state. It nevertheless displaces the encoded history, and learned
 dynamics can amplify, rotate, or contract that displacement before a planner
-reads out a cost. We begin with a local geometric audit that makes this
-displacement visible relative to nearby clean representations. We then explain
-why that audit is not yet control-facing and define ACPC by matching the
-history and actions over the complete predicted rollout.
+reads out a cost. We analyze this effect at three levels. Local representation
+geometry first shows how a perturbation cloud compares with nearby clean
+representations. ACPC then replaces that descriptive comparison with a
+same-history, shared-action distance over the full predicted rollout. Finally,
+ATR aggregates this distance across logged anchors, while SMPR checks whether
+declared proxy-different histories remain separated from the resulting tube.
+The last two quantities must be read together: a small same-state radius is
+useful only if selected state distinctions are retained.
 
-The desired diagnostic has two sides. Two visual views of the same state should
-remain inside a small action-conditioned rollout tube. At the same time, states
-that differ under a declared task proxy should remain outside that tube. The
-first side supplies a predictive radius; the second prevents a low radius from
-being mistaken for robustness when the representation has collapsed. We first
-define the radius and connect it to prediction error and planner decisions,
-then introduce the complementary task-proxy margin and checkpoint score.
+\subsection{Local representation geometry under visual perturbations}\label{sec:local-geometry-audit}
 
-\subsection{Local visual geometry as an initial audit}\label{sec:local-geometry-audit}
-
-Before comparing complete rollouts, consider a descriptive question: how large
-is the cloud produced by repeated visual perturbations of one state relative
-to the spacing between sampled clean states? Let
-$\mathcal V\in\{\mathrm{enc},\mathrm{end}\}$ denote either the encoder output
-or the representation after eight autoregressive rollout steps. For sampled
-state $i$, let $v_{i,\mathcal V}^{(0)}$ be its clean representation and
+Before defining a controlled rollout quantity, consider a descriptive
+question: how large is the representation cloud induced by repeated visual
+perturbations relative to the spacing among sampled clean anchors? Let
+$\mathcal V\in\{\mathrm{enc},\mathrm{roll}\}$ denote either the encoder output
+or the representation after eight autoregressive rollout steps. For anchor
+history $i$, let $v_{i,\mathcal V}^{(0)}$ be its clean representation and
 $v_{i,\mathcal V}^{(m)}$, $m=1,\ldots,M$, the representations of $M$
-perturbed views. In the endpoint space, the clean and perturbed views of each
-state use the same recorded action sequence. We define the sampled visual
+perturbed views. In the rollout space, the clean and perturbed views of each
+anchor use the same recorded action sequence. We define the sampled visual
 radius, nearest-clean spacing, and their ratio as
 \begin{align}
 r_{i,\mathcal V}^{\mathrm{vis}}
@@ -204,7 +198,8 @@ clean center; a value at least one says that it reaches or exceeds that local
 spacing. Neither statement identifies a semantic boundary.
 
 The ratio considers one neighboring center but not the neighbor's own visual
-radius. We therefore also call the sampled cloud around state $i$
+radius. To account for both cloud sizes, we call the sampled cloud around
+anchor $i$
 \emph{fully disjoint} when its enclosing ball is separated from every other
 sampled ball:
 \begin{equation}
@@ -214,7 +209,7 @@ r_{i,\mathcal V}^{\mathrm{vis}}+r_{j,\mathcal V}^{\mathrm{vis}}
 \quad\text{for every }j\neq i.
 \label{eq:local-cloud-disjoint}
 \end{equation}
-This gives three mutually exclusive state categories: (i)
+This gives three mutually exclusive anchor categories: (i)
 \emph{reaches/exceeds spacing} when $r_{i,\mathcal V}^{\mathrm{vis}}\geq
 d_{i,\mathcal V}^{\mathrm{NN}}$; (ii) \emph{within spacing, not disjoint}
 when the first inequality is reversed but \Cref{eq:local-cloud-disjoint} does
@@ -222,25 +217,23 @@ not hold; and (iii) \emph{fully disjoint} when it does hold. The second
 category means only that enclosing-ball separation is not certified; it does
 not assert that sampled points overlap.
 
-This audit is intuitive, but it is not a control-facing diagnostic. Its
-nearest clean center is chosen in learned space and need not represent a
-task-relevant or semantic difference. Although the clean and perturbed views
-within one state share actions, different clean endpoint centers generally
+These quantities reveal local contraction and separation, but they do not
+determine whether a perturbation changes a prediction or planning decision.
+The nearest clean anchor is chosen in learned space and need not represent a
+task-relevant or semantic difference. Different clean rollout centers also
 come from their own recorded action sequences, so their spacing can mix state
-and action effects. The encoder and final endpoint also omit when a visual
-displacement expands or contracts along the intermediate predictions.
-Moreover, the sampled maximum and nearest spacing depend on the number of
-views, anchor density, and representation scale; they have no samplewise link
-to future-error or planner-cost changes, and a collapsed representation can
-make every radius small.
+and action effects. Moreover, the encoder output and final rollout step omit
+the intermediate predictions, while the sampled maximum and nearest spacing
+depend on the number of views, anchor density, and representation scale. Most
+importantly, neither quantity bounds future-error drift or planner-cost
+movement, and representation collapse can make every radius small.
 
-We therefore compare the clean and perturbed views of the same history under
-exactly the same action sequence throughout the predicted rollout. This
-controlled paired quantity is ACPC. The endpoint comparison above is one
-component of it: when $\alpha_H>0$, the final-step displacement for any view
-is at most $\mathrm{ACPC}_H/\sqrt{\alpha_H}$. ACPC thus retains the local
-intuition while removing the arbitrary-neighbor comparison and observing the
-complete action-conditioned trajectory.
+These limitations motivate ACPC, which compares clean and perturbed views of
+the same history under exactly the same action sequence throughout the
+predicted rollout. The rollout-space comparison above is its final-step
+component: when $\alpha_H>0$, the final-step displacement for any view is at
+most $\mathrm{ACPC}_H/\sqrt{\alpha_H}$. Local geometry therefore motivates,
+but does not replace, the complete action-conditioned comparison.
 
 \subsection{Paired rollout radius}\label{sec:acpc-def}
 
@@ -410,15 +403,15 @@ fails. It concerns candidate selection and model cost under paired planner
 evaluations; it is not a statement about simulator return. Appendix~\ref{sec:appendix-fixed-pool-details}
 specifies the fixed-pool and adaptive-CEM evaluation contract.
 
-\subsection{Why low radius needs a task-proxy margin}\label{sec:acpc-radius-margin}
+\subsection{Checkpoint-level radius and proxy separation}\label{sec:acpc-radius-margin}
 
-ACPC replaces the local audit's arbitrary neighbor and endpoint-only view with
-a same-history, shared-action comparison over the complete rollout. The two
-propositions explain why its same-state radius is useful, but a single pair
-does not summarize a checkpoint, and a small radius is not sufficient. A
-constant representation makes every ACPC value zero and destroys all state
-distinctions. We therefore aggregate the same-state radius and pair it with an
-explicit separation test on declared state-coordinate proxies.
+ACPC provides one controlled measurement for a paired history. Evaluating a
+checkpoint requires aggregating these measurements, and interpreting a small
+aggregate requires checking that the representation retains selected state
+distinctions. A constant representation makes every ACPC value zero while
+destroying all such distinctions. We therefore aggregate the same-state
+radius and pair it with an explicit separation test on declared
+state-coordinate proxies.
 
 First convert pairwise ACPC to a checkpoint-level radius. Evaluation uses a
 fixed set of \emph{anchors}: an anchor is one logged history window together
@@ -504,15 +497,15 @@ The reported protocol fixes $q=0.90$ and normalized margin $\delta=0.10$.
 SMPR is the fraction of tested proxy-different pairs that remain outside the
 same-state tube by more than that margin.
 
-SMPR and the local disjointness audit share a radius--margin intuition, but
-they are not the same estimator. Local disjointness compares sampled maximum
-radii around arbitrary clean centers at the encoder or final endpoint and uses
-a symmetric two-ball condition. SMPR instead selects neighbors through a
-declared task-coordinate proxy, rolls both histories under the anchor's action
+Local ball separation and SMPR share a radius--margin intuition, but answer
+different questions. The local analysis compares sampled maximum radii around
+clean anchors at the encoder output or final rollout step and uses a symmetric
+two-ball condition. SMPR instead selects neighbors through a declared
+task-coordinate proxy, rolls both histories under the anchor's action
 sequence, compares their complete weighted rollouts, and tests a one-sided
-margin beyond the checkpoint-level q90 same-state tube. The local audit is a
-representative geometric description; ATR and SMPR are the operational
-checkpoint quantities.
+margin beyond the checkpoint-level q90 same-state tube. The former describes
+local representation geometry; ATR and SMPR provide the checkpoint-level
+diagnostic.
 
 ATR and SMPR must be read together. A constant representation makes both ATR
 and every $D_i^{\mathrm{diff}}$ zero, so it fails the SMPR test. Conversely, a
@@ -586,7 +579,7 @@ empirical claims.
 
 \begin{table}[H]
 \centering
-\caption{Reader guide to the ACPC diagnostic chain.}
+\caption{Reader guide to the analysis and diagnostic quantities.}
 \label{tab:acpc-object-guide}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -594,6 +587,7 @@ empirical claims.
 \toprule
 Object & Plain-language meaning & Empirical role \\
 \midrule
+Local $r/\mathrm{NN}$ and ball separation & Size of a visual perturbation cloud relative to nearby clean representations. & PushT geometry case study \\
 ACPC & Distance between the clean and perturbed predicted futures of one history under shared actions. & Prediction and planner analyses \\
 $b_j$ & Upper bound on how far candidate $j$'s squared goal cost can move. & Fixed-pool planner audit \\
 $\mathrm{ATR}^{\mathrm{raw}}$ & q90 radius of the normalized same-state rollout tube. & Tube used by SMPR \\
@@ -640,53 +634,43 @@ A Gaussian-sweep checkpoint meets the \emph{success-rate criterion} when it atta
 
 For blur and resize, each task uses the Gaussian thresholds selected on the other three tasks. We compare 24 checkpoint pairs (four tasks $\times$ three runs $\times$ two shifts), each pairing the unaugmented checkpoint with the checkpoint trained at $\stdmax{}=0.08$. A pair is labeled positive when success rate under the shift improves by at least five percentage points while clean success rate decreases by no more than five points. No blur- or resize-specific adjustment is made, and this analysis does not benchmark alternative signals such as encoder shift or one-step ACPC.
 
-\subsection{Local visual geometry before and after eight rollout steps}\label{sec:exp-local-geometry}
+\subsection{Local representation geometry before and after an eight-step rollout}\label{sec:exp-local-geometry}
 
-We first apply the local audit from \Cref{sec:local-geometry-audit} to one
-representative PushT checkpoint pair: LeWM training run 3072 before
-augmentation and after full-sequence Gaussian augmentation with
-$\stdmax{}=0.08$. The audit contains 128 logged states and, for each state,
-one clean view plus 18 perturbed views---six draws at each probe standard
-deviation in $\{0.01,0.04,0.08\}$. We compare the encoder output with the
-representation after eight autoregressive rollout steps. All ratios and
-counts are computed in the original 192-dimensional inference-cost
-representation. The t-SNE visualization~\cite{vandermaaten2008tsne} is
-qualitative only.
+We use a fixed PushT case study to visualize the quantities in
+\Cref{sec:local-geometry-audit}. The pair consists of LeWM training run 3072
+before augmentation and after full-sequence Gaussian augmentation with
+$\stdmax{}=0.08$. For each of 128 logged anchor histories, we generate one
+clean view and 18 perturbed views---six draws at each probe standard deviation
+in $\{0.01,0.04,0.08\}$. We compare the encoder output with the representation
+after eight autoregressive rollout steps. All ratios and counts are computed
+in the original 192-dimensional projected latent space used by the planner
+cost; the t-SNE visualization~\cite{vandermaaten2008tsne} is qualitative only.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.94\linewidth]{fig_local_geometry_highd_audit.pdf}
-\caption{Representative PushT local-geometry audit for LeWM training run
-3072. Rows compare the unaugmented and $\stdmax{}=0.08$ Gaussian-augmented
-checkpoints; columns show the encoder output and the representation after
-eight autoregressive rollout steps. Each state has one clean and 18 perturbed
-views; colors identify a fixed random subset of 16 states, while gray points
-and all reported statistics cover all 128 states. Each column uses a joint
-t-SNE fit across the two checkpoints, but t-SNE does not preserve metric
-geometry: the displayed median $r/\mathrm{NN}$, $r<\mathrm{NN}$ counts, and
-three-category strips are computed in the original high-dimensional
-representations, not in two dimensions. Reaching nearest-clean spacing is not
-a semantic-crossover claim, and the 2-D ellipses are only qualitative
-envelopes. The local view exposes visual spread, but it does not control the
-neighbor's task meaning, compare different centers under one shared action
-sequence, or observe the complete rollout; these limitations motivate ACPC.}
+\caption{Local representation geometry for a fixed PushT case study using
+LeWM training run 3072. Rows compare the unaugmented and $\stdmax{}=0.08$
+Gaussian-augmented checkpoints; columns show the encoder output and the
+representation after eight autoregressive rollout steps. Colors highlight a
+fixed subset of 16 anchors, while gray points and all reported statistics
+cover all 128 anchors. The callouts and category strips are computed in the
+original 192-dimensional projected latent space. The t-SNE visualization is
+qualitative because t-SNE does not preserve metric geometry; neither its
+coordinates nor ellipses enter any reported metric.}
 \label{fig:local-geometry-highd}
 \end{figure}
 
-Without augmentation, the median $r/\mathrm{NN}$ is $1.41$ at the encoder
-and $1.86$ after eight rollout steps. Only 22/128 and 7/128 states,
-respectively, have $r<\mathrm{NN}$, and none has a fully disjoint sampled
-cloud. The three category counts---reaches/exceeds spacing, within spacing but
-not disjoint, and fully disjoint---are $(106,22,0)$ at the encoder and
-$(121,7,0)$ after the rollout.
+Without augmentation, the median $r/\mathrm{NN}$ is $1.41$ at the encoder and
+$1.86$ after eight rollout steps, and none of the 128 anchor clouds is fully
+disjoint. After Gaussian augmentation, the corresponding ratios fall to
+$0.10$ and $0.19$; the fully disjoint fractions rise to $95.3\%$ at the
+encoder and $84.4\%$ after the rollout. Thus, in this fixed case study,
+augmentation contracts same-anchor visual clouds relative to nearby clean
+representations and preserves much of that separation after prediction.
 
-At the Gaussian-augmented checkpoint, the corresponding median ratios fall to
-$0.10$ and $0.19$. The $r<\mathrm{NN}$ counts rise to 125/128 at the encoder
-and 122/128 after the rollout; 122/128 and 108/128 clouds are fully disjoint.
-The category counts become $(3,3,122)$ and $(6,14,108)$. This representative
-pair therefore makes the contraction and separation effect easy to see, but
-it does not turn nearest-clean geometry into a task-semantic or planning
-criterion. The remaining experiments use ACPC to control the history and
+This local analysis does not establish task-semantic separation or planning
+robustness. The remaining experiments use ACPC to control the history and
 actions over the full rollout, ATR to summarize its normalized upper tail,
 and SMPR to test declared proxy-different pairs.
 

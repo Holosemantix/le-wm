@@ -16,7 +16,7 @@
 same-state visual perturbation
   -> local representation spread
   -> sampled clouds may reach nearby clean-state spacing
-  -> local geometry is intuitive but not control-facing
+  -> local geometry is descriptive but not prediction- or planning-relevant by itself
   -> shared-action full-rollout ACPC
   -> ATR upper-tail radius + SMPR proxy-separation guard
   -> downstream validation already present elsewhere in the paper
@@ -25,7 +25,7 @@ same-state visual perturbation
 整改完成后，读者必须能够回答：
 
 1. `r/NN`、`r < NN` 与 `disjoint` 分别测什么；
-2. 多少 sampled states 达到 local spacing、仍在 spacing 内但未完全分离、或已经 fully disjoint；
+2. 多少 sampled anchors 达到 local spacing、仍在 spacing 内但未完全分离、或已经 fully disjoint；
 3. 为什么这些直观 local measures 仍不足；
 4. ACPC 相比 local endpoint geometry 控制了什么；
 5. ATR 与 SMPR 如何把 radius–margin intuition 转换为 checkpoint diagnostic。
@@ -38,7 +38,7 @@ same-state visual perturbation
 - 改动现有 Gaussian sweep、future-error、planner、cross-task、cross-stressor 或 Gaussian-sensitivity figures；
 - 改动现有 tables；
 - 重新训练模型或改变任何 estimand；
-- 把 local PushT audit 扩写为 four-task evidence；
+- 把 local PushT case study 扩写为 four-task evidence；
 - 把 t-SNE distance、area 或 overlap 当作 quantitative evidence；
 - 把 nearest-clean spacing 写成 semantic boundary；
 - 将 local `r/NN` 或 disjoint counts 直接并入 ATR–SMPR score。
@@ -111,7 +111,7 @@ Paper-facing label 使用：
 
 ### 2.4 两个 representation spaces
 
-Local audit 只比较：
+Local analysis 只比较：
 
 - **Encoder**：history 经 encoder 后的 representation；
 - **After eight rollout steps**：同一 anchor 经八个 autoregressive prediction steps 后的 final representation。
@@ -124,7 +124,7 @@ sqrt(alpha_H) * r_H <= ACPC_H.
 
 ## 3. 为什么 local geometry 不够
 
-Local geometry 是必要的直观入口，但不能作为最终 control-facing diagnostic。正文必须明确给出以下六点：
+Local geometry 是必要的直观入口，但不能单独回答 perturbation 是否会改变 prediction 或 planning decision。正文必须明确给出以下六点：
 
 1. **Neighbor meaning is uncontrolled.** Learned-space nearest neighbor 不一定是 task-relevant different state，也不是 semantic label。
 2. **State and action effects can mix.** 不同 clean rollout centers 通常来自各自的 recorded action sequences，因此 center distance 可能同时包含 state 与 action-sequence differences。
@@ -133,7 +133,7 @@ Local geometry 是必要的直观入口，但不能作为最终 control-facing d
 5. **No direct downstream object.** Local overlap risk 本身不提供与 common-future error drift 或 candidate-cost movement 的 samplewise relation。
 6. **Small radius can be degenerate.** Constant representation 可以令所有 radii 接近零，因此 contraction 本身不等于 selective consistency。
 
-不得把这些不足简写为“encoder geometry ignores actions”，因为 audit 还包含 eight-step rollout endpoint。准确结论是：endpoint geometry 展示了 action-conditioned computation 后的局部现象，但没有同时控制 shared actions、complete rollout、task-proxy separation 与 checkpoint aggregation。
+不得把这些不足简写为“encoder geometry ignores actions”，因为 local analysis 还包含 eight-step rollout endpoint。准确结论是：endpoint geometry 展示了 action-conditioned computation 后的局部现象，但没有同时控制 shared actions、complete rollout、task-proxy separation 与 checkpoint aggregation。
 
 ## 4. Local geometry → ACPC → ATR/SMPR 的最终过渡
 
@@ -141,7 +141,7 @@ Local geometry 是必要的直观入口，但不能作为最终 control-facing d
 
 ACPC 比较同一 underlying history 的 clean/probed views，让两条 branches 使用完全相同的 recorded or candidate action sequence，并比较完整 weighted predicted rollout。
 
-因此 ACPC 解决 local audit 中三个核心控制问题：
+因此 ACPC 解决 local analysis 中三个核心控制问题：
 
 - same history，而不是任意 learned-space neighbor；
 - same action sequence，而不是混合不同 actions 的 rollout centers；
@@ -149,7 +149,7 @@ ACPC 比较同一 underlying history 的 clean/probed views，让两条 branches
 
 正文必须表达下面的逻辑；允许按版面润色，但不能删除因果连接：
 
-> The local analysis reveals whether visual perturbations are large relative to nearby clean representations, but it is not yet a control-facing diagnostic. Its nearest neighbor need not represent a task-relevant state difference, its scale depends on local sampling density, and its endpoint view does not isolate visual disagreement along a common action-conditioned rollout. We therefore compare the clean and perturbed views of the same history under exactly the same action sequence and measure their disagreement throughout the predicted rollout. This paired quantity is ACPC.
+> The local analysis reveals contraction and separation relative to nearby clean representations, but it does not determine whether a perturbation changes a prediction or planning decision. Its nearest clean anchor need not mark a task-relevant boundary, and its final-step view omits the intervening rollout. These limitations motivate ACPC, which compares clean and perturbed views of the same history under exactly the same action sequence throughout the predicted rollout.
 
 ### 4.2 ACPC 到 ATR/SMPR
 
@@ -171,11 +171,11 @@ Pairwise ACPC 仍不能单独代表一个 checkpoint，也不能排除 constant-
 | Encoder or final-step representation | Complete shared-action weighted rollout |
 | Nearest-clean spacing | Clean-transition normalization |
 | Symmetric `d_ij > r_i + r_j` | One-sided `D_i^diff > ATR^raw + delta` |
-| Representative descriptive audit | Checkpoint-level operational diagnostic |
+| Fixed descriptive case study | Checkpoint-level operational diagnostic |
 
 正文不能写“SMPR is the disjoint metric at rollout level”，也不能把 local ratios 加入 selective score。
 
-## 5. Verified representative audit
+## 5. Verified fixed case study
 
 ### 5.1 Frozen scope
 
@@ -183,7 +183,7 @@ Pairwise ACPC 仍不能单独代表一个 checkpoint，也不能排除 constant-
 - Model：LeWM；
 - Training run：3072；
 - Conditions：unaugmented checkpoint 与 full-sequence Gaussian-augmentation checkpoint (`stdmax = 0.08`)；
-- 128 sampled states；
+- 128 sampled anchor histories；
 - 每个 state：1 clean view + 18 perturbation views；
 - probe standard deviations：0.01、0.04、0.08，各六个 draws；
 - rollout：eight autoregressive steps；
@@ -220,7 +220,7 @@ Full-precision median ratios：1.4079947、1.8627083、0.0957874、0.1936060。
 - t-SNE state circles/envelopes：qualitative illustration；
 - `r/NN`、`r<NN`、three-category counts、disjoint：high-dimensional quantitative evidence。
 
-新图不显示 ATR/SMPR 数字；ATR/SMPR 属于下一层 operational diagnostic，不应与 local audit annotations 混在同一 panel。
+新图不显示 ATR/SMPR 数字；ATR/SMPR 属于下一层 operational diagnostic，不应与 local-analysis annotations 混在同一 panel。
 
 ### 6.2 Layout
 
@@ -236,7 +236,7 @@ Full-precision median ratios：1.4079947、1.8627083、0.0957874、0.1936060。
 1. 灰色 background clean states/views；
 2. 彩色 selected clean anchors；
 3. 同色 perturbation views 与 qualitative envelopes；
-4. 一个明确标为 `High-dimensional audit` 的 callout：
+4. 一个明确标为 `Original-space metrics` 的 callout：
    - median `r/NN`；
    - `r < NN` count/percentage；
    - fully-disjoint count/percentage；
@@ -258,30 +258,24 @@ Category strip 使用 colorblind-safe colors，并同时写 counts，不能只�
 
 ### 6.4 Caption contract
 
-Caption 必须说明：
+Caption 只承担四项功能：
 
-- representative PushT mechanism audit；
-- checkpoint pair、training run、128 states 与 18 perturbation views；
-- rows/columns 的确切含义；
-- t-SNE 只用于 qualitative visualization；
-- 所有 displayed metrics/counts 在 original high-dimensional space 计算；
-- `r >= NN` 表示达到 nearest-clean spacing，不表示 semantic crossover；
-- local geometry 的三个局限：neighbor meaning、action matching、complete rollout；
-- 这些局限 motivate ACPC。
+- 说明这是 fixed PushT case study 并给出 training run；
+- 解释 rows、columns 和 highlighted anchors；
+- 明确 callouts/category strips 在 original 192-dimensional projected latent space 中计算；
+- 明确 t-SNE coordinates 与 ellipses 只作 qualitative visualization。
 
-建议 caption 收束句：
-
-> The visualization shows the sampled state clouds, whereas all ratios and category counts are computed in the original high-dimensional representations. This local audit exposes visual spread relative to nearby clean anchors, but it does not control the neighbor's task meaning, the action sequence, or disagreement over the complete predicted rollout; these limitations motivate ACPC.
+Checkpoint scope、perturbation draws、semantic/action limitations 与 ACPC transition 放在正文，不在 caption 中重复。
 
 ## 7. Manuscript integration
 
 ### 7.1 Minimal Introduction bridge
 
-只在 Introduction 的 problem-to-method transition 中增加一句短 roadmap，说明论文先展示 local geometry，再通过 ACPC/ATR/SMPR 进行 controlled diagnostic。不得借本专项重写整个 Introduction。
+在 Introduction 的 problem-to-method transition 中按定义顺序组织相关段落：先说明 local geometry 的现象与局限，再定义 ACPC，最后说明 collapse failure 与 ATR/SMPR。不得借本专项改动其他背景、结果或 contribution paragraphs。
 
 ### 7.2 Theory insertion
 
-在 ACPC definition 之前增加一个 focused local-geometry subsection：
+在 ACPC definition 之前增加 `Local representation geometry under visual perturbations` subsection：
 
 1. 定义 `r_i`、`n_i`、`r_i/n_i` 与 fully-disjoint condition；
 2. 定义三个 mutually exclusive state categories；
@@ -297,14 +291,14 @@ Caption 必须说明：
 
 在 Evaluation setup 后、现有 detailed empirical claims 前增加 focused subsection：
 
-> **Local visual geometry before and after eight rollout steps**
+> **Local representation geometry before and after an eight-step rollout**
 
 该 subsection：
 
-- 先定义 representative audit scope；
+- 先定义 fixed PushT case-study scope；
 - 引用新 composite figure；
 - 报告 Section 5 的 high-D summaries 与 state categories；
-- 只得出 representative local-geometry conclusion；
+- 只得出 fixed-case-study local-geometry conclusion；
 - 以“为什么 local geometry 不够”收束并指回 ACPC/ATR/SMPR。
 
 ### 7.4 Retire the old Appendix t-SNE display
@@ -375,7 +369,7 @@ Journal of Machine Learning Research, 9(86):2579--2605, 2008.
 
 ### 10.2 Definitions that do not require external attribution
 
-下列 quantities 是本文为 representative audit 明确定义的 descriptive objects，不得通过无关 citation 暗示它们是既有标准指标：
+下列 quantities 是本文为 fixed case study 明确定义的 descriptive objects，不得通过无关 citation 暗示它们是既有标准指标：
 
 - sampled perturbation radius `r_i`；
 - nearest-clean spacing `n_i`；
@@ -384,7 +378,7 @@ Journal of Machine Learning Research, 9(86):2579--2605, 2008.
 - enclosing-ball disjointness；
 - three-category state partition。
 
-正文应使用 `we define`、`we report` 或 `in this audit`，而不是 `the standard r/NN metric`。
+正文应使用 `we define`、`we report` 或 `in this analysis`，而不是 `the standard r/NN metric`。
 
 ### 10.3 Existing citations that may be reused
 
@@ -398,7 +392,7 @@ Nearest-neighbor OOD、manifold learning 或 metric-learning papers 与本文的
 
 1. t-SNE 首次出现处有原始方法 citation；
 2. figure caption/prose 不暗示 t-SNE distances 是 high-dimensional metric evidence；
-3. local audit definitions 明确属于本文；
+3. local-analysis definitions 明确属于本文；
 4. 新 reference entry 无 duplicate key/duplicate paper；
 5. `references.bib` 中无未引用的专项新增条目；
 6. normal/blind builds 无 undefined citation。
@@ -419,12 +413,12 @@ Nearest-neighbor OOD、manifold learning 或 metric-learning papers 与本文的
 
 - [ ] 新文中 `r/NN`、`r<NN`、disjoint 和三类 state categories 均有定义；
 - [ ] 三类 counts 对每个 panel 都相加为 128；
-- [ ] 新 figure 同时提供直观 state clouds 与 high-D quantitative audit；
+- [ ] 新 figure 同时提供直观 state clouds 与 original-space quantitative metrics；
 - [ ] 新 figure 不显示 ATR/SMPR 数字；
 - [ ] 所有 quantitative values 来自 original high-dimensional representations；
 - [ ] t-SNE 仅作 qualitative visualization；
 - [ ] t-SNE 首次出现处引用 van der Maaten and Hinton (2008) 原始论文；
-- [ ] `r/NN`、`r<NN`、disjoint 与 state categories 明确写成本文 audit definitions，不伪装成标准外部指标；
+- [ ] `r/NN`、`r<NN`、disjoint 与 anchor categories 明确写成本文 definitions，不伪装成标准外部指标；
 - [ ] 未为 nearest-neighbor geometry 添加不直接支持正文 claim 的文献；
 - [ ] `r >= NN` 未被写成 semantic crossover；
 - [ ] Local geometry 的六项不足完整且自然引出 ACPC；
