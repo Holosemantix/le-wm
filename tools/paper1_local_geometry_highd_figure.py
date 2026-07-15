@@ -200,9 +200,9 @@ def build_figure(
         2,
         left=0.065,
         right=0.985,
-        bottom=0.07,
-        top=0.94,
-        hspace=0.26,
+        bottom=0.04,
+        top=0.96,
+        hspace=0.18,
         wspace=0.14,
     )
     colors = plt.cm.turbo(np.linspace(0.05, 0.95, len(anchors)))
@@ -297,23 +297,31 @@ def build_figure(
         total = int(audit["n_states"])
         radius_count = int(audit["radius_lt_nn_count"])
         disjoint_count = int(audit["fully_disjoint_count"])
-        metric_subtitle = (
-            f"median r/NN {audit['median_radius_over_nn']:.2f}  ·  "
-            f"r < NN {radius_count}/{total} ({_format_percent(radius_count, total)})  ·  "
-            f"fully disjoint {disjoint_count}/{total} ({_format_percent(disjoint_count, total)})"
+        metric_text = (
+            f"median r/NN {audit['median_radius_over_nn']:.2f}\n"
+            f"r < NN {_format_percent(radius_count, total)}\n"
+            f"fully disjoint {_format_percent(disjoint_count, total)}"
         )
         ax.text(
-            0.5,
-            1.01,
-            metric_subtitle,
+            0.025,
+            0.975,
+            metric_text,
             transform=ax.transAxes,
-            ha="center",
-            va="bottom",
-            fontsize=6.2,
+            ha="left",
+            va="top",
+            fontsize=6.4,
+            linespacing=1.12,
             color="#202020",
+            bbox={
+                "boxstyle": "round,pad=0.22",
+                "facecolor": "white",
+                "edgecolor": "#D0D0D0",
+                "linewidth": 0.45,
+                "alpha": 0.82,
+            },
             zorder=8,
         )
-        ax.set_title(f"{row_title}: {column_title}", pad=14.0)
+        ax.set_title(f"{row_title}: {column_title}", pad=4.0)
         ax.set_xlim(*xlim)
         ax.set_ylim(*ylim)
         ax.set_xlabel("t-SNE coordinate 1", labelpad=1.5)
@@ -321,16 +329,6 @@ def build_figure(
         ax.tick_params(pad=1)
         ax.grid(True, color="#ECECEC", linewidth=0.45)
         ax.set_aspect("equal", adjustable="box")
-
-    fig.text(
-        0.5,
-        0.008,
-        "NN denotes nearest clean-anchor spacing; all subtitle metrics use the original high-dimensional representation.",
-        ha="center",
-        va="bottom",
-        fontsize=6.7,
-        color="#333333",
-    )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, bbox_inches="tight", pad_inches=0.04)
