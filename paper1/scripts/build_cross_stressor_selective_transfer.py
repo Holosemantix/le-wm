@@ -339,60 +339,71 @@ def write_all_pairs_table(rows: list[dict[str, Any]], out: Path) -> None:
 
 
 def plot(rows: list[dict[str, Any]], out: Path) -> None:
-    """Two aligned descriptive rows per checkpoint pair: the observed success
-    change under the shift (top) and the selective-score change (bottom).
-    The display carries no thresholds or verdicts; the sign-agreement
-    quantification lives in the text and appendix."""
+    """Two aligned descriptive rows per task and shift, averaged over the
+    three training runs: the observed success change under the shift (top)
+    and the calibrated-score change (bottom). No thresholds or verdicts are
+    drawn; per-pair values are in the appendix table."""
     out.parent.mkdir(parents=True, exist_ok=True)
     bar_color = "#2c6fa8"
+    stressors = ("blur", "resize")
     with plt.rc_context(STYLE):
         fig, (behavior_ax, score_ax) = plt.subplots(
             2,
             1,
-            figsize=(6.7, 3.7),
+            figsize=(6.0, 3.4),
             sharex=True,
             gridspec_kw={"height_ratios": (1.25, 1.0), "hspace": 0.14},
         )
 
+        behavior_means: list[float] = []
+        score_means: list[float] = []
         positions: list[float] = []
-        task_positions: dict[str, list[float]] = {}
-        cursor = 0.0
-        previous_task = None
-        for row in rows:
-            if previous_task is not None and row["task"] != previous_task:
-                cursor += 1.5
-            positions.append(cursor)
-            task_positions.setdefault(row["task"], []).append(cursor)
-            previous_task = row["task"]
-            cursor += 1.0
+        hatched_flags: list[bool] = []
+        tick_positions: list[float] = []
+        for task_index, task in enumerate(TASKS):
+            base = task_index * 3.0
+            tick_positions.append(base + 0.5)
+            for offset, stressor in enumerate(stressors):
+                cell = [
+                    row
+                    for row in rows
+                    if row["task"] == task and row["stressor"] == stressor
+                ]
+                if len(cell) != len(SEEDS):
+                    raise ValueError(f"{task}/{stressor}: expected one row per run")
+                positions.append(base + offset)
+                hatched_flags.append(stressor == "resize")
+                behavior_means.append(mean(row["delta_behavior"] for row in cell))
+                score_means.append(
+                    mean(row["delta_selective_score"] for row in cell)
+                )
 
-        for position, row in zip(positions, rows):
-            hatched = row["stressor"] == "resize"
+        for position, hatched, behavior, score in zip(
+            positions, hatched_flags, behavior_means, score_means
+        ):
             bar_kwargs = {
-                "width": 0.82,
+                "width": 0.85,
                 "color": bar_color,
                 "hatch": "///" if hatched else None,
                 "edgecolor": "white" if hatched else bar_color,
                 "linewidth": 0.4,
                 "zorder": 2,
             }
-            behavior_ax.bar(position, row["delta_behavior"], **bar_kwargs)
-            score_ax.bar(position, row["delta_selective_score"], **bar_kwargs)
+            behavior_ax.bar(position, behavior, **bar_kwargs)
+            score_ax.bar(position, score, **bar_kwargs)
 
         behavior_ax.axhline(0.0, color="#444444", linewidth=0.8, zorder=3)
-        y_values = [row["delta_behavior"] for row in rows]
-        behavior_ax.set_ylim(min(y_values) - 4.0, max(y_values) + 5.0)
+        behavior_ax.set_ylim(min(behavior_means) - 4.0, max(behavior_means) + 6.0)
         behavior_ax.set_ylabel("Success-rate change\nunder the shift (pp)")
 
         score_ax.axhline(0.0, color="#444444", linewidth=0.8, zorder=3)
-        score_values = [row["delta_selective_score"] for row in rows]
-        score_ax.set_ylim(min(score_values) - 0.4, max(score_values) + 0.4)
-        score_ax.set_ylabel("Selective-score\nchange $\\Delta S$")
+        score_ax.set_ylim(min(score_means) - 0.4, max(score_means) + 0.4)
+        score_ax.set_ylabel("Calibrated-score\nchange $\\Delta S$")
 
-        score_ax.set_xticks([mean(values) for values in task_positions.values()])
-        score_ax.set_xticklabels(list(task_positions.keys()))
+        score_ax.set_xticks(tick_positions)
+        score_ax.set_xticklabels(list(TASKS))
         score_ax.tick_params(axis="x", length=0)
-        score_ax.set_xlim(-0.9, cursor - 0.1)
+        score_ax.set_xlim(-0.9, positions[-1] + 0.9)
         for axis in (behavior_ax, score_ax):
             axis.grid(True, axis="y", color="#B0B0B0", alpha=0.22, linewidth=0.55)
             axis.spines["top"].set_visible(False)
@@ -407,7 +418,7 @@ def plot(rows: list[dict[str, Any]], out: Path) -> None:
             loc="upper right",
             ncol=2,
             frameon=False,
-            fontsize=6.6,
+            fontsize=6.8,
             handlelength=1.5,
             columnspacing=0.9,
             handletextpad=0.5,

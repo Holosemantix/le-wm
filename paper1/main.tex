@@ -1042,22 +1042,25 @@ selected on the other three Gaussian-noise tasks are exactly the common pair
 $(t_R,t_M)=(0.3,0.95)$, so the screen carries over without adjustment. For
 each of the 24 checkpoint pairs in \Cref{sec:bg}, we recompute ATR and SMPR
 under the new shift, insert them into the same calibrated score, and predict
-improvement when the augmented checkpoint scores higher ($\Delta S>0$); the
-observed label requires a success-rate gain of at least five percentage
-points with at most a five-point clean loss. No blur or resize outcome
+improvement when the augmented checkpoint scores higher ($\Delta S>0$; that
+is, when the noise-trained checkpoint clears the common thresholds with more
+margin under the shift than its unaugmented counterpart). The observed label
+requires a success-rate gain of at least five percentage points with at most
+a five-point clean loss. No blur or resize outcome
 enters threshold selection.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.92\linewidth]{fig_cross_stressor_selective_transfer_v1.pdf}
 \caption{Correspondence between planning gains and the diagnostic under blur
-and resize for all 24 checkpoint pairs (unaugmented versus
-$\stdmax{}=0.08$), grouped by task and ordered by training run. Top:
-success-rate change under the shift. Bottom: selective-score change
-$\Delta S$ of the same pairs under the common thresholds; hatched bars are
-resize. Tasks with clear planning gains (TwoRoom, Reacher) also show clearly
-positive score changes, while Cube changes little in planning and its score
-decreases.}
+and resize. Bars average the three training runs for each task and shift;
+per-pair values are in \Cref{tab:cross-stressor-all-pairs}. Top: change in
+planning success rate from the unaugmented to the $\stdmax{}=0.08$
+checkpoint under the shift. Bottom: change $\Delta S$ in the calibrated
+score of \Cref{eq:joint-diagnostic-score}, i.e., how much more margin the
+noise-trained checkpoint has inside the common thresholds; positive means
+the diagnostic favors it. Tasks with clear planning gains (TwoRoom, Reacher)
+also gain score; Cube gains neither.}
 \label{fig:cross-stressor-selective-transfer}
 \end{figure}
 
