@@ -1004,30 +1004,31 @@ augmentation level; this supports a shared operating range, not an exact
 universal boundary or a general collapse detector.
 \FloatBarrier
 
-\subsection{Application to PLDM}
+\subsection{Portability to other model families}
 \label{sec:exp-pldm-portability}
 
-We next ask whether the same diagnostic procedure applies to a different
-joint-embedding dynamics architecture. We use the complete PLDM Gaussian
-sweep with the same paired histories, eight-step rollouts, ATR normalization,
-SMPR guard, success-rate criterion, and threshold-selection procedure. The
-analysis uses PLDM's encoder and predictor and does not depend on LeWM layers
-or training losses. Each setting has one training run, so we cannot estimate
-run-to-run variability. For each PLDM test task, we select thresholds on
-the other three PLDM tasks and then fix them for its nine checkpoints.
+The equations and diagnostics of \Cref{sec:acpc} reference only a frozen
+encoder, an action-conditioned predictor, and a latent goal cost, so nothing
+in the procedure is specific to LeWM. We test this portability on PLDM, a
+joint-embedding dynamics model with a different architecture and training
+recipe, by rerunning the complete Gaussian sweep with the same paired
+histories, eight-step rollouts, ATR normalization, SMPR guard, success-rate
+criterion, and threshold-selection procedure (one training run per setting,
+so run-to-run variability is not estimated). Calibration stays inside the
+family: for each PLDM test task, thresholds are selected on the other three
+PLDM tasks and fixed for its nine checkpoints; no LeWM number is reused.
 
-Pooling all 36 task--checkpoint evaluations (four test tasks $\times$
-nine checkpoints) gives $0.836$ balanced accuracy, $0.789$ precision, and
-$0.882$ recall. Task-level balanced accuracies are $0.938$, $0.750$, $0.500$,
-and $0.875$ for TwoRoom, PushT, Reacher, and Cube: on Reacher the thresholds
-chosen on the other tasks perform at chance. After normalizing ATR within each
-PLDM task, applying the LeWM thresholds selected on the corresponding three
-threshold-selection tasks
-gives the same aggregate values ($0.836$/$0.789$/$0.882$).
-\textbf{Takeaway:} the equations and evaluation procedure carry over to a
-second joint-embedding architecture, but numerical calibration remains
-model-family specific, and the aggregate agreement above does not make
-thresholds architecture-invariant.
+\Cref{tab:pldm-architecture-portability} compares the same leave-task-out
+screen in the two families. TwoRoom and Cube screen almost identically in
+both, PushT is weaker on PLDM, and on Reacher the transferred thresholds
+perform at chance. Pooling all 36 PLDM task--checkpoint decisions gives
+$0.836$ balanced accuracy, $0.789$ precision, and $0.882$ recall. As a
+second check, applying the LeWM thresholds after within-task ATR
+normalization yields exactly the same PLDM decisions. \textbf{Takeaway:}
+the theory and the evaluation procedure carry over unchanged to a different
+training paradigm; only the numerical calibration is redone within each
+family, and the Reacher case shows that this recalibration is not guaranteed
+to succeed on every task.
 
 \input{tables/table_pldm_architecture_portability}
 
@@ -1052,30 +1053,29 @@ enters threshold selection.
 \caption{Correspondence between planning gains and the diagnostic under blur
 and resize for all 24 checkpoint pairs (unaugmented versus
 $\stdmax{}=0.08$), grouped by task and ordered by training run. Top:
-success-rate change under the shift; the dashed line is the five-point
-observed-label threshold, and daggers mark the two discordant pairs, both at
-$+4$ points. Bottom: selective-score change $\Delta S$ of the same pairs
-under the common thresholds. Bar color gives the diagnostic verdict; hatched
-bars are resize. The label's clean-loss condition changes no label among
-these pairs.}
+success-rate change under the shift. Bottom: selective-score change
+$\Delta S$ of the same pairs under the common thresholds; hatched bars are
+resize. Tasks with clear planning gains (TwoRoom, Reacher) also show clearly
+positive score changes, while Cube changes little in planning and its score
+decreases.}
 \label{fig:cross-stressor-selective-transfer}
 \end{figure}
 
-The verdict agrees with the observed label on 22 of 24 pairs
-(\Cref{fig:cross-stressor-selective-transfer}). The two rows of the figure
-make the task-level correspondence visible: TwoRoom and Reacher transfer
-strongly, with success-rate gains of $29$--$56$ points and large positive
-score changes; Cube shows no gain and uniformly negative score changes; and
-PushT sits between the two groups on both rows---mixed success changes and
-small score changes---and contributes both borderline pairs. Both
-disagreements are borderline rather than sign errors: two PushT pairs
-improve by exactly four percentage points, one point below the label
-threshold, while the score improves. The magnitude of the score change also tracks the size of the
-success change (Spearman's $\rho=0.835$); per-shift classification metrics
-are in \Cref{sec:appendix-cross-stressor}. \textbf{Takeaway:} the common
-threshold range, fixed on Gaussian noise, still separates improved from
-unimproved checkpoints under blur and resize at the tested severities; it is
-not an absolute robustness classifier.
+The two rows of \Cref{fig:cross-stressor-selective-transfer} show the
+correspondence directly: TwoRoom and Reacher transfer strongly, with
+success-rate gains of $29$--$56$ points and large positive score changes;
+Cube shows neither a planning gain nor a score gain; and PushT sits between
+the two groups on both rows, with mixed success changes and small score
+changes. The magnitude of the score change tracks the size of the success
+change (Spearman's $\rho=0.835$). Quantitatively, the sign of $\Delta S$
+matches the five-point success-rate label on 22 of 24 pairs; both
+exceptions are borderline PushT pairs that improve by exactly four
+percentage points while the score improves, and per-shift classification
+metrics are in \Cref{sec:appendix-cross-stressor}. \textbf{Takeaway:} where
+noise training transfers to blur and resize, the diagnostic improves with
+it, and where it does not, the diagnostic does not; the common range, fixed
+on Gaussian noise, preserves this ordering at the tested severities without
+being an absolute robustness classifier.
 \FloatBarrier
 
 \section{Discussion and limitations}\label{sec:disc}

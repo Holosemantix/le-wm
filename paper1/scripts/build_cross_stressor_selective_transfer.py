@@ -339,19 +339,19 @@ def write_all_pairs_table(rows: list[dict[str, Any]], out: Path) -> None:
 
 
 def plot(rows: list[dict[str, Any]], out: Path) -> None:
-    """Two aligned verdict rows per checkpoint pair: the observed success
-    change under the shift (top) and the selective-score change from the
-    common Gaussian-calibrated thresholds (bottom)."""
+    """Two aligned descriptive rows per checkpoint pair: the observed success
+    change under the shift (top) and the selective-score change (bottom).
+    The display carries no thresholds or verdicts; the sign-agreement
+    quantification lives in the text and appendix."""
     out.parent.mkdir(parents=True, exist_ok=True)
-    predicted_color = "#2166ac"
-    nonpredicted_color = "#b8b8b8"
+    bar_color = "#2c6fa8"
     with plt.rc_context(STYLE):
         fig, (behavior_ax, score_ax) = plt.subplots(
             2,
             1,
-            figsize=(6.7, 3.9),
+            figsize=(6.7, 3.7),
             sharex=True,
-            gridspec_kw={"height_ratios": (1.3, 1.0), "hspace": 0.14},
+            gridspec_kw={"height_ratios": (1.25, 1.0), "hspace": 0.14},
         )
 
         positions: list[float] = []
@@ -367,50 +367,28 @@ def plot(rows: list[dict[str, Any]], out: Path) -> None:
             cursor += 1.0
 
         for position, row in zip(positions, rows):
-            color = predicted_color if row["predicted_positive"] else nonpredicted_color
             hatched = row["stressor"] == "resize"
             bar_kwargs = {
                 "width": 0.82,
-                "color": color,
+                "color": bar_color,
                 "hatch": "///" if hatched else None,
-                "edgecolor": "white" if hatched else color,
+                "edgecolor": "white" if hatched else bar_color,
                 "linewidth": 0.4,
                 "zorder": 2,
             }
             behavior_ax.bar(position, row["delta_behavior"], **bar_kwargs)
             score_ax.bar(position, row["delta_selective_score"], **bar_kwargs)
-            if row["discordance"].startswith("false_"):
-                offset = 1.0 if row["delta_behavior"] >= 0 else -1.0
-                behavior_ax.annotate(
-                    r"$\dag$",
-                    xy=(position, row["delta_behavior"] + offset),
-                    ha="center",
-                    va="bottom" if offset > 0 else "top",
-                    fontsize=8.5,
-                    color="#8E1B2C",
-                    zorder=4,
-                )
 
         behavior_ax.axhline(0.0, color="#444444", linewidth=0.8, zorder=3)
-        behavior_ax.axhline(5.0, color="#444444", linewidth=0.8, linestyle="--", zorder=3)
-        behavior_ax.text(
-            cursor - 0.4,
-            6.2,
-            "+5 pp observed-label threshold",
-            ha="right",
-            va="bottom",
-            fontsize=6.6,
-            color="#555555",
-        )
         y_values = [row["delta_behavior"] for row in rows]
-        behavior_ax.set_ylim(min(y_values) - 5.0, max(y_values) + 7.0)
+        behavior_ax.set_ylim(min(y_values) - 4.0, max(y_values) + 5.0)
         behavior_ax.set_ylabel("Success-rate change\nunder the shift (pp)")
 
         score_ax.axhline(0.0, color="#444444", linewidth=0.8, zorder=3)
         score_values = [row["delta_selective_score"] for row in rows]
         score_ax.set_ylim(min(score_values) - 0.4, max(score_values) + 0.4)
         score_ax.set_ylabel("Selective-score\nchange $\\Delta S$")
-        
+
         score_ax.set_xticks([mean(values) for values in task_positions.values()])
         score_ax.set_xticklabels(list(task_positions.keys()))
         score_ax.tick_params(axis="x", length=0)
@@ -421,17 +399,15 @@ def plot(rows: list[dict[str, Any]], out: Path) -> None:
             axis.spines["right"].set_visible(False)
 
         legend_handles = [
-            Patch(facecolor=predicted_color, label=r"Predicts improvement ($\Delta S>0$)"),
-            Patch(facecolor=nonpredicted_color, label="Predicts no improvement"),
-            Patch(facecolor="#8a8a8a", label="Blur"),
-            Patch(facecolor="#8a8a8a", hatch="///", edgecolor="white", label="Resize"),
+            Patch(facecolor=bar_color, label="Blur"),
+            Patch(facecolor=bar_color, hatch="///", edgecolor="white", label="Resize"),
         ]
         behavior_ax.legend(
             handles=legend_handles,
             loc="upper right",
             ncol=2,
             frameon=False,
-            fontsize=6.5,
+            fontsize=6.6,
             handlelength=1.5,
             columnspacing=0.9,
             handletextpad=0.5,

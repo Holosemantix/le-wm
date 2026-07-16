@@ -227,20 +227,20 @@ def plot_planner(summary: dict[str, Any], out: Path) -> None:
 def build_increment_table(summary: dict[str, Any]) -> str:
     analyses = summary["predeclared_incremental_analyses"]
     specs = (
-        ("cost_drift", "Maximum fixed-pool cost movement"),
+        ("cost_drift", "Largest candidate-cost change in the shared pool"),
         ("positive_clean_regret", "Adaptive-CEM decision regret"),
-        ("first_action_rms", "Adaptive-CEM first-action change (RMS)"),
+        ("first_action_rms", "RMS change in the first planned action"),
     )
     lines = [
         r"\begin{table}[H]",
         r"\centering",
-        r"\caption{Leave-one-task-out prediction gain from candidate-conditioned five-step ACPC in the reduced-budget CEM audit (9,600 history records). Both ridge models include perturbation severity, training condition, one-step ACPC, and the nominal top-1 margin; the expanded model adds five-step ACPC. Within each independent training run, the models are fitted on three tasks and evaluated on the fourth, rotating over all four tasks. Test MAE on the fitted $\log(1+\mathrm{target})$ response is averaged equally across these four evaluations for each model, and the relative decrease between those two equal-task MAEs is then computed. Entries report the across-run mean $\pm$ sample standard deviation of these run-level decreases; the final column counts positive task--run cases out of 12. Higher is better. Decision regret is measured in the model's squared latent goal cost, not simulator return.}",
+        r"\caption{Reduction in prediction MAE after adding candidate-specific five-step ACPC. Models are fitted on three tasks and evaluated on the remaining task; higher is better.}",
         r"\label{tab:acpc-planner-increment}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{4.5pt}",
         r"\begin{tabularx}{\linewidth}{Xcc}",
         r"\toprule",
-        r"Prediction target & \shortstack{Leave-one-task-out MAE decrease\\(\%, mean $\pm$ sample SD, $\uparrow$)} & \shortstack{Positive task--run\\cases (/12)} \\",
+        r"Prediction target & \shortstack{MAE reduction (\%) $\uparrow$\\mean $\pm$ run-to-run std. dev.} & \shortstack{Task--run evaluations\\improved (/12)} \\",
         r"\midrule",
     ]
     for key, label in specs:
@@ -252,7 +252,16 @@ def build_increment_table(summary: dict[str, Any]) -> str:
             f"{label} & {mean_display} & "
             f"{aggregate['task_seed_cells_improved']}/12 \\\\"
         )
-    lines.extend([r"\bottomrule", r"\end{tabularx}", r"\end{table}"])
+    lines.extend(
+        [
+            r"\bottomrule",
+            r"\end{tabularx}",
+            r"\vspace{2pt}",
+            "",
+            r"\parbox{0.98\linewidth}{\scriptsize MAE is computed on the $\log(1+\mathrm{target})$ scale. The four evaluation tasks are weighted equally within each training run; entries then report the mean and standard deviation across three runs. The final column counts the 12 task--run evaluations separately.}",
+            r"\end{table}",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -262,7 +271,7 @@ def build_absolute_table(summary: dict[str, Any]) -> str:
     lines = [
         r"\begin{table}[H]",
         r"\centering",
-        r"\caption{CEM decision statistics at Gaussian perturbation severity 0.08. Values are mean $\pm$ sample SD across independent training runs after histories are averaged within each run. Reduced-budget rows use 100 histories, $K=64$, top-8 elites, and eight CEM steps; full-budget rows use the same 16 histories per task with $K=300$, top-30 elites, and 30 steps. Regret is measured with the model's squared latent goal cost and is not an environment success rate.}",
+        r"\caption{CEM decision statistics at Gaussian perturbation severity 0.08. Values are mean $\pm$ standard deviation across training runs after averaging histories within each run. Reduced-budget rows use 100 histories, $K=64$, top-8 elites, and eight CEM iterations; full-budget rows use the same 16 histories per task with $K=300$, top-30 elites, and 30 iterations. Regret uses the model's squared latent goal cost, not an environment success rate.}",
         r"\label{tab:acpc-planner-absolute}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{2.2pt}",
@@ -367,7 +376,7 @@ def build_sweep_table(rows: list[dict[str, str]]) -> str:
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Summary of the nine-level Gaussian-augmentation sweep. ``Best'' denotes the augmentation level with the highest mean planning success rate at evaluation noise $\sigma=0.08$; Fig.~\ref{fig:full-sweep-diagnostics} shows every level. Relative ATR is divided by its value without noise augmentation and is lower-is-better; SMPR is reported on its original scale and is higher-is-better.}",
+        r"\caption{Summary of the Gaussian-augmentation sweep (nine checkpoints per task: no augmentation plus eight noise levels; \Cref{fig:full-sweep-diagnostics} shows every level). ``Best'' is the level with the highest mean planning success at evaluation noise $\sigma=0.08$; arrows give the change from the unaugmented checkpoint to that level. Relative ATR is lower-is-better, SMPR higher-is-better; the last column lists levels meeting the success-rate criterion (\Cref{sec:bg}).}",
         r"\label{tab:full-sweep-compact}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{3.5pt}",
@@ -491,32 +500,54 @@ def build_pldm_table(
     ):
         raise ValueError("PLDM three-source summary is missing")
 
+    lewm_task_ba: dict[str, float] = {}
+    for partition in lewm_cross_task_summary.get("partitions", []):
+        if (
+            int(partition.get("source_coverage", -1)) == 3
+            and len(partition.get("evaluation_tasks", [])) == 1
+        ):
+            lewm_task_ba[str(partition["evaluation_tasks"][0])] = float(
+                partition["balanced_accuracy"]
+            )
+    if set(lewm_task_ba) != set(TASKS):
+        raise ValueError("LeWM three-source balanced accuracies are incomplete")
+
+    pldm_task_ba = {
+        str(row["task"]): float(row["balanced_accuracy"]) for row in local_eval
+    }
+    if set(pldm_task_ba) != set(TASKS):
+        raise ValueError("PLDM three-source balanced accuracies are incomplete")
+
+    if relative_lewm_confusion != local_confusion:
+        raise ValueError(
+            "score-aligned LeWM thresholds no longer reproduce the PLDM decisions"
+        )
+    if (local_ba, local_precision, local_recall) != (
+        relative_ba,
+        relative_precision,
+        relative_recall,
+    ):
+        raise ValueError("PLDM pooled metrics diverge between calibrations")
+
     lines = [
         r"\begin{table}[H]",
         r"\centering",
-        r"\caption{Applying the same ACPC analysis to the complete PLDM sweep of four tasks and nine augmentation levels. The first row selects thresholds on the other three PLDM tasks. The second uses the corresponding LeWM thresholds after normalizing ATR within each PLDM task. Metrics include all 36 PLDM evaluation rows; raw thresholds are not assumed to match across model families.}",
+        r"\caption{The same leave-task-out screen in two model families: for each evaluation task, thresholds are selected on that family's other three tasks and applied unchanged. Chance is $0.5$; LeWM values average three training runs, PLDM has one run per setting. Applying score-aligned LeWM thresholds to PLDM after within-task ATR normalization yields identical PLDM decisions.}",
         r"\label{tab:pldm-architecture-portability}",
         r"\scriptsize",
-        r"\setlength{\tabcolsep}{4.0pt}",
-        r"\begin{tabular}{lrrrrr}",
+        r"\setlength{\tabcolsep}{6pt}",
+        r"\begin{tabular}{lrr}",
         r"\toprule",
-        r"Calibration & BA & Precision & Recall & False pass & False miss \\",
+        r" & \multicolumn{2}{c}{Balanced accuracy} \\",
+        r"\cmidrule(lr){2-3}",
+        r"Evaluation task & LeWM & PLDM \\",
         r"\midrule",
-        (
-            f"PLDM thresholds, other three tasks & {local_ba:.3f} & "
-            f"{local_precision:.3f} & {local_recall:.3f} & "
-            f"{local_confusion['fp']} & {local_confusion['fn']} \\\\"
-        ),
-        (
-            f"LeWM thresholds, PLDM-normalized & {relative_ba:.3f} & "
-            f"{relative_precision:.3f} & {relative_recall:.3f} & "
-            f"{relative_lewm_confusion['fp']} & "
-            f"{relative_lewm_confusion['fn']} \\\\"
-        ),
-        r"\bottomrule",
-        r"\end{tabular}",
-        r"\end{table}",
     ]
+    for task in TASKS:
+        lines.append(
+            f"{task} & {lewm_task_ba[task]:.3f} & {pldm_task_ba[task]:.3f} \\\\"
+        )
+    lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}"])
     return "\n".join(lines)
 
 

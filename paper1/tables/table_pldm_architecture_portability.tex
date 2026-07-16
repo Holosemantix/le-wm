@@ -1,15 +1,19 @@
 \begin{table}[H]
 \centering
-\caption{The same ACPC analysis applied to the complete PLDM sweep (four tasks $\times$ nine augmentation levels, one training run each; 36 held-out decisions). Row 1 selects thresholds on the other three PLDM tasks; row 2 applies the corresponding LeWM thresholds after within-task ATR normalization. ``False pass''/``false miss'' count criterion-negative checkpoints accepted and criterion-positive checkpoints rejected.}
+\caption{The same leave-task-out screen in two model families: for each evaluation task, thresholds are selected on that family's other three tasks and applied unchanged. Chance is $0.5$; LeWM values average three training runs, PLDM has one run per setting. Applying score-aligned LeWM thresholds to PLDM after within-task ATR normalization yields identical PLDM decisions.}
 \label{tab:pldm-architecture-portability}
 \scriptsize
-\setlength{\tabcolsep}{4.0pt}
-\begin{tabular}{lrrrrr}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{lrr}
 \toprule
-Calibration & BA & Precision & Recall & False pass & False miss \\
+ & \multicolumn{2}{c}{Balanced accuracy} \\
+\cmidrule(lr){2-3}
+Evaluation task & LeWM & PLDM \\
 \midrule
-PLDM thresholds, other three tasks & 0.836 & 0.789 & 0.882 & 4 & 2 \\
-LeWM thresholds, PLDM-normalized & 0.836 & 0.789 & 0.882 & 4 & 2 \\
+TwoRoom & 0.935 & 0.938 \\
+PushT & 0.917 & 0.750 \\
+Reacher & 0.889 & 0.500 \\
+Cube & 0.858 & 0.875 \\
 \bottomrule
 \end{tabular}
 \end{table}
