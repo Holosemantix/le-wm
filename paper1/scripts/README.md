@@ -104,6 +104,7 @@ Legacy summary-level steps retained for provenance:
 python -m paper1.scripts.build_diagnostic_manifest
 python -m paper1.scripts.build_full_sweep_diagnostics
 python -m paper1.scripts.plot_full_sweep_diagnostics
+python -m paper1.scripts.plot_pldm_sweep_diagnostics
 python -m paper1.scripts.plot_endpoint_atr_smpr
 python -m paper1.scripts.fixed_pool_tail_audit
 python -m paper1.scripts.heldout_diagnostic_validation
@@ -153,6 +154,7 @@ v2 runner binds every reference by seed, task, stressor, and severity.
 
 Plot output notes:
 
+- `plot_pldm_sweep_diagnostics` renders the PLDM analogue of the main sweep figure from `pldm_frozen_rows_v2.csv`, with the same dotted common-threshold lines and no across-run shading (one run per setting).
 - `plot_full_sweep_diagnostics` writes vector PDF figures by default: a main figure with separate behavior and ATR/SMPR axes per task, the diagnostic-region scatter, and a compact four-across appendix planner-guard figure; recovery shading is rendered as continuous majority-recovered ranges. The main sweep display divides ATR by each task$\times$seed no-noise value (base 1) while leaving SMPR on its original rate scale; frozen calibration uses the unrescaled ATR statistic.
 - `plot_cross_stressor_submission` reads the locked all-pairs CSV and writes the 24-pair LeWM submission scatter as a vector PDF; it does not rerun diagnostics or evaluation.
 - `plot_endpoint_atr_smpr` writes the two-panel endpoint dumbbell figure with base-to-noise-trained movement arrows.

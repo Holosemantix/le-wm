@@ -1018,19 +1018,36 @@ so run-to-run variability is not estimated). Calibration stays inside the
 family: for each PLDM test task, thresholds are selected on the other three
 PLDM tasks and fixed for its nine checkpoints; no LeWM number is reused.
 
-\Cref{tab:pldm-architecture-portability} compares the same leave-task-out
-screen in the two families. TwoRoom and Cube screen almost identically in
-both, PushT is weaker on PLDM, and on Reacher the transferred thresholds
-perform at chance. Pooling all 36 PLDM task--checkpoint decisions gives
-$0.836$ balanced accuracy, $0.789$ precision, and $0.882$ recall. As a
-second check, applying the LeWM thresholds after within-task ATR
-normalization yields exactly the same PLDM decisions. \textbf{Takeaway:}
-the theory and the evaluation procedure carry over unchanged to a different
-training paradigm; only the numerical calibration is redone within each
-family, and the Reacher case shows that this recalibration is not guaranteed
-to succeed on every task.
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{fig_pldm_sweep_diagnostics.pdf}
+\caption{The \Cref{fig:full-sweep-diagnostics} view repeated on PLDM (one
+training run per setting), with the same common thresholds drawn as dotted
+lines. On TwoRoom, PushT, and Cube the relative-ATR curve falls below $t_R$
+and SMPR stays above $t_M$ where planning recovers; on Reacher the noisy
+success rate barely changes across the sweep and relative ATR never clears
+$t_R$, so no checkpoint is accepted.}
+\label{fig:pldm-sweep-diagnostics}
+\end{figure}
 
-\input{tables/table_pldm_architecture_portability}
+\Cref{fig:pldm-sweep-diagnostics} repeats the
+\Cref{fig:full-sweep-diagnostics} view on PLDM, and the same signature
+appears. Within the family, all four leave-one-task-out selections again
+land on the common pair $(t_R,t_M)=(0.3,0.95)$: the diagnostic starts
+accepting checkpoints exactly at the level where planning recovers on PushT
+and Cube, one grid level after it on TwoRoom, and never on Reacher---there
+the unaugmented checkpoint already reaches $80\%$ noisy success, the sweep
+never improves it by more than $1.4$ points, and relative ATR never falls
+below $t_R$, so there is almost no recovery signal to locate. Pooling all
+36 PLDM decisions gives $0.836$ balanced accuracy ($0.789$ precision,
+$0.882$ recall); per-task values sit next to their LeWM counterparts in
+\Cref{tab:pldm-architecture-portability} (\Cref{sec:appendix-cross-task}).
+Applying the LeWM thresholds after within-task ATR normalization yields
+exactly the same decisions---as expected, since both families select the
+same pair on this grid, although that agreement does not make thresholds
+architecture-invariant. \textbf{Takeaway:} the theory, the diagnostics, and
+the calibration procedure carry over unchanged to a different training
+paradigm; the one failing task offers almost no recovery signal to detect.
 
 \subsection{The common threshold range under blur and resize}
 \label{sec:exp-cross-stressor}
@@ -1341,6 +1358,12 @@ sample size is therefore not inflated by treating checkpoint rows as
 independent observations.
 
 \input{tables/table_cross_task_atr_smpr_all_subsets_v1}
+
+For PLDM, \Cref{tab:pldm-architecture-portability} lists the per-task
+balanced accuracies of the same leave-task-out screen next to the LeWM
+values quoted in \Cref{sec:exp-pldm-portability}.
+
+\input{tables/table_pldm_architecture_portability}
 
 \section{Cross-Stressor Pairs and Discordant Cases}
 \label{sec:appendix-cross-stressor}
