@@ -10,12 +10,14 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.transforms as mtransforms
 from matplotlib.lines import Line2D
 
 from .utils_paper1_io import ROOT, TASKS
@@ -58,6 +60,10 @@ def _read_rows(path: Path) -> dict[str, list[dict[str, float | bool]]]:
                     "atr": float(row["atr_horizon_v2_q90"]),
                     "smpr": float(row["smpr"]),
                     "stress_score": float(row["stress_score"]),
+                    "stress_seed_scores": json.loads(
+                        row["stress_score_by_evaluation_seed"]
+                    ),
+                    "base_clean": float(row["base_clean_score"]),
                     "recovered": str(row["behavior_label"]).lower() == "true",
                 }
             )
@@ -89,7 +95,7 @@ def plot(by_task: dict[str, list[dict[str, float | bool]]], out_fig: Path) -> No
     with plt.rc_context(PLOT_STYLE):
         fig = plt.figure(figsize=(6.7, 2.75))
         outer = fig.add_gridspec(
-            1, 4, left=0.075, right=0.995, bottom=0.17, top=0.84, wspace=0.14
+            1, 4, left=0.075, right=0.995, bottom=0.17, top=0.84, wspace=0.34
         )
 
         for index, task in enumerate(TASKS):
@@ -106,11 +112,43 @@ def plot(by_task: dict[str, list[dict[str, float | bool]]], out_fig: Path) -> No
             smpr = [row["smpr"] for row in rows]
             recovered = [bool(row["recovered"]) for row in rows]
 
-            for start, end in _recovery_spans(x, recovered):
-                diagnostic_ax.axvspan(
-                    start, end, color=RECOVERY_COLOR, alpha=0.50, lw=0, zorder=0
+            clean_base = rows[0]["base_clean"]
+            score_lo = [min(row["stress_seed_scores"]) for row in rows]
+            score_hi = [max(row["stress_seed_scores"]) for row in rows]
+            score_ax.axhline(clean_base, color="#888888", ls="--", lw=0.9, zorder=1.5)
+            score_ax.errorbar(
+                x,
+                score,
+                yerr=[
+                    [m - l for m, l in zip(score, score_lo)],
+                    [h - m for m, h in zip(score, score_hi)],
+                ],
+                color="#222222",
+                marker="o",
+                lw=1.6,
+                ms=3.6,
+                elinewidth=0.9,
+                capsize=1.6,
+                zorder=2,
+            )
+            onset = next(
+                (xi for xi, flag in zip(x, recovered) if flag), None
+            )
+            if onset is not None:
+                onset_transform = mtransforms.blended_transform_factory(
+                    score_ax.transData, score_ax.transAxes
                 )
-            score_ax.plot(x, score, color="#222222", marker="o", lw=1.6, ms=3.6, zorder=2)
+                score_ax.plot(
+                    onset,
+                    0.97,
+                    marker="v",
+                    color="#2e7d32",
+                    ms=4.2,
+                    ls="none",
+                    transform=onset_transform,
+                    clip_on=False,
+                    zorder=4,
+                )
             diagnostic_ax.plot(x, atr, color="#d95f02", marker="s", lw=1.35, ms=3.4, zorder=2)
             diagnostic_ax.plot(
                 x, smpr, color="#7570b3", marker="^", lw=1.35, ms=3.5, ls="--", zorder=2
@@ -143,8 +181,8 @@ def plot(by_task: dict[str, list[dict[str, float | bool]]], out_fig: Path) -> No
             if index % 4 == 0:
                 score_ax.set_ylabel("Planning\nsuccess rate (%)")
                 diagnostic_ax.set_ylabel("Relative ATR\n/ SMPR")
-            score_ax.set_ylim(0, 102)
-            score_ax.set_yticks([0, 25, 50, 75, 100])
+            score_span = [*score_lo, *score_hi, clean_base]
+            score_ax.set_ylim(min(score_span) - 5.0, max(score_span) + 5.0)
             score_ax.tick_params(axis="x", labelbottom=False, length=0)
             max_atr = max(atr)
             diagnostic_ax.set_ylim(-0.05, max(1.03, max_atr + 0.1))
@@ -170,11 +208,13 @@ def plot(by_task: dict[str, list[dict[str, float | bool]]], out_fig: Path) -> No
             ),
             Line2D([], [], color="#d95f02", marker="s", lw=1.35, ms=3.4, label=r"Relative ATR ($\downarrow$)"),
             Line2D([], [], color="#7570b3", marker="^", lw=1.35, ms=3.5, ls="--", label=r"SMPR ($\uparrow$)"),
+            Line2D([], [], color="#888888", ls="--", lw=0.9, label="Unaugmented clean score"),
+            Line2D([], [], color="#2e7d32", marker="v", ms=4.2, ls="none", label="Criterion onset"),
         ]
         fig.legend(
             handles=legend_handles,
             loc="upper center",
-            ncol=3,
+            ncol=5,
             frameon=False,
             columnspacing=1.1,
             handletextpad=0.35,

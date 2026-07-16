@@ -10,6 +10,7 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.transforms as mtransforms
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
@@ -151,7 +152,7 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
         # success-rate axis above the joint ATR--SMPR axis.
         fig = plt.figure(figsize=(6.7, 2.75))
         outer = fig.add_gridspec(
-            1, 4, left=0.075, right=0.995, bottom=0.17, top=0.84, wspace=0.14
+            1, 4, left=0.075, right=0.995, bottom=0.17, top=0.84, wspace=0.34
         )
         by_task = _by_task(rows)
 
@@ -171,9 +172,43 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             smpr_lo, smpr_hi = _range_by_rho(trs, "smpr_delta010")
             recovery = _rate_by_rho(trs, "recovery_label")
 
-            _shade_recovery(diagnostic_ax, x, recovery)
-            score_ax.fill_between(x, score_lo, score_hi, color="#555555", alpha=0.12, lw=0, zorder=1)
-            score_ax.plot(x, score, color="#222222", marker="o", lw=1.6, ms=3.6, zorder=2)
+            clean_base = safe_mean(
+                [fnum(tr.get("base_clean_score")) for tr in trs]
+            )
+            score_ax.axhline(clean_base, color="#888888", ls="--", lw=0.9, zorder=1.5)
+            score_ax.errorbar(
+                x,
+                score,
+                yerr=[
+                    [m - l for m, l in zip(score, score_lo)],
+                    [h - m for m, h in zip(score, score_hi)],
+                ],
+                color="#222222",
+                marker="o",
+                lw=1.6,
+                ms=3.6,
+                elinewidth=0.9,
+                capsize=1.6,
+                zorder=2,
+            )
+            onset = next(
+                (xi for xi, rate in zip(x, recovery) if rate >= 0.5), None
+            )
+            if onset is not None:
+                onset_transform = mtransforms.blended_transform_factory(
+                    score_ax.transData, score_ax.transAxes
+                )
+                score_ax.plot(
+                    onset,
+                    0.97,
+                    marker="v",
+                    color="#2e7d32",
+                    ms=4.2,
+                    ls="none",
+                    transform=onset_transform,
+                    clip_on=False,
+                    zorder=4,
+                )
             diagnostic_ax.plot(x, atr, color="#d95f02", marker="s", lw=1.35, ms=3.4, zorder=2)
             diagnostic_ax.plot(
                 x, smpr, color="#7570b3", marker="^", lw=1.35, ms=3.5, ls="--", zorder=2
@@ -207,10 +242,13 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
                 score_ax.set_ylabel("Planning\nsuccess rate (%)")
                 diagnostic_ax.set_ylabel("Relative ATR\n/ SMPR")
             else:
-                score_ax.tick_params(axis="y", labelleft=False)
+                # Score panels keep their tick labels: y-ranges adapt per task,
+                # so hiding them would leave panels (b)-(d) unreadable. The
+                # diagnostic row shares one fixed range, so labels stay on the
+                # leftmost panel only.
                 diagnostic_ax.tick_params(axis="y", labelleft=False)
-            score_ax.set_ylim(0, 102)
-            score_ax.set_yticks([0, 25, 50, 75, 100])
+            score_span = [*score_lo, *score_hi, clean_base]
+            score_ax.set_ylim(min(score_span) - 5.0, max(score_span) + 5.0)
             score_ax.tick_params(axis="x", labelbottom=False, length=0)
             diagnostic_ax.set_ylim(-0.03, 1.03)
             diagnostic_ax.set_yticks([0, 0.5, 1.0])
@@ -244,13 +282,15 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             ),
             Line2D([], [], color="#d95f02", marker="s", lw=1.35, ms=3.4, label=r"Relative ATR ($\downarrow$)"),
             Line2D([], [], color="#7570b3", marker="^", lw=1.35, ms=3.5, ls="--", label=r"SMPR ($\uparrow$)"),
+            Line2D([], [], color="#888888", ls="--", lw=0.9, label="Unaugmented clean score"),
+            Line2D([], [], color="#2e7d32", marker="v", ms=4.2, ls="none", label="Criterion onset"),
         ]
         fig.legend(
             handles=legend_handles,
             loc="upper center",
-            ncol=3,
+            ncol=5,
             frameon=False,
-            columnspacing=1.1,
+            columnspacing=0.7,
             handletextpad=0.35,
             bbox_to_anchor=(0.5, 1.0),
         )

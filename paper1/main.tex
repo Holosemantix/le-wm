@@ -227,7 +227,8 @@ representation geometry before we introduce the controlled rollout metric.
 
 Let
 $\mathcal V\in\{\mathrm{enc},\mathrm{roll}\}$ denote either the encoder output
-or the representation after eight autoregressive rollout steps. For anchor
+or the representation after eight autoregressive rollout steps (the
+protocol horizon $H{=}8$; \Cref{sec:acpc-def}). For anchor
 history $i$, let $v_{i,\mathcal V}^{(0)}$ be its clean representation and
 $v_{i,\mathcal V}^{(m)}$, $m=1,\ldots,M$, the representations of $M$
 perturbed views. In the rollout space, the clean and perturbed views of each
@@ -268,9 +269,9 @@ r_{i,\mathcal V}^{\mathrm{vis}}+r_{j,\mathcal V}^{\mathrm{vis}}
 \label{eq:local-cloud-disjoint}
 \end{equation}
 Across the sampled anchors, we report three summaries: the median
-$r/\mathrm{NN}$ ratio; the count and fraction satisfying
-$r_{i,\mathcal V}^{\mathrm{vis}}<d_{i,\mathcal V}^{\mathrm{NN}}$; and the count
-and fraction satisfying the fully-disjoint condition in
+$r/\mathrm{NN}$ ratio; the fraction satisfying
+$r_{i,\mathcal V}^{\mathrm{vis}}<d_{i,\mathcal V}^{\mathrm{NN}}$; and the
+fraction satisfying the fully-disjoint condition in
 \Cref{eq:local-cloud-disjoint}. The second is a one-sided nearest-center test,
 whereas the third is a symmetric certificate for the enclosing balls in the
 original high-dimensional representation. It is unrelated to whether the
@@ -754,7 +755,7 @@ full-sequence Gaussian augmentation at $\stdmax{}=0.08$. For each of 128
 logged histories, we generate one clean view and 18 perturbed views---six
 draws at each probe standard deviation in $\{0.01,0.04,0.08\}$. We compare the
 encoder output with the representation after eight autoregressive rollout
-steps. All ratios and counts use the original 192-dimensional projected
+steps. All ratios and fractions use the original 192-dimensional projected
 latent space in which the planner computes costs. The t-SNE
 visualization~\cite{vandermaaten2008tsne} reproduces the deterministic
 per-panel projections used in the original Appendix visualization and is
@@ -779,6 +780,7 @@ are qualitative and enter none of these metrics.}
 \label{fig:local-geometry-highd}
 \end{figure}
 
+\Cref{fig:local-geometry-highd} summarizes the case study.
 Without augmentation, the median $r/\mathrm{NN}$ is $1.41$ at the encoder and
 $1.86$ after eight rollout steps, and none of the 128 anchor clouds is fully
 disjoint. After Gaussian augmentation, the corresponding ratios fall to
@@ -800,10 +802,11 @@ sweep (\Cref{fig:full-sweep-diagnostics}).
 \includegraphics[width=\linewidth]{fig_full_sweep_diagnostics.pdf}
 \caption{Checkpoint-level planning performance and diagnostics across the
 complete Gaussian-augmentation sweep. We report planning success rate at
-evaluation noise $\sigma=0.08$, relative ATR, and SMPR. Lines are across-run
-means; the gray band spans the three run means of the success rate; green
-bands in the diagnostic row mark levels meeting the success-rate criterion
-(\Cref{sec:bg}) in a majority of runs.
+evaluation noise $\sigma=0.08$, relative ATR, and SMPR. Points are across-run
+means and error bars span the three training runs; success-rate axes are
+scaled per task. The dashed gray line marks the unaugmented checkpoint's
+clean score, and the triangle marks the first augmentation level meeting the
+success-rate criterion (\Cref{sec:bg}) in a majority of runs.
 Lower ATR (relative to the unaugmented checkpoint) and higher SMPR are
 favorable. Dotted horizontal lines mark the common thresholds $t_R=0.3$
 (ATR) and $t_M=0.95$ (SMPR) shared across tasks
@@ -1024,8 +1027,10 @@ PLDM tasks and fixed for its nine checkpoints; no LeWM number is reused.
 \includegraphics[width=\linewidth]{fig_pldm_sweep_diagnostics.pdf}
 \caption{The \Cref{fig:full-sweep-diagnostics} view repeated on PLDM (one
 training run per setting), with the same common thresholds drawn as dotted
-lines; green bands in the diagnostic row mark levels meeting the
-success-rate criterion. On TwoRoom, PushT, and Cube the relative-ATR curve
+lines. Error bars span the three evaluation seeds of the single run, the
+dashed gray line marks the unaugmented checkpoint's clean score, the
+triangle marks the first level meeting the success-rate criterion, and
+success-rate axes are scaled per task. On TwoRoom, PushT, and Cube the relative-ATR curve
 falls below $t_R$ and SMPR stays above $t_M$ where planning recovers; on
 Reacher the noisy success rate barely changes across the sweep and relative
 ATR never clears $t_R$, so no checkpoint is accepted.}
@@ -1052,7 +1057,7 @@ architecture-invariant. \textbf{Takeaway:} the theory, the diagnostics, and
 the calibration procedure carry over unchanged to a different training
 paradigm; the one failing task offers almost no recovery signal to detect.
 
-\subsection{The common threshold range under blur and resize}
+\subsection{Selective transfer of the diagnostic under blur and resize}
 \label{sec:exp-cross-stressor}
 
 Blur ($k=15$) and resize (scale $0.25$), each at one fixed severity, test
@@ -1398,7 +1403,7 @@ $E$ followed by rollout map $G$ gives
 \end{equation}
 This explains one mechanism by which Gaussian noise training can contract
 ACPC: it reduces the composed local sensitivity of the encoder--predictor
-path. It is a local approximation, not a global robustness bound.
+path (\Cref{fig:local-gaussian-sensitivity}). It is a local approximation, not a global robustness bound.
 
 \begin{figure}[H]
 \centering
