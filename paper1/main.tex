@@ -141,7 +141,7 @@ severities, and applies to PLDM after model-family recalibration.
 %% ===========================================================================
 \section{Introduction}\label{sec:intro}
 
-World models support control by predicting how candidate actions change the environment~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. Joint-embedding predictive architectures (JEPAs) move this prediction problem from pixels to learned representations~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa}. By avoiding pixel reconstruction, they can reduce pressure to model nuisance detail~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}. This is appealing for visual control, where lighting, texture, or image quality may change even when the physical situation does not. Latent prediction alone, however, does not establish that a trained world model will produce stable action-conditioned predictions under such changes.
+World models support control by predicting how candidate actions change the environment~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. Joint-embedding predictive architectures (JEPAs) instead learn by predicting in representation space rather than reconstructing pixels~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa}. This can reduce pressure to model nuisance detail~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}. This is appealing for visual control, where lighting, texture, or image quality may change even when the physical situation does not. Latent prediction alone, however, does not establish that a trained world model will produce stable action-conditioned predictions under such changes.
 
 For control, whether a visual difference is irrelevant depends on the state and the actions being considered. A background texture can be ignored, whereas a contact pose, doorway state, or object--goal relation may determine which action is useful. Encoder invariance cannot resolve this distinction on its own because a planner does not act directly on the encoder output. It rolls the representation forward under candidate actions and ranks the resulting predictions with a cost. A small encoder discrepancy may grow through this computation, whereas a larger one may contract before it affects the cost. This motivates the central question: after the same action sequence is applied, do clean and perturbed views of one trajectory still produce similar predicted futures? A descriptive PushT case study (\Cref{sec:exp-local-geometry}) shows what is at stake: for an unaugmented checkpoint, the representations of a history's perturbed views spread wider than its distance to the nearest other history, both at the encoder and after prediction, so visual noise entangles distinct states.
 
@@ -176,19 +176,19 @@ The contributions are:
 Prior work addresses three complementary parts of this problem: learning latent predictive representations, preserving control-relevant distinctions under visual shifts, and evaluating learned dynamics.
 
 \paragraph{Latent predictive world models.}
-DreamerV3 and TD-MPC2 illustrate how learned dynamics can support control by predicting the consequences of candidate actions~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. JEPAs replace pixel reconstruction with prediction in representation space, first for images and then for video~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,assran2025vjepa2}. LeWM instantiates this idea as an end-to-end JEPA world model stabilized by SIGReg~\cite{maes2026lewm,eppspulley1983}, while PLDM provides a different joint-embedding dynamics design~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting,maes2026stableworldmodel}. Analyses of latent prediction explain why it can suppress nuisance or noisy features~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures,klindt2026lejepaworldmodel}; Seq-JEPA studies the related balance between invariant and equivariant prediction~\cite{ghaemi2025seqjepa}. These results motivate latent predictive learning, but our focus is checkpoint evaluation: whether the discrepancy between two visual views of the same trajectory contracts or grows as the predictor rolls them forward under shared actions.
+DreamerV3 and TD-MPC2 illustrate how learned dynamics can support control by predicting the consequences of candidate actions~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. JEPAs replace pixel reconstruction with prediction in representation space, first for images and then for video~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,assran2025vjepa2}. LeWM instantiates this idea as an end-to-end JEPA world model stabilized by SIGReg~\cite{maes2026lewm}; SIGReg's Gaussianity statistic is based on the Epps--Pulley test~\cite{eppspulley1983}. PLDM provides a different joint-embedding dynamics design~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting}. Analyses of latent prediction show, in simplified settings, how predictive learning can favor influential features over noisy ones~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}. Under Gaussian, stationary additive-noise dynamics, LeJEPA can recover latent state up to a linear transformation~\cite{klindt2026lejepaworldmodel}. seq-JEPA studies the related trade-off between invariant and equivariant representations by conditioning sequential prediction on known view transformations, represented as actions~\cite{ghaemi2025seqjepa}. These results motivate latent predictive learning, but our focus is checkpoint evaluation: whether the discrepancy between two visual views of the same trajectory contracts or grows as the predictor rolls them forward under shared actions.
 
 \paragraph{Robust visual control and selective invariance.}
 DrQ, DrQ-v2, and SODA improve visual control through training-time augmentation~\cite{kostrikov2020drq,yarats2022drqv2,hansen2021soda}. ViGMO and VIBR learn invariances in latent or value space~\cite{vigmo,dupuis2023vibr}, whereas ReOI modifies observations at test time to reduce distractor sensitivity in visual model-predictive control~\cite{chen2025reoi}. These methods seek to train or repair a more robust controller. We instead ask how to audit visual sensitivity in an already trained predictive model.
 
-Control-aware representation learning also explains why robustness cannot mean removing every difference. Bisimulation-based methods preserve distinctions in rewards and transitions~\cite{gelada2019deepmdp,zhang2021dbc,bsmpc,toso2026bisimjepa}, while value-equivalent and value-aware models preserve distinctions that matter to downstream value or planning~\cite{grimm2020valueequivalence,voelcker2025calibratedvalueaware}. This motivates the two-sided structure of our diagnostic: same-state visual views should agree after prediction, but low disagreement is considered meaningful only when pairs marked as different by task state coordinates remain separated. Our state-coordinate test is narrower than a learned bisimulation or semantic criterion; its role is to expose the constant-representation failure mode.
+Control-aware representation learning also explains why robustness cannot mean removing every difference. Bisimulation-based methods ground behavioral similarity in task-relevant transition structure, often through reward and transition-distribution differences~\cite{gelada2019deepmdp,zhang2021dbc,bsmpc,toso2026bisimjepa}, while value-equivalent and value-aware formulations organize model learning around downstream value or planning quantities~\cite{grimm2020valueequivalence,voelcker2025calibratedvalueaware}. This motivates the two-sided structure of our diagnostic: same-state visual views should agree after prediction, but low disagreement is considered meaningful only when pairs marked as different by task state coordinates remain separated. Our state-coordinate test is narrower than a learned bisimulation or semantic criterion; its role is to expose the constant-representation failure mode.
 
 \paragraph{Diagnostics of learned dynamics.}
 Recent work tests whether learned dynamics retain action or temporal structure
 through inverse prediction, latent action decoding, cycle consistency,
 group-action tests, or compatibility with generated futures~\cite{chen2026atm,zhang2026deltajepa,seo2026acid,ruan2026futurecompatible,wang2026groupactions}.
-Other methods use action-conditioned consistency as a training
-objective~\cite{yan2026mwm} or diagnose kinematic failures in long-horizon
+MWM uses observation-level action-conditioned rollout consistency as a training
+objective~\cite{yan2026mwm}, while other methods diagnose kinematic failures in long-horizon
 rollouts~\cite{schaefer2026kinematic}. These studies motivate testing the
 predictor directly instead of inferring its behavior from encoder geometry.
 
@@ -215,6 +215,12 @@ while SMPR checks whether selected pairs with different task-state labels
 remain separated. ATR and SMPR must be interpreted together: low visual
 sensitivity is useful only if the representation retains relevant state
 distinctions.
+
+MWM optimizes action-conditioned rollout consistency during
+training~\cite{yan2026mwm}, while seq-JEPA conditions sequential view
+prediction on known transformations represented as actions to balance
+invariant and equivariant representations~\cite{ghaemi2025seqjepa}. In contrast, our paired-view
+construction is a post-hoc diagnostic of a frozen checkpoint.
 
 \subsection{Local representation geometry under visual perturbations}\label{sec:local-geometry-audit}
 
@@ -452,7 +458,8 @@ Appendix~\ref{sec:appendix-acpc-proofs}. Because every candidate must be
 evaluated under both histories, these certificates support a post-hoc audit
 rather than a cheap online pre-screen.
 
-CEM repeatedly fits its next proposal to the current elite set. With common
+CEM repeatedly fits its next proposal to the current elite
+set~\cite{kroese2006cem}. With common
 random numbers, identical proposals generate the same ordered candidate pool,
 and an identical certified elite set produces the same next proposal.
 
@@ -471,11 +478,14 @@ evaluations; it is not a statement about simulator return.
 \subsection{Checkpoint-level radius and proxy separation}\label{sec:acpc-radius-margin}
 
 ACPC measures one clean--perturbed history pair. To evaluate a checkpoint, we
-must summarize many such measurements. We must also distinguish genuine
-visual stability from representation collapse: a constant representation
-makes every ACPC value zero but removes all state distinctions. We therefore
-use ATR to summarize sensitivity across histories and SMPR to test whether
-selected pairs with different task-state labels remain separated.
+must summarize many such measurements. A constant representation makes every
+ACPC value zero while removing all state distinctions, the familiar collapse
+failure of view-agreement objectives~\cite{bardes2022vicreg}. For control,
+bisimulation-based representation learning instead grounds behavioral
+similarity in reward and transition-distribution
+differences~\cite{zhang2021dbc}. We therefore use ATR to summarize sensitivity
+across histories and SMPR to test whether selected pairs with different
+task-state labels remain separated.
 
 Evaluation uses a fixed set of \emph{anchors}. Each anchor consists of one
 logged history window, its $H$-step observed future, and its recorded actions.
@@ -584,7 +594,7 @@ coordinate distinctions; they do not prove semantic validity, action relevance,
 or correct behavior. Appendix~\ref{sec:appendix-A} gives the exact coordinate
 rules and eligible-pair counts.
 
-\subsection{Checkpoint-level calibration}\label{sec:acpc-diag}
+\subsection{Checkpoint-level threshold selection}\label{sec:acpc-diag}
 
 The raw ATR in \Cref{eq:atr-raw} is the same-state reference used by SMPR.
 Raw ATR scales differ across tasks, so comparisons between augmentation levels
@@ -599,10 +609,12 @@ every evaluated setting, so the following ratio is well defined:
 \label{eq:atr-relative}
 \end{equation}
 Raw ATR remains in the SMPR definition (\Cref{eq:smpr}). Relative ATR equals
-one for the unaugmented reference and is used only to compare and calibrate
-checkpoints.
+one for the unaugmented reference and is used only for within-cell comparisons
+and threshold selection. This re-basing removes a common multiplicative scale
+factor; it does not establish absolute ATR comparability across tasks or model
+families.
 
-We combine relative ATR and SMPR only after calibrating one threshold for each.
+We combine relative ATR and SMPR only after selecting one threshold for each.
 For model family $\mathcal F$ and visual shift $\upsilon$ (Gaussian noise,
 blur, or resize), let these thresholds be $t_R$ and $t_M$. Every quantity in
 the score is measured under the same shift. With a small constant
@@ -623,6 +635,8 @@ is at most $t_R$, and SMPR is at least $t_M$. No task outcome is needed to score
 a checkpoint once the thresholds are fixed. Planning success rates are used
 only to select thresholds on threshold-selection tasks and evaluate them on
 test tasks.
+Here, \emph{calibration} means operational threshold selection on designated
+tasks; it is not probabilistic calibration and carries no coverage guarantee.
 We calibrate thresholds separately for each model family; the equations do not
 imply that architectures share numerical thresholds.
 
@@ -804,9 +818,12 @@ sweep (\Cref{fig:full-sweep-diagnostics}).
 complete Gaussian-augmentation sweep. We report planning success rate at
 evaluation noise $\sigma=0.08$, relative ATR, and SMPR. Points are across-run
 means and error bars span the three training runs; success-rate axes are
-scaled per task. The dashed gray line marks the unaugmented checkpoint's
-clean score, and the triangle marks the first augmentation level meeting the
-success-rate criterion (\Cref{sec:bg}) in a majority of runs.
+scaled per task. The dashed gray line marks the unaugmented baseline: the success rate of
+the $\stdmax{}=0$ checkpoint with no perturbation added at training or
+evaluation time. Green shading marks the augmentation levels meeting the
+success-rate criterion (\Cref{sec:bg}) in a majority of runs. The
+$\stdmax{}=0$ endpoint of each curve is this baseline itself; relative ATR
+equals one there by construction.
 Lower ATR (relative to the unaugmented checkpoint) and higher SMPR are
 favorable. Dotted horizontal lines mark the common thresholds $t_R=0.3$
 (ATR) and $t_M=0.95$ (SMPR) shared across tasks
@@ -824,6 +841,20 @@ in success rate on TwoRoom, PushT, Reacher, and Cube, respectively. Gaussian
 augmentation recovers performance over a range of training levels whose
 location differs by task. \Cref{fig:full-sweep-diagnostics} compares success
 rate with ATR and SMPR across the complete sweep.
+
+Reacher additionally shows a fixed-protocol training effect: from
+$\stdmax{}=0.02$ onward, its noisy-evaluation success rate matches or
+exceeds the unaugmented baseline in \Cref{fig:full-sweep-diagnostics}(c),
+and the same augmentation lifts the unperturbed score from $59.2\%$ to
+$76$--$82\%$. Part of this crossing therefore reflects a general lift of
+the augmented checkpoints under the fixed training protocol rather than
+robustness recovery alone. The green shading is unaffected by this reading:
+it follows the success-rate criterion, which is defined relative to the
+unaugmented and best checkpoints at evaluation noise $\sigma=0.08$
+(\Cref{sec:bg}), not relative to the crossing of the dashed baseline---on
+Reacher the crossing occurs one grid level before the criterion onset. We
+treat the lift as an observation under the fixed training protocol, not a
+claim about asymptotic training behavior.
 
 Every augmentation level that meets the success-rate criterion has lower ATR
 and higher SMPR than the corresponding unaugmented checkpoint. Neither
@@ -1028,8 +1059,9 @@ PLDM tasks and fixed for its nine checkpoints; no LeWM number is reused.
 \caption{The \Cref{fig:full-sweep-diagnostics} view repeated on PLDM (one
 training run per setting), with the same common thresholds drawn as dotted
 lines. Error bars span the three evaluation seeds of the single run, the
-dashed gray line marks the unaugmented checkpoint's clean score, the
-triangle marks the first level meeting the success-rate criterion, and
+dashed gray line marks the unaugmented baseline (the success rate of the
+$\stdmax{}=0$ checkpoint with no added perturbation), green shading marks
+the levels meeting the success-rate criterion, and
 success-rate axes are scaled per task. On TwoRoom, PushT, and Cube the relative-ATR curve
 falls below $t_R$ and SMPR stays above $t_M$ where planning recovers; on
 Reacher the noisy success rate barely changes across the sweep and relative
@@ -1047,7 +1079,14 @@ meets the relative criterion), one grid level after it on TwoRoom, and never
 on Reacher---there
 the unaugmented checkpoint already reaches $80\%$ noisy success, the sweep
 never improves it by more than $1.4$ points, and relative ATR never falls
-below $t_R$, so there is almost no recovery signal to locate. Per-task
+below $t_R$, so there is almost no recovery signal to locate. One caveat
+applies when reading \Cref{fig:pldm-sweep-diagnostics}: PLDM trains a
+single run per sweep level, and an isolated level can reflect single-run
+training instability rather than the augmentation level itself---most
+visibly Reacher at $\stdmax{}=0.05$, where the clean and the noisy score
+drop together. Retraining these runs was outside our compute budget, so
+isolated single-level dips should be read with the single-run protocol in
+mind. Per-task
 balanced accuracies for both families are tabulated in
 \Cref{tab:pldm-architecture-portability} (\Cref{sec:appendix-cross-task}).
 Applying the LeWM thresholds after within-task ATR normalization yields
@@ -1401,6 +1440,12 @@ $E$ followed by rollout map $G$ gives
 \approx \sigma^2\|J_GJ_E\|_F^2 .
 \label{eq:local-gaussian-sensitivity}
 \end{equation}
+Jacobian Frobenius norms have previously been used to quantify and regularize
+local representation sensitivity and contraction~\cite{rifai2011contractive}.
+We estimate
+$\operatorname{tr}[(J_GJ_E)^\top(J_GJ_E)]=\|J_GJ_E\|_F^2$ with Rademacher
+probes using the Hutchinson estimator~\cite{hutchinson1989stochastic}; JVPs
+avoid materializing the full Jacobian.
 This explains one mechanism by which Gaussian noise training can contract
 ACPC: it reduces the composed local sensitivity of the encoder--predictor
 path (\Cref{fig:local-gaussian-sensitivity}). It is a local approximation, not a global robustness bound.
@@ -1410,8 +1455,10 @@ path (\Cref{fig:local-gaussian-sensitivity}). It is a local approximation, not a
 \includegraphics[width=\linewidth]{fig_gaussian_sensitivity_main.png}
 \caption{Local-sensitivity ratio of the checkpoint trained with Gaussian
 augmentation to the unaugmented checkpoint, estimated by finite
-differences and by a JVP/Hutchinson estimate of the composed Jacobian trace.
-Values below one indicate contraction after augmentation. The two estimators
+differences and by a JVP-based Hutchinson estimate of the composed Jacobian's
+squared Frobenius norm.
+Values below one indicate reduced local sensitivity after augmentation. The
+two estimators
 agree in direction for every task; these ratios do not establish task
 performance.}
 \label{fig:local-gaussian-sensitivity}
