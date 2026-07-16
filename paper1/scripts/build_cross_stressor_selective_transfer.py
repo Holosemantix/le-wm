@@ -311,7 +311,7 @@ def write_all_pairs_table(rows: list[dict[str, Any]], out: Path) -> None:
         r"\centering",
         r"\caption{All 24 LeWM checkpoint pairs evaluated under blur and resize. ATR$_{\rm rel}$ and SMPR are measured for the checkpoint trained with Gaussian augmentation ($\stdmax{}=0.08$); $\Delta P$ and $\Delta S$ are its success-rate and selective-score changes relative to the unaugmented checkpoint. A pair is positive when $\Delta P\geq5$ percentage points with at most a five-point clean loss. Daggers mark the two discordant pairs.}",
         r"\label{tab:cross-stressor-all-pairs}",
-        r"\scriptsize",
+        r"\footnotesize",
         r"\setlength{\tabcolsep}{3pt}",
         r"\begin{tabular}{lrlrrrrrl}",
         r"\toprule",
@@ -344,21 +344,20 @@ def plot(rows: list[dict[str, Any]], out: Path) -> None:
     and the calibrated-score change (bottom). No thresholds or verdicts are
     drawn; per-pair values are in the appendix table."""
     out.parent.mkdir(parents=True, exist_ok=True)
-    bar_color = "#2c6fa8"
+    stressor_colors = {"blur": "#4477AA", "resize": "#EE6677"}
     stressors = ("blur", "resize")
     with plt.rc_context(STYLE):
         fig, (behavior_ax, score_ax) = plt.subplots(
-            2,
             1,
-            figsize=(6.0, 3.4),
-            sharex=True,
-            gridspec_kw={"height_ratios": (1.25, 1.0), "hspace": 0.14},
+            2,
+            figsize=(6.7, 2.2),
+            gridspec_kw={"wspace": 0.26},
         )
 
         behavior_means: list[float] = []
         score_means: list[float] = []
         positions: list[float] = []
-        hatched_flags: list[bool] = []
+        bar_stressors: list[str] = []
         tick_positions: list[float] = []
         for task_index, task in enumerate(TASKS):
             base = task_index * 3.0
@@ -372,57 +371,86 @@ def plot(rows: list[dict[str, Any]], out: Path) -> None:
                 if len(cell) != len(SEEDS):
                     raise ValueError(f"{task}/{stressor}: expected one row per run")
                 positions.append(base + offset)
-                hatched_flags.append(stressor == "resize")
+                bar_stressors.append(stressor)
                 behavior_means.append(mean(row["delta_behavior"] for row in cell))
                 score_means.append(
                     mean(row["delta_selective_score"] for row in cell)
                 )
 
-        for position, hatched, behavior, score in zip(
-            positions, hatched_flags, behavior_means, score_means
+        for position, stressor, behavior, score in zip(
+            positions, bar_stressors, behavior_means, score_means
         ):
+            color = stressor_colors[stressor]
             bar_kwargs = {
                 "width": 0.85,
-                "color": bar_color,
-                "hatch": "///" if hatched else None,
-                "edgecolor": "white" if hatched else bar_color,
+                "color": color,
+                "hatch": "///" if stressor == "resize" else None,
+                "edgecolor": "white" if stressor == "resize" else color,
                 "linewidth": 0.4,
                 "zorder": 2,
             }
             behavior_ax.bar(position, behavior, **bar_kwargs)
             score_ax.bar(position, score, **bar_kwargs)
+            behavior_ax.annotate(
+                f"{behavior:.0f}",
+                (position, behavior),
+                textcoords="offset points",
+                xytext=(0, 1.5 if behavior >= 0 else -7),
+                ha="center",
+                fontsize=5.8,
+                color="#333333",
+            )
+            score_ax.annotate(
+                f"{score:.1f}",
+                (position, score),
+                textcoords="offset points",
+                xytext=(0, 1.5 if score >= 0 else -7),
+                ha="center",
+                fontsize=5.8,
+                color="#333333",
+            )
 
-        behavior_ax.axhline(0.0, color="#444444", linewidth=0.8, zorder=3)
-        behavior_ax.set_ylim(min(behavior_means) - 4.0, max(behavior_means) + 6.0)
+        behavior_ax.axhline(0.0, color="#333333", linewidth=0.9, zorder=3)
+        behavior_ax.set_ylim(min(behavior_means) - 4.0, max(behavior_means) + 13.0)
         behavior_ax.set_ylabel("Success-rate change\nunder the shift (pp)")
+        behavior_ax.set_title("(a) Planning gain", loc="left", fontweight="semibold")
 
-        score_ax.axhline(0.0, color="#444444", linewidth=0.8, zorder=3)
-        score_ax.set_ylim(min(score_means) - 0.4, max(score_means) + 0.4)
+        score_ax.axhline(0.0, color="#333333", linewidth=0.9, zorder=3)
+        score_ax.set_ylim(min(score_means) - 0.4, max(score_means) + 0.9)
         score_ax.set_ylabel("Calibrated-score\nchange $\\Delta S$")
+        score_ax.set_title("(b) Diagnostic gain", loc="left", fontweight="semibold")
 
-        score_ax.set_xticks(tick_positions)
-        score_ax.set_xticklabels(list(TASKS))
-        score_ax.tick_params(axis="x", length=0)
-        score_ax.set_xlim(-0.9, positions[-1] + 0.9)
+        for axis in (behavior_ax, score_ax):
+            axis.set_xticks(tick_positions)
+            axis.set_xticklabels(list(TASKS))
+            axis.tick_params(axis="x", length=0)
+            axis.set_xlim(-0.9, positions[-1] + 0.9)
         for axis in (behavior_ax, score_ax):
             axis.grid(True, axis="y", color="#B0B0B0", alpha=0.22, linewidth=0.55)
             axis.spines["top"].set_visible(False)
             axis.spines["right"].set_visible(False)
 
         legend_handles = [
-            Patch(facecolor=bar_color, label="Blur"),
-            Patch(facecolor=bar_color, hatch="///", edgecolor="white", label="Resize"),
+            Patch(facecolor=stressor_colors["blur"], label="Blur"),
+            Patch(
+                facecolor=stressor_colors["resize"],
+                hatch="///",
+                edgecolor="white",
+                label="Resize",
+            ),
         ]
-        behavior_ax.legend(
-            handles=legend_handles,
-            loc="upper right",
-            ncol=2,
-            frameon=False,
-            fontsize=6.8,
-            handlelength=1.5,
-            columnspacing=0.9,
-            handletextpad=0.5,
-        )
+        for axis in (behavior_ax, score_ax):
+            axis.legend(
+                handles=legend_handles,
+                loc="upper left",
+                ncol=2,
+                frameon=False,
+                fontsize=6.8,
+                handlelength=1.5,
+                columnspacing=0.9,
+                handletextpad=0.5,
+                borderaxespad=0.2,
+            )
         fig.tight_layout(pad=0.65)
         fig.savefig(out)
         plt.close(fig)

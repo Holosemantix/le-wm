@@ -378,7 +378,7 @@ def build_sweep_table(rows: list[dict[str, str]]) -> str:
         r"\centering",
         r"\caption{Summary of the Gaussian-augmentation sweep (nine checkpoints per task: no augmentation plus eight noise levels; \Cref{fig:full-sweep-diagnostics} shows every level). ``Best'' is the level with the highest mean planning success at evaluation noise $\sigma=0.08$; arrows give the change from the unaugmented checkpoint to that level. Relative ATR is lower-is-better, SMPR higher-is-better; the last column lists levels meeting the success-rate criterion (\Cref{sec:bg}).}",
         r"\label{tab:full-sweep-compact}",
-        r"\scriptsize",
+        r"\footnotesize",
         r"\setlength{\tabcolsep}{3.5pt}",
         r"\begin{tabular}{lrrrrrr}",
         r"\toprule",
@@ -530,11 +530,11 @@ def build_pldm_table(
         raise ValueError("PLDM pooled metrics diverge between calibrations")
 
     lines = [
-        r"\begin{table}[H]",
+        r"\begin{table}[t]",
         r"\centering",
         r"\caption{The same leave-task-out screen in two model families: for each evaluation task, thresholds are selected on that family's other three tasks and applied unchanged. Chance is $0.5$; LeWM values average three training runs, PLDM has one run per setting. Applying score-aligned LeWM thresholds to PLDM after within-task ATR normalization yields identical PLDM decisions.}",
         r"\label{tab:pldm-architecture-portability}",
-        r"\scriptsize",
+        r"\small",
         r"\setlength{\tabcolsep}{6pt}",
         r"\begin{tabular}{lrr}",
         r"\toprule",

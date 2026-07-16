@@ -382,7 +382,7 @@ REQUIRED_MAIN_TEXT_SNIPPETS = [
     "The three evaluation seeds measure only within-run variability",
     "We make no blur- or resize-specific adjustment",
     "not an exact universal boundary or a general collapse detector",
-    "it is not an absolute robustness classifier",
+    "being an absolute robustness classifier",
     "The t-SNE coordinates and ellipses are qualitative and enter none of these metrics",
     "not an independent statistical success count",
     "does not benchmark alternative signals such as encoder shift",
@@ -393,6 +393,7 @@ MAIN_TEXT_FIGURES = {
     "fig_local_geometry_highd_audit.pdf",
     "fig_future_drift_three_seed_v1.pdf",
     "fig_acpc_planner_evidence.pdf",
+    "fig_pldm_sweep_diagnostics.pdf",
     "fig_cross_stressor_selective_transfer_v1.pdf",
 }
 
@@ -506,7 +507,7 @@ PAIRED_MULTISEVERITY_SMPR_SMOKE_SHA256 = "eb41ff0d6a23db0e15ea5f48540f91f5d83483
 PUBLIC_V1_ARTIFACT_HASHES = {
     "paper1/config/frozen_diagnostic_protocol_v1.json": FROZEN_PROTOCOL_SHA256,
     "paper1/results/frozen_external_validation_summary_v3.json": "ec485a7026c1d2ff80295f4dc85dd3753ca12f2ede7d7c0137a13796070dfeba",
-    "paper1/tables/table_pldm_architecture_portability.tex": "5fae4948ac832bf0f2a53dd9dac13182f6cd1031a8a057255b3b08cda22c6906",
+    "paper1/tables/table_pldm_architecture_portability.tex": "b7f84b19896d20f23775d9bb75faddd91680b227f689b67a699ddc49c304ba83",
     "paper1/results/external_validation/cross_stressor_fixed_rho_summary.json": "94077f772e8dd7641b47e161a17d4ec67cea695dc044cb9a0229857efc157453",
     "paper1/results/external_validation/target_view_frozen_summary.json": "dba255daf282d1dbea7a102839e054cdd39b159a08a9ea9b1d3def7767477870",
     "paper1/results/diagnostic_baselines/diagnostic_baseline_all_v1.json": "df43cfd80b0387bde31426a37445149646a247724c1b2dd61f801a97d6c4f3c8",
@@ -992,15 +993,15 @@ def check_visual_text_structure() -> None:
         "\\subsection{Common-future error drift}",
         "\\subsection{Candidate-cost drift and planner stability}",
         "\\subsection{Checkpoint-level radius and proxy separation}",
-        "\\subsection{Checkpoint-level calibration}",
+        "\\subsection{Checkpoint-level threshold selection}",
         "\\subsection{Evaluation setup}",
         "\\subsection{Motivating case study: local geometry before and after prediction}",
         "\\subsection{Planning performance under observation noise}",
         "\\subsection{Predicting the perturbation-induced error drift}",
         "\\subsection{Predicting CEM selection regret across tasks}",
         "\\subsection{A common threshold range across tasks}",
-        "\\subsection{Application to PLDM}",
-        "\\subsection{The common threshold range under blur and resize}",
+        "\\subsection{Portability to other model families}",
+        "\\subsection{Selective transfer of the diagnostic under blur and resize}",
     )
     for heading in required_headings:
         if heading not in body:
@@ -3650,8 +3651,10 @@ def check_public_v1_remediation_artifacts() -> None:
         ROOT / "paper1/tables/table_pldm_architecture_portability.tex"
     ).read_text(encoding="utf-8")
     for expected in (
-        "PLDM thresholds, other three tasks & 0.836 & 0.789 & 0.882 & 4 & 2",
-        "LeWM thresholds, PLDM-normalized & 0.836 & 0.789 & 0.882 & 4 & 2",
+        "TwoRoom & 0.935 & 0.938",
+        "PushT & 0.917 & 0.750",
+        "Reacher & 0.889 & 0.500",
+        "Cube & 0.858 & 0.875",
         "after within-task ATR normalization",
     ):
         if expected not in e2_table:

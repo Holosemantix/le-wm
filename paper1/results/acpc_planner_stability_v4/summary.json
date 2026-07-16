@@ -1,6 +1,6 @@
 {
   "authorized_shard_count": 72,
-  "extension_execution_sha256": "291f7a0eaaf2840c10da67e643587fa5546c260f99e54fa1d988a0afda3793a3",
+  "extension_execution_sha256": "72268515de35f45e739f825b9fc7c2bdf3a56442a680e69cd7f384ca79771edf",
   "extension_shard_count": 48,
   "full_budget_seed_summary": [
     {
@@ -3664,8 +3664,8 @@
     }
   },
   "protocol_id": "paper1-acpc-planner-stability-v4",
-  "protocol_sha256": "ca599e23257fcfa890c68fb344eacdcd71212eff90747c37119bbdd071ce3f3d",
-  "reference_execution_sha256": "bcc037e78699d7343256d543c42f0d6f155515de20111284a3ac8eae61c13236",
+  "protocol_sha256": "4c7ed35023469da1b92777b636e783ffc4d116cca6f69f7697d532bf16dd3e22",
+  "reference_execution_sha256": "e1ec6ced2826a6189f78685f30be54a09c9e1bbcc05dd63ad5bb81ce712d4019",
   "reference_shard_count": 24,
   "schema_version": "paper1-acpc-planner-stability-summary-2.0",
   "training_seeds": [

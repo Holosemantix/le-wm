@@ -2,8 +2,9 @@
 
 The layout, colors, and dotted common-threshold lines mirror
 ``plot_full_sweep_diagnostics.py`` so that readers can compare the two model
-families panel by panel. PLDM has one training run per setting, so no
-across-run shading is drawn.
+families panel by panel. PLDM has one training run per setting; which levels
+meet the success-rate criterion is reported in the text and tables rather
+than drawn on the figure.
 """
 
 from __future__ import annotations
@@ -17,7 +18,6 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.transforms as mtransforms
 from matplotlib.lines import Line2D
 
 from .utils_paper1_io import ROOT, TASKS
@@ -110,7 +110,6 @@ def plot(by_task: dict[str, list[dict[str, float | bool]]], out_fig: Path) -> No
             base_atr = rows[0]["atr"]
             atr = [row["atr"] / base_atr for row in rows]
             smpr = [row["smpr"] for row in rows]
-            recovered = [bool(row["recovered"]) for row in rows]
 
             clean_base = rows[0]["base_clean"]
             score_lo = [min(row["stress_seed_scores"]) for row in rows]
@@ -131,24 +130,6 @@ def plot(by_task: dict[str, list[dict[str, float | bool]]], out_fig: Path) -> No
                 capsize=1.6,
                 zorder=2,
             )
-            onset = next(
-                (xi for xi, flag in zip(x, recovered) if flag), None
-            )
-            if onset is not None:
-                onset_transform = mtransforms.blended_transform_factory(
-                    score_ax.transData, score_ax.transAxes
-                )
-                score_ax.plot(
-                    onset,
-                    0.97,
-                    marker="v",
-                    color="#2e7d32",
-                    ms=4.2,
-                    ls="none",
-                    transform=onset_transform,
-                    clip_on=False,
-                    zorder=4,
-                )
             diagnostic_ax.plot(x, atr, color="#d95f02", marker="s", lw=1.35, ms=3.4, zorder=2)
             diagnostic_ax.plot(
                 x, smpr, color="#7570b3", marker="^", lw=1.35, ms=3.5, ls="--", zorder=2
@@ -208,8 +189,7 @@ def plot(by_task: dict[str, list[dict[str, float | bool]]], out_fig: Path) -> No
             ),
             Line2D([], [], color="#d95f02", marker="s", lw=1.35, ms=3.4, label=r"Relative ATR ($\downarrow$)"),
             Line2D([], [], color="#7570b3", marker="^", lw=1.35, ms=3.5, ls="--", label=r"SMPR ($\uparrow$)"),
-            Line2D([], [], color="#888888", ls="--", lw=0.9, label="Unaugmented clean score"),
-            Line2D([], [], color="#2e7d32", marker="v", ms=4.2, ls="none", label="Criterion onset"),
+            Line2D([], [], color="#888888", ls="--", lw=0.9, label="Unaugmented baseline"),
         ]
         fig.legend(
             handles=legend_handles,

@@ -1942,13 +1942,13 @@
   "immutable": true,
   "parent_protocol": {
     "path": "paper1/config/acpc_planner_stability_protocol_v4.json",
-    "sha256": "ca599e23257fcfa890c68fb344eacdcd71212eff90747c37119bbdd071ce3f3d"
+    "sha256": "ecf73791fe1bd7df31328ca6b92c100e6eee81271c08840b8b83e3f6cf54b3b7"
   },
   "post_result_protocol_edits_forbidden": true,
   "protocol_id": "paper1-acpc-planner-stability-v4",
   "reference_execution": {
     "path": "paper1/config/acpc_planner_stability_execution_v2.json",
-    "sha256": "bcc037e78699d7343256d543c42f0d6f155515de20111284a3ac8eae61c13236"
+    "sha256": "e1ec6ced2826a6189f78685f30be54a09c9e1bbcc05dd63ad5bb81ce712d4019"
   },
   "result_root": "paper1/results/acpc_planner_stability_v4/formal",
   "schema_version": "paper1-acpc-planner-stability-execution-4.0",
@@ -1960,6 +1960,6 @@
   "status": "frozen_pre_execution",
   "supersedes_unexecuted_execution": {
     "path": "paper1/config/acpc_planner_stability_execution_v3.json",
-    "sha256": "568c6051c8b0f9747c887e04d9965163ba7abae68268ff84a63667e0cfe1dd18"
+    "sha256": "53c4766c1f12ba92554272bb6182ea650dd4348aaf6348e7927d32f821ef1136"
   }
 }

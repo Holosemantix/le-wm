@@ -25,6 +25,13 @@ OUT_TABLE = ROOT / "paper1/tables/table_target_aligned_acpc.tex"
 OUT_ABSOLUTE = ROOT / "paper1/tables/table_target_aligned_acpc_absolute.tex"
 OUT_FIGURE = ROOT / "assets/paper1_figs/fig_future_drift_three_seed_v1.pdf"
 
+# Reader-facing control names (Sec. 5.3): internal CSV names -> manuscript names.
+CONTROL_DISPLAY = {
+    "zero actions": "zeroed actions",
+    "batch-permuted actions": "swapped actions",
+    "time-shuffled actions": "shuffled actions",
+}
+
 SEEDS = (3072, 3073, 3074)
 CONTROL_NAMES = {
     "plus_action_zero_h8_control": "zero actions",
@@ -102,18 +109,18 @@ def _write_summary_table(summaries: list[dict[str, Any]]) -> None:
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Predicting the perturbation-induced difference between nominal and perturbed eight-step prediction errors on non-augmented checkpoints. Each regression is fitted on 15 of 16 trajectory groups and evaluated on the omitted group, rotating over all groups. The one-step baseline contains perturbation severity, clean--perturbed encoder-history distance, and recorded-action one-step ACPC. The two nested eight-step models retain that baseline and add either an oracle action control or recorded-action eight-step ACPC. Within each task--run cell, the oracle control is the lowest-MAE choice among zeroed, batch-permuted, and time-shuffled action features over the same 16 rotations. Values are relative reductions in cross-validated regression MAE; higher is better.}",
+        r"\caption{Relative reduction in out-of-group MAE from Base+ACPC$_8$ when predicting the error drift $d$ on the unaugmented checkpoints (protocol and model definitions in \Cref{sec:exp-target-aligned}). Base+Control$_8$ uses the per-cell oracle control; higher is better. The last column counts task--run cells in which Base+ACPC$_8$ is best.}",
         r"\label{tab:target-aligned-acpc}",
         r"\small",
         r"\setlength{\tabcolsep}{6pt}",
         r"\begin{tabular}{lrrc}",
         r"\toprule",
-        r"Training run & vs. one-step baseline & vs. eight-step action control & Task--run cells improved \\",
+        r"Training run (seed) & vs. Base & vs. Base+Control$_8$ & Task--run cells improved \\",
         r"\midrule",
     ]
     for row in summaries:
         lines.append(
-            f"seed {row['training_seed']} & {100*row['reduction_vs_one_step']:.1f}\\% & "
+            f"{row['training_seed']} & {100*row['reduction_vs_one_step']:.1f}\\% & "
             f"{100*row['reduction_vs_control']:.1f}\\% & {row['tasks_passed']}/{row['task_count']} \\\\"
         )
     lines.extend(
@@ -133,13 +140,13 @@ def _write_absolute_table(rows: list[dict[str, Any]]) -> None:
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Leave-one-trajectory-group-out regression MAE for predicting the perturbation-induced difference between nominal and perturbed eight-step prediction errors on non-augmented checkpoints. Each row contains 16 trajectory groups. All models include perturbation severity, clean--perturbed encoder-history distance, and recorded-action one-step ACPC. The two eight-step columns add either the oracle action control or recorded-action eight-step ACPC. Within each task--run row, the oracle control is the lowest-MAE choice among zeroed, batch-permuted, and time-shuffled action features over the same 16 rotations. Lower is better.}",
+        r"\caption{Out-of-group MAE (16-fold leave-one-trajectory-group-out) for predicting the error drift $d$ on the unaugmented checkpoints; lower is better, model definitions in \Cref{sec:exp-target-aligned}. ``Selected control'' is the destroyed-action control chosen by the per-cell oracle; ``paired wins'' counts the folds (of 16) in which Base+ACPC$_8$ beats Base+Control$_8$.}",
         r"\label{tab:target-aligned-acpc-absolute}",
-        r"\scriptsize",
+        r"\footnotesize",
         r"\setlength{\tabcolsep}{3.2pt}",
         r"\begin{tabular}{lrrrrlc}",
         r"\toprule",
-        r"Task & seed & \shortstack{one-step\\baseline} & \shortstack{$+$ eight-step\\action control} & \shortstack{$+$ recorded-action\\eight-step ACPC} & \shortstack{selected\\control} & \shortstack{paired\\wins} \\",
+        r"Task & \shortstack{run\\(seed)} & Base & \shortstack{Base\\$+$Control$_8$} & \shortstack{Base\\$+$ACPC$_8$} & \shortstack{selected\\control} & \shortstack{paired\\wins} \\",
         r"\midrule",
     ]
     ordered = sorted(rows, key=lambda row: (TASKS.index(row["task"]), row["training_seed"]))
@@ -147,7 +154,7 @@ def _write_absolute_table(rows: list[dict[str, Any]]) -> None:
         lines.append(
             f"{row['task']} & {row['training_seed']} & {row['one_step_mae']:.3f} & "
             f"{row['best_control_mae']:.3f} & \\textbf{{{row['eight_step_mae']:.3f}}} & "
-            f"{row['best_control']} & {row['win_blocks']}/{row['block_count']} \\\\"
+            f"{CONTROL_DISPLAY[row['best_control']]} & {row['win_blocks']}/{row['block_count']} \\\\"
         )
         if index + 1 < len(ordered) and ordered[index + 1]["task"] != row["task"]:
             lines.append(r"\addlinespace[1pt]")
@@ -168,7 +175,7 @@ def _plot(rows: list[dict[str, Any]]) -> None:
             "ytick.labelsize": 7.5,
         }
     )
-    fig, axes = plt.subplots(1, len(TASKS), figsize=(6.8, 3.05))
+    fig, axes = plt.subplots(1, len(TASKS), figsize=(6.8, 2.6))
     methods = (
         ("one_step_mae", "1-step\nbaseline", "#9A9A9A"),
         (
@@ -183,7 +190,7 @@ def _plot(rows: list[dict[str, Any]]) -> None:
         ),
     )
     run_offsets = (-0.055, 0.0, 0.055)
-    for ax, task in zip(axes, TASKS):
+    for panel_index, (ax, task) in enumerate(zip(axes, TASKS)):
         task_rows = sorted(
             (row for row in rows if row["task"] == task),
             key=lambda row: int(row["training_seed"]),
@@ -235,7 +242,13 @@ def _plot(rows: list[dict[str, Any]]) -> None:
             range(len(methods)),
             [label for _, label, _ in methods],
         )
-        ax.set_title(task, fontsize=8.5, fontweight="semibold", pad=5)
+        ax.set_title(
+            f"({chr(97 + panel_index)}) {task}",
+            loc="left",
+            fontsize=8.5,
+            fontweight="semibold",
+            pad=5,
+        )
         ax.grid(axis="y", color="#D9D9D9", linewidth=0.6)
         ax.spines[["top", "right"]].set_visible(False)
         ax.tick_params(axis="x", direction="out", length=2.5, labelsize=6.4)
@@ -246,12 +259,6 @@ def _plot(rows: list[dict[str, Any]]) -> None:
         r"Regression MAE ($\downarrow$)",
         fontsize=7.6,
         labelpad=5,
-    )
-    fig.suptitle(
-        "Predicting the perturbation-induced difference in eight-step prediction error",
-        fontsize=8.7,
-        fontweight="semibold",
-        y=0.99,
     )
     legend_labels = (
         r"baseline = recorded-action ACPC$_1$",
@@ -275,19 +282,14 @@ def _plot(rows: list[dict[str, Any]]) -> None:
         legend_handles,
         legend_labels,
         loc="upper center",
-        bbox_to_anchor=(0.5, 0.91),
+        bbox_to_anchor=(0.5, 1.0),
         ncol=3,
         frameon=False,
         fontsize=6.8,
         handletextpad=0.35,
         columnspacing=1.15,
     )
-    fig.supxlabel(
-        "Nested regression feature set (both eight-step models retain the one-step baseline)",
-        fontsize=8,
-        y=0.012,
-    )
-    fig.subplots_adjust(left=0.10, right=0.975, bottom=0.27, top=0.75, wspace=0.25)
+    fig.subplots_adjust(left=0.10, right=0.975, bottom=0.17, top=0.82, wspace=0.25)
     OUT_FIGURE.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT_FIGURE)
     plt.close(fig)

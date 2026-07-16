@@ -78,11 +78,11 @@
     "root_cause": "float32 cancellation in an algebraic identity guard at real cost scale; the candidate costs, candidate ordering, and exact winner are unchanged",
     "supersedes_execution": {
       "path": "paper1/config/acpc_planner_stability_execution_v1.json",
-      "sha256": "ad955b1ba7e223e2dde1b399717aecb6b321e8ac0f909fd13543707bbdfeef1a"
+      "sha256": "08a8a08a29db8984d3c1d1719bf2065b33a3d58b37f846851219a361676029ad"
     },
     "supersedes_protocol": {
       "path": "paper1/config/acpc_planner_stability_protocol_v1.json",
-      "sha256": "fba166f6a9016d557b486a85866c3381073a428b9ce93e1e91cfe99e479a022d"
+      "sha256": "236c1feaba5093d2778ff897c509fcbfb4410781838b78678ad220c7de6ea866"
     },
     "v1_attempts": [
       {
@@ -114,7 +114,7 @@
         ],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/fixed_reduced_tworoom_base_seed3074.json",
-        "sha256": "026c71b97eac023d403a11f42ccbf63083e70838837db28a41b7adfb0545a7cd",
+        "sha256": "1707ba28cd7d4974b57e6b4fc96d85d3a832f18d1d7be4f3dfccc385c4327449",
         "shard_id": "fixed_reduced_tworoom_base_seed3074",
         "status": "partial"
       },
@@ -125,7 +125,7 @@
         "errors": [],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_reduced_tworoom_base_seed3074.json",
-        "sha256": "9586f1a2d7891765c095f0f47bc9ba742393d5b8b5bc3039c27a0cf60e514363",
+        "sha256": "973d6c9e064187ca8b78714b9ee4e29fec6fb371fe027e786428799c1b774ba2",
         "shard_id": "adaptive_reduced_tworoom_base_seed3074",
         "status": "complete"
       },
@@ -136,7 +136,7 @@
         "errors": [],
         "expected_rows": 32,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_full_tworoom_base_seed3074.json",
-        "sha256": "9f70697dc31f46a0384a6b9b3bc4036a0dfdb25b4e02c11f66bd29a85e0fa8c2",
+        "sha256": "14435fd6f0c5fcb4e83a9471d71f113999a450b87c3a8ff1416516f7f365d262",
         "shard_id": "adaptive_full_tworoom_base_seed3074",
         "status": "complete"
       },
@@ -169,7 +169,7 @@
         ],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/fixed_reduced_tworoom_endpoint_seed3074.json",
-        "sha256": "802a281e0957f19ebed380025a34b8d056f2ff4b0172ea2a10e9303785fb71aa",
+        "sha256": "65219640592a087cc248afa16570efa7291ee54551d94b61d4209860d799d8c9",
         "shard_id": "fixed_reduced_tworoom_endpoint_seed3074",
         "status": "partial"
       },
@@ -180,7 +180,7 @@
         "errors": [],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_reduced_tworoom_endpoint_seed3074.json",
-        "sha256": "e93872983c0dfae5e5f040931575a4f8c33877c40f3c5677018d90beaf46f35b",
+        "sha256": "e5a9f59f621701616f3e4b8eb8c23817b0942cfa32ffc36deeb707dfd8a7b508",
         "shard_id": "adaptive_reduced_tworoom_endpoint_seed3074",
         "status": "complete"
       },
@@ -191,7 +191,7 @@
         "errors": [],
         "expected_rows": 32,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_full_tworoom_endpoint_seed3074.json",
-        "sha256": "defd7cf7b1a96cb1a24e669d4a646e2b76ead690063d54006217c1c3fbde24b2",
+        "sha256": "9f1690b46bc75ece976d3a1627111e78f87ae639b852e56766b598e961b8ba82",
         "shard_id": "adaptive_full_tworoom_endpoint_seed3074",
         "status": "complete"
       },
@@ -224,7 +224,7 @@
         ],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/fixed_reduced_pusht_base_seed3074.json",
-        "sha256": "9a7edf5ba2b10dd270c802680b1c605f98e09eec621dc1dec6fc31566271ed73",
+        "sha256": "e706a8c50b9f4765cf2325b185dfa993eea0df1fc73b2db3ffad6212aec4821a",
         "shard_id": "fixed_reduced_pusht_base_seed3074",
         "status": "partial"
       },
@@ -235,7 +235,7 @@
         "errors": [],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_reduced_pusht_base_seed3074.json",
-        "sha256": "deb87a3846353faa38e5936df40d52559c0eee4d2f157465ae08cf01e1840c37",
+        "sha256": "8cdd3ae8481a8a3f6cd833caa4171baa4027f891125ea4f4973b7a1efda17c13",
         "shard_id": "adaptive_reduced_pusht_base_seed3074",
         "status": "complete"
       },
@@ -246,7 +246,7 @@
         "errors": [],
         "expected_rows": 32,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_full_pusht_base_seed3074.json",
-        "sha256": "e861c0376c2c2abf989355fe38589be49cc2590cd106a9badae63767f5b16325",
+        "sha256": "ff5416c53c2acd0a6323a14f1c0a0fb3f83d83dd7066de195c01e61a6951181d",
         "shard_id": "adaptive_full_pusht_base_seed3074",
         "status": "complete"
       },
@@ -279,7 +279,7 @@
         ],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/fixed_reduced_pusht_endpoint_seed3074.json",
-        "sha256": "1838dd5b433f8a269f25b20fa34fec4bddd036fb4e81d94e1eafd23475df34fa",
+        "sha256": "78f0c0921c30a6ab2e3d2895f62970bb1fd49acb044706b2a5524c27aaa2bd76",
         "shard_id": "fixed_reduced_pusht_endpoint_seed3074",
         "status": "partial"
       },
@@ -290,7 +290,7 @@
         "errors": [],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_reduced_pusht_endpoint_seed3074.json",
-        "sha256": "d0dbe093822a1aacdd123ba236e87f26fd53fd2f8210d07f405d9b4b3639ef63",
+        "sha256": "6c4be146c648c2f7e704ff235e1b034ede17a9151d779b22db50c0c7fea435af",
         "shard_id": "adaptive_reduced_pusht_endpoint_seed3074",
         "status": "complete"
       },
@@ -301,7 +301,7 @@
         "errors": [],
         "expected_rows": 32,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_full_pusht_endpoint_seed3074.json",
-        "sha256": "088d5df8daafc55a9937debc05c524f2ec9622f8b61daba49ba6e87fcd3d1936",
+        "sha256": "9360a128bbebd6f1924fa2d5cc15adba23059c2f9872ec4f79ffed8f665e9a4c",
         "shard_id": "adaptive_full_pusht_endpoint_seed3074",
         "status": "complete"
       },
@@ -334,7 +334,7 @@
         ],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/fixed_reduced_reacher_base_seed3074.json",
-        "sha256": "a34258475d1eb9c9e9537d3982810626e970ef17bd9edc73dfae3f4e3e22bf3a",
+        "sha256": "fc533c31293a6c3d7ca26dd7f83b83a6898415d3fde2d33789da9e2a0d383d67",
         "shard_id": "fixed_reduced_reacher_base_seed3074",
         "status": "partial"
       },
@@ -345,7 +345,7 @@
         "errors": [],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_reduced_reacher_base_seed3074.json",
-        "sha256": "a76981a17417f7b5c905dc74827ce656e152750cef65399d7e57fcb414f980ec",
+        "sha256": "c2050f71dc7629e7c10a08c6b09c78167d15984d6c235acbdae8407c0b6b040a",
         "shard_id": "adaptive_reduced_reacher_base_seed3074",
         "status": "complete"
       },
@@ -356,7 +356,7 @@
         "errors": [],
         "expected_rows": 32,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_full_reacher_base_seed3074.json",
-        "sha256": "90db4559e5f96d3f2b33529782e3c183d2590463ae87e05e5c59c97c99057923",
+        "sha256": "dd2dc6516002f9f21c2f9f6bf343ea17f3aa3bbade2f2fce8bf4506af4a61f1e",
         "shard_id": "adaptive_full_reacher_base_seed3074",
         "status": "complete"
       },
@@ -389,7 +389,7 @@
         ],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/fixed_reduced_reacher_endpoint_seed3074.json",
-        "sha256": "0104f0bd84ba9b790f32661c6836d92d52bb141309c6ff83a32cc42a5fff4263",
+        "sha256": "10b48b903b7c9805344517bf1c8ff12eb7c525d5f83928fa65d926cbe6451620",
         "shard_id": "fixed_reduced_reacher_endpoint_seed3074",
         "status": "partial"
       },
@@ -400,7 +400,7 @@
         "errors": [],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_reduced_reacher_endpoint_seed3074.json",
-        "sha256": "da95a43760bddcf15ae664b6fae9ad35843b2434e2305c8cb0be647f78f8f0ac",
+        "sha256": "fb11d846fe841bff49bc9f43c640ff9d87e2bed3fdb819b841b75f97b4a1b84c",
         "shard_id": "adaptive_reduced_reacher_endpoint_seed3074",
         "status": "complete"
       },
@@ -411,7 +411,7 @@
         "errors": [],
         "expected_rows": 32,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_full_reacher_endpoint_seed3074.json",
-        "sha256": "3915c82b00bc2aa60e60dc359bc69d9f8e6550bf922f7b8840eda27d46e5f50c",
+        "sha256": "b3c35a4bbee8246529282ff4db62c671c717c48f4253f919d4754119ee1594c6",
         "shard_id": "adaptive_full_reacher_endpoint_seed3074",
         "status": "complete"
       },
@@ -444,7 +444,7 @@
         ],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/fixed_reduced_cube_base_seed3074.json",
-        "sha256": "0715f012997a8311e8afa55ae33c5f8e49e52d4ccf3f40075a34c064c9e5f747",
+        "sha256": "8689c46ba2c9830ca8f0127a1f0a31de73201991f7b545fcfca7bf36d5a92a6c",
         "shard_id": "fixed_reduced_cube_base_seed3074",
         "status": "partial"
       },
@@ -455,7 +455,7 @@
         "errors": [],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_reduced_cube_base_seed3074.json",
-        "sha256": "d0b6f9ae890b04bb9f148144eff55079777999e811cda5f955623c5b107eccc3",
+        "sha256": "7a6e7a2e894111d9f371aed634eac4aab1c10a95ac33866f6e0bcb77775330e0",
         "shard_id": "adaptive_reduced_cube_base_seed3074",
         "status": "complete"
       },
@@ -466,7 +466,7 @@
         "errors": [],
         "expected_rows": 32,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_full_cube_base_seed3074.json",
-        "sha256": "b86f53e00c8abfab4c6bdb52c66685875298a4ff8b757f36e3070bf2842254a3",
+        "sha256": "b4234ccbe6a7276f7b53272961c1626a8385059f0867302a73c401286df143d8",
         "shard_id": "adaptive_full_cube_base_seed3074",
         "status": "complete"
       },
@@ -499,7 +499,7 @@
         ],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/fixed_reduced_cube_endpoint_seed3074.json",
-        "sha256": "d57eb26edb06d07147f1c32f1a52d430738b9fd253f0ae35a28787156ada9534",
+        "sha256": "5f9baa286a362764f16d4c1e55216f1bbe020bc8097c12230ad33b4665b85a92",
         "shard_id": "fixed_reduced_cube_endpoint_seed3074",
         "status": "partial"
       },
@@ -510,7 +510,7 @@
         "errors": [],
         "expected_rows": 400,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_reduced_cube_endpoint_seed3074.json",
-        "sha256": "e51a38a330fd813bff71acab15a868d1b96d60351cc58c56894cbcc94f8ef56d",
+        "sha256": "715c4e5cd2b7fa27606833d0de725b7279ee08f7c4ca6c3719abe81ad2ee0ecf",
         "shard_id": "adaptive_reduced_cube_endpoint_seed3074",
         "status": "complete"
       },
@@ -521,7 +521,7 @@
         "errors": [],
         "expected_rows": 32,
         "path": "paper1/results/acpc_planner_stability_v1/formal/adaptive_full_cube_endpoint_seed3074.json",
-        "sha256": "6203325f1fd7a1d6ec72e041ff4488b1398fb58927c3d71fc6abe90c0b33855a",
+        "sha256": "c5d064abebdca2579968aed86e8c47e4156ab03018485a37bd5bb350e5e8f127",
         "shard_id": "adaptive_full_cube_endpoint_seed3074",
         "status": "complete"
       }
@@ -666,7 +666,7 @@
     "paper1/scripts/freeze_acpc_planner_stability_protocol.py": "7aa6bc6179f76c9a3afd80493e9fe08a34d0cb11c38109422edbcd513ed54265",
     "paper1/scripts/freeze_acpc_planner_stability_protocol_v2.py": "9af7fa5d9fdaad4f665803fbc977b95d3ce3e204dbc34d9887bdd65cdc174a42",
     "paper1/scripts/run_acpc_planner_stability_shards.py": "a9ef004f4afb49576c295edf870bb18fcaae7a8211e0253ba9502291731db89f",
-    "paper1/scripts/summarize_acpc_planner_stability.py": "2d9883af6b6313f572a01e7c2f29e4034b50dee44c67706ee4dab8af6c3b2e37",
+    "paper1/scripts/summarize_acpc_planner_stability.py": "2d37950715a5f4ca352b4304e3e24cfe5c0b8c4fc7dd99553f44a0c83f3974e3",
     "tests/test_paper1_acpc_adaptive_cem.py": "a0883c21bb93f87abcbf2deb14176a30fb8ed0cbaa596fe3d9b1e309c69f9fa7",
     "tests/test_paper1_acpc_frozen_protocols.py": "a9102a6bb3963f7dfe679822ed6f131f5a50023ba4dda38940a872e5818b3b78",
     "tests/test_paper1_acpc_planner_protocol_v2.py": "ee70c5c6616d042f00f5676eae06005282aca005799caeaeac4473fc62c8a9c2",

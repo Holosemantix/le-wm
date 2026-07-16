@@ -37,14 +37,16 @@ def test_future_drift_summary_uses_three_symmetric_training_runs() -> None:
 def test_future_drift_text_describes_nested_models_and_all_action_controls() -> None:
     text = (ROOT / "paper1/main.tex").read_text()
     normalized = " ".join(text.split())
-    assert "The two eight-step models retain this baseline" in normalized
+    assert "Every model contains the probe severity and the encoder-history distance" in normalized
+    assert r"\emph{zeroed} actions" in normalized
+    assert r"\emph{swapped} actions" in normalized
+    assert r"\emph{shuffled} actions" in normalized
     assert (
-        "zeroed, batch-permuted, or time-shuffled actions"
+        "the only feature whose action sequence is the one that generated"
         in normalized
     )
-    assert "Only the recorded-action feature uses the sequence that generated" in normalized
-    assert "oracle comparator" in normalized
-    assert "non-augmented checkpoint from each task and training run" in normalized
+    assert "``Strongest'' is an oracle choice" in normalized
+    assert "the unaugmented checkpoint of each task and training run" in normalized
     assert "actions from another trajectory" not in normalized
     assert "better of the two" not in normalized
 
@@ -54,11 +56,12 @@ def test_future_drift_figure_names_the_estimand_and_feature_sets() -> None:
         ROOT / "paper1/scripts/build_future_drift_reader_display.py"
     ).read_text()
     assert "Regression MAE" in script
-    assert "both eight-step models retain the one-step baseline" in script
+    assert "per-cell oracle" in script
+    assert "error drift $d$" in script
     assert r"baseline = recorded-action ACPC$_1$" in script
     assert r"oracle control = $+$ best-of-three ACPC$_8$ control" in script
     assert r"recorded = $+$ recorded-action ACPC$_8$" in script
-    assert "oracle control is the lowest-MAE choice" in script
+    assert "chosen by the per-cell oracle" in script
     assert "Held-out MAE" not in script
 
 
@@ -70,7 +73,8 @@ def test_future_drift_appendix_tables_avoid_internal_shorthand() -> None:
             "paper1/tables/table_target_aligned_acpc_absolute.tex",
         )
     )
-    assert "clean--perturbed encoder-history distance" in combined
+    assert "error drift $d$" in combined
+    assert "per-cell oracle" in combined
     assert "encoder response" not in combined
     assert "H8" not in combined
     assert "oracle" in combined
@@ -92,17 +96,13 @@ def test_main_text_uses_reader_facing_data_flow_language() -> None:
     ):
         assert excluded not in lowered
 
-    assert (
-        "perturbation-induced difference between nominal and perturbed "
-        "eight-step prediction errors"
-        in normalized
-    )
+    assert "error drift $d=|e_{\\tilde h}-e_h|$" in normalized
     assert "held-out mae" not in lowered
-    assert "this gives 14 directional" in lowered
-    assert "selected from one, two, and three source tasks" in lowered
+    assert "produce $4+6+4=14$ directional" in normalized
+    assert "the one-, two-, and three-task selection settings" in normalized
     assert "action-conditioned predictive consistency" in lowered
-    assert "task-proxy margin" in lowered
-    assert "checkpoint-level calibration" in lowered
+    assert "checkpoint-level radius and proxy separation" in lowered
+    assert "checkpoint-level threshold selection" in lowered
 
 
 def test_theory_section_contains_the_complete_radius_margin_chain() -> None:
@@ -113,8 +113,8 @@ def test_theory_section_contains_the_complete_radius_margin_chain() -> None:
         r"\subsection{Paired rollout radius}",
         r"\subsection{Common-future error drift}",
         r"\subsection{Candidate-cost drift and planner stability}",
-        r"\subsection{Why low radius needs a task-proxy margin}",
-        r"\subsection{Checkpoint-level calibration}",
+        r"\subsection{Checkpoint-level radius and proxy separation}",
+        r"\subsection{Checkpoint-level threshold selection}",
     )
     assert [body.index(heading) for heading in headings] == sorted(
         body.index(heading) for heading in headings
@@ -135,7 +135,7 @@ def test_theory_section_contains_the_complete_radius_margin_chain() -> None:
     assert r"\mathrm{ATR}^{\mathrm{raw}}_q(\theta)+\delta" in body
     assert "q35 of all off-diagonal Euclidean distances" in body
     assert "normalized margin $\\delta=0.10$" in body
-    assert "SMPR is the fraction of tested proxy-different pairs" in body
+    assert "SMPR is the fraction of tested pairs with different proxy labels" in body
     assert r"\begin{proposition}" in body
     assert r"\begin{theorem}" not in body
     assert "thm:" not in body

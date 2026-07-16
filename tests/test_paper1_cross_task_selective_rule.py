@@ -162,8 +162,8 @@ def test_generated_cross_task_tables_use_reader_facing_labels() -> None:
         ROOT / "paper1/tables/table_cross_stressor_selective_transfer_v1.tex"
     ).read_text(encoding="utf-8")
 
-    assert "Source tasks" in p2_table
-    assert "Evaluation tasks" in p2_table
+    assert "Selection tasks" in p2_table
+    assert "Test tasks" in p2_table
     assert "held-out" not in p2_table.lower()
     assert "Encoder q90" not in p3_table
     assert "H1" not in p3_table

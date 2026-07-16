@@ -184,7 +184,9 @@ def build_figure(
 
     plt.rcParams.update(
         {
-            "font.family": "sans-serif",
+            "font.family": "serif",
+            "font.serif": ["DejaVu Serif", "Times New Roman", "Times"],
+            "mathtext.fontset": "stix",
             "font.size": 8.0,
             "axes.titlesize": 7.1,
             "axes.labelsize": 6.8,

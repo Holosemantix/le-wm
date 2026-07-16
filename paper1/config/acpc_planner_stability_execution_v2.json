@@ -974,7 +974,7 @@
   "immutable": true,
   "parent_protocol": {
     "path": "paper1/config/acpc_planner_stability_protocol_v2.json",
-    "sha256": "f202a9b2a4b1f70692bde47a734eb3fe005d25483617bef054681e4f96abfcf7"
+    "sha256": "27518eeec0f7a61e38f9827c4282618ce3bf5cb13b93bcae6af84fb4e66adf5f"
   },
   "post_result_protocol_edits_forbidden": true,
   "protocol_id": "paper1-acpc-planner-stability-v2",
@@ -988,7 +988,7 @@
   "status": "frozen_pre_execution",
   "supersedes_execution": {
     "path": "paper1/config/acpc_planner_stability_execution_v1.json",
-    "sha256": "ad955b1ba7e223e2dde1b399717aecb6b321e8ac0f909fd13543707bbdfeef1a"
+    "sha256": "08a8a08a29db8984d3c1d1719bf2065b33a3d58b37f846851219a361676029ad"
   },
   "v1_results_must_be_retained": true
 }

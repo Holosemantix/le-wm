@@ -1942,13 +1942,13 @@
   "immutable": true,
   "parent_protocol": {
     "path": "paper1/config/acpc_planner_stability_protocol_v3.json",
-    "sha256": "17dc40ce9fa4acf2160de1df6031491df9c900f83d30c21a227ab9a9ebee3583"
+    "sha256": "99d4fc6ea5beef0c8c7509f554b984fa2478287178a6e55927dec527adbc94ed"
   },
   "post_result_protocol_edits_forbidden": true,
   "protocol_id": "paper1-acpc-planner-stability-v3",
   "reference_execution": {
     "path": "paper1/config/acpc_planner_stability_execution_v2.json",
-    "sha256": "bcc037e78699d7343256d543c42f0d6f155515de20111284a3ac8eae61c13236"
+    "sha256": "e1ec6ced2826a6189f78685f30be54a09c9e1bbcc05dd63ad5bb81ce712d4019"
   },
   "result_root": "paper1/results/acpc_planner_stability_v3/formal",
   "schema_version": "paper1-acpc-planner-stability-execution-3.0",

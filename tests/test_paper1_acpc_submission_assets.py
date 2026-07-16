@@ -31,11 +31,11 @@ def test_submission_planner_tables_are_bound_to_validated_three_seed_summary() -
     assert r"7.9 $\pm$ 1.4 & 8/12" in increment
     assert r"15.2 $\pm$ 2.0 & 12/12" in increment
     assert r"1.1 $\pm$ 0.5 & 10/12" in increment
-    assert "sample standard deviation" in increment
-    assert "Leave-one-task-out MAE decrease" in increment
-    assert "fitted on three tasks and evaluated on the fourth" in increment
+    assert "standard deviation across three runs" in increment
+    assert "Reduction in prediction MAE" in increment
+    assert "fitted on three tasks and evaluated on the remaining task" in increment
     assert "Held-out" not in increment
-    assert "Positive task--run" in increment
+    assert "Task--run evaluations" in increment
     assert "Run range" not in increment
     assert "seed 3072" not in increment
     assert "Three-seed" not in increment
@@ -60,10 +60,12 @@ def test_pldm_table_uses_the_current_task_relative_protocol() -> None:
     )
 
     table = build_pldm_table(rows, cross_task)
-    assert "complete PLDM sweep of four tasks and nine augmentation levels" in table
-    assert "PLDM thresholds, other three tasks & 0.836 & 0.789 & 0.882 & 4 & 2" in table
-    assert "LeWM thresholds, PLDM-normalized & 0.836 & 0.789 & 0.882 & 4 & 2" in table
-    assert "raw thresholds are not assumed" in table
+    assert "leave-task-out screen in two model families" in table
+    assert "TwoRoom & 0.935 & 0.938" in table
+    assert "PushT & 0.917 & 0.750" in table
+    assert "Reacher & 0.889 & 0.500" in table
+    assert "Cube & 0.858 & 0.875" in table
+    assert "within-task ATR normalization yields identical PLDM decisions" in table
 
 
 def test_submission_full_sweep_table_keeps_all_tasks_and_nine_levels() -> None:
@@ -79,7 +81,7 @@ def test_submission_full_sweep_table_keeps_all_tasks_and_nine_levels() -> None:
         "Cube",
     }
     table = build_sweep_table(rows)
-    assert "nine-level Gaussian-augmentation sweep" in table
+    assert "nine checkpoints per task" in table
     assert "TwoRoom & 68.8 & 97.1" in table
     assert "PushT & 7.2 & 86.8" in table
     assert "Reacher & 18.2 & 83.3" in table

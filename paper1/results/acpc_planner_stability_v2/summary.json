@@ -1,6 +1,6 @@
 {
   "authorized_shard_count": 24,
-  "execution_addendum_sha256": "bcc037e78699d7343256d543c42f0d6f155515de20111284a3ac8eae61c13236",
+  "execution_addendum_sha256": "e1ec6ced2826a6189f78685f30be54a09c9e1bbcc05dd63ad5bb81ce712d4019",
   "full_budget_summary": [
     {
       "candidate_count": 300,
