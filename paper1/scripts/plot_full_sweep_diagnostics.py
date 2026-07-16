@@ -151,7 +151,7 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
         # success-rate axis above the joint ATR--SMPR axis.
         fig = plt.figure(figsize=(6.7, 2.75))
         outer = fig.add_gridspec(
-            1, 4, left=0.075, right=0.995, bottom=0.19, top=0.84, wspace=0.14
+            1, 4, left=0.075, right=0.995, bottom=0.17, top=0.84, wspace=0.14
         )
         by_task = _by_task(rows)
 
@@ -171,7 +171,6 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             smpr_lo, smpr_hi = _range_by_rho(trs, "smpr_delta010")
             recovery = _rate_by_rho(trs, "recovery_label")
 
-            _shade_recovery(score_ax, x, recovery)
             _shade_recovery(diagnostic_ax, x, recovery)
             score_ax.fill_between(x, score_lo, score_hi, color="#555555", alpha=0.12, lw=0, zorder=1)
             score_ax.plot(x, score, color="#222222", marker="o", lw=1.6, ms=3.6, zorder=2)
@@ -218,6 +217,7 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             diagnostic_ax.set_yticks([0.25, 0.75], minor=True)
             diagnostic_ax.set_xlim(-0.003, 0.083)
             diagnostic_ax.set_xticks([0.00, 0.02, 0.04, 0.06, 0.08])
+            diagnostic_ax.set_xlabel(r"$\sigma_{\max}^{\mathrm{train}}$", labelpad=1.5)
             _polish_axis(score_ax)
             _polish_axis(diagnostic_ax)
             diagnostic_ax.grid(
@@ -254,7 +254,6 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             handletextpad=0.35,
             bbox_to_anchor=(0.5, 1.0),
         )
-        fig.supxlabel(r"Maximum training-noise std. $\sigma_{\max}^{\mathrm{train}}$", y=0.035)
         fig.savefig(out_fig, dpi=230)
         plt.close(fig)
 

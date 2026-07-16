@@ -802,8 +802,8 @@ sweep (\Cref{fig:full-sweep-diagnostics}).
 complete Gaussian-augmentation sweep. We report planning success rate at
 evaluation noise $\sigma=0.08$, relative ATR, and SMPR. Lines are across-run
 means; the gray band spans the three run means of the success rate; green
-bands mark levels meeting the success-rate criterion (\Cref{sec:bg}) in a
-majority of runs.
+bands in the diagnostic row mark levels meeting the success-rate criterion
+(\Cref{sec:bg}) in a majority of runs.
 Lower ATR (relative to the unaugmented checkpoint) and higher SMPR are
 favorable. Dotted horizontal lines mark the common thresholds $t_R=0.3$
 (ATR) and $t_M=0.95$ (SMPR) shared across tasks
@@ -1024,10 +1024,11 @@ PLDM tasks and fixed for its nine checkpoints; no LeWM number is reused.
 \includegraphics[width=\linewidth]{fig_pldm_sweep_diagnostics.pdf}
 \caption{The \Cref{fig:full-sweep-diagnostics} view repeated on PLDM (one
 training run per setting), with the same common thresholds drawn as dotted
-lines. On TwoRoom, PushT, and Cube the relative-ATR curve falls below $t_R$
-and SMPR stays above $t_M$ where planning recovers; on Reacher the noisy
-success rate barely changes across the sweep and relative ATR never clears
-$t_R$, so no checkpoint is accepted.}
+lines; green bands in the diagnostic row mark levels meeting the
+success-rate criterion. On TwoRoom, PushT, and Cube the relative-ATR curve
+falls below $t_R$ and SMPR stays above $t_M$ where planning recovers; on
+Reacher the noisy success rate barely changes across the sweep and relative
+ATR never clears $t_R$, so no checkpoint is accepted.}
 \label{fig:pldm-sweep-diagnostics}
 \end{figure}
 
@@ -1036,7 +1037,9 @@ $t_R$, so no checkpoint is accepted.}
 appears. Within the family, all four leave-one-task-out selections again
 land on the common pair $(t_R,t_M)=(0.3,0.95)$: the diagnostic starts
 accepting checkpoints exactly at the level where planning recovers on PushT
-and Cube, one grid level after it on TwoRoom, and never on Reacher---there
+and Cube (Cube's underlying improvement is modest, about six points, but
+meets the relative criterion), one grid level after it on TwoRoom, and never
+on Reacher---there
 the unaugmented checkpoint already reaches $80\%$ noisy success, the sweep
 never improves it by more than $1.4$ points, and relative ATR never falls
 below $t_R$, so there is almost no recovery signal to locate. Per-task

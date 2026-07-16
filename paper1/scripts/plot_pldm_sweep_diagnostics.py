@@ -26,7 +26,7 @@ DEFAULT_FIG = ROOT / "assets/paper1_figs/fig_pldm_sweep_diagnostics.pdf"
 # Shared with the LeWM sweep figure.
 COMMON_TR = 0.30
 COMMON_TM = 0.95
-RECOVERY_COLOR = "#79c77e"
+RECOVERY_COLOR = "#d9ead3"
 
 PLOT_STYLE = {
     "font.family": "serif",
@@ -89,7 +89,7 @@ def plot(by_task: dict[str, list[dict[str, float | bool]]], out_fig: Path) -> No
     with plt.rc_context(PLOT_STYLE):
         fig = plt.figure(figsize=(6.7, 2.75))
         outer = fig.add_gridspec(
-            1, 4, left=0.075, right=0.995, bottom=0.19, top=0.84, wspace=0.14
+            1, 4, left=0.075, right=0.995, bottom=0.17, top=0.84, wspace=0.14
         )
 
         for index, task in enumerate(TASKS):
@@ -106,11 +106,10 @@ def plot(by_task: dict[str, list[dict[str, float | bool]]], out_fig: Path) -> No
             smpr = [row["smpr"] for row in rows]
             recovered = [bool(row["recovered"]) for row in rows]
 
-            for axis in (score_ax, diagnostic_ax):
-                for start, end in _recovery_spans(x, recovered):
-                    axis.axvspan(
-                        start, end, color=RECOVERY_COLOR, alpha=0.50, lw=0, zorder=0
-                    )
+            for start, end in _recovery_spans(x, recovered):
+                diagnostic_ax.axvspan(
+                    start, end, color=RECOVERY_COLOR, alpha=0.50, lw=0, zorder=0
+                )
             score_ax.plot(x, score, color="#222222", marker="o", lw=1.6, ms=3.6, zorder=2)
             diagnostic_ax.plot(x, atr, color="#d95f02", marker="s", lw=1.35, ms=3.4, zorder=2)
             diagnostic_ax.plot(
@@ -152,6 +151,7 @@ def plot(by_task: dict[str, list[dict[str, float | bool]]], out_fig: Path) -> No
             diagnostic_ax.set_yticks([0, 0.5, 1.0] + ([1.5] if max_atr > 1.25 else []))
             diagnostic_ax.set_xlim(-0.003, 0.083)
             diagnostic_ax.set_xticks([0.00, 0.02, 0.04, 0.06, 0.08])
+            diagnostic_ax.set_xlabel(r"$\sigma_{\max}^{\mathrm{train}}$", labelpad=1.5)
             for axis in (score_ax, diagnostic_ax):
                 axis.grid(True, axis="y", color="#b0b0b0", alpha=0.22, lw=0.6)
                 axis.tick_params(axis="both", which="major", direction="out", length=3.0)
@@ -180,7 +180,6 @@ def plot(by_task: dict[str, list[dict[str, float | bool]]], out_fig: Path) -> No
             handletextpad=0.35,
             bbox_to_anchor=(0.5, 1.0),
         )
-        fig.supxlabel(r"Maximum training-noise std. $\sigma_{\max}^{\mathrm{train}}$", y=0.035)
         fig.savefig(out_fig, dpi=230)
         plt.close(fig)
 
