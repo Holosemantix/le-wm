@@ -32,10 +32,15 @@ DEFAULT_OUTPUT = ROOT / "assets/paper1_figs/fig_local_geometry_highd_audit.pdf"
 DEFAULT_AUDIT_OUTPUT = ROOT / "assets/paper1_figs/fig_local_geometry_highd_audit.json"
 
 PANEL_SPECS = (
-    ("base", "encoder", "Origin LeWM", "Encoder"),
-    ("base", "predictor", "Origin LeWM", "8-step rollout"),
-    ("fullseq_robust", "encoder", "Noise-trained LeWM", "Encoder"),
-    ("fullseq_robust", "predictor", "Noise-trained LeWM", "8-step rollout"),
+    ("base", "encoder", "Origin LeWM", "Encoder features"),
+    ("base", "predictor", "Origin LeWM", "8-step rollout predicted features"),
+    ("fullseq_robust", "encoder", "Noise-trained LeWM", "Encoder features"),
+    (
+        "fullseq_robust",
+        "predictor",
+        "Noise-trained LeWM",
+        "8-step rollout predicted features",
+    ),
 )
 
 def _load_json(path: Path) -> Any:
@@ -199,6 +204,27 @@ def build_figure(
     colors = plt.cm.turbo(np.linspace(0.05, 0.95, len(anchors)))
     audit_rows: list[dict[str, Any]] = []
 
+    # Checkpoint names are shared column-group headers.  Keeping them separate
+    # from the panel labels avoids repeating long titles in four narrow axes.
+    fig.text(
+        0.285,
+        0.995,
+        "Origin LeWM",
+        ha="center",
+        va="top",
+        fontsize=7.8,
+        fontweight="semibold",
+    )
+    fig.text(
+        0.755,
+        0.995,
+        "Noise-trained LeWM",
+        ha="center",
+        va="top",
+        fontsize=7.8,
+        fontweight="semibold",
+    )
+
     # Reproduce the original Appendix visualization: each panel has its own
     # deterministic t-SNE fit, using the same panel order and seeds as
     # ``paper1_selective_contraction.py``.  The coordinates are qualitative
@@ -313,11 +339,22 @@ def build_figure(
             zorder=8,
         )
         panel_letter = chr(ord("a") + panel_index)
-        ax.set_title(
-            f"({panel_letter}) {row_title}\n{column_title}",
-            loc="left",
-            pad=3.0,
+        ax.text(
+            -0.055,
+            1.075,
+            f"({panel_letter})",
+            transform=ax.transAxes,
+            ha="left",
+            va="bottom",
             fontsize=7.8,
+            fontweight="semibold",
+            clip_on=False,
+        )
+        ax.set_title(
+            column_title,
+            loc="center",
+            pad=3.0,
+            fontsize=6.5,
             fontweight="semibold",
         )
         ax.set_xlim(*xlim)

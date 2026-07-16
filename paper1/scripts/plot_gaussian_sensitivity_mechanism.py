@@ -54,12 +54,12 @@ def plot_main(fd_rows: list[dict[str, str]], jvp_rows: list[dict[str, str]], out
         (
             axes[0],
             [fnum(_row(fd_rows, task, "endpoint")["sensitivity_slope_vs_base"]) for task in TASKS],
-            "(a) Finite-difference slope",
+            "Finite-difference slope",
         ),
         (
             axes[1],
             [fnum(_row(jvp_rows, task, "endpoint")["composed_trace_per_pixel_dim_vs_base"]) for task in TASKS],
-            "(b) JVP/Hutchinson raw composed trace",
+            "JVP/Hutchinson raw composed trace",
         ),
     ]
     for ax, vals, title in panels:

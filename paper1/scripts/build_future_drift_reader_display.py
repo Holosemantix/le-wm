@@ -243,7 +243,7 @@ def _plot(rows: list[dict[str, Any]]) -> None:
             [label for _, label, _ in methods],
         )
         ax.set_title(
-            f"({chr(97 + panel_index)}) {task}",
+            task,
             loc="left",
             fontsize=8.5,
             fontweight="semibold",
