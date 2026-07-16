@@ -102,21 +102,18 @@
 \maketitle
 
 \begin{abstract}
-Latent predictive world models avoid reconstructing pixels, but this does not
-guarantee robust predictions when visual appearance changes without a change
-in state. Noise, blur, or reduced resolution may alter the encoded history;
-the resulting error can then grow as the model predicts forward and a planner
-acts on those predictions. We introduce Action-Conditioned Predictive
+Latent predictive world models avoid reconstructing pixels, but visual
+changes that leave the state unchanged---noise, blur, or reduced
+resolution---can still alter the encoded history, and the resulting error can
+grow as the model predicts forward and a planner acts on those predictions. We introduce Action-Conditioned Predictive
 Consistency (ACPC), a diagnostic for frozen checkpoints. ACPC encodes clean
 and perturbed views of the same history, predicts both forward under the same
 actions, and measures the distance between the two latent trajectories. Exact
 samplewise inequalities relate this distance to changes in multi-step
-prediction error and planner candidate costs. A collapsed representation
-would make ACPC artificially small, so we complement it with two
-checkpoint-level summaries: Action-Conditioned Trajectory Radius (ATR)
-measures sensitivity to same-state visual perturbations, and Selective Margin
-Pass Rate (SMPR) tests whether pairs with different logged task states remain
-separated. Across four visual control tasks on the JEPA world model LeWM,
+prediction error and planner candidate costs. Because a collapsed representation makes ACPC artificially small, two
+checkpoint-level summaries complement it: Action-Conditioned Trajectory
+Radius (ATR, same-state visual sensitivity) and Selective Margin Pass Rate
+(SMPR, separation of pairs with different logged task states). Across four visual control tasks on the JEPA world model LeWM,
 eight-step ACPC under the recorded
 actions predicts perturbation-induced error changes with $51.3\pm3.5\%$
 lower cross-validated MAE than the strongest of three same-horizon controls
@@ -125,8 +122,8 @@ cross-task prediction of CEM selection regret: cross-task test MAE
 decreases by $15.2\pm2.0\%$, with an improvement in all 12 task--run
 evaluations. A single ATR--SMPR threshold range, recovered from almost any subset of
 tasks, screens checkpoints across the four tasks to within one augmentation
-level, orders checkpoint pairs correctly under blur and resize at the tested
-severities, and applies to PLDM after model-family recalibration.
+level, orders checkpoint pairs correctly under blur and resize, and applies to
+PLDM after model-family recalibration.
 
 \ifdefined\blindsubmission\else
 Code is available \href{\paperpubliccodeurl}{here}.
