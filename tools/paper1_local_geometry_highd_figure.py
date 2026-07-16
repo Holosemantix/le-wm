@@ -32,20 +32,10 @@ DEFAULT_OUTPUT = ROOT / "assets/paper1_figs/fig_local_geometry_highd_audit.pdf"
 DEFAULT_AUDIT_OUTPUT = ROOT / "assets/paper1_figs/fig_local_geometry_highd_audit.json"
 
 PANEL_SPECS = (
-    ("base", "encoder", "Origin LeWM", "Encoder features"),
-    (
-        "base",
-        "predictor",
-        "Origin LeWM",
-        "8-step rollout predicted features",
-    ),
-    ("fullseq_robust", "encoder", "Noise-trained LeWM", "Encoder features"),
-    (
-        "fullseq_robust",
-        "predictor",
-        "Noise-trained LeWM",
-        "8-step rollout predicted features",
-    ),
+    ("base", "encoder", "Origin LeWM", "Encoder"),
+    ("base", "predictor", "Origin LeWM", "8-step rollout"),
+    ("fullseq_robust", "encoder", "Noise-trained LeWM", "Encoder"),
+    ("fullseq_robust", "predictor", "Noise-trained LeWM", "8-step rollout"),
 )
 
 def _load_json(path: Path) -> Any:
@@ -323,7 +313,13 @@ def build_figure(
             zorder=8,
         )
         panel_letter = chr(ord("a") + panel_index)
-        ax.set_title(f"({panel_letter}) {row_title}\n{column_title}", pad=3.0)
+        ax.set_title(
+            f"({panel_letter}) {row_title}\n{column_title}",
+            loc="left",
+            pad=3.0,
+            fontsize=7.8,
+            fontweight="semibold",
+        )
         ax.set_xlim(*xlim)
         ax.set_ylim(*ylim)
         ax.set_xlabel("t-SNE coordinate 1", labelpad=1.5)
