@@ -174,8 +174,6 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             _shade_recovery(score_ax, x, recovery)
             _shade_recovery(diagnostic_ax, x, recovery)
             score_ax.fill_between(x, score_lo, score_hi, color="#555555", alpha=0.12, lw=0, zorder=1)
-            diagnostic_ax.fill_between(x, atr_lo, atr_hi, color="#d95f02", alpha=0.11, lw=0, zorder=1)
-            diagnostic_ax.fill_between(x, smpr_lo, smpr_hi, color="#7570b3", alpha=0.10, lw=0, zorder=1)
             score_ax.plot(x, score, color="#222222", marker="o", lw=1.6, ms=3.6, zorder=2)
             diagnostic_ax.plot(x, atr, color="#d95f02", marker="s", lw=1.35, ms=3.4, zorder=2)
             diagnostic_ax.plot(
@@ -256,7 +254,7 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             handletextpad=0.35,
             bbox_to_anchor=(0.5, 1.0),
         )
-        fig.supxlabel(r"Gaussian augmentation level $\sigma_{\max}^{\mathrm{train}}$", y=0.035)
+        fig.supxlabel(r"Maximum training-noise std. $\sigma_{\max}^{\mathrm{train}}$", y=0.035)
         fig.savefig(out_fig, dpi=230)
         plt.close(fig)
 

@@ -801,8 +801,9 @@ sweep (\Cref{fig:full-sweep-diagnostics}).
 \caption{Checkpoint-level planning performance and diagnostics across the
 complete Gaussian-augmentation sweep. We report planning success rate at
 evaluation noise $\sigma=0.08$, relative ATR, and SMPR. Lines are across-run
-means; shaded ranges span the three run means; green bands mark levels
-meeting the success-rate criterion (\Cref{sec:bg}) in a majority of runs.
+means; the gray band spans the three run means of the success rate; green
+bands mark levels meeting the success-rate criterion (\Cref{sec:bg}) in a
+majority of runs.
 Lower ATR (relative to the unaugmented checkpoint) and higher SMPR are
 favorable. Dotted horizontal lines mark the common thresholds $t_R=0.3$
 (ATR) and $t_M=0.95$ (SMPR) shared across tasks
@@ -1038,9 +1039,8 @@ accepting checkpoints exactly at the level where planning recovers on PushT
 and Cube, one grid level after it on TwoRoom, and never on Reacher---there
 the unaugmented checkpoint already reaches $80\%$ noisy success, the sweep
 never improves it by more than $1.4$ points, and relative ATR never falls
-below $t_R$, so there is almost no recovery signal to locate. Pooling all
-36 PLDM decisions gives $0.836$ balanced accuracy ($0.789$ precision,
-$0.882$ recall); per-task values sit next to their LeWM counterparts in
+below $t_R$, so there is almost no recovery signal to locate. Per-task
+balanced accuracies for both families are tabulated in
 \Cref{tab:pldm-architecture-portability} (\Cref{sec:appendix-cross-task}).
 Applying the LeWM thresholds after within-task ATR normalization yields
 exactly the same decisions---as expected, since both families select the
@@ -1360,8 +1360,10 @@ independent observations.
 \input{tables/table_cross_task_atr_smpr_all_subsets_v1}
 
 For PLDM, \Cref{tab:pldm-architecture-portability} lists the per-task
-balanced accuracies of the same leave-task-out screen next to the LeWM
-values quoted in \Cref{sec:exp-pldm-portability}.
+balanced accuracies of the leave-task-out screen of
+\Cref{sec:exp-pldm-portability} next to the LeWM values; pooled over all 36
+PLDM decisions, balanced accuracy is $0.836$ with precision $0.789$ and
+recall $0.882$.
 
 \input{tables/table_pldm_architecture_portability}
 
