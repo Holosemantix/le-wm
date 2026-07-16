@@ -33,13 +33,13 @@ DEFAULT_AUDIT_OUTPUT = ROOT / "assets/paper1_figs/fig_local_geometry_highd_audit
 
 PANEL_SPECS = (
     ("base", "encoder", "Origin LeWM", "Encoder features"),
-    ("base", "predictor", "Origin LeWM", "8-step rollout predicted features"),
+    ("base", "predictor", "Origin LeWM", "8-step rollout predictions"),
     ("fullseq_robust", "encoder", "Noise-trained LeWM", "Encoder features"),
     (
         "fullseq_robust",
         "predictor",
         "Noise-trained LeWM",
-        "8-step rollout predicted features",
+        "8-step rollout predictions",
     ),
 )
 
@@ -339,20 +339,9 @@ def build_figure(
             zorder=8,
         )
         panel_letter = chr(ord("a") + panel_index)
-        ax.text(
-            -0.055,
-            1.075,
-            f"({panel_letter})",
-            transform=ax.transAxes,
-            ha="left",
-            va="bottom",
-            fontsize=7.8,
-            fontweight="semibold",
-            clip_on=False,
-        )
         ax.set_title(
-            column_title,
-            loc="center",
+            f"({panel_letter}) {column_title}",
+            loc="left",
             pad=3.0,
             fontsize=6.5,
             fontweight="semibold",

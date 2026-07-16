@@ -87,7 +87,7 @@
     {
       "panel": "base:predictor",
       "condition": "Origin LeWM",
-      "representation": "8-step rollout predicted features",
+      "representation": "8-step rollout predictions",
       "n_states": 128,
       "n_views": 19,
       "median_radius_over_nn": 1.8627083417690424,
@@ -131,7 +131,7 @@
     {
       "panel": "fullseq_robust:predictor",
       "condition": "Noise-trained LeWM",
-      "representation": "8-step rollout predicted features",
+      "representation": "8-step rollout predictions",
       "n_states": 128,
       "n_views": 19,
       "median_radius_over_nn": 0.19360597603070212,
