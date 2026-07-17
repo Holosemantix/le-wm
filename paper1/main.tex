@@ -380,27 +380,16 @@ The clean-reference selection regret obeys
 0\leq C_{\tilde w}-C_w\leq b_{\tilde w}+b_w.
 \label{eq:fixed-pool-regret-bound}
 \end{equation}
-If the clean winner is unique and
-\begin{equation}
-\min_{j\ne w}\bigl(C_j-C_w-b_j-b_w\bigr)>0,
-\label{eq:top1-certificate-main}
-\end{equation}
-then the perturbed branch has the same winner. If $\mathcal E$ is the clean
-top-$k$ elite set and
-\begin{equation}
-\min_{i\in\mathcal E,\,j\notin\mathcal E}
-\bigl(C_j-C_i-b_j-b_i\bigr)>0,
-\label{eq:elite-certificate-main}
-\end{equation}
-then the perturbed branch has exactly the same elite set.
 \end{proposition}
 
 The quantity $b_j$ is a candidate-specific upper bound on the movement of the
-squared goal cost. The regret inequality bounds the extra clean-history model
-cost of choosing the perturbed winner. The last two conditions subtract the
-allowed movements from each clean candidate gap; a positive remainder means
-that the gap cannot be crossed. These statements use the evaluated endpoints,
-not a global Lipschitz approximation. Combining $b_j$ with the final-step
+squared goal cost, and the regret inequality bounds the extra clean-history
+model cost of choosing the perturbed winner; both use the evaluated
+endpoints, not a global Lipschitz approximation. Subtracting the allowed
+movements from each clean candidate gap yields selection certificates: if
+every remainder is positive, the clean winner---and, under the analogous
+elite-wise condition, the exact top-$k$ elite set---is preserved
+(\Cref{prop:fixed-pool-certificates}). Combining $b_j$ with the final-step
 conversion $r_j\le\mathrm{ACPC}_H(h,\tilde h,\mathbf a^j)/\sqrt{\alpha_H}$
 gives the explicit chain
 \begin{equation}
@@ -419,24 +408,14 @@ Appendix~\ref{sec:appendix-acpc-proofs}. Because every candidate must be
 evaluated under both histories, these certificates support a post-hoc audit
 rather than a cheap online pre-screen.
 
-CEM repeatedly fits its next proposal to the current elite
-set~\cite{kroese2006cem}. With common
-random numbers, identical proposals generate the same ordered candidate pool,
-and an identical certified elite set produces the same next proposal.
-
-\begin{corollary}[Conditional CEM stability]\label{cor:adaptive-cem-alignment}
-Consider clean and perturbed CEM runs initialized by the same proposal and
-sampled with common random numbers. While their ordered candidate pools remain
-aligned, if \Cref{eq:elite-certificate-main} holds at the current iteration,
-both runs fit the same next proposal. If it holds at every iteration, their
-pools and proposals remain aligned by induction; since the evaluated solver
-returns the final proposal mean as its action, the selected actions then
-coincide as well.
-\end{corollary}
-
-The guarantee stops at the first iteration for which the elite condition
-fails. It concerns candidate selection and model cost under paired planner
-evaluations; it is not a statement about simulator return.
+These certificates extend to whole planner runs. CEM repeatedly fits its
+next proposal to the current elite set~\cite{kroese2006cem}; with common
+random numbers, a certified elite set at every iteration aligns the clean and
+perturbed runs---pools, proposals, and returned action
+(\Cref{cor:adaptive-cem-alignment}). The guarantee stops at the first
+iteration whose elite condition fails, and it concerns candidate selection
+and model cost, not simulator return. Formal statements and proofs are in
+Appendix~\ref{sec:appendix-acpc-proofs}.
 
 \subsection{Checkpoint-level radius and proxy separation}\label{sec:acpc-radius-margin}
 
@@ -460,23 +439,12 @@ logged history window, its $H$-step observed future, and its recorded actions.
 We first normalize ACPC separately for each anchor and then aggregate across
 anchors. Throughout this
 section, $Q_q$ denotes the empirical $q$-quantile, $n$ is the number of
-anchors, and $M$ is the number of perturbation draws per anchor. For anchor
-$i$, let $u^{\mathrm{obs}}_{i,0}$ be the embedding of the last clean history
-observation in the projected space selected by $\Pi$, and let
-$u^{\mathrm{obs}}_{i,1:H}$ be the embeddings of the next $H$ actually observed
-clean frames in that same space. Define the clean-motion scale
-\begin{equation}
-s_i
-=Q_{0.50}\!\left(
-\left\{\|u^{\mathrm{obs}}_{i,k}-u^{\mathrm{obs}}_{i,k-1}\|_2
-\right\}_{k=1}^{H}
-\right).
-\label{eq:clean-transition-scale}
-\end{equation}
-Thus $s_i$ is the anchor's typical one-step clean motion in the projected
-space (the median keeps it stable under a few unusually large frame moves);
-dividing by $s_i$ expresses rollout distances in units of ordinary motion and
-uses no task outcome. With a small
+anchors, and $M$ is the number of perturbation draws per anchor. Distances
+for anchor $i$ are normalized by its clean-motion scale $s_i$: the median of
+its $H$ consecutive observed clean-frame displacements in the projected space
+(\Cref{eq:clean-transition-scale}, \Cref{sec:appendix-A}). Thus $s_i$ is the
+anchor's typical one-step clean motion; dividing by it expresses rollout
+distances in units of ordinary motion and uses no task outcome. With a small
 numerical stabilizer $\varepsilon_{\mathrm{norm}}$ (value in
 \Cref{sec:appendix-A}) and perturbation draw $m$, define
 \begin{equation}
@@ -506,30 +474,15 @@ a candidate-distribution tail guarantee.
 ATR alone cannot rule out a collapsed representation. SMPR provides the
 complementary separation test. Let $y_i$ be the standardized logged task-state
 vector at the end of anchor $i$'s observed $H$-step future, and let
-$\ell(y_i)$ be a declared task-specific coordinate label. Let $d_{0.35}$ be
-the q35 of all off-diagonal Euclidean distances among the standardized
-endpoint states---in the notation above, $Q_{0.35}$ over the anchor batch;
-this neighborhood radius and the margin below are protocol constants fixed a
-priori. A radius well below the median pairwise distance keeps every selected
-pair genuinely nearby in state space, while leaving most anchors an eligible
-different-label neighbor (\Cref{tab:smpr-proxies} reports the counts). Each
-eligible anchor chooses the nearest neighbor $j(i)$ with a different label
-and distance at most $d_{0.35}$. The predictor
-rolls both clean histories under the anchor actions $\mathbf a_i$; for the
-neighbor these are not the actions it actually executed, but reusing the
-anchor's actions keeps a single shared action sequence on both sides. Their
-normalized proxy-different distance is
-\begin{equation}
-D_i^{\mathrm{diff}}
-=
-\frac{
-\left\|\bar G_{\mathbf a_i}(E_\theta(h_i))
--\bar G_{\mathbf a_i}(E_\theta(h_{j(i)}))\right\|_2
-}{s_i+\varepsilon_{\mathrm{norm}}}.
-\label{eq:different-state-distance}
-\end{equation}
-The shared metric, action sequence, and normalization put visual sensitivity
-and state separation on a comparable scale. The
+$\ell(y_i)$ be a declared task-specific coordinate label. Each eligible anchor
+selects its nearest different-label neighbor $j(i)$ inside a fixed
+state-space neighborhood, both clean histories are rolled under the anchor's
+actions $\mathbf a_i$, and $D_i^{\mathrm{diff}}$ denotes their normalized
+weighted-rollout distance (\Cref{eq:different-state-distance},
+\Cref{sec:appendix-A}); the shared metric, action sequence, and normalization
+put visual sensitivity and state separation on a comparable scale. The
+neighborhood radius and the margin below are protocol constants fixed a
+priori. The
 \emph{Selective Margin Pass Rate} (SMPR) is
 \begin{equation}
 \mathrm{SMPR}_{q,\delta}(\theta)
@@ -576,10 +529,9 @@ every evaluated setting, so the following ratio is well defined:
 {\mathrm{ATR}^{\mathrm{raw}}_{q}(\theta_0)}.
 \label{eq:atr-relative}
 \end{equation}
-Raw ATR remains in the SMPR definition (\Cref{eq:smpr}). Relative ATR equals
-one for the unaugmented reference and is used only for within-cell comparisons
-and threshold selection. This re-basing removes a common multiplicative scale
-factor; it does not establish absolute ATR comparability across tasks or model
+Raw ATR remains in the SMPR definition (\Cref{eq:smpr}); relative ATR equals
+one for the unaugmented reference and removes a common multiplicative scale
+factor without establishing absolute comparability across tasks or model
 families.
 
 We combine relative ATR and SMPR only after selecting one threshold for each.
@@ -608,17 +560,14 @@ tasks---not probabilistic calibration---and is performed separately for each
 model family; the equations do not imply that architectures share numerical
 thresholds.
 
-For a comparison with reference checkpoint $\theta_0$, define
-\begin{equation}
-\Delta S_{\mathcal F,\upsilon}(\theta_1;\theta_0)
-=
-S_{\mathcal F,\upsilon}(\theta_1;\theta_0)
--S_{\mathcal F,\upsilon}(\theta_0;\theta_0).
-\label{eq:paired-diagnostic-change}
-\end{equation}
+For a comparison with reference checkpoint $\theta_0$, define the paired
+score change
+$\Delta S_{\mathcal F,\upsilon}(\theta_1;\theta_0)
+=S_{\mathcal F,\upsilon}(\theta_1;\theta_0)
+-S_{\mathcal F,\upsilon}(\theta_0;\theta_0)$.
 A positive $\Delta S$ means only that $\theta_1$ improves on its reference
-under the same calibrated scoring map. It does not assign an absolute
-robustness label to either checkpoint.
+under the same calibrated scoring map; it assigns no absolute robustness
+label to either checkpoint.
 
 \Cref{tab:acpc-object-guide} summarizes the chain. The prediction experiment
 (\Cref{sec:exp-target-aligned}) evaluates whether ACPC is informative about
@@ -746,7 +695,7 @@ visualization~\cite{vandermaaten2008tsne} reproduces the deterministic
 per-panel projections used in the original Appendix visualization and is
 qualitative only.
 
-\begin{figure}[H]
+\begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{fig_local_geometry_highd_audit.pdf}
 \caption{Descriptive local-geometry case study motivating the controlled ACPC
@@ -1207,6 +1156,33 @@ Equality holds exactly when $u-y$ and $v-y$ are positively colinear. The
 adverse increase obeys the same bound because
 $(e_{\tilde h}-e_h)_+\le|e_{\tilde h}-e_h|$.
 
+\begin{proposition}[Fixed-pool selection certificates]\label{prop:fixed-pool-certificates}
+In the setting of \Cref{prop:exact-cost-certificate}, if the clean winner $w$
+is unique and
+\begin{equation}
+\min_{j\ne w}\bigl(C_j-C_w-b_j-b_w\bigr)>0,
+\label{eq:top1-certificate-main}
+\end{equation}
+then the perturbed branch has the same winner. If $\mathcal E$ is the clean
+top-$k$ elite set and
+\begin{equation}
+\min_{i\in\mathcal E,\,j\notin\mathcal E}
+\bigl(C_j-C_i-b_j-b_i\bigr)>0,
+\label{eq:elite-certificate-main}
+\end{equation}
+then the perturbed branch has exactly the same elite set.
+\end{proposition}
+
+\begin{corollary}[Conditional CEM stability]\label{cor:adaptive-cem-alignment}
+Consider clean and perturbed CEM runs initialized by the same proposal and
+sampled with common random numbers. While their ordered candidate pools remain
+aligned, if \Cref{eq:elite-certificate-main} holds at the current iteration,
+both runs fit the same next proposal. If it holds at every iteration, their
+pools and proposals remain aligned by induction; since the evaluated solver
+returns the final proposal mean as its action, the selected actions then
+coincide as well.
+\end{corollary}
+
 \paragraph{Proof of \Cref{prop:exact-cost-certificate}.}
 For one candidate, suppress the index and factor the squared-distance
 difference:
@@ -1233,7 +1209,9 @@ C_{\tilde w}
 \]
 which proves \Cref{eq:fixed-pool-regret-bound}; nonnegativity follows from the
 optimality of $w$ on the nominal pool.
-Positivity of \Cref{eq:top1-certificate-main} makes every perturbed competitor
+
+For \Cref{prop:fixed-pool-certificates}, positivity of
+\Cref{eq:top1-certificate-main} makes every perturbed competitor
 strictly more costly than $w$.  The same argument for every
 $i\in\mathcal E$ and $j\notin\mathcal E$ proves that
 \Cref{eq:elite-certificate-main} preserves the exact elite set.  Strict
@@ -1377,7 +1355,20 @@ unaugmented checkpoint. Statements about recovered levels in
 majority of runs.
 
 \paragraph{ATR protocol.}
-We compute ATR separately for each task, training run, and checkpoint. Each
+We compute ATR separately for each task, training run, and checkpoint. For
+anchor $i$, let $u^{\mathrm{obs}}_{i,0}$ be the embedding of the last clean
+history observation in the projected space selected by $\Pi$, and
+$u^{\mathrm{obs}}_{i,1:H}$ the embeddings of the next $H$ actually observed
+clean frames in that space; the clean-motion scale is
+\begin{equation}
+s_i
+=Q_{0.50}\!\left(
+\left\{\|u^{\mathrm{obs}}_{i,k}-u^{\mathrm{obs}}_{i,k-1}\|_2
+\right\}_{k=1}^{H}
+\right).
+\label{eq:clean-transition-scale}
+\end{equation}
+Each
 anchor contributes one weighted radius over the rollout horizon. Perturbation
 draws use Gaussian observation noise at $\sigma=0.08$, matching the behavioral
 evaluation severity; under blur or resize, draws apply that shift instead. The
@@ -1400,18 +1391,33 @@ reduction depends on the rollout horizon and the summary quantile.
 \input{tables/table_horizon_quantile_sensitivity}
 
 \paragraph{SMPR protocol.}
-SMPR follows \Cref{eq:smpr}. For each eligible anchor, we find the nearest
-history with a different proxy label and a standardized state distance no
-greater than the global q35 radius. We roll both clean histories forward under
-the anchor's recorded actions and normalize their distance by the anchor's
-clean transition scale. The pair passes only if this distance is strictly
+SMPR follows \Cref{eq:smpr}. Let $d_{0.35}$ be
+the q35 of all off-diagonal Euclidean distances among the standardized
+endpoint states; this radius, well below the median pairwise distance, keeps
+every selected pair genuinely nearby in state space while leaving most
+anchors an eligible different-label neighbor (\Cref{tab:smpr-proxies}
+reports the counts). Each eligible anchor chooses the nearest neighbor $j(i)$
+with a different label and distance at most $d_{0.35}$. The predictor rolls
+both clean histories under the anchor actions $\mathbf a_i$; for the
+neighbor these are not the actions it actually executed, but reusing the
+anchor's actions keeps a single shared action sequence on both sides. Their
+normalized proxy-different distance is
+\begin{equation}
+D_i^{\mathrm{diff}}
+=
+\frac{
+\left\|\bar G_{\mathbf a_i}(E_\theta(h_i))
+-\bar G_{\mathbf a_i}(E_\theta(h_{j(i)}))\right\|_2
+}{s_i+\varepsilon_{\mathrm{norm}}}.
+\label{eq:different-state-distance}
+\end{equation}
+The pair passes only if this distance is strictly
 greater than raw q90 ATR plus $0.10$.
 
 \Cref{tab:smpr-proxies} makes the pairing rule explicit. The logged state
 is taken at the end of the observed eight-step future and standardized
-coordinate-wise by the dataset preprocessor. We compute all off-diagonal
-Euclidean distances in that task's full standardized state vector and use
-their global q35 as the neighborhood radius. Proxy labels use median splits
+coordinate-wise by the dataset preprocessor. The neighborhood radius is the $d_{0.35}$ defined above, computed in that
+task's full standardized state vector. Proxy labels use median splits
 computed within the fixed 100-endpoint anchor batch (anchor seed 9101); each
 label therefore describes the endpoint reached by that trajectory's own
 recorded actions. After selecting a neighbor, we roll both starting histories
