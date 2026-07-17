@@ -217,92 +217,37 @@ remain separated. ATR and SMPR must be interpreted together: low visual
 sensitivity is useful only if the representation retains relevant state
 distinctions.
 
-MWM optimizes action-conditioned rollout consistency during
-training~\cite{yan2026mwm}, while seq-JEPA conditions sequential view
-prediction on known transformations represented as actions to balance
-invariant and equivariant representations~\cite{ghaemi2025seqjepa}. In contrast, our paired-view
-construction is a post-hoc diagnostic of a frozen checkpoint---one trained
-world model with frozen parameters $\theta$.
+Throughout, the object under study is a frozen checkpoint---one trained world
+model with frozen parameters $\theta$. Unlike MWM~\cite{yan2026mwm} and
+seq-JEPA~\cite{ghaemi2025seqjepa}, which optimize action-conditioned
+consistency during training, our paired-view construction is post hoc.
 
 \subsection{Local representation geometry under visual perturbations}\label{sec:local-geometry-audit}
 
-Start with one clean history and generate several visually perturbed versions
-of it. After encoding or rolling forward each version, how far do the
-perturbed representations spread from the clean representation? In
-particular, is this spread smaller or larger than the distance to the nearest
-other clean history? This comparison provides a descriptive view of local
-representation geometry before we introduce the controlled rollout metric.
+Before defining the controlled rollout metric, we describe the local
+geometric picture that motivates it. Start with one clean history and several
+visually perturbed versions of it; encode or roll forward each version, and
+compare two scales: the sampled \emph{visual radius}---how far the perturbed
+representations spread from the clean one---and the \emph{nearest-clean
+spacing}---the distance from the clean representation to the nearest other
+clean history. Their ratio, abbreviated $r/\mathrm{NN}$, indicates whether
+the perturbed views of one history stay closer to it than genuinely
+different histories do; a symmetric two-ball test additionally counts anchors
+whose perturbation cloud is fully disjoint from every other anchor's cloud.
+\Cref{sec:appendix-local-geometry} states the formal definitions and reported
+summaries; \Cref{sec:exp-local-geometry} presents the resulting case study.
 
-Let
-$\mathcal V\in\{\mathrm{enc},\mathrm{roll}\}$ denote either the encoder output
-or the representation after eight autoregressive rollout steps (the
-protocol horizon $H{=}8$; \Cref{sec:acpc-def}). For anchor
-history $i$, let $v_{i,\mathcal V}^{(0)}$ be its clean representation and
-$v_{i,\mathcal V}^{(m)}$, $m=1,\ldots,M$, the representations of $M$
-perturbed views. In the rollout space, the clean and perturbed views of each
-anchor use the same recorded action sequence. We define the sampled visual
-radius, nearest-clean spacing, and their ratio as
-\begin{align}
-r_{i,\mathcal V}^{\mathrm{vis}}
-&=\max_{1\leq m\leq M}
-\left\|v_{i,\mathcal V}^{(m)}-v_{i,\mathcal V}^{(0)}\right\|_2,
-\nonumber\\
-d_{i,\mathcal V}^{\mathrm{NN}}
-&=\min_{j\neq i}
-\left\|v_{i,\mathcal V}^{(0)}-v_{j,\mathcal V}^{(0)}\right\|_2,
-\qquad
-\rho_{i,\mathcal V}^{\mathrm{local}}
-=\frac{r_{i,\mathcal V}^{\mathrm{vis}}}
-{d_{i,\mathcal V}^{\mathrm{NN}}}.
-\label{eq:local-radius-spacing}
-\end{align}
-The figures abbreviate $\rho_{i,\mathcal V}^{\mathrm{local}}$ as
-$r/\mathrm{NN}$. When this ratio is below one, every sampled perturbed view of
-anchor $i$ lies closer to its clean representation than that representation
-lies to the nearest other clean anchor. A ratio of at least one means that the
-largest sampled displacement reaches or exceeds this nearest-clean distance.
-This is a geometric comparison; the nearest clean anchor need not lie across
-a semantic or task-relevant boundary.
-
-The ratio uses only anchor $i$'s perturbation radius. It does not account for
-the perturbation radius around the neighboring anchor. We therefore add a
-symmetric test: the enclosing ball around anchor $i$ is \emph{fully
-disjoint} if it is separated from the enclosing ball around every other
-anchor:
-\begin{equation}
-\left\|v_{i,\mathcal V}^{(0)}-v_{j,\mathcal V}^{(0)}\right\|_2
->
-r_{i,\mathcal V}^{\mathrm{vis}}+r_{j,\mathcal V}^{\mathrm{vis}}
-\quad\text{for every }j\neq i.
-\label{eq:local-cloud-disjoint}
-\end{equation}
-Across the sampled anchors, we report three summaries: the median
-$r/\mathrm{NN}$ ratio; the fraction satisfying
-$r_{i,\mathcal V}^{\mathrm{vis}}<d_{i,\mathcal V}^{\mathrm{NN}}$; and the
-fraction satisfying the fully-disjoint condition in
-\Cref{eq:local-cloud-disjoint}. The second is a one-sided nearest-center test,
-whereas the third is a symmetric certificate for the enclosing balls in the
-original high-dimensional representation. It is unrelated to whether the
-qualitative t-SNE display ellipses overlap.
-
-These quantities show local contraction and separation, but they cannot
-determine whether a perturbation changes a prediction or planning decision.
-The nearest clean anchor is chosen in learned space and need not represent a
-task-relevant or semantic difference. Different clean rollout centers also
-come from their own recorded action sequences, so their spacing can mix state
-and action effects. The encoder output and final rollout step also omit all
-intermediate predictions. In addition, the sampled maximum and nearest-clean
-distance depend on the number of views, the density of clean anchors, and the
-representation scale. Neither quantity bounds changes in future prediction
-error or planner cost, and a collapsed representation can make every radius
-small.
-
-These limitations motivate ACPC, which compares clean and perturbed views of
+These quantities are descriptive. The nearest clean anchor is chosen in
+learned space and need not lie across a task-relevant boundary; the spacing
+between clean rollout centers mixes state and action effects, since each
+center follows its own recorded actions; encoder and endpoint views omit all
+intermediate predictions; the sampled radius depends on the number of views,
+anchor density, and representation scale; and a collapsed representation
+makes every radius small. None of them bounds changes in prediction error or
+planner cost. They motivate ACPC, which compares clean and perturbed views of
 the same history under exactly the same action sequence throughout the
-predicted rollout. The rollout-space comparison above is its final-step
-component: when $\alpha_H>0$, the final-step displacement for any view is at
-most $\mathrm{ACPC}_H/\sqrt{\alpha_H}$. Local geometry therefore motivates,
-but does not replace, the complete action-conditioned comparison.
+predicted rollout; when $\alpha_H>0$, the final-step displacement of any view
+is at most $\mathrm{ACPC}_H/\sqrt{\alpha_H}$.
 
 \subsection{Paired rollout radius}\label{sec:acpc-def}
 
@@ -321,10 +266,10 @@ $\mathbf a=(a_0,\ldots,a_{H-1})$. For its length-$k$ prefix, define
 \end{equation}
 Here $F_\theta$ is the action-conditioned predictor and $H$ is the number of
 autoregressive future steps. The planner does not read raw predictor outputs:
-it scores candidates in a normalized projection of the embedding space. The
-map $\Pi$ denotes that projection, so every distance below lives in the same
-space in which planner costs are computed; our implementation stores these
-projected embeddings directly, and $\Pi$ then requires no extra computation.
+it scores candidates in the projected embedding space in which planner
+costs are computed. The
+map $\Pi$ denotes that projection; our implementation stores the projected
+embeddings directly, so $\Pi$ requires no extra computation.
 With nonnegative weights $\sum_{k=1}^H\alpha_k=1$, stack the whole rollout as
 \begin{equation}
 \bar G_{\mathbf a}(z)
@@ -455,7 +400,21 @@ squared goal cost. The regret inequality bounds the extra clean-history model
 cost of choosing the perturbed winner. The last two conditions subtract the
 allowed movements from each clean candidate gap; a positive remainder means
 that the gap cannot be crossed. These statements use the evaluated endpoints,
-not a global Lipschitz approximation. Proofs and equality cases are in
+not a global Lipschitz approximation. Combining $b_j$ with the final-step
+conversion $r_j\le\mathrm{ACPC}_H(h,\tilde h,\mathbf a^j)/\sqrt{\alpha_H}$
+gives the explicit chain
+\begin{equation}
+|\tilde C_j-C_j|
+\;\le\; b_j
+\;\le\;
+\frac{\mathrm{ACPC}_H(h,\tilde h,\mathbf a^j)}{\sqrt{\alpha_H}}
+\bigl(\|x_j-g\|_2+\|\tilde x_j-g\|_2\bigr),
+\label{eq:acpc-cost-chain}
+\end{equation}
+so candidate-specific ACPC directly bounds every candidate-cost movement, and
+through
+\Cref{eq:fixed-pool-regret-bound,eq:top1-certificate-main,eq:elite-certificate-main}
+the planner-facing statements as well. Proofs and equality cases are in
 Appendix~\ref{sec:appendix-acpc-proofs}. Because every candidate must be
 evaluated under both histories, these certificates support a post-hoc audit
 rather than a cheap online pre-screen.
@@ -470,7 +429,9 @@ Consider clean and perturbed CEM runs initialized by the same proposal and
 sampled with common random numbers. While their ordered candidate pools remain
 aligned, if \Cref{eq:elite-certificate-main} holds at the current iteration,
 both runs fit the same next proposal. If it holds at every iteration, their
-pools, proposals, and final actions remain aligned by induction.
+pools and proposals remain aligned by induction; since the evaluated solver
+returns the final proposal mean as its action, the selected actions then
+coincide as well.
 \end{corollary}
 
 The guarantee stops at the first iteration for which the elite condition
@@ -479,8 +440,11 @@ evaluations; it is not a statement about simulator return.
 
 \subsection{Checkpoint-level radius and proxy separation}\label{sec:acpc-radius-margin}
 
-ACPC measures one clean--perturbed history pair. To evaluate a checkpoint, we
-must summarize many such measurements. A constant representation makes every
+The certificates above are candidate-wise: they require paired evaluation of
+every candidate in a planner pool. The checkpoint summaries introduced now
+serve a different purpose---screening---and do not estimate that pool-wise
+bound. ACPC measures one clean--perturbed history pair; to evaluate a
+checkpoint, we must summarize many such measurements. A constant representation makes every
 ACPC value zero while removing all state distinctions, the familiar collapse
 failure of view-agreement objectives~\cite{bardes2022vicreg}. These two
 requirements yield a two-part summary: the Action-Conditioned Trajectory
@@ -509,11 +473,10 @@ s_i
 \right).
 \label{eq:clean-transition-scale}
 \end{equation}
-Here $Q_{0.50}$ is the empirical median of the $H$ consecutive clean-frame
-displacements, so $s_i$ is the anchor's typical one-step clean motion in the
-projected space; the median keeps this scale stable when a few frames move
-unusually far. Dividing by $s_i$ expresses rollout distances in units of that
-ordinary motion and uses no task outcome. With a small
+Thus $s_i$ is the anchor's typical one-step clean motion in the projected
+space (the median keeps it stable under a few unusually large frame moves);
+dividing by $s_i$ expresses rollout distances in units of ordinary motion and
+uses no task outcome. With a small
 numerical stabilizer $\varepsilon_{\mathrm{norm}}$ (value in
 \Cref{sec:appendix-A}) and perturbation draw $m$, define
 \begin{equation}
@@ -565,9 +528,8 @@ D_i^{\mathrm{diff}}
 }{s_i+\varepsilon_{\mathrm{norm}}}.
 \label{eq:different-state-distance}
 \end{equation}
-Both histories use the same rollout metric, the same action sequence
-$\mathbf a_i$, and the same normalization $s_i$. This ensures that visual
-sensitivity and state separation are measured on a comparable scale. The
+The shared metric, action sequence, and normalization put visual sensitivity
+and state separation on a comparable scale. The
 \emph{Selective Margin Pass Rate} (SMPR) is
 \begin{equation}
 \mathrm{SMPR}_{q,\delta}(\theta)
@@ -586,16 +548,11 @@ The reported protocol fixes $q=0.90$ and normalized margin $\delta=0.10$.
 SMPR is the fraction of tested pairs with different proxy labels whose
 rollout distance exceeds the same-state radius by more than this margin.
 
-The local ball analysis and SMPR both compare a radius with a margin, but they
-answer different questions. The local analysis uses distances in learned
-space to describe the sampled neighborhood around each clean anchor. It
-examines either the encoder output or the final rollout step and applies a
-symmetric two-ball test. SMPR instead selects nearby histories using a
-declared task-state label. It rolls both histories under the anchor's actions,
-compares their complete weighted trajectories, and asks whether their distance
-exceeds the checkpoint-level q90 same-state radius. Thus, the local analysis
-is a geometric case study, whereas ATR and SMPR form the checkpoint-level
-diagnostic.
+The local ball analysis (\Cref{sec:local-geometry-audit}) also compares a
+radius with a spacing, but it is a descriptive case study of learned-space
+neighborhoods; SMPR instead selects neighbors by a declared task-state label,
+rolls both histories under the anchor's actions, and tests complete weighted
+trajectories against the checkpoint-level q90 same-state radius.
 
 ATR and SMPR must be read together. A constant representation makes both ATR
 and every $D_i^{\mathrm{diff}}$ zero, so it fails the SMPR test. Conversely, a
@@ -647,9 +604,9 @@ a checkpoint once the thresholds are fixed. Planning success rates are used
 only to select thresholds on threshold-selection tasks and evaluate them on
 test tasks.
 Here, \emph{calibration} means operational threshold selection on designated
-tasks; it is not probabilistic calibration and carries no coverage guarantee.
-We calibrate thresholds separately for each model family; the equations do not
-imply that architectures share numerical thresholds.
+tasks---not probabilistic calibration---and is performed separately for each
+model family; the equations do not imply that architectures share numerical
+thresholds.
 
 For a comparison with reference checkpoint $\theta_0$, define
 \begin{equation}
@@ -1283,14 +1240,32 @@ $i\in\mathcal E$ and $j\notin\mathcal E$ proves that
 inequalities avoid relying on implementation-specific tie breaking.
 
 \paragraph{Proof of \Cref{cor:adaptive-cem-alignment}.}
-At iteration zero, the proposals are identical by assumption.  Common random
-numbers therefore produce the same ordered action pool.  If the elite
-certificate holds, both branches select the same action vectors as elites.
-The CEM mean/variance update is a deterministic function of those vectors, so
-the next proposals are identical.  Repeating this argument establishes pool
-and proposal alignment by induction.  If a certificate fails, equality of the
-elite sets is unknown; the induction stops and no later shared-pool statement
-is made.
+Index the branches by $b\in\{\mathrm c,\mathrm p\}$ (clean, perturbed) and
+iterations by $t$. Let $\phi_t^b$ collect branch $b$'s proposal parameters
+(mean and variance), let $\omega_t$ be the shared random numbers, and let
+$\mathcal A_t^b=T(\phi_t^b,\omega_t)$ be the sampled candidate pool, where
+$T$ is the deterministic sampling map. Branch $b$ selects the elite set
+$\mathcal E_t^b$ as the $k$ lowest-cost candidates under its own costs and
+updates $\phi_{t+1}^b=U(\{\mathbf a^j:j\in\mathcal E_t^b\})$, where $U$ is
+deterministic and permutation invariant; the evaluated solver's unweighted
+elite mean and standard deviation satisfy this. The induction step is
+\[
+\phi_t^{\mathrm c}=\phi_t^{\mathrm p}
+\;\Longrightarrow\;
+\mathcal A_t^{\mathrm c}=\mathcal A_t^{\mathrm p}
+\;\overset{\text{\Cref{eq:elite-certificate-main}}}{\Longrightarrow}\;
+\mathcal E_t^{\mathrm c}=\mathcal E_t^{\mathrm p}
+\;\Longrightarrow\;
+\phi_{t+1}^{\mathrm c}=\phi_{t+1}^{\mathrm p},
+\]
+and the base case $\phi_0^{\mathrm c}=\phi_0^{\mathrm p}$ holds by
+assumption, which aligns pools and proposals for as long as the certificate
+holds at every completed iteration. The evaluated solver returns the final
+proposal mean as its action, so aligned proposals return identical actions.
+An implementation that instead returns the best final candidate additionally
+requires the top-1 condition \Cref{eq:top1-certificate-main} at the last
+iteration. If a certificate fails, equality of the elite sets is unknown; the
+induction stops and no later shared-pool statement is made.
 
 \paragraph{Relation to the weighted rollout radius.}
 The planner bound uses the displacement at the cost readout horizon.  For the
@@ -1307,6 +1282,65 @@ two stacked predictions $au$ and $bu$ with $a,b\geq0$, the reverse-triangle
 bound in \Cref{eq:target-free-error-drift} holds with equality.  Likewise,
 setting $g=0$, $x=au$, and $\tilde x=bu$ makes
 $|\tilde C-C|=|b-a|(a+b)=r(\|x-g\|_2+\|\tilde x-g\|_2)$.
+
+\section{Local-Geometry Case-Study Definitions}
+\label{sec:appendix-local-geometry}
+
+This section states the descriptive quantities summarized in
+\Cref{sec:local-geometry-audit} and reported by the case study in
+\Cref{sec:exp-local-geometry}.
+
+Let
+$\mathcal V\in\{\mathrm{enc},\mathrm{roll}\}$ denote either the encoder output
+or the representation after eight autoregressive rollout steps (the
+protocol horizon $H{=}8$; \Cref{sec:acpc-def}). For anchor
+history $i$, let $v_{i,\mathcal V}^{(0)}$ be its clean representation and
+$v_{i,\mathcal V}^{(m)}$, $m=1,\ldots,M$, the representations of $M$
+perturbed views. In the rollout space, the clean and perturbed views of each
+anchor use the same recorded action sequence. We define the sampled visual
+radius, nearest-clean spacing, and their ratio as
+\begin{align}
+r_{i,\mathcal V}^{\mathrm{vis}}
+&=\max_{1\leq m\leq M}
+\left\|v_{i,\mathcal V}^{(m)}-v_{i,\mathcal V}^{(0)}\right\|_2,
+\nonumber\\
+d_{i,\mathcal V}^{\mathrm{NN}}
+&=\min_{j\neq i}
+\left\|v_{i,\mathcal V}^{(0)}-v_{j,\mathcal V}^{(0)}\right\|_2,
+\qquad
+\rho_{i,\mathcal V}^{\mathrm{local}}
+=\frac{r_{i,\mathcal V}^{\mathrm{vis}}}
+{d_{i,\mathcal V}^{\mathrm{NN}}}.
+\label{eq:local-radius-spacing}
+\end{align}
+The figures abbreviate $\rho_{i,\mathcal V}^{\mathrm{local}}$ as
+$r/\mathrm{NN}$. When this ratio is below one, every sampled perturbed view of
+anchor $i$ lies closer to its clean representation than that representation
+lies to the nearest other clean anchor. A ratio of at least one means that the
+largest sampled displacement reaches or exceeds this nearest-clean distance.
+This is a geometric comparison; the nearest clean anchor need not lie across
+a semantic or task-relevant boundary.
+
+The ratio uses only anchor $i$'s perturbation radius. It does not account for
+the perturbation radius around the neighboring anchor. We therefore add a
+symmetric test: the enclosing ball around anchor $i$ is \emph{fully
+disjoint} if it is separated from the enclosing ball around every other
+anchor:
+\begin{equation}
+\left\|v_{i,\mathcal V}^{(0)}-v_{j,\mathcal V}^{(0)}\right\|_2
+>
+r_{i,\mathcal V}^{\mathrm{vis}}+r_{j,\mathcal V}^{\mathrm{vis}}
+\quad\text{for every }j\neq i.
+\label{eq:local-cloud-disjoint}
+\end{equation}
+Across the sampled anchors, we report three summaries: the median
+$r/\mathrm{NN}$ ratio; the fraction satisfying
+$r_{i,\mathcal V}^{\mathrm{vis}}<d_{i,\mathcal V}^{\mathrm{NN}}$; and the
+fraction satisfying the fully-disjoint condition in
+\Cref{eq:local-cloud-disjoint}. The second is a one-sided nearest-center test,
+whereas the third is a symmetric certificate for the enclosing balls in the
+original high-dimensional representation. It is unrelated to whether the
+qualitative t-SNE display ellipses overlap.
 
 \section{Evaluation and Diagnostic Protocol}\label{sec:appendix-A}
 
@@ -1483,13 +1517,20 @@ only the aggregate classification metrics.
 \label{sec:appendix-local-sensitivity}
 
 For a small isotropic observation perturbation
-$\delta x\sim\mathcal N(0,\sigma^2 I)$, first-order linearization of encoder
-$E$ followed by rollout map $G$ gives
+$\delta x\sim\mathcal N(0,\sigma^2 I)$, first-order expansion of encoder $E$
+followed by rollout map $G$ gives
+$\Delta G=J_GJ_E\,\delta x+o(\|\delta x\|_2)$ with Jacobians evaluated at
+the clean input. Writing $A=J_GJ_E$ and taking expectations of the leading
+term,
 \begin{equation}
-\mathbb E\!\left[\|\Delta G\|_2^2\right]
-\approx \sigma^2\|J_GJ_E\|_F^2 .
+\mathbb E\!\left[\|A\,\delta x\|_2^2\right]
+=\operatorname{tr}\!\bigl(A\,\mathbb E[\delta x\,\delta x^\top]A^\top\bigr)
+=\sigma^2\operatorname{tr}(AA^\top)
+=\sigma^2\|A\|_F^2,
 \label{eq:local-gaussian-sensitivity}
 \end{equation}
+so $\mathbb E[\|\Delta G\|_2^2]\approx\sigma^2\|J_GJ_E\|_F^2$ to first
+order as $\sigma\to0$.
 Jacobian Frobenius norms have previously been used to quantify and regularize
 local representation sensitivity and contraction~\cite{rifai2011contractive}.
 We estimate
@@ -1519,7 +1560,11 @@ training run, and training condition at perturbation severities
 $0.02,0.05,0.08$. Each CEM branch uses $K=64$ candidates, eight elites, eight
 iterations, and a five-step model-prediction horizon. The clean and perturbed
 branches start from the same proposal and use common random numbers, but each
-branch updates its proposal from its own elites.
+branch updates its proposal from its own elites. The implemented cost is the
+mean-reduced squared error over embedding coordinates, i.e., $\|x-g\|_2^2/d$
+for embedding dimension $d$; this common positive factor rescales every $C_j$
+and $b_j$ identically and leaves the regret bound and both certificates
+unchanged.
 
 For every candidate, we compute ACPC along that candidate's action sequence
 and summarize the pool by its q90 at horizons one and five. For clean plan
