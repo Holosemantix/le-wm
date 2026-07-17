@@ -680,7 +680,8 @@ experiments.}
 \label{tab:acpc-object-guide}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\linewidth}{p{0.18\linewidth}X >{\raggedright\arraybackslash}p{0.25\linewidth}}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}p{0.13\linewidth}X >{\raggedright\arraybackslash}p{0.30\linewidth}@{}}
 \toprule
 Object & Plain-language meaning & Empirical role \\
 \midrule
@@ -949,7 +950,8 @@ reduction is $55.9\pm4.7\%$ relative to Base and $51.3\pm3.5\%$ relative to
 Base+Control$_8$. These results concern prediction of the error drift; they
 do not compare the absolute forecast accuracy of one-step and eight-step
 world models. \Cref{sec:appendix-p1-controls} reports the task-level values
-and selected controls. \textbf{Takeaway:} eight-step ACPC carries information
+and selected controls
+(\Cref{tab:target-aligned-acpc,tab:target-aligned-acpc-absolute}). \textbf{Takeaway:} eight-step ACPC carries information
 about the bounded error change that neither encoder shift, one-step ACPC, nor
 any same-horizon destroyed-action control provides.
 
@@ -1397,10 +1399,10 @@ full-dataset statistics. Counts give eligible and skipped anchors in the fixed
 \toprule
 Task & Logged state field (dim.) & Implemented proxy label $\ell(y)$ & Eligible / skipped \\
 \midrule
-TwoRoom & \code{pos\_agent} (2) & Median split of the standardized agent $x$ coordinate. & 61 / 39 \\
+TwoRoom & \code{pos\_agent} (2) & One median bit from the standardized agent $x$ coordinate (slice \code{pos\_agent[0:1]}). & 61 / 39 \\
 PushT & \code{state} (7) & Three median bits from standardized block $x$, block $y$, and block angle (slice \code{state[2:5]}). & 98 / 2 \\
 Reacher & \code{observation} (6) & Three median bits from the two standardized joint-velocity coordinates and their Euclidean norm (slice \code{observation[4:6]}). & 100 / 0 \\
-Cube & \code{observation} (28) & For standardized observation $\bar o$, let $r=\bar o_{0:3}-\bar o_{25:28}$; use median bits of $r_1$, $r_2$, and $\lVert r\rVert_2$. & 100 / 0 \\
+Cube & \code{observation} (28) & Three median bits from the first two coordinates and the Euclidean norm of $r=\bar o_{0:3}-\bar o_{25:28}$, where $\bar o$ is the standardized observation. & 100 / 0 \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -1438,7 +1440,10 @@ planner pool. We do not infer one result from the other;
 candidate-specific features.
 
 The prediction-error analysis is restricted to the unaugmented checkpoints
-and the listed visual probes. Every training run improves on all four tasks.
+and the listed visual probes. \Cref{tab:target-aligned-acpc} reports the
+per-run relative reductions, and \Cref{tab:target-aligned-acpc-absolute} the
+underlying out-of-group MAE values with the selected controls. Every
+training run improves on all four tasks.
 
 \input{tables/table_target_aligned_acpc}
 \input{tables/table_target_aligned_acpc_absolute}

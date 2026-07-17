@@ -64,7 +64,7 @@
   "panels": [
     {
       "panel": "base:encoder",
-      "condition": "Origin LeWM",
+      "condition": "Unaugmented LeWM",
       "representation": "Encoder features",
       "n_states": 128,
       "n_views": 19,
@@ -86,7 +86,7 @@
     },
     {
       "panel": "base:predictor",
-      "condition": "Origin LeWM",
+      "condition": "Unaugmented LeWM",
       "representation": "8-step rollout predictions",
       "n_states": 128,
       "n_views": 19,

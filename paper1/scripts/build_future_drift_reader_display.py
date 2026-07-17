@@ -153,7 +153,7 @@ def _write_absolute_table(rows: list[dict[str, Any]]) -> None:
     for index, row in enumerate(ordered):
         lines.append(
             f"{row['task']} & {row['training_seed']} & {row['one_step_mae']:.3f} & "
-            f"{row['best_control_mae']:.3f} & \\textbf{{{row['eight_step_mae']:.3f}}} & "
+            f"{row['best_control_mae']:.3f} & {row['eight_step_mae']:.3f} & "
             f"{CONTROL_DISPLAY[row['best_control']]} & {row['win_blocks']}/{row['block_count']} \\\\"
         )
         if index + 1 < len(ordered) and ordered[index + 1]["task"] != row["task"]:
