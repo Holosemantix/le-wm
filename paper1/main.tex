@@ -339,13 +339,11 @@ $Y_{\mathbf a}^H$---is spelled out in
 Appendix~\ref{sec:appendix-acpc-proofs}.
 
 The proposition bounds the difference between two errors, not either
-prediction's absolute error. Both predictions may be inaccurate even when
-ACPC is small. The result states only that their errors relative to the same
-future cannot differ by more than ACPC. ACPC itself still does not require the
-realized future. The prediction
-experiment in \Cref{sec:exp-target-aligned} uses that future only to evaluate
-whether ACPC is informative about the bounded quantity, which we call the
-\emph{error drift} $d=|e_{\tilde h}-e_h|$.
+prediction's absolute error: both predictions may be inaccurate even when
+ACPC is small. The prediction experiment in \Cref{sec:exp-target-aligned}
+uses a logged future only to evaluate whether ACPC is informative about the
+bounded quantity, which we call the \emph{error drift}
+$d=|e_{\tilde h}-e_h|$.
 
 \subsection{Candidate-cost drift and planner stability}
 
@@ -685,15 +683,12 @@ that motivates ACPC, not to establish task-level robustness. Using a fixed
 PushT case study, we ask whether augmentation makes perturbed views of the
 same history more compact relative to other clean histories. We compare a
 matched pair of LeWM checkpoints: one unaugmented and one trained with
-full-sequence Gaussian augmentation at $\stdmax{}=0.08$. For each of 128
-logged histories, we generate one clean view and 18 perturbed views---six
-draws at each probe standard deviation in $\{0.01,0.04,0.08\}$. We compare the
+full-sequence Gaussian augmentation at $\stdmax{}=0.08$, comparing the
 encoder output with the representation after eight autoregressive rollout
 steps. All ratios and fractions use the original 192-dimensional projected
-latent space in which the planner computes costs. The t-SNE
-visualization~\cite{vandermaaten2008tsne} reproduces the deterministic
-per-panel projections used in the original Appendix visualization and is
-qualitative only.
+latent space in which the planner computes costs; the sampling protocol is in
+\Cref{sec:appendix-local-geometry}. The t-SNE
+visualization~\cite{vandermaaten2008tsne} is qualitative only.
 
 \begin{figure}[t]
 \centering
@@ -731,7 +726,7 @@ therefore turn to the checkpoint-level ATR--SMPR diagnostic and its
 relationship with planning performance across the complete augmentation
 sweep (\Cref{fig:full-sweep-diagnostics}).
 
-\begin{figure}[H]
+\begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{fig_full_sweep_diagnostics.pdf}
 \caption{Checkpoint-level planning performance and diagnostics across the
@@ -833,7 +828,7 @@ All eight-step features use uniform weights $\alpha_k=1/8$ in
 helps; if it also improves on Base+Control$_8$, the gain is attributable to
 the recorded actions rather than to merely rolling out eight steps.
 
-\begin{figure}[H]
+\begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{fig_future_drift_three_seed_v1.pdf}
 \caption{Cross-validated MAE for predicting the error drift $d$ on the
@@ -874,12 +869,11 @@ single-decision quantity as \emph{CEM selection regret}. It uses the model's
 squared latent goal cost; it is neither cumulative regret nor simulator
 return.
 
-We run the clean and perturbed CEM branches from the same proposal with common
-random numbers, while allowing each branch to update from its own elites. For
-every candidate, we compute one- and five-step ACPC along that candidate's
-action sequence, then take the 90th percentile (q90) across the candidate
-pool. The five-step score matches the model-prediction horizon used by the
-planner. We compare two ridge regressions. The baseline uses perturbation
+The paired CEM branches follow \Cref{sec:appendix-planner-protocol}: same
+initial proposal, common random numbers, each branch updating from its own
+elites. For every candidate, we compute one- and five-step ACPC along its
+action sequence and take the pool q90; five steps match the planner's
+prediction horizon. We compare two ridge regressions. The baseline uses perturbation
 severity, training condition, candidate-level one-step ACPC q90, and the clean
 gap between the best and second-best candidates. The expanded model adds
 candidate-level five-step ACPC q90. Within each training run, both regressions
@@ -888,7 +882,7 @@ task is excluded from fitting. We evaluate MAE on
 $\log(1+\text{selection regret})$; Appendix~\ref{sec:appendix-planner-protocol}
 gives the CEM budget and sample counts.
 
-\begin{figure}[H]
+\begin{figure}[t]
 \centering
 \includegraphics[width=0.76\linewidth]{fig_acpc_planner_evidence.pdf}
 \caption{Adding planner-horizon ACPC improves prediction of adaptive-CEM
@@ -906,10 +900,9 @@ $\log(1+\text{selection regret})$.}
 Adding planner-horizon ACPC lowers cross-task test MAE by
 $15.2\pm2.0\%$ (mean $\pm$ sample standard deviation across training runs).
 The error decreases in all 12 task--run test cases
-(\Cref{fig:acpc-planner-evidence}). Because the baseline already includes
-severity, training condition, one-step ACPC, and the clean candidate margin,
-this gain shows that the planner-horizon rollout carries additional cross-task
-predictive information. The comparison does not separate action conditioning
+(\Cref{fig:acpc-planner-evidence}). Since the two regressions differ only by
+the planner-horizon feature, this gain shows that the planner-horizon rollout
+carries additional cross-task predictive information. The comparison does not separate action conditioning
 from horizon length; it tests the incremental value of the configured
 planner-horizon ACPC feature.
 \textbf{Takeaway:} candidate-specific ACPC helps predict the clean-model cost
@@ -943,14 +936,9 @@ average and one level at most (balanced accuracy $0.900$, precision/recall
 $0.913/0.953$). Calibration on a single task is less reliable (balanced
 accuracy $0.855$ on average, ranging from $0.723$ to $0.913$): Reacher alone
 selects $t_R=0.1$ and produces mismatches of up to five levels on the other
-tasks. This exception is a tie-break in fit rather than a failure of the
-shared pair---under $(0.3,0.95)$ Reacher's own onset mismatch is also at
-most one level---but calibrating on Reacher alone prefers the tighter
-$t_R=0.1$ that fits it exactly and does not carry over. The mechanism is
-simple: recovered Reacher checkpoints reach relative ATR well below $0.1$,
-while the earliest recovered levels on the other tasks lie above it, so the
-tighter threshold rejects them and delays the accepted onset.
-\Cref{sec:appendix-cross-task} reports every partition.
+tasks. This exception is a tie-break in fit rather than a failure of the shared
+pair; \Cref{sec:appendix-cross-task} reports every partition and the
+mechanism.
 
 Two limits keep this claim modest. First, $t_R=0.3$ is the largest value in
 the evaluated grid (\Cref{sec:appendix-A}), so the upper edge of the
@@ -978,7 +966,7 @@ so run-to-run variability is not estimated). Calibration stays inside the
 family: for each PLDM test task, thresholds are selected on the other three
 PLDM tasks and fixed for its nine checkpoints; no LeWM number is reused.
 
-\begin{figure}[H]
+\begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{fig_pldm_sweep_diagnostics.pdf}
 \caption{The \Cref{fig:full-sweep-diagnostics} view repeated on PLDM (one
@@ -1003,17 +991,11 @@ meets the relative criterion), one grid level after it on TwoRoom, and never
 on Reacher---there
 the unaugmented checkpoint already reaches $80\%$ noisy success, the sweep
 never improves it by more than $1.4$ points, and relative ATR never falls
-below $t_R$, so there is almost no recovery signal to locate. One caveat
-applies when reading \Cref{fig:pldm-sweep-diagnostics}: PLDM trains a
-single run per sweep level, and an isolated level can reflect single-run
-training instability rather than the augmentation level itself---most
-visibly Reacher at $\stdmax{}=0.05$, where the clean and the noisy score
-drop together. The diagnostic tracks this dip: the two levels with the
-lowest clean scores ($\stdmax{}=0.01$ and $0.05$) are exactly the two with
-the highest relative ATR in \Cref{fig:pldm-sweep-diagnostics}(c),
-consistent with relative ATR responding to checkpoint quality itself rather
-than only to the augmentation level. Per-task
-balanced accuracies for both families are tabulated in
+below $t_R$, so there is almost no recovery signal to locate. Because PLDM
+trains a single run per sweep level, an isolated level can reflect
+single-run instability rather than the augmentation level itself; the
+diagnostic tracks the one visible dip (\Cref{sec:appendix-cross-task}).
+Per-task balanced accuracies for both families are tabulated in
 \Cref{tab:pldm-architecture-portability} (\Cref{sec:appendix-cross-task}).
 Applying the LeWM thresholds after within-task ATR normalization yields
 exactly the same decisions---as expected, since both families select the
@@ -1039,7 +1021,7 @@ requires a success-rate gain of at least five percentage points with at most
 a five-point clean loss. No blur or resize outcome
 enters threshold selection.
 
-\begin{figure}[H]
+\begin{figure}[!htb]
 \centering
 \includegraphics[width=\linewidth]{fig_cross_stressor_selective_transfer_v1.pdf}
 \caption{Correspondence between planning gains and the diagnostic under blur
@@ -1266,7 +1248,11 @@ $|\tilde C-C|=|b-a|(a+b)=r(\|x-g\|_2+\|\tilde x-g\|_2)$.
 
 This section states the descriptive quantities summarized in
 \Cref{sec:local-geometry-audit} and reported by the case study in
-\Cref{sec:exp-local-geometry}.
+\Cref{sec:exp-local-geometry}. The case study uses 128 logged PushT
+histories; for each, one clean view and 18 perturbed views are generated---six
+draws at each probe standard deviation in $\{0.01,0.04,0.08\}$. The t-SNE
+display reproduces the deterministic per-panel projections of the original
+Appendix visualization.
 
 Let
 $\mathcal V\in\{\mathrm{enc},\mathrm{roll}\}$ denote either the encoder output
@@ -1496,7 +1482,23 @@ retains every training run and all nine checkpoints. The apparent
 sample size is therefore not inflated by treating checkpoint rows as
 independent observations.
 
+The single-source Reacher exception in \Cref{sec:exp-frozen-external} is a
+tie-break in fit: under $(0.3,0.95)$ Reacher's own onset mismatch is also at
+most one level, but calibrating on Reacher alone prefers the tighter
+$t_R=0.1$ that fits it exactly and does not carry over. Recovered Reacher
+checkpoints reach relative ATR well below $0.1$, while the earliest recovered
+levels on the other tasks lie above it, so the tighter threshold rejects them
+and delays the accepted onset.
+
 \input{tables/table_cross_task_atr_smpr_all_subsets_v1}
+
+On the PLDM sweep, the most visible single-run artifact is Reacher at
+$\stdmax{}=0.05$, where the clean and the noisy score drop together. The
+diagnostic tracks this dip: the two levels with the lowest clean scores
+($\stdmax{}=0.01$ and $0.05$) are exactly the two with the highest relative
+ATR in \Cref{fig:pldm-sweep-diagnostics}(c), consistent with relative ATR
+responding to checkpoint quality itself rather than only to the augmentation
+level.
 
 For PLDM, \Cref{tab:pldm-architecture-portability} lists the per-task
 balanced accuracies of the leave-task-out screen of
