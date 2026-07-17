@@ -1173,8 +1173,10 @@ five-step ACPC lowers cross-task test error for CEM selection regret
 beyond severity, training condition, one-step ACPC, and the clean candidate
 margin, with an improvement in all 12 task--run evaluations
 (\Cref{sec:exp-planner}). Third, thresholds chosen on some tasks retain useful
-checkpoint-screening accuracy on the other tasks; the same diagnostic is also
-evaluated under blur and resize and on PLDM after per-family recalibration
+checkpoint-screening accuracy on the other tasks; under blur and resize the
+transferred score preserves the observed ordering except in two
+near-criterion pairs, and the same construction carries to PLDM after
+model-family recalibration
 (\Cref{sec:exp-frozen-external,sec:exp-pldm-portability,sec:exp-cross-stressor}).
 
 \paragraph{Scope and limitations.}
@@ -1185,15 +1187,20 @@ adaptive-CEM guarantee requires the candidate pools to remain aligned and
 stops at the first failed elite certificate. SMPR tests only the declared
 coordinate proxies, so a model can still make stable but incorrect
 predictions. Three training runs per LeWM task, and one run per PLDM setting,
-support consistency checks but not precise variability estimates. Finally,
-blur and resize are each tested at one severity, and the one-source results in
-\Cref{sec:exp-frozen-external} show that calibration depends on source-task
-composition.
+support consistency checks but not precise variability estimates. In
+addition, blur and resize are each tested at one severity, and the one-source
+results in \Cref{sec:exp-frozen-external} show that calibration depends on
+source-task composition. Finally, the recovery evidence varies a single
+intervention---the strength of Gaussian noise augmentation---so the
+diagnostic--behavior alignment is established along that axis; blur, resize,
+and PLDM probe transfer, but alignment under interventions other than noise
+augmentation remains untested.
 
 \paragraph{Future work.}
 Important next steps are direct task outcomes for ACPC-informed planner
 interventions, multiple severities per visual shift, richer different-state
-proxies, and additional JEPA-family world models with different objectives and
+proxies, alignment checks under interventions other than noise augmentation,
+and additional JEPA-family world models with different objectives and
 planner interfaces; we plan to extend this coverage in future revisions.
 
 \section{Conclusion}\label{sec:conc}
@@ -1207,8 +1214,9 @@ proxies. Across four tasks, ACPC under recorded actions predicts
 perturbation-induced error changes beyond one-step and destroyed-action
 controls and improves cross-task prediction of CEM selection regret. The
 calibrated ATR--SMPR screen approximately reproduces recovery labels on tasks
-excluded from threshold selection. The same diagnostic can also be evaluated
-under blur and resize and---after model-family recalibration---on PLDM. ACPC therefore
+excluded from threshold selection. The transferred score orders checkpoint pairs correctly under blur and
+resize, and the same construction extends to PLDM after model-family
+recalibration. ACPC therefore
 provides a low-cost audit before deploying a frozen checkpoint behind a
 planner: using only the model and logged data, it detects visual sensitivity
 that encoder-level checks can miss.
