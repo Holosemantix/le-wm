@@ -56,7 +56,7 @@ Paper-specific tool usage is documented in `../tools/README_paper1.md`.
 
 The current source is configured as an arXiv-style non-anonymous draft. Before submitting, replace the `\arxivauthors` placeholder in `arxiv_metadata.tex` with the real author list and verify the public code/data URL printed after the abstract.
 
-Current public companion repository: `https://github.com/Anguo-star/lewm-acpc-diagnostics`.
+Current public companion repository: `https://github.com/Anguo-star/acpc-diagnostics`.
 
 For a double-blind conference variant, use `docs/main_blind.tex` and run `bash paper1/docs/check_blind_ready.sh` from the repository root. The blind path compiles the same paper with anonymous authors, hides the public code URL and acknowledgements, and creates `/tmp/paper1_blind_src.tar.gz` without `arxiv_metadata.tex` or `arxiv_release_notes.tex`.
 
