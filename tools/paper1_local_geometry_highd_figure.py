@@ -32,8 +32,8 @@ DEFAULT_OUTPUT = ROOT / "assets/paper1_figs/fig_local_geometry_highd_audit.pdf"
 DEFAULT_AUDIT_OUTPUT = ROOT / "assets/paper1_figs/fig_local_geometry_highd_audit.json"
 
 PANEL_SPECS = (
-    ("base", "encoder", "Origin LeWM", "Encoder features"),
-    ("base", "predictor", "Origin LeWM", "8-step rollout predictions"),
+    ("base", "encoder", "Unaugmented LeWM", "Encoder features"),
+    ("base", "predictor", "Unaugmented LeWM", "8-step rollout predictions"),
     ("fullseq_robust", "encoder", "Noise-trained LeWM", "Encoder features"),
     (
         "fullseq_robust",
@@ -209,7 +209,7 @@ def build_figure(
     fig.text(
         0.285,
         0.995,
-        "Origin LeWM",
+        "Unaugmented LeWM",
         ha="center",
         va="top",
         fontsize=7.8,

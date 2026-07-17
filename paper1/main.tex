@@ -160,7 +160,7 @@ radius by a margin. SMPR certifies only the supplied coordinate labels. A
 calibrated score combining ATR and SMPR screens frozen checkpoints; ACPC is
 an evaluation tool, not a training objective.
 
-We instantiate the diagnostic on JEPA-style world models, with LeWM~\cite{maes2026lewm} as the primary testbed and PLDM as a second model family (\Cref{sec:exp-pldm-portability}), using Gaussian observation noise for calibration; tasks and protocols are specified in \Cref{sec:bg}. On LeWM's unaugmented checkpoints, eight-step ACPC under the recorded actions predicts the perturbation-induced change in prediction error about $51\%$ better, in cross-validated MAE, than the strongest control with the same rollout length but destroyed action information (\Cref{sec:exp-target-aligned}). ACPC computed along planner candidates consistently improves prediction of CEM selection regret (\Cref{sec:exp-planner}). Thresholds chosen on some tasks screen checkpoints from tasks excluded from threshold selection with balanced accuracy $0.86$--$0.90$ across all cross-task partitions (\Cref{sec:exp-frozen-external}), and the calibrated score orders checkpoint pairs correctly under blur and resize at the tested severities (\Cref{sec:exp-cross-stressor}).
+We instantiate the diagnostic on JEPA-style world models, with LeWM~\cite{maes2026lewm} as the primary testbed and PLDM as a second model family (\Cref{sec:exp-pldm-portability}), using Gaussian observation noise for calibration; tasks and protocols are specified in \Cref{sec:bg}. On LeWM's unaugmented checkpoints, eight-step ACPC under the recorded actions predicts the perturbation-induced change in prediction error about $51\%$ better, in cross-validated MAE, than the strongest control with the same rollout length but destroyed action information (\Cref{sec:exp-target-aligned}). ACPC computed along planner candidates consistently improves prediction of CEM selection regret (\Cref{sec:exp-planner}). Thresholds chosen on some tasks screen checkpoints from tasks excluded from threshold selection, and every partition that selects thresholds on two or more tasks recovers the same threshold pair (\Cref{sec:exp-frozen-external}); and the calibrated score orders checkpoint pairs correctly under blur and resize at the tested severities (\Cref{sec:exp-cross-stressor}).
 
 The contributions are:
 \begin{enumerate}[leftmargin=1.4em]
@@ -1038,7 +1038,10 @@ selects $t_R=0.1$ and produces mismatches of up to five levels on the other
 tasks. This exception is a tie-break in fit rather than a failure of the
 shared pair---under $(0.3,0.95)$ Reacher's own onset mismatch is also at
 most one level---but calibrating on Reacher alone prefers the tighter
-$t_R=0.1$ that fits it exactly and does not carry over.
+$t_R=0.1$ that fits it exactly and does not carry over. The mechanism is
+simple: recovered Reacher checkpoints reach relative ATR well below $0.1$,
+while the earliest recovered levels on the other tasks lie above it, so the
+tighter threshold rejects them and delays the accepted onset.
 \Cref{sec:appendix-cross-task} reports every partition.
 
 Two limits keep this claim modest. First, $t_R=0.3$ is the largest value in
@@ -1226,7 +1229,7 @@ that encoder-level checks can miss.
 %% ===========================================================================
 \FloatBarrier
 \appendix
-\section{Candidate-Cost and Fixed-Pool Analysis}\label{sec:appendix-acpc-proofs}
+\section{Proofs and Fixed-Pool Analysis}\label{sec:appendix-acpc-proofs}
 
 \paragraph{Proof of \Cref{prop:target-free-error-drift}.}
 Write $u=\bar G_{\mathbf a}(E_\theta(h))$,
