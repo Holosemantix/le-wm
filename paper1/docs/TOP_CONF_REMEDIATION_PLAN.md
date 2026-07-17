@@ -1,8 +1,64 @@
 # Paper1 顶会投稿整改计划
 
-> 目标：把当前 `paper1` 从“matched Gaussian-noise post-hoc diagnostic study”提升为更接近顶会主会标准的诊断/世界模型论文。
+> [!IMPORTANT]
+> **Historical assessment / 已被当前稿件状态取代（2026-07-17）。**
+> 本文档记录的是 2026-07-08 前后的整改判断，不应再把下文的
+> “Weak Reject / Borderline Reject” 作为当前 `paper1/main.tex` 的最新评分。
+> 2026-07-14 至 2026-07-17 的主文、理论与实验重构已经实质性完成了当时的多项
+> P0/P1 缺口。下文保留为历史计划和 provenance，不应据此回退当前 claim 或实验结构。
+
+## 2026-07-17 当前状态更新
+
+当前稿件更合适的总体判断是 **约 6/10，Borderline / Weak Accept**，而不是
+本计划最初的明显 Weak Reject。该分数不是接收承诺；严格 reviewer 仍可能因
+novelty、external baseline 或 perturbation breadth 给出更低评价。
+
+相较于本计划形成时，以下关键缺口已经解决或显著推进：
+
+- **Independent training runs：已解决。** LeWM Gaussian sweep 和主要 ACPC
+  结果覆盖 training seeds 3072/3073/3074，并明确区分 training-run 与
+  evaluation-seed variability。
+- **ACPC 相对 simpler controls 的增量价值：已解决。** Common-future
+  error-drift 实验同时控制 encoder shift、one-step ACPC 和三类
+  same-horizon destroyed-action controls；八步 action-matched ACPC 在全部
+  12 个 task--run cells 中取得更低 test MAE。
+- **Planner-facing evidence：已显著推进。** Candidate-specific
+  planner-horizon ACPC 在跨任务测试中改进 CEM selection-regret prediction，
+  同时保留“不等于 simulator return 或 planner intervention”的边界。
+- **Held-out-style validation：已显著推进。** 当前稿包含 source-task
+  threshold selection / test-task evaluation、全部 14 个 cross-task
+  partitions，以及 Gaussian-calibrated score 在 blur/resize 上不重新调参的
+  24-pair transfer evaluation。因此“prospective validation 刚起步”已经是
+  过时描述；但真正新增任务、更多预注册 training runs 和更广 perturbation
+  grid 仍可继续增强。
+- **Selective collapse guard：已解决到 proxy-level claim。** ATR 与 SMPR
+  已成为统一的 checkpoint-level diagnostic；SMPR 明确只验证所声明的
+  task-state coordinate proxies，不宣称完整 semantic/action validity。
+- **Second model family：已加入。** PLDM 使用相同 analysis interface 和完整
+  四任务九 checkpoint sweep，但每个 setting 只有一个 training run，因此只支持
+  family-local portability，不支持强 cross-architecture generalization。
+
+当前仍限制顶会评分上限的主要因素是：
+
+1. 缺少在同一 checkpoint-screening protocol 下运行的外部
+   **diagnostic baselines**；DrQ、TD-MPC、Dreamer 属于 training/control
+   methods，不应再被笼统写成当前 post-hoc diagnostic 的直接 baseline。
+2. Held-out visual shifts 仍只有 blur 和 resize，且各一个固定 severity；
+   brightness、contrast、occlusion、camera/background shift 等更广 grid
+   尚未覆盖。
+3. PLDM 缺 independent training-run replication，跨 architecture 证据仍薄。
+4. 理论链提升了 soundness，但主要由 samplewise inequalities 和 conditional
+   CEM induction 构成，理论 novelty 本身不足以支撑 strong accept。
+5. 当前结果证明 diagnostic prediction/screening value，没有完成
+   ACPC-informed intervention 改善 closed-loop return 的闭环。
+
+因此，下文仍然有效的总原则是“真正门槛是证据强度，而非篇幅”；但其中关于
+training seeds、simple controls、planner evidence 和 prospective validation
+缺失的具体判断已经被当前稿件取代。
+
+> **历史原始目标（保留原文）：** 把当时的 `paper1` 从“matched Gaussian-noise post-hoc diagnostic study”提升为更接近顶会主会标准的诊断/世界模型论文。
 >
-> 本文档根据对 `paper1/main.tex` 更新版的客观审稿意见整理，供 Codex 后续执行。当前评价倾向为 **Weak Reject / Borderline Reject**，主要原因不是问题不重要，而是证据链仍偏事后诊断、主实验统计不足、prospective validation 尚未建立。
+> **历史原始判断（已失效）：** 本文档根据当时 `paper1/main.tex` 的客观审稿意见整理；当时评价倾向为 **Weak Reject / Borderline Reject**，主要原因不是问题不重要，而是证据链仍偏事后诊断、主实验统计不足、prospective validation 尚未建立。
 
 ## 2026-07-03 执行状态
 

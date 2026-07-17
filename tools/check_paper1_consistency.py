@@ -376,7 +376,7 @@ REQUIRED_MAIN_TEXT_SNIPPETS = [
     "Selective Margin Pass Rate",
     "not a candidate-distribution tail guarantee",
     "so it fails the SMPR test",
-    "does not assign an absolute robustness label",
+    "assigns no absolute robustness label",
     "do not imply that architectures share numerical thresholds",
     "adaptive-CEM guarantee requires the candidate pools to remain aligned",
     "The three evaluation seeds measure only within-run variability",
@@ -1025,23 +1025,32 @@ def check_visual_text_structure() -> None:
         if retired_visual_phrase in body:
             fail(f"main text restored the retired Figure 3 encoding: {retired_visual_phrase}")
 
-    required_theory_objects = (
+    required_body_theory_objects = (
         "\\label{eq:acpc-rollout-objects}",
         "\\label{eq:weighted-rollout-map}",
         "\\label{eq:normalized-same-state-radius}",
         "\\label{eq:atr-raw}",
-        "\\label{eq:different-state-distance}",
         "\\label{eq:smpr}",
         "\\label{eq:atr-relative}",
         "\\label{eq:joint-diagnostic-score}",
-        "q35 of all off-diagonal Euclidean distances",
         "normalized margin $\\delta=0.10$",
     )
-    for theory_object in required_theory_objects:
+    for theory_object in required_body_theory_objects:
         if theory_object not in body:
             fail(
                 "paper1/main.tex missing required radius--margin theory object: "
                 f"{theory_object}"
+            )
+
+    required_appendix_protocol_objects = (
+        "\\label{eq:different-state-distance}",
+        "q35 of all off-diagonal Euclidean distances",
+    )
+    for protocol_object in required_appendix_protocol_objects:
+        if protocol_object not in appendix:
+            fail(
+                "paper1/main.tex appendix missing required radius--margin "
+                f"protocol object: {protocol_object}"
             )
 
     if "\\begin{theorem}" in body or "thm:" in body:

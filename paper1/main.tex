@@ -884,7 +884,11 @@ gives the CEM budget and sample counts.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.76\linewidth]{fig_acpc_planner_evidence.pdf}
+\includegraphics[
+  width=0.76\linewidth,
+  trim=0 14pt 0 0,
+  clip
+]{fig_acpc_planner_evidence.pdf}
 \caption{Adding planner-horizon ACPC improves prediction of adaptive-CEM
 selection regret on tasks excluded from regression fitting. Each colored line
 connects the baseline and expanded-model errors for one test task in one
