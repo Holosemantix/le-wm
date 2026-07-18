@@ -6,8 +6,8 @@
 #
 # 必填 env vars (与旧脚本一致):
 #   dataset_name              tworoom | pusht | cube | reacher
-#   trainer_file              train.py | train_swm.py
-#   config                    swm | lewm (also accepts swm.yaml | lewm.yaml)
+#   trainer_file              train.py | train_swm.py | train_pldm.py
+#   config                    swm | lewm | pldm (also accepts a .yaml suffix)
 #   output_model_name         模型名后缀（最终落盘 `${dataset_name}_${output_model_name}`）
 #   num_eval                  eval 总 episode 数量（多 seed 时会平分到每个 seed）
 #   STABLEWM_HOME             checkpoint 根目录
@@ -83,10 +83,12 @@
 #   loss_adaptive_consistency_noise_prob, loss_adaptive_consistency_distance,
 #   loss_adaptive_consistency_detach_origin
 #   (legacy loss_adaptive_consistency_detach_clean is still accepted),
-#   pred_target               prediction target view:
+#   pred_target               LeWM prediction target view:
 #                              perturbed = target from configured perturbed future view,
 #                              origin = target from unperturbed/original future view.
 #                              target_view/loss_pred_target_view are aliases.
+#                              PLDM accepts perturbed (its implicit behavior) as
+#                              a compatibility no-op, but does not support origin.
 #   seed, wm_embed_dim, wm_inference_*, image_noise_std_min/max/apply_to_val
 #
 # 新增 env vars:
@@ -181,12 +183,63 @@ cd "${SCRIPT_DIR}"
 
 # ---------- 1. Hydra 参数构建 (沿用原脚本) ----------
 CMD_ARGS=()
+is_false_like() {
+    case "${1,,}" in
+        0|false|no|off) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+is_perturbed_target_like() {
+    case "${1,,}" in
+        perturb|perturbed|corrupt|corrupted|aug|augmented|full|full_sequence)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 add_override() {
     local key="$1"
     local value="${2:-}"
-    if [ -n "$value" ]; then
-        CMD_ARGS+=("$key=$value")
+    if [ -z "$value" ]; then
+        return 0
     fi
+
+    # run_trainer.sh is shared by LeWM/SWM and the external PLDM baseline,
+    # but PLDM intentionally has a smaller Hydra schema. Keep common launch
+    # templates usable without adding ignored keys to the PLDM config.
+    if [ "${config_name:-}" = "pldm" ]; then
+        case "$key" in
+            data|data.dataset.frameskip|seed|output_model_name|subdir|\
+            loss.sigreg.weight|wm.embed_dim|image_noise.*)
+                ;;
+            loss.pred.target_view)
+                if is_perturbed_target_like "$value"; then
+                    echo "[train] config=pldm: prediction target '${value}' is implicit; skipping unsupported Hydra key ${key}"
+                    return 0
+                fi
+                echo "[train][error] config=pldm only supports the implicit perturbed prediction target; got ${key}=${value}" >&2
+                exit 2
+                ;;
+            loss.*.enabled|loss.target_stop_grad)
+                if is_false_like "$value"; then
+                    echo "[train] config=pldm: ${key}=${value} is a disabled compatibility no-op"
+                    return 0
+                fi
+                echo "[train][error] config=pldm does not support ${key}=${value}" >&2
+                exit 2
+                ;;
+            *)
+                echo "[train][error] config=pldm has no supported Hydra override for ${key}=${value}" >&2
+                exit 2
+                ;;
+        esac
+    fi
+
+    CMD_ARGS+=("$key=$value")
 }
 
 normalize_eval_corruption_apply_to() {
