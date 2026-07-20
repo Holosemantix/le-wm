@@ -140,7 +140,9 @@ available \href{\paperpubliccodeurl}{\textcolor{blue}{here}}.\fi
 
 World models support control by predicting how candidate actions change the environment~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. Joint-embedding predictive architectures (JEPAs) instead learn by predicting in representation space rather than reconstructing pixels~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa}. This can reduce pressure to model nuisance detail~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}. This is appealing for visual control, where lighting, texture, or image quality may change even when the physical situation does not. Latent prediction alone, however, does not establish that a trained world model will produce stable action-conditioned predictions under such changes.
 
-For control, whether a visual difference is irrelevant depends on the state and the actions being considered. A background texture can be ignored, whereas a contact pose, doorway state, or object--goal relation may determine which action is useful. Encoder invariance cannot resolve this distinction on its own because a planner does not act directly on the encoder output. It rolls the representation forward under candidate actions and ranks the resulting predictions with a cost. A small encoder discrepancy may grow through this computation, whereas a larger one may contract before it affects the cost. This motivates the central question: after the same action sequence is applied, do clean and perturbed views of one trajectory still produce similar predicted futures? A descriptive PushT case study (\Cref{sec:exp-local-geometry}) shows what is at stake: for a checkpoint trained without noise augmentation, the representations of a history's perturbed views spread wider than its distance to the nearest other history, both at the encoder and after prediction, so visual noise entangles distinct states.
+For control, whether a visual difference is irrelevant depends on the state and the actions being considered. A background texture can be ignored, whereas a contact pose, doorway state, or object--goal relation may determine which action is useful. Encoder invariance cannot resolve this distinction on its own because a planner does not act directly on the encoder output. It rolls the representation forward under candidate actions and ranks the resulting predictions with a cost. A small encoder discrepancy may grow through this computation, whereas a larger one may contract before it affects the cost.
+
+This motivates the central question: after the same action sequence is applied, do clean and perturbed views of one trajectory still produce similar predicted futures? A descriptive PushT case study (\Cref{sec:exp-local-geometry}) shows what is at stake: for a checkpoint trained without noise augmentation, the representations of a history's perturbed views spread wider than its distance to the nearest other history, both at the encoder and after prediction, so visual noise entangles distinct states.
 
 Action-Conditioned Predictive Consistency (ACPC) turns the central question
 into a measurement: roll the clean and perturbed views of one history
@@ -150,6 +152,7 @@ future nor a task outcome, yet two exact inequalities connect it to both:
 ACPC bounds how much the perturbation can change the multi-step prediction
 error against a common logged future, and it bounds how far each planner
 candidate's cost can move, which yields fixed-pool stability certificates.
+
 A small ACPC value alone can still be trivial---a constant representation
 makes every paired rollout identical---so we summarize each checkpoint with
 two complementary numbers: Action-Conditioned Trajectory Radius (ATR), a
@@ -173,7 +176,9 @@ The contributions are:
 Prior work addresses three complementary parts of this problem: learning latent predictive representations, preserving control-relevant distinctions under visual shifts, and evaluating learned dynamics.
 
 \paragraph{Latent predictive world models.}
-DreamerV3 and TD-MPC2 illustrate how learned dynamics can support control by predicting the consequences of candidate actions~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. JEPAs replace pixel reconstruction with prediction in representation space, first for images and then for video~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,assran2025vjepa2}. LeWM instantiates this idea as an end-to-end JEPA world model stabilized by SIGReg~\cite{maes2026lewm}; SIGReg's Gaussianity statistic is based on the Epps--Pulley test~\cite{eppspulley1983}. PLDM provides a different joint-embedding dynamics design~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting}. Analyses of latent prediction show, in simplified settings, how predictive learning can favor influential features over noisy ones~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}. Under Gaussian, stationary additive-noise dynamics, LeJEPA can recover latent state up to a linear transformation~\cite{klindt2026lejepaworldmodel}. seq-JEPA studies the related trade-off between invariant and equivariant representations by conditioning sequential prediction on known view transformations, represented as actions~\cite{ghaemi2025seqjepa}. These results motivate latent predictive learning, but our focus is checkpoint evaluation: whether the discrepancy between two visual views of the same trajectory contracts or grows as the predictor rolls them forward under shared actions.
+DreamerV3 and TD-MPC2 illustrate how learned dynamics can support control by predicting the consequences of candidate actions~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. JEPAs replace pixel reconstruction with prediction in representation space, first for images and then for video~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,assran2025vjepa2}. LeWM instantiates this idea as an end-to-end JEPA world model stabilized by SIGReg~\cite{maes2026lewm}; SIGReg's Gaussianity statistic is based on the Epps--Pulley test~\cite{eppspulley1983}. PLDM provides a different joint-embedding dynamics design~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting}. Analyses of latent prediction show, in simplified settings, how predictive learning can favor influential features over noisy ones~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}. Under Gaussian, stationary additive-noise dynamics, LeJEPA can recover latent state up to a linear transformation~\cite{klindt2026lejepaworldmodel}. seq-JEPA studies the related trade-off between invariant and equivariant representations by conditioning sequential prediction on known view transformations, represented as actions~\cite{ghaemi2025seqjepa}.
+
+These results motivate latent predictive learning, but our focus is checkpoint evaluation: whether the discrepancy between two visual views of the same trajectory contracts or grows as the predictor rolls them forward under shared actions.
 
 \paragraph{Robust visual control and selective invariance.}
 DrQ, DrQ-v2, and SODA improve visual control through training-time augmentation~\cite{kostrikov2020drq,yarats2022drqv2,hansen2021soda}. ViGMO and VIBR learn invariances in latent or value space~\cite{vigmo,dupuis2023vibr}, whereas ReOI modifies observations at test time to reduce distractor sensitivity in visual model-predictive control~\cite{chen2025reoi}. These methods seek to train or repair a more robust controller. We instead ask how to audit visual sensitivity in an already trained predictive model.
@@ -931,13 +936,17 @@ Such a range exists, and \Cref{fig:full-sweep-diagnostics} shows it
 directly: at the dotted thresholds $t_R=0.3$ and $t_M=0.95$, the
 relative-ATR curve of every task drops below its line, and the SMPR curve
 rises above its line, within one grid level of the point where planning
-success recovers. The leave-task-out evaluation over the 14
+success recovers.
+
+The leave-task-out evaluation over the 14
 threshold-selection/test partitions of \Cref{sec:bg} confirms that this
 range is not an artifact of any single task: 13 of the 14 partitions select
 exactly this pair, and with two or three threshold-selection tasks the
 diagnostic locates recovery on test tasks within $0.5$ grid levels on
 average and one level at most (balanced accuracy $0.900$, precision/recall
-$0.913/0.953$). Calibration on a single task is less reliable (balanced
+$0.913/0.953$).
+
+Calibration on a single task is less reliable (balanced
 accuracy $0.855$ on average, ranging from $0.723$ to $0.913$): Reacher alone
 selects $t_R=0.1$ and produces mismatches of up to five levels on the other
 tasks. This exception is a tie-break in fit rather than a failure of the shared
@@ -995,7 +1004,9 @@ meets the relative criterion), one grid level after it on TwoRoom, and never
 on Reacher---there
 the unaugmented checkpoint already reaches $80\%$ noisy success, the sweep
 never improves it by more than $1.4$ points, and relative ATR never falls
-below $t_R$, so there is almost no recovery signal to locate. Because PLDM
+below $t_R$, so there is almost no recovery signal to locate.
+
+Because PLDM
 trains a single run per sweep level, an isolated level can reflect
 single-run instability rather than the augmentation level itself; the
 diagnostic tracks the one visible dip (\Cref{sec:appendix-cross-task}).
@@ -1045,7 +1056,9 @@ correspondence directly: TwoRoom and Reacher transfer strongly, with
 success-rate gains of $29$--$56$ points and large positive score changes;
 Cube shows neither a planning gain nor a score gain; and PushT sits between
 the two groups on both rows, with mixed success changes and small score
-changes. The magnitude of the score change tracks the size of the success
+changes.
+
+The magnitude of the score change tracks the size of the success
 change (Spearman's $\rho=0.835$). Quantitatively, the sign of $\Delta S$
 matches the five-point success-rate label on 22 of 24 pairs; both
 exceptions are borderline PushT pairs that improve by exactly four
