@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from paper1.scripts.build_cross_stressor_selective_transfer import build as build_p3
+from paper1.scripts.build_cross_stressor_ir_dr_comparison import build as build_p3
 from paper1.scripts.cross_task_selective_rule import run_all_subsets
 from paper1.scripts.utils_paper1_io import read_csv
 
@@ -55,13 +55,15 @@ def test_all_source_task_subsets_are_complete_and_directional() -> None:
         assert split["evaluation_rows"] == (4 - coverage) * 27
 
     assert params["diagnostic_fields"] == {
-        "atr": "horizon-v2 q90 relative to the no-augmentation checkpoint",
-        "smpr": "horizon-v2 q90 tube with strict normalized margin 0.10",
+        "ir_relative_q90": (
+            "horizon-v2 q90 IR relative to the no-augmentation checkpoint"
+        ),
+        "dr_delta010": "horizon-v2 q90 DR with strict normalized margin 0.10",
     }
     assert {
         (
-            split["selected_thresholds"]["tau_atr"],
-            split["selected_thresholds"]["tau_smpr"],
+            split["selected_thresholds"]["ir_threshold"],
+            split["selected_thresholds"]["dr_threshold"],
         )
         for split in params["splits"]
         if split["source_coverage"] == 3
@@ -109,9 +111,9 @@ def test_paper_facing_full_sweep_is_bound_to_canonical_v2_atr_smpr() -> None:
         "build_acpc_submission_assets.py",
     ):
         script = (ROOT / "paper1/scripts" / script_name).read_text(encoding="utf-8")
-        assert "smpr_delta010" in script
-        assert '"smpr_delta0"' not in script
-        assert "'smpr_delta0'" not in script
+        assert "to_ir_dr" in script
+        assert "smpr" not in script.lower()
+        assert "atr" not in script.lower()
 
 
 def test_three_source_thresholds_drive_cross_stressor_final_rule() -> None:
@@ -131,7 +133,7 @@ def test_three_source_thresholds_drive_cross_stressor_final_rule() -> None:
     assert summary["threshold_search_on_blur_or_resize"] is False
     assert set(summary["task_thresholds"]) == {"TwoRoom", "PushT", "Reacher", "Cube"}
     assert all(
-        thresholds == {"tau_atr": 0.3, "tau_smpr": 0.95}
+        thresholds == {"ir_threshold": 0.3, "dr_threshold": 0.95}
         for thresholds in summary["task_thresholds"].values()
     )
     assert summary["overall"]["balanced_accuracy"] == pytest.approx(8 / 9)
@@ -139,7 +141,7 @@ def test_three_source_thresholds_drive_cross_stressor_final_rule() -> None:
     assert summary["overall"]["recall"] == pytest.approx(1.0)
     assert summary["overall"]["discordant_n"] == 2
     assert summary["overall"][
-        "spearman_delta_behavior_vs_delta_selective_score"
+        "spearman_delta_behavior_vs_delta_ir_dr_score"
     ] == pytest.approx(0.8352554297)
     assert summary["by_stressor"]["blur"]["balanced_accuracy"] == pytest.approx(0.875)
     assert summary["by_stressor"]["resize"]["balanced_accuracy"] == pytest.approx(0.9)
@@ -156,10 +158,10 @@ def test_three_source_thresholds_drive_cross_stressor_final_rule() -> None:
 
 def test_generated_cross_task_tables_use_reader_facing_labels() -> None:
     p2_table = (
-        ROOT / "paper1/tables/table_cross_task_atr_smpr_all_subsets_v1.tex"
+        ROOT / "paper1/tables/table_cross_task_ir_dr_all_subsets_v1.tex"
     ).read_text(encoding="utf-8")
     p3_table = (
-        ROOT / "paper1/tables/table_cross_stressor_selective_transfer_v1.tex"
+        ROOT / "paper1/tables/table_cross_stressor_ir_dr_summary_v1.tex"
     ).read_text(encoding="utf-8")
 
     assert "Selection tasks" in p2_table

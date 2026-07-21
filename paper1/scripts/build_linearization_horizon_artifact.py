@@ -19,6 +19,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+try:
+    from .ir_dr_compat import to_ir_dr
+except ImportError:  # Support the historical direct-script entry point.
+    from paper1.scripts.ir_dr_compat import to_ir_dr
 from tools import paper1_linearization_horizon_audit as audit
 from tools.paper1_jvp_hutchinson_sensitivity_audit import _git_commit, _jsonable, _write_csv
 
@@ -28,7 +32,7 @@ TASKS = ("TwoRoom", "PushT", "Reacher", "Cube")
 SEEDS = (3072, 3073, 3074)
 CHECKPOINT_TYPES = ("base", "onset", "endpoint")
 FROZEN_PROTOCOL = ROOT / "paper1/config/frozen_diagnostic_protocol_v1.json"
-SCHEMA_VERSION = "paper1-linearization-horizon-full-0.1"
+SCHEMA_VERSION = "paper1-linearization-horizon-ir-dr-0.1"
 
 
 def _require(condition: bool, message: str) -> None:
@@ -158,6 +162,7 @@ def summarize_calibration(
 
 
 def summarize_horizons(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    rows = to_ir_dr(rows)
     grouped: dict[tuple[str, str, int, float], list[float]] = defaultdict(list)
     for row in rows:
         grouped[
@@ -165,9 +170,9 @@ def summarize_horizons(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]
                 str(row["task"]),
                 str(row["checkpoint_type"]),
                 int(row["horizon"]),
-                float(row["atr_quantile"]),
+                float(row["ir_quantile"]),
             )
-        ].append(float(row["atr_horizon_v2"]))
+        ].append(float(row["ir_horizon_v2"]))
     output: list[dict[str, Any]] = []
     for task in TASKS:
         for horizon in audit.HORIZONS:
@@ -185,11 +190,11 @@ def summarize_horizons(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]
                     {
                         "task": task,
                         "horizon": horizon,
-                        "atr_quantile": quantile,
+                        "ir_quantile": quantile,
                         "n_training_seeds": len(SEEDS),
-                        "base_atr_median": base_median,
-                        "onset_atr_median": _median(onset),
-                        "endpoint_atr_median": endpoint_median,
+                        "base_ir_median": base_median,
+                        "onset_ir_median": _median(onset),
+                        "endpoint_ir_median": endpoint_median,
                         "endpoint_to_base_ratio": (
                             endpoint_median / base_median if base_median > 0 else math.nan
                         ),
@@ -216,7 +221,7 @@ def build_artifact(inputs: Sequence[Path]) -> dict[str, Any]:
     seen_checkpoints: set[tuple[str, int, str]] = set()
     for path in inputs:
         _require(path.is_file(), f"missing shard: {path}")
-        payload = _load(path)
+        payload = to_ir_dr(_load(path))
         metadata = payload.get("metadata", {})
         _require(metadata.get("schema_version") == audit.SCHEMA_VERSION, f"{path}: schema")
         _require(metadata.get("status") == "complete", f"{path}: incomplete")
@@ -298,7 +303,7 @@ def build_artifact(inputs: Sequence[Path]) -> dict[str, Any]:
     checkpoints.sort(key=key_fn)
     calibration_rows.sort(key=lambda row: (*key_fn(row), float(row["sigma"])))
     horizon_rows.sort(
-        key=lambda row: (*key_fn(row), int(row["horizon"]), float(row["atr_quantile"]))
+        key=lambda row: (*key_fn(row), int(row["horizon"]), float(row["ir_quantile"]))
     )
     probe_rows.sort(key=lambda row: (*key_fn(row), int(row["probe_index"])))
     calibration_summary = summarize_calibration(checkpoints, calibration_rows)
@@ -346,7 +351,7 @@ def build_artifact(inputs: Sequence[Path]) -> dict[str, Any]:
                 "horizon_weights": "uniform alpha_k=1/H applied as sqrt(alpha_k)",
                 "input_covariance": "raw pixel-space iid Gaussian mapped through ImageNet normalization",
                 "linearization_normalization": "none",
-                "atr_normalization": "per-anchor clean transition q50",
+                "ir_normalization": "per-anchor clean transition q50",
             },
             "limitations": [
                 "remainder order is a descriptive finite-draw log-log slope",
@@ -396,14 +401,15 @@ def write_calibration_table(path: Path, rows: Sequence[Mapping[str, Any]]) -> No
 
 
 def write_horizon_table(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
+    rows = to_ir_dr(rows)
     by = {
-        (str(row["task"]), int(row["horizon"]), float(row["atr_quantile"])): row
+        (str(row["task"]), int(row["horizon"]), float(row["ir_quantile"])): row
         for row in rows
     }
     lines = [
         r"\begin{table}[H]",
         r"\centering",
-        r"\caption{Horizon/quantile sensitivity at fixed pixel-noise $\sigma=0.08$. Each entry is the median endpoint/base horizon-v2 ATR ratio over three training seeds (lower is a larger endpoint reduction). Horizon and quantile effects are descriptive; they do not retune the frozen gate.}",
+        r"\caption{Horizon and quantile sensitivity of the IR reduction at fixed evaluation noise $\sigma=0.08$. Each entry is the median, over the three training runs, of the ratio between the IR of the checkpoint trained at the highest augmentation level ($\stdmax{}=0.08$) and that of the unaugmented checkpoint; lower means a larger reduction. These values are descriptive and do not retune any threshold.}",
         r"\label{tab:horizon-quantile-sensitivity}",
         r"\small",
         r"\setlength{\tabcolsep}{5pt}",
@@ -500,14 +506,14 @@ def plot_calibration(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, action="append", required=True)
-    parser.add_argument("--out-json", type=Path, default=ROOT / "paper1/results/linearization_horizon_sensitivity_v1.json")
-    parser.add_argument("--checkpoint-csv", type=Path, default=ROOT / "paper1/results/linearization_checkpoint_rows.csv")
-    parser.add_argument("--calibration-csv", type=Path, default=ROOT / "paper1/results/linearization_calibration_rows.csv")
-    parser.add_argument("--horizon-csv", type=Path, default=ROOT / "paper1/results/horizon_quantile_sensitivity_rows.csv")
-    parser.add_argument("--calibration-summary", type=Path, default=ROOT / "paper1/results/linearization_calibration_summary.csv")
-    parser.add_argument("--horizon-summary", type=Path, default=ROOT / "paper1/results/horizon_quantile_sensitivity_summary.csv")
+    parser.add_argument("--out-json", type=Path, default=ROOT / "paper1/results/linearization_horizon_sensitivity_ir_dr_v1.json")
+    parser.add_argument("--checkpoint-csv", type=Path, default=ROOT / "paper1/results/linearization_checkpoint_rows_ir_dr.csv")
+    parser.add_argument("--calibration-csv", type=Path, default=ROOT / "paper1/results/linearization_calibration_rows_ir_dr.csv")
+    parser.add_argument("--horizon-csv", type=Path, default=ROOT / "paper1/results/horizon_quantile_sensitivity_rows_ir_dr.csv")
+    parser.add_argument("--calibration-summary", type=Path, default=ROOT / "paper1/results/linearization_calibration_summary_ir_dr.csv")
+    parser.add_argument("--horizon-summary", type=Path, default=ROOT / "paper1/results/horizon_quantile_sensitivity_summary_ir_dr.csv")
     parser.add_argument("--calibration-table", type=Path, default=ROOT / "paper1/tables/table_linearization_calibration.tex")
-    parser.add_argument("--horizon-table", type=Path, default=ROOT / "paper1/tables/table_horizon_quantile_sensitivity.tex")
+    parser.add_argument("--horizon-table", type=Path, default=ROOT / "paper1/tables/table_horizon_quantile_sensitivity_ir_dr.tex")
     parser.add_argument("--figure", type=Path, default=ROOT / "assets/paper1_figs/fig_linearization_calibration.png")
     return parser
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply three-source Gaussian thresholds to the 24 LeWM blur/resize pairs."""
+"""Compare IR--DR score changes with blur/resize planning changes."""
 
 from __future__ import annotations
 
@@ -19,35 +19,36 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
+from .ir_dr_compat import to_ir_dr
 from .utils_paper1_io import ROOT, SEEDS, TASKS, write_csv
 
 
 DEFAULT_PAIRS = ROOT / "paper1/results/external_validation/cross_stressor_all_pairs.csv"
-DEFAULT_P2 = ROOT / "paper1/results/cross_task_atr_smpr_all_subsets_summary_v1.json"
-DEFAULT_ROWS = ROOT / "paper1/results/external_validation/cross_stressor_three_source_thresholds_v1.csv"
-DEFAULT_SUMMARY = ROOT / "paper1/results/external_validation/cross_stressor_three_source_thresholds_summary_v1.json"
-DEFAULT_TABLE = ROOT / "paper1/tables/table_cross_stressor_selective_transfer_v1.tex"
-DEFAULT_ALL_PAIRS = ROOT / "paper1/tables/table_cross_stressor_all_pairs_v1.tex"
-DEFAULT_FIGURE = ROOT / "assets/paper1_figs/fig_cross_stressor_selective_transfer_v1.pdf"
+DEFAULT_P2 = ROOT / "paper1/results/cross_task_ir_dr_all_subsets_summary_v1.json"
+DEFAULT_ROWS = ROOT / "paper1/results/external_validation/cross_stressor_three_source_ir_dr_v1.csv"
+DEFAULT_SUMMARY = ROOT / "paper1/results/external_validation/cross_stressor_three_source_ir_dr_v1.json"
+DEFAULT_TABLE = ROOT / "paper1/tables/table_cross_stressor_ir_dr_summary_v1.tex"
+DEFAULT_ALL_PAIRS = ROOT / "paper1/tables/table_cross_stressor_ir_dr_all_pairs_v1.tex"
+DEFAULT_FIGURE = ROOT / "assets/paper1_figs/fig_cross_stressor_ir_dr_comparison_v1.pdf"
 
 FIELDS = [
     "task",
     "training_seed",
     "stressor",
-    "tau_atr",
-    "tau_smpr",
+    "ir_threshold",
+    "dr_threshold",
     "base_stressed_score",
     "endpoint_stressed_score",
     "delta_behavior",
     "behavior_class",
     "observed_positive",
-    "base_atr_rel",
-    "endpoint_atr_rel",
-    "base_smpr",
-    "endpoint_smpr",
-    "base_selective_score",
-    "endpoint_selective_score",
-    "delta_selective_score",
+    "base_ir_relative",
+    "endpoint_ir_relative",
+    "base_dr",
+    "endpoint_dr",
+    "base_ir_dr_score",
+    "endpoint_ir_dr_score",
+    "delta_ir_dr_score",
     "predicted_positive",
     "discordance",
 ]
@@ -81,9 +82,14 @@ def _bool(value: Any) -> bool:
     return str(value).lower() in {"true", "1", "yes"}
 
 
-def _score(atr_rel: float, smpr: float, tau_atr: float, tau_smpr: float) -> float:
-    radius_margin = (tau_atr - atr_rel) / (abs(tau_atr) + 1e-12)
-    separation_margin = (smpr - tau_smpr) / (abs(tau_smpr) + 1e-12)
+def _score(
+    ir_relative: float,
+    dr: float,
+    ir_threshold: float,
+    dr_threshold: float,
+) -> float:
+    radius_margin = (ir_threshold - ir_relative) / (abs(ir_threshold) + 1e-12)
+    separation_margin = (dr - dr_threshold) / (abs(dr_threshold) + 1e-12)
     return min(radius_margin, separation_margin)
 
 
@@ -152,12 +158,12 @@ def _metrics(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "precision": precision,
         "recall": recall,
         "f1": f1,
-        "spearman_delta_behavior_vs_delta_selective_score": _spearman(
+        "spearman_delta_behavior_vs_delta_ir_dr_score": _spearman(
             [row["delta_behavior"] for row in rows],
-            [row["delta_selective_score"] for row in rows],
+            [row["delta_ir_dr_score"] for row in rows],
         ),
         "signed_order_agreement": sum(
-            (row["delta_behavior"] > 0) == (row["delta_selective_score"] > 0)
+            (row["delta_behavior"] > 0) == (row["delta_ir_dr_score"] > 0)
             for row in rows
         )
         / len(rows),
@@ -171,7 +177,10 @@ def _task_thresholds(p2_summary: dict[str, Any]) -> dict[str, tuple[float, float
         if item["source_coverage"] != 3 or len(item["evaluation_tasks"]) != 1:
             continue
         task = item["evaluation_tasks"][0]
-        thresholds[task] = (float(item["tau_atr"]), float(item["tau_smpr"]))
+        thresholds[task] = (
+            float(item["ir_threshold"]),
+            float(item["dr_threshold"]),
+        )
     if set(thresholds) != set(TASKS):
         raise ValueError(f"missing three-source thresholds: {sorted(set(TASKS) - set(thresholds))}")
     return thresholds
@@ -180,6 +189,8 @@ def _task_thresholds(p2_summary: dict[str, Any]) -> dict[str, tuple[float, float
 def build(
     pair_rows: list[dict[str, str]], p2_summary: dict[str, Any]
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    pair_rows = to_ir_dr(pair_rows)
+    p2_summary = to_ir_dr(p2_summary)
     lewm = [row for row in pair_rows if row["model_family"] == "LeWM"]
     if len(lewm) != 24:
         raise ValueError(f"expected 24 LeWM pairs, found {len(lewm)}")
@@ -195,17 +206,27 @@ def build(
     output: list[dict[str, Any]] = []
     for row in lewm:
         task = row["task"]
-        tau_atr, tau_smpr = thresholds[task]
-        base_atr = float(row["base_atr"])
-        endpoint_atr = float(row["endpoint_atr"])
-        if base_atr <= 0:
-            raise ValueError(f"{task}: non-positive cross-stressor ATR reference")
-        base_atr_rel = 1.0
-        endpoint_atr_rel = endpoint_atr / base_atr
-        base_smpr = float(row["base_smpr"])
-        endpoint_smpr = float(row["endpoint_smpr"])
-        base_score = _score(base_atr_rel, base_smpr, tau_atr, tau_smpr)
-        endpoint_score = _score(endpoint_atr_rel, endpoint_smpr, tau_atr, tau_smpr)
+        ir_threshold, dr_threshold = thresholds[task]
+        base_ir_raw = float(row["base_ir_raw"])
+        endpoint_ir_raw = float(row["endpoint_ir_raw"])
+        if base_ir_raw <= 0:
+            raise ValueError(f"{task}: non-positive cross-stressor IR reference")
+        base_ir_relative = 1.0
+        endpoint_ir_relative = endpoint_ir_raw / base_ir_raw
+        base_dr = float(row["base_dr"])
+        endpoint_dr = float(row["endpoint_dr"])
+        base_score = _score(
+            base_ir_relative,
+            base_dr,
+            ir_threshold,
+            dr_threshold,
+        )
+        endpoint_score = _score(
+            endpoint_ir_relative,
+            endpoint_dr,
+            ir_threshold,
+            dr_threshold,
+        )
         delta_score = endpoint_score - base_score
         observed_positive = _bool(row["positive_transfer_label"])
         predicted_positive = delta_score > 0
@@ -222,20 +243,20 @@ def build(
                 "task": task,
                 "training_seed": int(row["training_seed"]),
                 "stressor": row["stressor_family"],
-                "tau_atr": tau_atr,
-                "tau_smpr": tau_smpr,
+                "ir_threshold": ir_threshold,
+                "dr_threshold": dr_threshold,
                 "base_stressed_score": float(row["base_stressed_score"]),
                 "endpoint_stressed_score": float(row["endpoint_stressed_score"]),
                 "delta_behavior": float(row["delta_behavior"]),
                 "behavior_class": row["behavior_class"],
                 "observed_positive": observed_positive,
-                "base_atr_rel": base_atr_rel,
-                "endpoint_atr_rel": endpoint_atr_rel,
-                "base_smpr": base_smpr,
-                "endpoint_smpr": endpoint_smpr,
-                "base_selective_score": base_score,
-                "endpoint_selective_score": endpoint_score,
-                "delta_selective_score": delta_score,
+                "base_ir_relative": base_ir_relative,
+                "endpoint_ir_relative": endpoint_ir_relative,
+                "base_dr": base_dr,
+                "endpoint_dr": endpoint_dr,
+                "base_ir_dr_score": base_score,
+                "endpoint_ir_dr_score": endpoint_score,
+                "delta_ir_dr_score": delta_score,
                 "predicted_positive": predicted_positive,
                 "discordance": discordance,
             }
@@ -251,12 +272,12 @@ def build(
         for task in TASKS
     }
     summary = {
-        "schema_version": "paper1-cross-stressor-selective-transfer-1.0",
+        "schema_version": "paper1-cross-stressor-ir-dr-comparison-1.0",
         "threshold_source": "three Gaussian source tasks for each evaluation task",
         "threshold_search_on_blur_or_resize": False,
         "training_seeds": SEEDS,
         "task_thresholds": {
-            task: {"tau_atr": value[0], "tau_smpr": value[1]}
+            task: {"ir_threshold": value[0], "dr_threshold": value[1]}
             for task, value in thresholds.items()
         },
         "overall": _metrics(output),
@@ -284,8 +305,8 @@ def write_summary_table(summary: dict[str, Any], out: Path) -> None:
     lines = [
         r"\begin{table}[t]",
         r"\centering",
-        r"\caption{Transfer of the Gaussian-calibrated selective score to blur and resize. For each task, thresholds are selected on the other three Gaussian-noise tasks and fixed; each pair compares the $\stdmax{}=0.08$ checkpoint with its unaugmented counterpart. ``Discordant'' counts pairs whose score-change sign disagrees with the observed success-rate label (\Cref{sec:exp-cross-stressor}).}",
-        r"\label{tab:cross-stressor-selective-transfer}",
+        r"\caption{IR--DR scores under blur and resize. For each task, thresholds are chosen on the other three Gaussian-noise tasks and then fixed; each pair compares the $\stdmax{}=0.08$ checkpoint with its unaugmented counterpart. ``Discordant'' counts pairs whose score-change sign disagrees with the predefined success criterion (\Cref{sec:exp-cross-stressor}).}",
+        r"\label{tab:cross-stressor-ir-dr-summary}",
         r"\small",
         r"\setlength{\tabcolsep}{4pt}",
         r"\begin{tabular}{lrrrrr}",
@@ -297,7 +318,7 @@ def write_summary_table(summary: dict[str, Any], out: Path) -> None:
         lines.append(
             f"{label} & {metrics['n']} & {metrics['balanced_accuracy']:.3f} & "
             f"{metrics['precision']:.3f} / {metrics['recall']:.3f} & "
-            f"{metrics['spearman_delta_behavior_vs_delta_selective_score']:.3f} & "
+            f"{metrics['spearman_delta_behavior_vs_delta_ir_dr_score']:.3f} & "
             f"{metrics['discordant_n']} \\\\"
         )
     lines.extend([r"\bottomrule", r"\end{tabular}", r"\end{table}"])
@@ -309,13 +330,13 @@ def write_all_pairs_table(rows: list[dict[str, Any]], out: Path) -> None:
     lines = [
         r"\begin{table*}[t]",
         r"\centering",
-        r"\caption{All 24 LeWM checkpoint pairs evaluated under blur and resize. ATR$_{\rm rel}$ and SMPR are measured for the checkpoint trained with Gaussian augmentation ($\stdmax{}=0.08$); $\Delta P$ and $\Delta S$ are its success-rate and selective-score changes relative to the unaugmented checkpoint. A pair is positive when $\Delta P\geq5$ percentage points with at most a five-point clean loss. Daggers mark the two discordant pairs.}",
-        r"\label{tab:cross-stressor-all-pairs}",
+        r"\caption{All 24 LeWM checkpoint pairs evaluated under blur and resize. IR$_{\rm rel}$ and DR are measured for the checkpoint trained with Gaussian-noise augmentation ($\stdmax{}=0.08$); $\Delta P$ and $\Delta S$ are its success-rate and IR--DR score changes relative to the unaugmented checkpoint. A pair is positive when $\Delta P\geq5$ percentage points with at most a five-point clean loss. Daggers mark the two discordant pairs.}",
+        r"\label{tab:cross-stressor-ir-dr-all-pairs}",
         r"\footnotesize",
         r"\setlength{\tabcolsep}{3pt}",
         r"\begin{tabular}{lrlrrrrrl}",
         r"\toprule",
-        r"Task & Seed & Shift & ATR$_{\rm rel}$ & SMPR & $\Delta P$ & $\Delta S$ & Outcome (success / score) \\",
+        r"Task & Seed & Shift & IR$_{\rm rel}$ & DR & $\Delta P$ & $\Delta S$ & Outcome (success / IR--DR) \\",
         r"\midrule",
     ]
     labels = {
@@ -327,8 +348,8 @@ def write_all_pairs_table(rows: list[dict[str, Any]], out: Path) -> None:
     for row in rows:
         lines.append(
             f"{row['task']} & {row['training_seed']} & {row['stressor']} & "
-            f"{row['endpoint_atr_rel']:.3f} & {row['endpoint_smpr']:.3f} & "
-            f"{row['delta_behavior']:.1f} & {row['delta_selective_score']:.3f} & "
+            f"{row['endpoint_ir_relative']:.3f} & {row['endpoint_dr']:.3f} & "
+            f"{row['delta_behavior']:.1f} & {row['delta_ir_dr_score']:.3f} & "
             f"{labels[row['discordance']]}"
             + ("$^\\dag$" if row["discordance"].startswith("false_") else "")
             + r" \\"
@@ -341,7 +362,7 @@ def write_all_pairs_table(rows: list[dict[str, Any]], out: Path) -> None:
 def plot(rows: list[dict[str, Any]], out: Path) -> None:
     """Two aligned descriptive rows per task and shift, averaged over the
     three training runs: the observed success change under the shift (top)
-    and the calibrated-score change (bottom). No thresholds or verdicts are
+    and the IR--DR score change (bottom). No thresholds or verdicts are
     drawn; per-pair values are in the appendix table."""
     out.parent.mkdir(parents=True, exist_ok=True)
     stressor_colors = {"blur": "#4477AA", "resize": "#EE6677"}
@@ -374,7 +395,7 @@ def plot(rows: list[dict[str, Any]], out: Path) -> None:
                 bar_stressors.append(stressor)
                 behavior_means.append(mean(row["delta_behavior"] for row in cell))
                 score_means.append(
-                    mean(row["delta_selective_score"] for row in cell)
+                    mean(row["delta_ir_dr_score"] for row in cell)
                 )
 
         for position, stressor, behavior, score in zip(
@@ -417,7 +438,7 @@ def plot(rows: list[dict[str, Any]], out: Path) -> None:
 
         score_ax.axhline(0.0, color="#333333", linewidth=0.9, zorder=3)
         score_ax.set_ylim(min(score_means) - 0.4, max(score_means) + 0.9)
-        score_ax.set_ylabel("Calibrated-score\nchange $\\Delta S$")
+        score_ax.set_ylabel("IR--DR score\nchange $\\Delta S$")
         score_ax.set_title("(b) Diagnostic gain", loc="left", fontweight="semibold")
 
         for axis in (behavior_ax, score_ax):
@@ -451,7 +472,7 @@ def plot(rows: list[dict[str, Any]], out: Path) -> None:
                 handletextpad=0.5,
                 borderaxespad=0.2,
             )
-        fig.tight_layout(pad=0.65)
+        fig.subplots_adjust(left=0.10, right=0.99, bottom=0.18, top=0.86, wspace=0.30)
         fig.savefig(out)
         plt.close(fig)
 
@@ -468,7 +489,8 @@ def main() -> int:
     args = parser.parse_args()
 
     p2_summary = json.loads(args.p2_summary.read_text(encoding="utf-8"))
-    rows, summary = build(_read_csv(args.pairs), p2_summary)
+    pair_rows = _read_csv(args.pairs)
+    rows, summary = build(pair_rows, p2_summary)
     write_csv(args.rows_out, rows, FIELDS)
     args.summary_out.parent.mkdir(parents=True, exist_ok=True)
     args.summary_out.write_text(

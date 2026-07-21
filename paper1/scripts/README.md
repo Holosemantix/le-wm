@@ -12,21 +12,26 @@ complete LeWM and PLDM Gaussian sweeps, the planner summary, and the 24-pair
 LeWM stressor file:
 
 ```bash
+python -m paper1.scripts.plot_acpc_ir_dr_overview
 python -m paper1.scripts.build_future_drift_reader_display
 python -m paper1.scripts.cross_task_selective_rule
-python -m paper1.scripts.build_cross_stressor_selective_transfer
+python -m paper1.scripts.build_cross_stressor_ir_dr_comparison
 python -m paper1.scripts.build_acpc_submission_assets
 bash paper1/build.sh
 ```
 
-The first three commands rebuild the future-drift display, all 14 LeWM
-cross-task threshold partitions, and the final-score-only blur/resize transfer
-analysis. The fourth writes the vector planner-evidence figure,
+The first command rebuilds Figure 1 from the committed, hash-recorded PushT
+input frames. The next three rebuild the future-drift display, all 14 LeWM
+cross-task threshold partitions, and the IR--DR blur/resize comparison
+analysis. `build_acpc_submission_assets` writes the vector planner-evidence figure,
 compact planner/full-sweep tables, and the PLDM architecture-portability
 table. Its PLDM inputs are the complete 36-row frozen sweep at
-`paper1/results/external_validation/pldm_frozen_rows_v2.csv`; the score-aligned
+`paper1/results/external_validation/pldm_frozen_rows_v2.csv`; the IR--DR
 comparison also reads the current LeWM cross-task threshold summary. These
 steps perform no model evaluation or training.
+If the source PushT H5 is available, regenerate the three Figure 1 inputs and
+their metadata first with
+`python -m paper1.scripts.build_acpc_overview_inputs --h5 /path/to/pusht_expert_train.h5`.
 The planner input is the
 three-seed v4 summary: 24 validated seed-3074 reference shards under
 `paper1/results/acpc_planner_stability_v2/` plus 48 exact-protocol replication

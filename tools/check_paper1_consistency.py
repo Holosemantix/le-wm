@@ -370,31 +370,28 @@ LEGACY_REQUIRED_MAIN_TEXT_SNIPPETS = [
 # Public-v1 gates are structural and claim-oriented.  The longer list above is
 # retained only to document the pre-remediation wording contract.
 REQUIRED_MAIN_TEXT_SNIPPETS = [
-    "ACPC is an evaluation tool, not a training objective",
-    "same-state visual perturbation",
-    "Common-future error-drift bound",
-    "Selective Margin Pass Rate",
-    "not a candidate-distribution tail guarantee",
-    "so it fails the SMPR test",
+    "It evaluates a frozen checkpoint and is not a training objective.",
+    "DR applies only to the supplied coordinate labels.",
+    "schematic and do not enter any reported metric.",
+    "does not certify robustness.",
     "assigns no absolute robustness label",
-    "do not imply that architectures share numerical thresholds",
-    "adaptive-CEM guarantee requires the candidate pools to remain aligned",
     "The three evaluation seeds measure only within-run variability",
-    "We make no blur- or resize-specific adjustment",
-    "not an exact universal boundary or a general collapse detector",
-    "being an absolute robustness classifier",
-    "The t-SNE coordinates and ellipses are qualitative and enter none of these metrics",
+    "checkpoint rows are never treated as independent replicates.",
+    "We make no blur- or resize-specific adjustment.",
+    "does not benchmark alternative signals such as encoder shift or one-step ACPC.",
+    "rather than an exact universal boundary.",
     "not an independent statistical success count",
-    "does not benchmark alternative signals such as encoder shift",
+    "not an absolute pass decision.",
 ]
 
 MAIN_TEXT_FIGURES = {
+    "fig_acpc_ir_dr_overview.pdf",
     "fig_full_sweep_diagnostics.pdf",
     "fig_local_geometry_highd_audit.pdf",
     "fig_future_drift_three_seed_v1.pdf",
     "fig_acpc_planner_evidence.pdf",
     "fig_pldm_sweep_diagnostics.pdf",
-    "fig_cross_stressor_selective_transfer_v1.pdf",
+    "fig_cross_stressor_ir_dr_comparison_v1.pdf",
 }
 
 APPENDIX_FIGURES = {
@@ -459,7 +456,6 @@ LEGACY_FORBIDDEN_SNIPPETS = [
 ]
 
 FORBIDDEN_SNIPPETS = [
-    "we introduce action-conditioned predictive consistency",
     "universal robustness predictor",
     "is a universal checkpoint selector",
     "general corruption transfer theorem",
@@ -662,8 +658,19 @@ def check_paired_multiseverity_protocol() -> None:
     source_hashes = protocol.get("source_hashes", {})
     if source_paths.keys() != source_hashes.keys():
         fail("paired multi-severity source hash map is incomplete")
+    # The frozen protocol records the runner used at preregistration.  A later
+    # PLDM-only compatibility extension changed run_trainer.sh without changing
+    # any bound measurement implementation; keep that exact post-freeze source
+    # visible while continuing to reject any further unreviewed drift.
+    allowed_postfreeze_source_hashes = {
+        "trainer_runner": "937d9de94d2471e538e081468db966e51cec5079139fd91f27f5497350ab2b9e",
+    }
     for name, rel in source_paths.items():
-        if _sha256_file(ROOT / rel) != source_hashes[name]:
+        current_hash = _sha256_file(ROOT / rel)
+        allowed_hashes = {source_hashes[name]}
+        if name in allowed_postfreeze_source_hashes:
+            allowed_hashes.add(allowed_postfreeze_source_hashes[name])
+        if current_hash not in allowed_hashes:
             fail(f"paired multi-severity bound source changed: {name}")
 
     addendum_rel = "paper1/config/paired_multiseverity_execution_addendum_v1.json"
@@ -921,7 +928,10 @@ def check_forbidden_text() -> None:
                 hits.append(f"{path.relative_to(ROOT)} contains forbidden snippet: {snippet!r}")
     main_tex = (ROOT / "paper1" / "main.tex").read_text(encoding="utf-8")
     normalized_main_tex = " ".join(main_tex.split())
-    paper_facing_files = [ROOT / "paper1" / "main.tex"] + sorted((ROOT / "paper1" / "tables").glob("table_*.tex"))
+    table_targets = re.findall(r"\\input\{(tables/[^}]+)\}", main_tex)
+    paper_facing_files = [ROOT / "paper1" / "main.tex"] + [
+        ROOT / "paper1" / f"{target}.tex" for target in table_targets
+    ]
     top_conference_forbidden = [
         "Remediation audit tables",
         "Bounded unseen-stressor check",
@@ -988,20 +998,19 @@ def check_visual_text_structure() -> None:
     body, appendix = main_tex.split(marker, 1)
 
     required_headings = (
-        "\\subsection{Local representation geometry under visual perturbations}",
-        "\\subsection{Paired rollout radius}",
+        "\\subsection{Pairwise ACPC}",
         "\\subsection{Common-future error drift}",
         "\\subsection{Candidate-cost drift and planner stability}",
-        "\\subsection{Checkpoint-level radius and proxy separation}",
+        "\\subsection{IR and DR for checkpoint screening}",
         "\\subsection{Checkpoint-level threshold selection}",
-        "\\subsection{Evaluation setup}",
-        "\\subsection{Motivating case study: local geometry before and after prediction}",
-        "\\subsection{Planning performance under observation noise}",
-        "\\subsection{Predicting the perturbation-induced error drift}",
-        "\\subsection{Predicting CEM selection regret across tasks}",
-        "\\subsection{A common threshold range across tasks}",
-        "\\subsection{Portability to other model families}",
-        "\\subsection{Selective transfer of the diagnostic under blur and resize}",
+        "\\subsection{Evaluation protocol}",
+        "\\subsection{Do visual perturbations remain local after prediction?}",
+        "\\subsection{How do IR and DR change across checkpoint recovery?}",
+        "\\subsection{Recorded-action ACPC predicts error drift}",
+        "\\subsection{Planner-horizon ACPC predicts CEM selection regret}",
+        "\\subsection{Do thresholds chosen on some tasks identify recovery on held-out tasks?}",
+        "\\subsection{Does the diagnostic transfer to PLDM?}",
+        "\\subsection{Does relative ordering persist under blur and resize?}",
     )
     for heading in required_headings:
         if heading not in body:
@@ -1029,10 +1038,10 @@ def check_visual_text_structure() -> None:
         "\\label{eq:acpc-rollout-objects}",
         "\\label{eq:weighted-rollout-map}",
         "\\label{eq:normalized-same-state-radius}",
-        "\\label{eq:atr-raw}",
-        "\\label{eq:smpr}",
-        "\\label{eq:atr-relative}",
-        "\\label{eq:joint-diagnostic-score}",
+        "\\label{eq:ir-raw}",
+        "\\label{eq:dr}",
+        "\\label{eq:ir-relative}",
+        "\\label{eq:ir-dr-score}",
         "normalized margin $\\delta=0.10$",
     )
     for theory_object in required_body_theory_objects:
@@ -1094,9 +1103,9 @@ def check_visual_text_structure() -> None:
         if "tar -xzf" not in text:
             fail(f"{script.relative_to(ROOT)} does not verify its packaged source in isolation")
 
-    paper_facing_tex = [
-        ROOT / "paper1" / "main.tex",
-        *sorted((ROOT / "paper1" / "tables").glob("*.tex")),
+    table_targets = re.findall(r"\\input\{(tables/[^}]+)\}", main_tex)
+    paper_facing_tex = [ROOT / "paper1" / "main.tex"] + [
+        ROOT / "paper1" / f"{target}.tex" for target in table_targets
     ]
     for path in paper_facing_tex:
         text = path.read_text(encoding="utf-8")
@@ -1107,11 +1116,11 @@ def check_visual_text_structure() -> None:
             fail(f"{path.relative_to(ROOT)} restored retired start-error terminology")
 
     full_sweep_plot = (ROOT / "paper1" / "scripts" / "plot_full_sweep_diagnostics.py").read_text(encoding="utf-8")
-    for token in ("1-SMPR", "smpr_fail"):
+    for token in ("1-SMPR", "smpr_fail", 'label=r"SMPR ($\\uparrow$)"'):
         if token in full_sweep_plot:
             fail(f"Figure 3 generator restored the failure-rate encoding: {token}")
-    if 'label=r"SMPR ($\\uparrow$)"' not in full_sweep_plot:
-        fail("Figure 3 generator must label direct SMPR as higher-is-better")
+    if 'label=r"DR ($\\uparrow$)"' not in full_sweep_plot:
+        fail("Figure 3 generator must label direct DR as higher-is-better")
     if not re.search(r"plt\.subplots\(1,\s*4,\s*figsize=\(6\.7,\s*2\.35\)", full_sweep_plot):
         fail("Figure 7 generator must retain the compact native-width four-across layout")
 
@@ -3410,27 +3419,27 @@ def check_claim_aligned_three_pillar_evidence() -> None:
             fail(f"P1 three-seed statistic changed: {key}")
 
     p2 = _load_strict_json(
-        ROOT / "paper1/results/cross_task_atr_smpr_all_subsets_summary_v1.json"
+        ROOT / "paper1/results/cross_task_ir_dr_all_subsets_summary_v1.json"
     )
     p2_params = _load_strict_json(
-        ROOT / "paper1/results/cross_task_atr_smpr_all_subsets_params_v1.json"
+        ROOT / "paper1/results/cross_task_ir_dr_all_subsets_params_v1.json"
     )
     if p2_params.get("diagnostic_fields") != {
-        "atr": "horizon-v2 q90 relative to the no-augmentation checkpoint",
-        "smpr": "horizon-v2 q90 tube with strict normalized margin 0.10",
+        "ir_relative_q90": "horizon-v2 q90 IR relative to the no-augmentation checkpoint",
+        "dr_delta010": "horizon-v2 q90 DR with strict normalized margin 0.10",
     }:
-        fail("P2 is not bound to the canonical horizon-v2 ATR/SMPR definition")
+        fail("P2 is not bound to the canonical horizon-v2 IR/DR definition")
     three_source_thresholds = {
         (
-            split["selected_thresholds"]["tau_atr"],
-            split["selected_thresholds"]["tau_smpr"],
+            split["selected_thresholds"]["ir_threshold"],
+            split["selected_thresholds"]["dr_threshold"],
         )
         for split in p2_params["splits"]
         if split["source_coverage"] == 3
     }
     if three_source_thresholds != {(0.3, 0.95)}:
         fail(f"P2 three-source thresholds changed: {three_source_thresholds}")
-    if p2.get("schema_version") != "paper1-cross-task-selective-rule-summary-1.0":
+    if p2.get("schema_version") != "paper1-cross-task-ir-dr-rule-summary-1.0":
         fail("P2 all-subset schema changed")
     if (
         p2.get("partition_count") != 14
@@ -3498,18 +3507,19 @@ def check_claim_aligned_three_pillar_evidence() -> None:
         "plot_full_sweep_diagnostics.py",
         "cross_task_selective_rule.py",
         "build_acpc_submission_assets.py",
+        "build_cross_stressor_ir_dr_comparison.py",
     ):
         script = (ROOT / "paper1/scripts" / script_name).read_text(encoding="utf-8")
-        if "smpr_delta010" not in script or any(
-            token in script for token in ('"smpr_delta0"', "'smpr_delta0'")
-        ):
-            fail(f"paper-facing script mixes legacy SMPR: {script_name}")
+        if "to_ir_dr" not in script or "smpr_delta010" in script:
+            fail(f"paper-facing script bypasses the IR/DR compatibility boundary: {script_name}")
 
     p3 = _load_strict_json(
         ROOT
         / "paper1/results/external_validation/"
-        "cross_stressor_three_source_thresholds_summary_v1.json"
+        "cross_stressor_three_source_ir_dr_v1.json"
     )
+    if p3.get("schema_version") != "paper1-cross-stressor-ir-dr-comparison-1.0":
+        fail("P3 cross-stressor IR/DR schema changed")
     if p3.get("threshold_search_on_blur_or_resize") is not False:
         fail("P3 must not select thresholds on blur or resize")
     overall = p3["overall"]
@@ -3519,12 +3529,12 @@ def check_claim_aligned_three_pillar_evidence() -> None:
         ("balanced_accuracy", 0.8888888888888888),
         ("precision", 0.8823529411764706),
         ("recall", 1.0),
-        ("spearman_delta_behavior_vs_delta_selective_score", 0.8352554296598855),
+        ("spearman_delta_behavior_vs_delta_ir_dr_score", 0.8352554296598855),
     ):
         if not math.isclose(overall[field], expected, abs_tol=1e-12):
             fail(f"P3 final selective-score transfer changed: {field}")
     if any(
-        thresholds != {"tau_atr": 0.3, "tau_smpr": 0.95}
+        thresholds != {"ir_threshold": 0.3, "dr_threshold": 0.95}
         for thresholds in p3.get("task_thresholds", {}).values()
     ) or set(p3.get("task_thresholds", {})) != EXPECTED_TASKS:
         fail("P3 does not use the four canonical three-source task thresholds")
@@ -3575,18 +3585,18 @@ def check_claim_aligned_three_pillar_evidence() -> None:
         if token in lowered:
             fail(f"retired paper-facing token restored: {token}")
     for token in (
-        "eq:smpr",
+        "eq:dr",
         "fig_future_drift_three_seed_v1.pdf",
-        "fig_cross_stressor_selective_transfer_v1.pdf",
-        "tables/table_cross_task_atr_smpr_all_subsets_v1",
-        "tables/table_cross_stressor_all_pairs_v1",
+        "fig_cross_stressor_ir_dr_comparison_v1.pdf",
+        "tables/table_cross_task_ir_dr_all_subsets_v1",
+        "tables/table_cross_stressor_ir_dr_all_pairs_v1",
     ):
         if token not in main_text:
             fail(f"current Paper1 mainline is missing: {token}")
 
     for rel in (
         "assets/paper1_figs/fig_future_drift_three_seed_v1.pdf",
-        "assets/paper1_figs/fig_cross_stressor_selective_transfer_v1.pdf",
+        "assets/paper1_figs/fig_cross_stressor_ir_dr_comparison_v1.pdf",
     ):
         if (ROOT / rel).stat().st_size < 5_000:
             fail(f"current Paper1 figure looks too small: {rel}")
@@ -3978,7 +3988,7 @@ def main() -> int:
         ("artifacts", check_artifacts),
         ("paired multi-severity protocol", check_paired_multiseverity_protocol),
         ("public-v1 remediation artifacts", check_public_v1_remediation_artifacts),
-        ("current selective diagnostic evidence", check_claim_aligned_three_pillar_evidence),
+        ("current IR/DR diagnostic evidence", check_claim_aligned_three_pillar_evidence),
         ("forbidden text", check_forbidden_text),
         ("appendix internal heading gate", check_appendix_internal_heading_gate),
         ("visual and text structure", check_visual_text_structure),

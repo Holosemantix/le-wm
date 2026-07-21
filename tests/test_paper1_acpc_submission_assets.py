@@ -55,17 +55,17 @@ def test_pldm_table_uses_the_current_task_relative_protocol() -> None:
         rows = list(csv.DictReader(stream))
     cross_task = json.loads(
         (
-            ROOT / "paper1/results/cross_task_atr_smpr_all_subsets_summary_v1.json"
+            ROOT / "paper1/results/cross_task_ir_dr_all_subsets_summary_v1.json"
         ).read_text(encoding="utf-8")
     )
 
     table = build_pldm_table(rows, cross_task)
-    assert "leave-task-out screen in two model families" in table
+    assert "leave-task-out IR--DR screen in two model families" in table
     assert "TwoRoom & 0.935 & 0.938" in table
     assert "PushT & 0.917 & 0.750" in table
     assert "Reacher & 0.889 & 0.500" in table
     assert "Cube & 0.858 & 0.875" in table
-    assert "within-task ATR normalization yields identical PLDM decisions" in table
+    assert "within-task IR normalization yields identical PLDM decisions" in table
 
 
 def test_submission_full_sweep_table_keeps_all_tasks_and_nine_levels() -> None:
@@ -86,3 +86,4 @@ def test_submission_full_sweep_table_keeps_all_tasks_and_nine_levels() -> None:
     assert "PushT & 7.2 & 86.8" in table
     assert "Reacher & 18.2 & 83.3" in table
     assert "Cube & 43.1 & 66.0" in table
+    assert "Relative IR & DR" in table

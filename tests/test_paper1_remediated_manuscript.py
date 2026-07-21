@@ -101,7 +101,7 @@ def test_main_text_uses_reader_facing_data_flow_language() -> None:
     assert "produce $4+6+4=14$ directional" in normalized
     assert "the one-, two-, and three-task selection settings" in normalized
     assert "action-conditioned predictive consistency" in lowered
-    assert "checkpoint-level radius and proxy separation" in lowered
+    assert "ir and dr for checkpoint screening" in lowered
     assert "checkpoint-level threshold selection" in lowered
 
 
@@ -110,10 +110,10 @@ def test_theory_section_contains_the_complete_radius_margin_chain() -> None:
     body = text.split(r"\section{Experiments}", 1)[0]
 
     headings = (
-        r"\subsection{Paired rollout radius}",
+        r"\subsection{Pairwise ACPC}",
         r"\subsection{Common-future error drift}",
         r"\subsection{Candidate-cost drift and planner stability}",
-        r"\subsection{Checkpoint-level radius and proxy separation}",
+        r"\subsection{IR and DR for checkpoint screening}",
         r"\subsection{Checkpoint-level threshold selection}",
     )
     assert [body.index(heading) for heading in headings] == sorted(
@@ -124,18 +124,18 @@ def test_theory_section_contains_the_complete_radius_margin_chain() -> None:
         r"\label{eq:acpc-rollout-objects}",
         r"\label{eq:weighted-rollout-map}",
         r"\label{eq:normalized-same-state-radius}",
-        r"\label{eq:atr-raw}",
-        r"\label{eq:different-state-distance}",
-        r"\label{eq:smpr}",
-        r"\label{eq:atr-relative}",
-        r"\label{eq:joint-diagnostic-score}",
+        r"\label{eq:ir-raw}",
+        r"\label{eq:dr}",
+        r"\label{eq:ir-relative}",
+        r"\label{eq:ir-dr-score}",
     ):
         assert label in body
 
-    assert r"\mathrm{ATR}^{\mathrm{raw}}_q(\theta)+\delta" in body
-    assert "q35 of all off-diagonal Euclidean distances" in body
+    assert r"\mathrm{IR}^{\mathrm{raw}}_q(\theta)+\delta" in body
     assert "normalized margin $\\delta=0.10$" in body
-    assert "SMPR is the fraction of tested pairs with different proxy labels" in body
+    assert "DR is the fraction of tested different-label pairs" in body
+    assert r"\label{eq:different-state-distance}" in text
+    assert "q35 of all off-diagonal Euclidean distances" in text
     assert r"\begin{proposition}" in body
     assert r"\begin{theorem}" not in body
     assert "thm:" not in body
@@ -167,10 +167,10 @@ def test_smpr_proxy_descriptions_match_the_executed_coordinate_slices() -> None:
 
 def test_referenced_cross_stressor_outputs_contain_only_final_rule() -> None:
     summary_table = (
-        ROOT / "paper1/tables/table_cross_stressor_selective_transfer_v1.tex"
+        ROOT / "paper1/tables/table_cross_stressor_ir_dr_summary_v1.tex"
     ).read_text()
     all_pairs_table = (
-        ROOT / "paper1/tables/table_cross_stressor_all_pairs_v1.tex"
+        ROOT / "paper1/tables/table_cross_stressor_ir_dr_all_pairs_v1.tex"
     ).read_text()
     combined = summary_table + all_pairs_table
     for excluded in (

@@ -61,8 +61,8 @@ def test_horizon_summary_uses_training_seed_medians_and_endpoint_base_ratio():
                                 "checkpoint_type": checkpoint_type,
                                 "training_seed": seed,
                                 "horizon": horizon,
-                                "atr_quantile": quantile,
-                                "atr_horizon_v2": value + (seed - 3073) * 0.1,
+                                "ir_quantile": quantile,
+                                "ir_horizon_v2": value + (seed - 3073) * 0.1,
                             }
                         )
 
@@ -70,8 +70,8 @@ def test_horizon_summary_uses_training_seed_medians_and_endpoint_base_ratio():
 
     assert len(summary) == 4 * 4 * 3
     first = summary[0]
-    assert first["base_atr_median"] == pytest.approx(2.0)
-    assert first["endpoint_atr_median"] == pytest.approx(0.5)
+    assert first["base_ir_median"] == pytest.approx(2.0)
+    assert first["endpoint_ir_median"] == pytest.approx(0.5)
     assert first["endpoint_to_base_ratio"] == pytest.approx(0.25)
 
 
