@@ -112,9 +112,10 @@ distinctions that determine the appropriate action.
 Bisimulation makes the required selectivity precise: two observations should be
 treated as the same state only when their action-conditioned consequences
 agree. Following this intuition, we introduce Action-Conditioned Predictive
-Consistency (ACPC), a diagnostic that rolls a clean history and a visually
-perturbed view of it forward under the same actions and measures the
-divergence between the two predicted futures. We prove that this divergence
+Consistency (ACPC), a diagnostic that encodes a clean history and a visually
+perturbed view of it, rolls both representations forward under the same action
+sequence, and measures the divergence between their predicted futures. We
+prove that this divergence
 bounds the perturbation-induced change in multi-step prediction error and
 planner cost. At the checkpoint level, two complementary measures form a
 screen: the Invariance Radius captures how far views of the same state
