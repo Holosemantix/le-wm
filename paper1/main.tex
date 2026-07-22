@@ -119,7 +119,7 @@ prove that this divergence
 bounds the perturbation-induced change in multi-step prediction error and
 planner cost. At the checkpoint level, two complementary measures form a
 screen: the Invariance Radius captures how far views of the same state
-spread after prediction, and the Distinction Rate checks that different
+spread after prediction, and the Separation Rate checks that different
 states remain distinguishable. Experiments on four visual control tasks and
 two model families show that pairwise ACPC predicts these changes in
 practice and that the ACPC-based screen transfers to new tasks and visual
@@ -168,7 +168,7 @@ question: after applying the same actions, how far apart are the predicted
 futures of two views of the same history?
 
 Action-Conditioned Predictive Consistency (ACPC) answers this question, as
-summarized in \Cref{fig:acpc-ir-dr-overview}. ACPC encodes a clean history
+summarized in \Cref{fig:acpc-ir-sr-overview}. ACPC encodes a clean history
 and a visually perturbed view of that history, rolls both forward under one
 action sequence, and measures the distance between their multi-step
 predictions. It evaluates a frozen checkpoint and is not a training
@@ -178,37 +178,39 @@ A low ACPC value is not sufficient: a constant representation would make
 every paired rollout identical. We therefore summarize each checkpoint with
 two complementary measures. The \emph{Invariance Radius} (IR) is a high
 quantile of normalized ACPC over logged histories; lower is better. The
-\emph{Distinction Rate} (DR) is the fraction of nearby pairs with different
+\emph{Separation Rate} (SR) is the fraction of nearby pairs with different
 state-coordinate labels whose rollout distance exceeds raw IR by a fixed
-margin; higher is better. DR applies only to the supplied coordinate labels.
+margin; higher is better. SR applies only to the supplied coordinate labels.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{fig_acpc_ir_dr_overview.pdf}
+\includegraphics[width=\linewidth]{fig_acpc_ir_sr_overview.pdf}
 \caption{\textbf{Overview of the Action-Conditioned Predictive Consistency
 (ACPC) diagnostic.}
 \textbf{(a)}~Inputs are logged PushT observations: a clean history, a
 Gaussian-perturbed view of the same history, and a nearby history with a
 different task state, shown for illustration and not necessarily the
-neighbor selected by the DR protocol. Stacked outlines indicate additional
+neighbor selected by the SR protocol. Stacked outlines indicate additional
 logged histories.
 \textbf{(b)}~Schematic latent-space comparison of a fragile (top) and a
 robust (bottom) checkpoint. The frozen encoder embeds each input, and both
-branches are rolled out for $H$ steps under the shared action sequence
-$\mathbf a_i$; ACPC measures the distance between the clean and perturbed
-predicted trajectories. Under the fragile checkpoint, the
+branches are rolled out for $H$ steps under anchor $i$'s shared recorded
+action sequence $\mathbf a_i=(a_{i,0},\ldots,a_{i,H-1})$; ACPC measures the
+distance between the clean and perturbed predicted trajectories. Under the
+fragile checkpoint, the
 perturbation-induced spread grows during the rollout and overlaps other
 states; under the robust checkpoint, the paired views remain close while
-different states remain separated. Positions and neighborhoods are
-schematic and do not enter any reported metric.
+different states remain separated. Each panel uses an independent schematic
+2-D layout; only within-panel proximity is meaningful. Positions and
+neighborhoods are schematic and do not enter any reported metric.
 \textbf{(c)}~Checkpoint-level summary of each row. The Invariance Radius
 (IR) aggregates normalized ACPC over perturbation draws and anchors and is
-reported relative to the unaugmented checkpoint; the Distinction Rate (DR)
+reported relative to the unaugmented checkpoint; the Separation Rate (SR)
 is the fraction of selected different-label pairs whose rollout distance
 exceeds the raw IR by a fixed margin. A checkpoint passes the screen only
-if relative IR is low and DR is high; passing is specific to the evaluated
+if relative IR is low and SR is high; passing is specific to the evaluated
 visual shift and state-coordinate labels and does not certify robustness.}
-\label{fig:acpc-ir-dr-overview}
+\label{fig:acpc-ir-sr-overview}
 \end{figure}
 
 ACPC also connects this measurement to downstream quantities. When a logged
@@ -233,7 +235,7 @@ MAE than the strongest same-horizon destroyed-action control
 (\Cref{sec:exp-target-aligned}). Planner-horizon ACPC improves cross-task
 prediction of CEM selection regret by $15.2\pm2.0\%$, with an improvement in
 all 12 task--run evaluations (\Cref{sec:exp-planner}). At the checkpoint
-level, a joint IR--DR rule selected on two or three tasks places the first
+level, a joint IR--SR rule selected on two or three tasks places the first
 accepted checkpoint within one augmentation level of recovery on the
 remaining tasks
 (\Cref{sec:exp-frozen-external}). Under blur and resize, the
@@ -247,7 +249,7 @@ The contributions are:
   \item \textbf{A paired-rollout diagnostic}
   (\Cref{sec:acpc}). ACPC measures how a state-preserving visual
   change affects a frozen model's prediction under fixed actions; IR
-  summarizes same-history sensitivity, and DR checks that selected
+  summarizes same-history sensitivity, and SR checks that selected
   state-coordinate distinctions remain separated.
   \item \textbf{Exact links to prediction and planning quantities}
   (\Cref{prop:target-free-error-drift,prop:exact-cost-certificate}).
@@ -256,7 +258,7 @@ The contributions are:
   cost.
   \item \textbf{Evaluation across tasks, shifts, and model families}
   (\Cref{sec:exp}). We compare pair-level ACPC with same-horizon controls
-  whose action information is removed, choose joint IR--DR thresholds on
+  whose action information is removed, choose joint IR--SR thresholds on
   source tasks and evaluate them on held-out tasks, and report
   fixed-severity checks under blur, resize, and PLDM.
 \end{enumerate}
@@ -379,7 +381,7 @@ They do not certify the complete ranking, policy actions, or return.
 
 Together, these lines of work motivate a paired, planner-facing audit of a
 frozen model. ACPC measures the rollout change, IR summarizes upper-tail
-same-history sensitivity, and DR checks separation on protocol-selected
+same-history sensitivity, and SR checks separation on protocol-selected
 pairs with different logged state-coordinate labels.
 
 \section{Action-Conditioned Predictive Consistency as a Diagnostic}\label{sec:acpc}
@@ -392,9 +394,9 @@ histories. It is descriptive because learned-space neighbors follow their own
 recorded actions and endpoint views omit intermediate predictions. Pairwise
 ACPC instead holds the actions fixed throughout a clean--perturbed rollout and
 yields exact bounds on prediction-error and candidate-cost changes. Finally,
-IR summarizes same-history sensitivity across logged histories, while DR
+IR summarizes same-history sensitivity across logged histories, while SR
 checks that selected state-coordinate distinctions remain separated.
-\Cref{fig:acpc-ir-dr-overview} contrasts fragile and robust checkpoints
+\Cref{fig:acpc-ir-sr-overview} contrasts fragile and robust checkpoints
 through the paired rollout and the two summaries. All three analyses are
 post-hoc measurements of a frozen model; none requires retraining.
 
@@ -566,7 +568,7 @@ iteration whose elite condition fails, and it concerns candidate selection
 and model cost, not simulator return. Formal statements and proofs are in
 Appendix~\ref{sec:appendix-acpc-proofs}.
 
-\subsection{IR and DR for checkpoint screening}\label{sec:acpc-ir-dr}
+\subsection{IR and SR for checkpoint screening}\label{sec:acpc-ir-sr}
 
 The bounds above evaluate individual history pairs and planner candidates.
 Checkpoint screening instead requires a summary over many logged histories,
@@ -576,13 +578,15 @@ excessively contracted representation can make every paired rollout look
 stable. We therefore ask two questions, mirroring the two sides of
 bisimulation-style equivalence (\Cref{sec:related}). The \emph{Invariance Radius} (IR)
 measures upper-tail same-history sensitivity under the chosen visual shift.
-The \emph{Distinction Rate} (DR) checks how often nearby histories with
+The \emph{Separation Rate} (SR) checks how often nearby histories with
 different state-coordinate labels remain farther apart than IR plus a fixed
-margin. Lower IR and higher DR are favorable, and a checkpoint must satisfy
+margin. Lower IR and higher SR are favorable, and a checkpoint must satisfy
 both.
 
 Evaluation uses a fixed set of \emph{anchors}. Each anchor consists of one
 logged history window, its $H$-step observed future, and its recorded actions.
+For anchor $i$, denote its length-$H$ recorded action sequence by
+$\mathbf a_i=(a_{i,0},\ldots,a_{i,H-1})$.
 We first normalize ACPC separately for each anchor and then aggregate across
 anchors. Throughout this
 section, $Q_q$ denotes the empirical $q$-quantile, $n$ is the number of
@@ -618,15 +622,15 @@ $H\in\{1,2,4,8\}$ and quantiles q80--q95
 (\Cref{tab:horizon-quantile-sensitivity}). This summary does not guarantee
 the tail behavior of planner candidates.
 
-For each eligible anchor, DR selects the nearest history inside a fixed
-standardized-state neighborhood whose logged future differs in selected
-task-state coordinates. Both histories are rolled forward under the anchor's
+To compute SR, the protocol selects, for each eligible anchor, the nearest
+history inside a fixed standardized-state neighborhood whose logged future
+differs in selected task-state coordinates. Both histories are rolled forward under the anchor's
 actions, so action differences cannot create the measured separation. The
 same clean-motion normalization used by IR puts the two distances on a common
 scale. Let $D_i^{\mathrm{diff}}$ be this normalized trajectory distance
-(\Cref{eq:different-state-distance}, \Cref{sec:appendix-A}). DR is
+(\Cref{eq:different-state-distance}, \Cref{sec:appendix-A}). SR is
 \begin{equation}
-\mathrm{DR}_{q,\delta}(\theta)
+\mathrm{SR}_{q,\delta}(\theta)
 =
 \frac{1}{|\mathcal I|}
 \sum_{i\in\mathcal I}
@@ -635,25 +639,25 @@ D_i^{\mathrm{diff}}
 >
 \mathrm{IR}^{\mathrm{raw}}_q(\theta)+\delta
 \right],
-\label{eq:dr}
+\label{eq:sr}
 \end{equation}
 where $\mathcal I$ contains anchors with an eligible neighbor carrying a
 different label.
 The reported protocol fixes $q=0.90$ and normalized margin $\delta=0.10$.
-DR is the fraction of tested different-label pairs whose rollout distance
+SR is the fraction of tested different-label pairs whose rollout distance
 exceeds IR by more than this margin.
 
 A constant representation makes both IR and every
-$D_i^{\mathrm{diff}}$ zero, so it fails DR. Conversely, a checkpoint can
-separate the tested labels while remaining visually sensitive, so DR alone
-does not replace IR. DR is limited to the state-coordinate labels used to
+$D_i^{\mathrm{diff}}$ zero, so it fails SR. Conversely, a checkpoint can
+separate the tested labels while remaining visually sensitive, so SR alone
+does not replace IR. SR is limited to the state-coordinate labels used to
 construct these pairs.
 Appendix~\ref{sec:appendix-A} gives the exact pairing rules and eligible-pair
 counts.
 
 \subsection{Checkpoint-level threshold selection}\label{sec:checkpoint-threshold-selection}
 
-Raw IR in \Cref{eq:ir-raw} is the reference used inside DR. Because raw
+Raw IR in \Cref{eq:ir-raw} is the reference used inside SR. Because raw
 scales differ across tasks, checkpoint comparisons use relative IR. Let
 $\theta_0$ be the unaugmented checkpoint for the same task, training run, and
 model family. Its raw IR is strictly positive in
@@ -665,31 +669,31 @@ every evaluated setting, so the following ratio is well defined:
 {\mathrm{IR}^{\mathrm{raw}}_{q}(\theta_0)}.
 \label{eq:ir-relative}
 \end{equation}
-Raw IR remains in the DR definition; relative IR equals one for the
+Raw IR remains in the SR definition; relative IR equals one for the
 unaugmented reference. This normalization removes a common multiplicative
 scale factor but does not make raw distances comparable across tasks or model
 families.
 
 The checkpoint rule uses one threshold for each measure.
 For model family $\mathcal F$ and visual shift $\upsilon$ (e.g., Gaussian
-noise), let these thresholds be $t_I$ and $t_D$. Every quantity in
-the score is measured under the same shift. With a small constant
+noise), let these thresholds be $t_{\mathrm{IR}}$ and $t_{\mathrm{SR}}$.
+Every quantity in the score is measured under the same shift. With a small constant
 $\varepsilon_{\mathrm{score}}$ (value in \Cref{sec:appendix-A}), define
 \begin{equation}
 S_{\mathcal F,\upsilon}(\theta;\theta_0)
 =
 \min\!\left\{
-\frac{t_I-\widetilde{\mathrm{IR}}_{q}(\theta;\theta_0)}
-{|t_I|+\varepsilon_{\mathrm{score}}},
-\frac{\mathrm{DR}_{q,\delta}(\theta)-t_D}
-{|t_D|+\varepsilon_{\mathrm{score}}}
+\frac{t_{\mathrm{IR}}-\widetilde{\mathrm{IR}}_{q}(\theta;\theta_0)}
+{|t_{\mathrm{IR}}|+\varepsilon_{\mathrm{score}}},
+\frac{\mathrm{SR}_{q,\delta}(\theta)-t_{\mathrm{SR}}}
+{|t_{\mathrm{SR}}|+\varepsilon_{\mathrm{score}}}
 \right\}.
-\label{eq:ir-dr-score}
+\label{eq:ir-sr-score}
 \end{equation}
 The score satisfies $S\geq0$ exactly when both conditions pass: relative IR
-is at most $t_I$, and DR is at least $t_D$. Planning success on source tasks
-is used only to choose $t_I$ and $t_D$; success on held-out tasks is used only
-to evaluate the fixed rule. Thresholds are chosen separately for each model
+is at most $t_{\mathrm{IR}}$, and SR is at least $t_{\mathrm{SR}}$.
+Planning success on source tasks is used only to choose $t_{\mathrm{IR}}$ and
+$t_{\mathrm{SR}}$; success on held-out tasks is used only to evaluate the fixed rule. Thresholds are chosen separately for each model
 family. Once the thresholds are fixed, scoring a checkpoint uses no
 task-success label.
 
@@ -704,7 +708,7 @@ to either checkpoint.
 
 The pair-level experiments test the quantities linked by the two bounds
 (\Cref{sec:exp-target-aligned,sec:exp-planner}). The checkpoint experiments
-test whether the joint IR--DR rule identifies recovery across tasks, model
+test whether the joint IR--SR rule identifies recovery across tasks, model
 families, and visual shifts
 (\Cref{sec:exp-frozen-external,sec:exp-pldm-portability,sec:exp-cross-stressor}).
 This checkpoint-level result is an empirical screening claim, not a
@@ -715,7 +719,7 @@ consequence of the pairwise inequalities.
 We first state the evaluation protocol. A geometry case study and the full
 checkpoint sweep then establish the visual-sensitivity pattern. Next, we test
 pairwise ACPC against prediction-error drift and CEM selection regret.
-Finally, we evaluate the IR--DR rule on held-out tasks, PLDM, blur, and
+Finally, we evaluate the IR--SR rule on held-out tasks, PLDM, blur, and
 resize.
 
 \subsection{Evaluation protocol}\label{sec:bg}
@@ -757,9 +761,10 @@ IR uses 100 logged anchors, five Gaussian-noise draws at the
 evaluation severity $\sigma=0.08$ (blur and resize diagnostics instead apply
 the corresponding shift), eight predicted steps,
 uniform horizon weights, within-anchor draw averaging, and a q90 summary
-across anchors. For each anchor, DR finds a nearby history with a different
-endpoint-state label and checks whether the two rollouts remain farther apart
-than raw IR plus $0.10$. Appendix~\ref{sec:appendix-A} gives the exact pairing,
+across anchors. To compute SR, the protocol selects, for each anchor, a nearby
+history with a different endpoint-state label and checks whether the two
+rollouts remain farther apart than raw IR plus $0.10$.
+Appendix~\ref{sec:appendix-A} gives the exact pairing,
 normalization, and threshold rules. Checkpoint comparisons use relative IR
 from \Cref{eq:ir-relative}.
 
@@ -769,13 +774,13 @@ A checkpoint in the Gaussian-noise training sweep meets the
 recovers at least 80\% of the improvement from the unaugmented checkpoint to
 the best checkpoint at evaluation noise $\sigma=0.08$, while losing no more
 than five percentage points on clean observations. Both constants were fixed
-a priori. We select $(t_I,t_D)$ on every nonempty proper subset of the four
-tasks and apply the thresholds unchanged to the remaining tasks. The one-,
+a priori. We select $(t_{\mathrm{IR}},t_{\mathrm{SR}})$ on every nonempty proper
+subset of the four tasks and apply the thresholds unchanged to the remaining tasks. The one-,
 two-, and three-task selection settings produce $4+6+4=14$ directional
 threshold-selection/test partitions. Metrics first average training runs
 within each test task and then weight tasks equally; checkpoint rows are never
 treated as independent replicates. Success rates are used to select and
-evaluate thresholds, but they are not inputs to ACPC, IR, or DR.
+evaluate thresholds, but they are not inputs to ACPC, IR, or SR.
 
 For blur and resize, each task uses the thresholds selected under Gaussian
 noise on the other three tasks. We compare 24 checkpoint pairs (four tasks
@@ -842,7 +847,7 @@ after prediction.
 This case study shows that augmentation can contract perturbation-induced
 variation relative to nearby clean histories, including after prediction. It
 does not establish task-relevant separation or planning robustness. We
-therefore turn to checkpoint-level IR and DR and their
+therefore turn to checkpoint-level IR and SR and their
 relationship with planning performance across the complete augmentation
 sweep (\Cref{fig:full-sweep-diagnostics}).
 
@@ -851,17 +856,17 @@ sweep (\Cref{fig:full-sweep-diagnostics}).
 \includegraphics[width=\linewidth]{fig_full_sweep_diagnostics.pdf}
 \caption{Checkpoint-level planning performance and diagnostics across the
 complete Gaussian-noise training sweep. We report planning success rate at
-evaluation noise $\sigma=0.08$, relative IR, and DR. Points are across-run
+evaluation noise $\sigma=0.08$, relative IR, and SR. Points are across-run
 means; success-rate error bars span the three training runs, and
 success-rate axes are scaled per task. The dashed line is the clean success rate of the unaugmented
 checkpoint; the leftmost black point is that checkpoint evaluated at
 $\sigma=0.08$. Relative IR equals one there by construction. Lower IR and
-higher DR are favorable. Dotted lines mark $t_I=0.3$ and $t_D=0.95$
+higher SR are favorable. Dotted lines mark $t_{\mathrm{IR}}=0.3$ and $t_{\mathrm{SR}}=0.95$
 (\Cref{sec:exp-frozen-external}).}
 \label{fig:full-sweep-diagnostics}
 \end{figure}
 
-\subsection{How do IR and DR change across checkpoint recovery?}\label{sec:exp-gaussian-panel}
+\subsection{How do IR and SR change across checkpoint recovery?}\label{sec:exp-gaussian-panel}
 
 At evaluation noise $\sigma=0.08$, the unaugmented LeWM checkpoints lose
 $25.9\pm2.4$, $74.6\pm5.6$, $41.0\pm1.4$, and $22.1\pm2.8$ percentage points
@@ -869,7 +874,7 @@ in success rate on TwoRoom, PushT, Reacher, and Cube, respectively.
 Gaussian-noise augmentation recovers performance over a range of training
 levels whose location differs by task. \Cref{fig:full-sweep-diagnostics}
 compares success
-rate with IR and DR across the complete sweep.
+rate with IR and SR across the complete sweep.
 
 On Reacher, augmentation also raises clean success from $59.2\%$ to
 $76$--$82\%$. Its recovery under noisy evaluation therefore cannot be
@@ -877,16 +882,16 @@ attributed to robustness alone; the checkpoints also improve on clean
 observations.
 
 Every augmentation level that meets the success-rate criterion has lower IR
-and higher DR than its unaugmented reference, although neither measure is
+and higher SR than its unaugmented reference, although neither measure is
 monotone at every level. Across the 108 LeWM checkpoint rows, 77 pass the
-reported IR threshold $t_I=0.3$, and all 77 also pass $t_D=0.95$. Thus every
-accepted checkpoint combines reduced same-history sensitivity with retention
+reported IR threshold $t_{\mathrm{IR}}=0.3$, and all 77 also pass
+$t_{\mathrm{SR}}=0.95$. Thus every accepted checkpoint combines reduced same-history sensitivity with retention
 of the evaluated state-coordinate distinctions. The different-label distance
-medians are largely stable across augmentation levels, so the rise in DR
+medians are largely stable across augmentation levels, so the rise in SR
 mainly reflects contraction of the same-history radius rather than expansion
 of different-label distances.
 
-IR tracks the recovery region, while DR verifies that the sampled
+IR tracks the recovery region, while SR verifies that the sampled
 state-coordinate distinctions remain outside the contracted radius. A
 first-order estimate of the composed encoder--rollout Jacobian offers one
 mechanism for the IR reduction
@@ -1041,8 +1046,8 @@ of \Cref{sec:bg}. We also count the grid steps between the first accepted
 checkpoint and the first checkpoint that meets that criterion.
 
 Across the 14 source/test splits, 13 choose
-$(t_I,t_D)=(0.3,0.95)$; only the Reacher-only split chooses
-$(0.1,0.95)$. With two or three source tasks, the first accepted checkpoint
+$(t_{\mathrm{IR}},t_{\mathrm{SR}})=(0.3,0.95)$; only the Reacher-only split
+chooses $(0.1,0.95)$. With two or three source tasks, the first accepted checkpoint
 is within $0.5$ grid steps of recovery on average and never differs by more
 than one step (balanced accuracy $0.900$, precision/recall
 $0.913/0.953$). Single-source selection is less reliable: balanced accuracy
@@ -1051,17 +1056,17 @@ the tighter IR threshold and delays acceptance on the other tasks by as many
 as five levels (\Cref{sec:appendix-cross-task}).
 
 The predominant rule accepts a checkpoint only when relative IR is at most
-$0.3$ and DR is at least $0.95$. IR limits same-history sensitivity, while
-DR requires the tested state-coordinate distinctions to remain separated.
+$0.3$ and SR is at least $0.95$. IR limits same-history sensitivity, while
+SR requires the tested state-coordinate distinctions to remain separated.
 Across the sweep, both measures improve over augmentation levels associated
-with recovery (\Cref{fig:full-sweep-diagnostics}). Because $t_I=0.3$ is the
+with recovery (\Cref{fig:full-sweep-diagnostics}). Because $t_{\mathrm{IR}}=0.3$ is the
 largest tested value, the upper edge of the useful range remains unresolved.
 \FloatBarrier
 
 \subsection{Does the diagnostic transfer to PLDM?}
 \label{sec:exp-pldm-portability}
 
-We apply the same ACPC, IR, and DR definitions to PLDM, which uses a
+We apply the same ACPC, IR, and SR definitions to PLDM, which uses a
 different architecture and training recipe. The experiment repeats the
 nine-checkpoint Gaussian-noise training sweep, paired histories, eight-step
 rollouts, success-rate criterion, and threshold-selection procedure. PLDM has one
@@ -1077,23 +1082,23 @@ Success-rate error bars span the three evaluation seeds of that run. The
 dashed gray line marks clean
 success of the unaugmented checkpoint, and the leftmost black point is its
 success at evaluation noise $\sigma=0.08$. Relative IR equals one at that
-checkpoint. Dotted lines mark $t_I=0.3$ and $t_D=0.95$. IR falls below its
-threshold near the recovery levels on TwoRoom, PushT, and Cube. On Reacher,
-relative IR remains above $t_I$, so no checkpoint passes the joint rule.}
+checkpoint. Dotted lines mark $t_{\mathrm{IR}}=0.3$ and
+$t_{\mathrm{SR}}=0.95$. IR falls below its threshold near the recovery levels on TwoRoom, PushT, and Cube. On Reacher,
+relative IR remains above $t_{\mathrm{IR}}$, so no checkpoint passes the joint rule.}
 \label{fig:pldm-sweep-diagnostics}
 \end{figure}
 
 All four leave-one-task-out selections choose
-$(t_I,t_D)=(0.3,0.95)$. Acceptance starts at
+$(t_{\mathrm{IR}},t_{\mathrm{SR}})=(0.3,0.95)$. Acceptance starts at
 the observed recovery level on PushT and Cube and one level later on TwoRoom.
 On Reacher, the best noisy score exceeds the unaugmented score by only
 $1.3$ points; one checkpoint meets the relative success criterion, while the
-joint IR--DR rule accepts none, giving balanced accuracy $0.5$. Pooled over all 36 PLDM
+joint IR--SR rule accepts none, giving balanced accuracy $0.5$. Pooled over all 36 PLDM
 rows, the rule obtains balanced accuracy $0.836$, precision $0.789$, and
 recall $0.882$.
 
-The accepted PLDM checkpoints have both low IR and high DR, matching the
-low-IR, high-DR pattern observed on LeWM. Applying the LeWM grid point after
+The accepted PLDM checkpoints have both low IR and high SR, matching the
+low-IR, high-SR pattern observed on LeWM. Applying the LeWM grid point after
 within-task PLDM normalization happens to give the same decisions, but this
 coincidence does not establish architecture-invariant thresholds. The result
 shows that the same two-part checkpoint rule can be applied to PLDM; one run
@@ -1104,23 +1109,23 @@ per setting limits the evidence.
 
 Blur ($k=15$) and resize (scale $0.25$) each provide one fixed-severity check
 outside the Gaussian-noise shift used for threshold selection. For each of the
-24 checkpoint pairs in \Cref{sec:bg}, we recompute IR and DR under the new shift
+24 checkpoint pairs in \Cref{sec:bg}, we recompute IR and SR under the new shift
 and compare the $\stdmax{}=0.08$ checkpoint with its unaugmented counterpart
 using $\Delta S$. A positive $\Delta S$ means that the augmented checkpoint
-gets a higher joint IR--DR score. This is a relative comparison, not an
+gets a higher joint IR--SR score. This is a relative comparison, not an
 absolute pass decision. No blur or resize outcome enters threshold selection.
 
 \begin{figure}[!htb]
 \centering
-\includegraphics[width=\linewidth]{fig_cross_stressor_ir_dr_comparison_v1.pdf}
+\includegraphics[width=\linewidth]{fig_cross_stressor_ir_sr_comparison_v2.pdf}
 \caption{Relative checkpoint comparison under blur and resize. Bars average
 the three training runs for each task and shift; per-pair values are in
-\Cref{tab:cross-stressor-ir-dr-all-pairs}. Panel (a) shows the change in planning
+\Cref{tab:cross-stressor-ir-sr-all-pairs}. Panel (a) shows the change in planning
 success from the unaugmented to the $\stdmax{}=0.08$ checkpoint. Panel (b)
-shows the change in the IR--DR score of
-\Cref{eq:ir-dr-score}; positive favors the augmented checkpoint
+shows the change in the IR--SR score of
+\Cref{eq:ir-sr-score}; positive favors the augmented checkpoint
 but is not an absolute pass decision.}
-\label{fig:cross-stressor-ir-dr-comparison}
+\label{fig:cross-stressor-ir-sr-comparison}
 \end{figure}
 
 The sign of $\Delta S$ agrees with whether the augmented checkpoint meets the
@@ -1150,8 +1155,8 @@ the predefined success criterion on 22 of 24 pairs.
 
 \paragraph{Why both measures are necessary.}
 IR alone rewards any contraction, including collapse or excessive
-invariance. DR guards against that failure by requiring selected histories
-with different state-coordinate labels to remain separated. Conversely, DR
+invariance. SR guards against that failure by requiring selected histories
+with different state-coordinate labels to remain separated. Conversely, SR
 alone does not require two views of the same history to agree. The two
 measures therefore answer different questions and must be used together.
 Their scope is limited to the tested visual changes and state-coordinate
@@ -1178,9 +1183,9 @@ ACPC measures how much a state-preserving visual change alters a world
 model's predicted trajectory when the actions are held fixed. Exact
 inequalities relate this change to prediction-error drift and planner
 candidate-cost movement. IR summarizes upper-tail same-history sensitivity,
-while DR checks that nearby histories with different state-coordinate labels
+while SR checks that nearby histories with different state-coordinate labels
 remain separated. In our experiments, recorded-action ACPC improves
-prediction of error drift and CEM selection regret, and joint IR--DR
+prediction of error drift and CEM selection regret, and joint IR--SR
 thresholds chosen on source tasks identify recovery on held-out tasks.
 Results on PLDM, blur, and resize provide initial evidence beyond the primary
 Gaussian-noise setting.
@@ -1396,7 +1401,7 @@ Gaussian-noise augmentation with $\stdmax{}\in\{0.01,\ldots,0.08\}$.
 \paragraph{PLDM protocol.}
 PLDM uses the same four tasks, nine-checkpoint Gaussian-noise training grid,
 evaluation seeds, trajectory count, paired-history construction, $H=8$ rollout
-statistic, and DR definition. For cross-task analysis, we divide raw IR by the
+statistic, and SR definition. For cross-task analysis, we divide raw IR by the
 value of the corresponding unaugmented PLDM checkpoint. We then select
 thresholds on the other three PLDM tasks. Success rates from the evaluation
 task never enter threshold selection. A second test applies the corresponding
@@ -1438,7 +1443,7 @@ default uses $H=8$ and uniform weights $\alpha_k=1/H$. We divide each radius by 
 anchor's q50 clean observed-transition scale, including the transition from
 the final history observation to the first future observation. We then
 average multiple noise draws within each anchor and take q90 across anchors.
-This gives raw IR in \Cref{eq:ir-raw}, which DR uses as its same-history
+This gives raw IR in \Cref{eq:ir-raw}, which SR uses as its same-history
 reference. For sweep plots and cross-task threshold selection within each model family, we
 divide raw IR by the corresponding unaugmented value as in
 \Cref{eq:ir-relative} before computing thresholds or run summaries. The
@@ -1446,18 +1451,18 @@ numerical stabilizers
 are $\varepsilon_{\mathrm{norm}}=10^{-8}$ in
 \Cref{eq:normalized-same-state-radius} and
 $\varepsilon_{\mathrm{score}}=10^{-12}$ in
-\Cref{eq:ir-dr-score}.
+\Cref{eq:ir-sr-score}.
 \Cref{tab:horizon-quantile-sensitivity} reports how the checkpoint-level IR
 reduction depends on the rollout horizon and the summary quantile.
 
-\input{tables/table_horizon_quantile_sensitivity_ir_dr}
+\input{tables/table_horizon_quantile_sensitivity_ir_sr_v2}
 
-\paragraph{DR protocol.}
-DR follows \Cref{eq:dr}. Let $d_{0.35}$ be
+\paragraph{SR protocol.}
+SR follows \Cref{eq:sr}. Let $d_{0.35}$ be
 the q35 of all off-diagonal Euclidean distances among the standardized
 endpoint states; this radius, well below the median pairwise distance, keeps
 every selected pair genuinely nearby in state space while leaving most
-anchors an eligible neighbor with a different label (\Cref{tab:dr-labels}
+anchors an eligible neighbor with a different label (\Cref{tab:sr-labels}
 reports the counts). Each eligible anchor chooses the nearest neighbor $j(i)$
 with a different label and distance at most $d_{0.35}$. The predictor rolls
 both clean histories under the anchor actions $\mathbf a_i$; for the
@@ -1476,7 +1481,7 @@ D_i^{\mathrm{diff}}
 The pair passes only if this distance is strictly greater than raw q90 IR
 plus $0.10$.
 
-\Cref{tab:dr-labels} makes the pairing rule explicit. The logged state is
+\Cref{tab:sr-labels} makes the pairing rule explicit. The logged state is
 taken at the end of the observed eight-step future and standardized
 coordinate-wise by the dataset preprocessor. The neighborhood radius is the
 $d_{0.35}$ defined above, computed in that task's full standardized state
@@ -1491,11 +1496,11 @@ and training runs.
 
 \begin{table}[t]
 \centering
-\caption{Implemented state-coordinate labels for DR. The state is taken at
+\caption{Implemented state-coordinate labels for SR. The state is taken at
 the eighth observed future step and standardized coordinate-wise with
 full-dataset statistics. Counts give eligible and skipped anchors in the fixed
 100-anchor evaluation; these labels are not semantic or action-relevance annotations.}
-\label{tab:dr-labels}
+\label{tab:sr-labels}
 \footnotesize
 \setlength{\tabcolsep}{3pt}
 \begin{tabularx}{\linewidth}{l l X r}
@@ -1512,12 +1517,12 @@ Cube & \code{observation} (28) & Three median bits from the first two coordinate
 
 \paragraph{Threshold grids.}
 For cross-task evaluation, candidate thresholds are
-$t_I\in\{0.05,0.075,0.10,0.15,0.20,0.30\}$ for task-relative IR and
-$t_D\in\{0.80,0.85,0.90,0.95\}$ for DR. Within each source-task subset,
+$t_{\mathrm{IR}}\in\{0.05,0.075,0.10,0.15,0.20,0.30\}$ for task-relative IR
+and $t_{\mathrm{SR}}\in\{0.80,0.85,0.90,0.95\}$ for SR. Within each source-task subset,
 selection minimizes, in order, mean absolute recovery-onset mismatch,
 false-early count, and false-late count. It then maximizes balanced accuracy,
-prefers smaller $t_I$, and finally prefers larger $t_D$. The selected pair is
-applied unchanged to every held-out task. No held-out-task label or
+prefers smaller $t_{\mathrm{IR}}$, and finally prefers larger
+$t_{\mathrm{SR}}$. The selected pair is applied unchanged to every held-out task. No held-out-task label or
 blur/resize outcome enters threshold selection.
 
 \paragraph{Reproducibility.}
@@ -1526,7 +1531,7 @@ summary figures and tables deterministically. Checkpoint-level diagnostics
 also require the released checkpoints and datasets. Machine-readable
 summaries record training seeds, evaluation seeds, and protocol hashes.
 
-\input{tables/table_full_sweep_compact_ir_dr}
+\input{tables/table_full_sweep_compact_ir_sr_v2}
 
 \section{Prediction-Error Scope and Controls}\label{sec:appendix-p1-controls}
 
@@ -1562,12 +1567,12 @@ independent observations.
 The single-source Reacher exception in \Cref{sec:exp-frozen-external} is a
 tie-break in fit: under $(0.3,0.95)$ Reacher's own onset mismatch is also at
 most one level, but calibrating on Reacher alone prefers the tighter
-$t_I=0.1$ that fits it exactly and does not carry over. Recovered Reacher
+$t_{\mathrm{IR}}=0.1$ that fits it exactly and does not carry over. Recovered Reacher
 checkpoints reach relative IR well below $0.1$, while the earliest recovered
 levels on the other tasks lie above it, so the tighter threshold rejects them
 and delays the accepted onset.
 
-\input{tables/table_cross_task_ir_dr_all_subsets_v1}
+\input{tables/table_cross_task_ir_sr_all_subsets_v2}
 
 On the PLDM sweep, the most visible single-run artifact is Reacher at
 $\stdmax{}=0.05$, where the clean and the noisy score drop together. The
@@ -1583,20 +1588,20 @@ balanced accuracies of the leave-task-out screen of
 PLDM decisions, balanced accuracy is $0.836$ with precision $0.789$ and
 recall $0.882$.
 
-\input{tables/table_pldm_architecture_portability_ir_dr}
+\input{tables/table_pldm_architecture_portability_ir_sr_v2}
 
 \section{Cross-Stressor Pairs and Discordant Cases}
 \label{sec:appendix-cross-stressor}
 
-\input{tables/table_cross_stressor_ir_dr_summary_v1}
+\input{tables/table_cross_stressor_ir_sr_summary_v2}
 
 Both discordant rows lie near the success-rate criterion: PushT run 3072 under
 resize and PushT run 3074 under blur each improve success rate by four
 percentage points, one point below the five-point criterion, while their
-IR--DR scores increase. The complete table shows these cases rather than
+IR--SR scores increase. The complete table shows these cases rather than
 only the aggregate classification metrics.
 
-\input{tables/table_cross_stressor_ir_dr_all_pairs_v1}
+\input{tables/table_cross_stressor_ir_sr_all_pairs_v2}
 
 \section{Local Sensitivity to Gaussian Noise as a Mechanistic Interpretation}
 \label{sec:appendix-local-sensitivity}

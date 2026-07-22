@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Merge 12 serial linearization/horizon shards and render paper artifacts."""
+"""Build the linearization/horizon artifact and render paper outputs.
+
+Fresh builds merge the 12 serial shards and validate their checkpoints.  A
+released aggregate can instead be migrated to the current IR/SR schema without
+reopening machine-specific checkpoint paths; this changes names and provenance
+metadata only, not recorded values.
+"""
 
 from __future__ import annotations
 
@@ -20,9 +26,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 try:
-    from .ir_dr_compat import to_ir_dr
+    from .ir_sr_compat import to_ir_sr
 except ImportError:  # Support the historical direct-script entry point.
-    from paper1.scripts.ir_dr_compat import to_ir_dr
+    from paper1.scripts.ir_sr_compat import to_ir_sr
 from tools import paper1_linearization_horizon_audit as audit
 from tools.paper1_jvp_hutchinson_sensitivity_audit import _git_commit, _jsonable, _write_csv
 
@@ -32,7 +38,7 @@ TASKS = ("TwoRoom", "PushT", "Reacher", "Cube")
 SEEDS = (3072, 3073, 3074)
 CHECKPOINT_TYPES = ("base", "onset", "endpoint")
 FROZEN_PROTOCOL = ROOT / "paper1/config/frozen_diagnostic_protocol_v1.json"
-SCHEMA_VERSION = "paper1-linearization-horizon-ir-dr-0.1"
+SCHEMA_VERSION = "paper1-linearization-horizon-ir-sr-0.2"
 
 
 def _require(condition: bool, message: str) -> None:
@@ -162,7 +168,7 @@ def summarize_calibration(
 
 
 def summarize_horizons(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
-    rows = to_ir_dr(rows)
+    rows = to_ir_sr(rows)
     grouped: dict[tuple[str, str, int, float], list[float]] = defaultdict(list)
     for row in rows:
         grouped[
@@ -221,7 +227,7 @@ def build_artifact(inputs: Sequence[Path]) -> dict[str, Any]:
     seen_checkpoints: set[tuple[str, int, str]] = set()
     for path in inputs:
         _require(path.is_file(), f"missing shard: {path}")
-        payload = to_ir_dr(_load(path))
+        payload = to_ir_sr(_load(path))
         metadata = payload.get("metadata", {})
         _require(metadata.get("schema_version") == audit.SCHEMA_VERSION, f"{path}: schema")
         _require(metadata.get("status") == "complete", f"{path}: incomplete")
@@ -401,7 +407,7 @@ def write_calibration_table(path: Path, rows: Sequence[Mapping[str, Any]]) -> No
 
 
 def write_horizon_table(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
-    rows = to_ir_dr(rows)
+    rows = to_ir_sr(rows)
     by = {
         (str(row["task"]), int(row["horizon"]), float(row["ir_quantile"])): row
         for row in rows
@@ -505,22 +511,40 @@ def plot_calibration(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, action="append", required=True)
-    parser.add_argument("--out-json", type=Path, default=ROOT / "paper1/results/linearization_horizon_sensitivity_ir_dr_v1.json")
-    parser.add_argument("--checkpoint-csv", type=Path, default=ROOT / "paper1/results/linearization_checkpoint_rows_ir_dr.csv")
-    parser.add_argument("--calibration-csv", type=Path, default=ROOT / "paper1/results/linearization_calibration_rows_ir_dr.csv")
-    parser.add_argument("--horizon-csv", type=Path, default=ROOT / "paper1/results/horizon_quantile_sensitivity_rows_ir_dr.csv")
-    parser.add_argument("--calibration-summary", type=Path, default=ROOT / "paper1/results/linearization_calibration_summary_ir_dr.csv")
-    parser.add_argument("--horizon-summary", type=Path, default=ROOT / "paper1/results/horizon_quantile_sensitivity_summary_ir_dr.csv")
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--input", type=Path, action="append")
+    source.add_argument(
+        "--legacy-artifact",
+        type=Path,
+        help="migrate a released aggregate to IR/SR without reopening checkpoints",
+    )
+    parser.add_argument("--out-json", type=Path, default=ROOT / "paper1/results/linearization_horizon_sensitivity_ir_sr_v2.json")
+    parser.add_argument("--checkpoint-csv", type=Path, default=ROOT / "paper1/results/linearization_checkpoint_rows_ir_sr_v2.csv")
+    parser.add_argument("--calibration-csv", type=Path, default=ROOT / "paper1/results/linearization_calibration_rows_ir_sr_v2.csv")
+    parser.add_argument("--horizon-csv", type=Path, default=ROOT / "paper1/results/horizon_quantile_sensitivity_rows_ir_sr_v2.csv")
+    parser.add_argument("--calibration-summary", type=Path, default=ROOT / "paper1/results/linearization_calibration_summary_ir_sr_v2.csv")
+    parser.add_argument("--horizon-summary", type=Path, default=ROOT / "paper1/results/horizon_quantile_sensitivity_summary_ir_sr_v2.csv")
     parser.add_argument("--calibration-table", type=Path, default=ROOT / "paper1/tables/table_linearization_calibration.tex")
-    parser.add_argument("--horizon-table", type=Path, default=ROOT / "paper1/tables/table_horizon_quantile_sensitivity_ir_dr.tex")
+    parser.add_argument("--horizon-table", type=Path, default=ROOT / "paper1/tables/table_horizon_quantile_sensitivity_ir_sr_v2.tex")
     parser.add_argument("--figure", type=Path, default=ROOT / "assets/paper1_figs/fig_linearization_calibration.png")
     return parser
 
 
 def main() -> int:
     args = build_parser().parse_args()
-    payload = build_artifact(args.input)
+    if args.legacy_artifact is None:
+        payload = build_artifact(args.input)
+    else:
+        legacy_payload = _load(args.legacy_artifact)
+        source_schema = legacy_payload.get("metadata", {}).get("schema_version")
+        payload = to_ir_sr(legacy_payload)
+        payload.setdefault("metadata", {})["schema_version"] = SCHEMA_VERSION
+        payload["metadata"]["schema_migration"] = {
+            "source": str(args.legacy_artifact),
+            "source_schema_version": source_schema,
+            "numeric_values_changed": False,
+            "description": "legacy diagnostic keys renamed to current IR/SR keys",
+        }
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
     args.out_json.write_text(
         json.dumps(_jsonable(payload), indent=2, sort_keys=True, allow_nan=False) + "\n",

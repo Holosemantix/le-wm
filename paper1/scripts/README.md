@@ -12,23 +12,42 @@ complete LeWM and PLDM Gaussian sweeps, the planner summary, and the 24-pair
 LeWM stressor file:
 
 ```bash
-python -m paper1.scripts.plot_acpc_ir_dr_overview
+python -m paper1.scripts.plot_acpc_ir_sr_overview
 python -m paper1.scripts.build_future_drift_reader_display
 python -m paper1.scripts.cross_task_selective_rule
-python -m paper1.scripts.build_cross_stressor_ir_dr_comparison
+python -m paper1.scripts.build_cross_stressor_ir_sr_comparison
 python -m paper1.scripts.build_acpc_submission_assets
 bash paper1/build.sh
 ```
 
 The first command rebuilds Figure 1 from the committed, hash-recorded PushT
 input frames. The next three rebuild the future-drift display, all 14 LeWM
-cross-task threshold partitions, and the IR--DR blur/resize comparison
+cross-task threshold partitions, and the IR--SR blur/resize comparison
 analysis. `build_acpc_submission_assets` writes the vector planner-evidence figure,
 compact planner/full-sweep tables, and the PLDM architecture-portability
 table. Its PLDM inputs are the complete 36-row frozen sweep at
-`paper1/results/external_validation/pldm_frozen_rows_v2.csv`; the IR--DR
+`paper1/results/external_validation/pldm_frozen_rows_v2.csv`; the IR--SR
 comparison also reads the current LeWM cross-task threshold summary. These
 steps perform no model evaluation or training.
+
+Reader-facing builders canonicalize diagnostic fields through
+`ir_sr_compat.py`. It maps both immutable ATR/SMPR fields and released IR/DR-v1
+fields into the current IR/SR schema without changing stored values. Equal
+duplicate aliases are accepted, but aliases with inconsistent values fail
+explicitly. The older `ir_dr_compat.py` entry point remains only for legacy-v1
+reproduction.
+
+The released linearization aggregate can be migrated to the same canonical
+schema without reopening its machine-specific checkpoint paths:
+
+```bash
+python -m paper1.scripts.build_linearization_horizon_artifact \
+  --legacy-artifact paper1/results/linearization_horizon_sensitivity_v1.json
+```
+
+This path records a schema-migration provenance block and leaves all measured
+values unchanged.
+
 If the source PushT H5 is available, regenerate the three Figure 1 inputs and
 their metadata first with
 `python -m paper1.scripts.build_acpc_overview_inputs --h5 /path/to/pusht_expert_train.h5`.

@@ -12,6 +12,28 @@ fail() {
   exit 1
 }
 
+PREVIOUS_LONG_NAME='Distinction'' Rate'
+RETIRED_LONG_NAME='Distinguishability'' Rate'
+CURRENT_LONG_NAME='Separation Rate'
+RETIRED_ABBREVIATION='D''R'
+
+contains_retired_abbreviation() {
+  grep -Eq "(^|[^[:alnum:]_])${RETIRED_ABBREVIATION}([^[:alnum:]_]|$)" "$1"
+}
+
+check_current_metric_source() {
+  local metric_source="$1"
+  [[ -f "$metric_source" ]] || fail "missing current metric source: $metric_source"
+  for retired_name in "$PREVIOUS_LONG_NAME" "$RETIRED_LONG_NAME"; do
+    if grep -Fq "$retired_name" "$metric_source"; then
+      fail "$metric_source contains retired metric name: $retired_name"
+    fi
+  done
+  if contains_retired_abbreviation "$metric_source"; then
+    fail "$metric_source contains the standalone retired metric abbreviation"
+  fi
+}
+
 rm -f main_blind.aux main_blind.bbl main_blind.blg main_blind.log \
       main_blind.out main_blind.toc main_blind.fdb_latexmk \
       main_blind.fls main_blind.synctex.gz main_blind.pdf
@@ -50,6 +72,11 @@ if grep -E -i "Anguo-star|github\.com|Author names to be supplied|Code and data 
   fail "blind PDF still contains self-identifying arXiv/source wording"
 fi
 
+check_current_metric_source "$PDF_TEXT"
+if ! grep -Fq "$CURRENT_LONG_NAME" "$PDF_TEXT"; then
+  fail "blind PDF is missing current metric name: $CURRENT_LONG_NAME"
+fi
+
 rm -rf /tmp/paper1_blind_src
 mkdir -p /tmp/paper1_blind_src/figures /tmp/paper1_blind_src/tables
 cp docs/main_blind.tex main.tex references.bib main_blind.bbl /tmp/paper1_blind_src/
@@ -58,6 +85,10 @@ python scripts/collect_tex_figures.py \
   --base-dir . \
   --out-dir /tmp/paper1_blind_src/figures \
   --table-out-dir /tmp/paper1_blind_src/tables
+
+while IFS= read -r -d '' metric_source; do
+  check_current_metric_source "$metric_source"
+done < <(find /tmp/paper1_blind_src -type f -name '*.tex' -print0)
 
 if grep -R -n -E -i --include='*.tex' "Anguo-star|github\.com|Author names to be supplied|Acknowledgements|public repository|LeWM authors" /tmp/paper1_blind_src; then
   fail "blind source bundle contains self-identifying arXiv/source wording"

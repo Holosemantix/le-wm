@@ -219,6 +219,12 @@ REQUIRED_ARTIFACTS = [
     ROOT / "paper1" / "scripts" / "run_all_paper1_diagnostics.sh",
     ROOT / "paper1" / "scripts" / "collect_tex_figures.py",
     ROOT / "paper1" / "scripts" / "README.md",
+    ROOT / "paper1" / "scripts" / "ir_sr_compat.py",
+    ROOT / "paper1" / "scripts" / "plot_acpc_ir_sr_overview.py",
+    ROOT / "paper1" / "scripts" / "cross_task_selective_rule.py",
+    ROOT / "paper1" / "scripts" / "build_acpc_submission_assets.py",
+    ROOT / "paper1" / "scripts" / "build_cross_stressor_ir_sr_comparison.py",
+    ROOT / "paper1" / "scripts" / "build_linearization_horizon_artifact.py",
     ROOT / "paper1" / "docs" / "codex_paper1_experiment_remediation_plan.md",
     ROOT / "paper1" / "docs" / "EXPERIMENT_REMEDIATION_STATUS_20260708.md",
     ROOT / "tools" / "paper1_radius_margin_certificate.py",
@@ -251,6 +257,44 @@ REQUIRED_ARTIFACTS = [
     ROOT / "paper1" / "tables" / "table_horizon_quantile_sensitivity.tex",
     ROOT / "paper1" / "tables" / "table_smpr_sensitivity.tex",
     ROOT / "paper1" / "tables" / "table_smpr_controls.tex",
+    # Current reader-facing IR/SR-v2 artifacts.  Frozen metric-v1 files remain
+    # immutable compatibility evidence, not current paper inputs.
+    ROOT / "paper1" / "results" / "cross_task_ir_sr_all_subsets_v2.csv",
+    ROOT / "paper1" / "results" / "cross_task_ir_sr_all_subsets_params_v2.json",
+    ROOT / "paper1" / "results" / "cross_task_ir_sr_all_subsets_summary_v2.json",
+    ROOT
+    / "paper1"
+    / "results"
+    / "external_validation"
+    / "cross_stressor_three_source_ir_sr_v2.csv",
+    ROOT
+    / "paper1"
+    / "results"
+    / "external_validation"
+    / "cross_stressor_three_source_ir_sr_v2.json",
+    ROOT / "paper1" / "results" / "linearization_horizon_sensitivity_ir_sr_v2.json",
+    ROOT / "paper1" / "tables" / "table_cross_task_ir_sr_all_subsets_v2.tex",
+    ROOT / "paper1" / "tables" / "table_cross_stressor_ir_sr_summary_v2.tex",
+    ROOT / "paper1" / "tables" / "table_cross_stressor_ir_sr_all_pairs_v2.tex",
+    ROOT / "paper1" / "tables" / "table_full_sweep_compact_ir_sr_v2.tex",
+    ROOT
+    / "paper1"
+    / "tables"
+    / "table_horizon_quantile_sensitivity_ir_sr_v2.tex",
+    ROOT
+    / "paper1"
+    / "tables"
+    / "table_pldm_architecture_portability_ir_sr_v2.tex",
+    ROOT / "assets" / "paper1_figs" / "fig_acpc_ir_sr_overview.pdf",
+    ROOT / "assets" / "paper1_figs" / "fig_acpc_ir_sr_overview.png",
+    ROOT
+    / "assets"
+    / "paper1_figs"
+    / "fig_cross_task_ir_sr_source_coverage_v2.pdf",
+    ROOT
+    / "assets"
+    / "paper1_figs"
+    / "fig_cross_stressor_ir_sr_comparison_v2.pdf",
     ROOT / "tools" / "paper1_linearization_horizon_audit.py",
     ROOT / "tests" / "test_paper1_linearization_horizon_audit.py",
     ROOT / "tests" / "test_paper1_cross_stressor_external_validation.py",
@@ -371,7 +415,7 @@ LEGACY_REQUIRED_MAIN_TEXT_SNIPPETS = [
 # retained only to document the pre-remediation wording contract.
 REQUIRED_MAIN_TEXT_SNIPPETS = [
     "It evaluates a frozen checkpoint and is not a training objective.",
-    "DR applies only to the supplied coordinate labels.",
+    "SR applies only to the supplied coordinate labels.",
     "schematic and do not enter any reported metric.",
     "does not certify robustness.",
     "assigns no absolute robustness label",
@@ -385,17 +429,28 @@ REQUIRED_MAIN_TEXT_SNIPPETS = [
 ]
 
 MAIN_TEXT_FIGURES = {
-    "fig_acpc_ir_dr_overview.pdf",
+    "fig_acpc_ir_sr_overview.pdf",
     "fig_full_sweep_diagnostics.pdf",
     "fig_local_geometry_highd_audit.pdf",
     "fig_future_drift_three_seed_v1.pdf",
     "fig_acpc_planner_evidence.pdf",
     "fig_pldm_sweep_diagnostics.pdf",
-    "fig_cross_stressor_ir_dr_comparison_v1.pdf",
+    "fig_cross_stressor_ir_sr_comparison_v2.pdf",
 }
 
 APPENDIX_FIGURES = {
     "fig_gaussian_sensitivity_main.png",
+}
+
+PAPER_TABLES = {
+    "tables/table_horizon_quantile_sensitivity_ir_sr_v2",
+    "tables/table_full_sweep_compact_ir_sr_v2",
+    "tables/table_target_aligned_acpc",
+    "tables/table_target_aligned_acpc_absolute",
+    "tables/table_cross_task_ir_sr_all_subsets_v2",
+    "tables/table_pldm_architecture_portability_ir_sr_v2",
+    "tables/table_cross_stressor_ir_sr_summary_v2",
+    "tables/table_cross_stressor_ir_sr_all_pairs_v2",
 }
 
 
@@ -515,6 +570,13 @@ PUBLIC_V1_ARTIFACT_HASHES = {
     "assets/paper1_data/smpr_controls_v2.json": "55a53c5e8036bcca2e8be82186bbad665531e1cefc7a5a5a8045c4313d68cdf2",
     "assets/paper1_data/smpr_oracle_guard_v2.json": "1224514237a958121e9e5a7d26515d98cf5c2bf59017c65060a17ba1ccd31203",
 }
+LEGACY_METRIC_V1_ARTIFACT_HASHES = {
+    "paper1/results/cross_task_ir_dr_all_subsets_v1.csv": "7d1d2120ad210b1a7e507426aa47498260ea52f213e0125cb69152f8279e2330",
+    "paper1/results/cross_task_ir_dr_all_subsets_params_v1.json": "280823ed9a92078889353ddbd31a0563e526c22f326c5aa63b66760d25c72c9e",
+    "paper1/results/cross_task_ir_dr_all_subsets_summary_v1.json": "ef7259c28286b61894fb5da71b0c0115bfd942f14e2213b375469eea187bf1f8",
+    "paper1/results/external_validation/cross_stressor_three_source_ir_dr_v1.csv": "7c5448c3d8af54de9b867c5fd2bade6b4bf7ca86c53e2bc7f16f3ba5ea5d0495",
+    "paper1/results/external_validation/cross_stressor_three_source_ir_dr_v1.json": "e58cc707201aa4a3769b51910256329b91ba4c71171c5ea298302b9b86bdfd55",
+}
 EXPECTED_BLUR_CONDITIONS = {
     f"{scope}_blur_ks{kernel}"
     for scope in ("pixels", "goal", "pixels_goal")
@@ -570,6 +632,61 @@ def _sha256_file(path: Path) -> str:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+_NO_NUMERIC_VALUE = object()
+
+
+def _legacy_metric_key_to_current(key: str) -> str:
+    """Map only the immutable v1 field spelling needed for equivalence checks."""
+
+    return "_".join("sr" if part == "dr" else part for part in key.split("_"))
+
+
+def _numeric_projection(value: object) -> object:
+    """Retain numeric structure while ignoring intentionally renamed prose."""
+
+    if isinstance(value, dict):
+        projected: dict[str, object] = {}
+        for key, item in value.items():
+            current_key = _legacy_metric_key_to_current(str(key))
+            current_item = _numeric_projection(item)
+            if current_item is _NO_NUMERIC_VALUE:
+                continue
+            if current_key in projected and projected[current_key] != current_item:
+                fail(f"legacy/current metric-key collision at {current_key!r}")
+            projected[current_key] = current_item
+        return projected
+    if isinstance(value, (list, tuple)):
+        projected_items = [_numeric_projection(item) for item in value]
+        return [item for item in projected_items if item is not _NO_NUMERIC_VALUE]
+    if value is None or isinstance(value, (bool, int, float)):
+        return value
+    return _NO_NUMERIC_VALUE
+
+
+def _assert_json_numeric_equivalence(
+    legacy_path: Path, current_path: Path, *, label: str
+) -> None:
+    legacy = _numeric_projection(_load_strict_json(legacy_path))
+    current = _numeric_projection(_load_strict_json(current_path))
+    if legacy != current:
+        fail(f"{label} numeric content changed during the v1-to-v2 terminology migration")
+
+
+def _assert_csv_value_equivalence(
+    legacy_path: Path, current_path: Path, *, label: str
+) -> None:
+    def canonical_rows(path: Path) -> list[dict[str, str]]:
+        with path.open(newline="", encoding="utf-8") as stream:
+            rows = list(csv.DictReader(stream))
+        return [
+            {_legacy_metric_key_to_current(key): value for key, value in row.items()}
+            for row in rows
+        ]
+
+    if canonical_rows(legacy_path) != canonical_rows(current_path):
+        fail(f"{label} row values changed during the v1-to-v2 terminology migration")
 
 
 def _load_strict_json(path: Path) -> dict:
@@ -927,11 +1044,83 @@ def check_forbidden_text() -> None:
             if snippet in text:
                 hits.append(f"{path.relative_to(ROOT)} contains forbidden snippet: {snippet!r}")
     main_tex = (ROOT / "paper1" / "main.tex").read_text(encoding="utf-8")
+    current_long_name = "Separation Rate"
+    retired_long_names = (
+        "Distinction" + " Rate",
+        "Distinguishability" + " Rate",
+    )
+    retired_abbreviation = "D" + "R"
+    retired_abbreviation_re = re.compile(
+        rf"(?<![A-Za-z0-9_]){re.escape(retired_abbreviation)}(?![A-Za-z0-9_])"
+    )
     normalized_main_tex = " ".join(main_tex.split())
     table_targets = re.findall(r"\\input\{(tables/[^}]+)\}", main_tex)
     paper_facing_files = [ROOT / "paper1" / "main.tex"] + [
         ROOT / "paper1" / f"{target}.tex" for target in table_targets
     ]
+    current_generator_files = [
+        ROOT / "paper1" / "scripts" / "plot_acpc_ir_sr_overview.py",
+        ROOT / "paper1" / "scripts" / "plot_full_sweep_diagnostics.py",
+        ROOT / "paper1" / "scripts" / "plot_pldm_sweep_diagnostics.py",
+        ROOT / "paper1" / "scripts" / "cross_task_selective_rule.py",
+        ROOT / "paper1" / "scripts" / "build_acpc_submission_assets.py",
+        ROOT / "paper1" / "scripts" / "build_cross_stressor_ir_sr_comparison.py",
+        ROOT / "paper1" / "scripts" / "build_linearization_horizon_artifact.py",
+    ]
+    for path in [*paper_facing_files, *current_generator_files]:
+        if not path.exists():
+            hits.append(f"missing current reader-facing source: {path.relative_to(ROOT)}")
+            continue
+        text = path.read_text(encoding="utf-8")
+        for retired_name in retired_long_names:
+            if retired_name in text:
+                hits.append(
+                    f"{path.relative_to(ROOT)} contains retired metric name: {retired_name!r}"
+                )
+        if retired_abbreviation_re.search(text):
+            hits.append(
+                f"{path.relative_to(ROOT)} contains standalone retired metric abbreviation"
+            )
+
+    for path in (
+        ROOT / "paper1" / "main.tex",
+        ROOT / "paper1" / "scripts" / "plot_acpc_ir_sr_overview.py",
+    ):
+        if path.exists() and current_long_name not in path.read_text(encoding="utf-8"):
+            hits.append(
+                f"{path.relative_to(ROOT)} is missing current metric name: {current_long_name!r}"
+            )
+
+    release_note = (ROOT / "paper1" / "arxiv_release_notes.tex").read_text(
+        encoding="utf-8"
+    )
+    historical_long_name = retired_long_names[1]
+    if release_note.count(historical_long_name) != 1:
+        hits.append(
+            "paper1/arxiv_release_notes.tex must contain exactly one explicit "
+            "historical long-name mapping"
+        )
+    if current_long_name not in release_note:
+        hits.append("paper1/arxiv_release_notes.tex is missing the current SR name")
+    if r"plot\_acpc\_ir\_sr\_overview.py" not in release_note:
+        hits.append("paper1/arxiv_release_notes.tex does not name the current Figure 1 generator")
+
+    retired_main_tokens = (
+        "fig:acpc-ir-dr-overview",
+        "fig:cross-stressor-ir-dr-comparison",
+        "sec:acpc-ir-dr",
+        "eq:dr",
+        "eq:ir-dr-score",
+        "tables/table_horizon_quantile_sensitivity_ir_dr",
+        "tables/table_full_sweep_compact_ir_dr",
+        "tables/table_pldm_architecture_portability_ir_dr",
+        "tables/table_cross_task_ir_dr_all_subsets_v1",
+        "tables/table_cross_stressor_ir_dr_summary_v1",
+        "tables/table_cross_stressor_ir_dr_all_pairs_v1",
+    )
+    for token in retired_main_tokens:
+        if token in main_tex:
+            hits.append(f"paper1/main.tex contains retired metric identifier: {token!r}")
     top_conference_forbidden = [
         "Remediation audit tables",
         "Bounded unseen-stressor check",
@@ -1001,11 +1190,11 @@ def check_visual_text_structure() -> None:
         "\\subsection{Pairwise ACPC}",
         "\\subsection{Common-future error drift}",
         "\\subsection{Candidate-cost drift and planner stability}",
-        "\\subsection{IR and DR for checkpoint screening}",
+        "\\subsection{IR and SR for checkpoint screening}",
         "\\subsection{Checkpoint-level threshold selection}",
         "\\subsection{Evaluation protocol}",
         "\\subsection{Do visual perturbations remain local after prediction?}",
-        "\\subsection{How do IR and DR change across checkpoint recovery?}",
+        "\\subsection{How do IR and SR change across checkpoint recovery?}",
         "\\subsection{Recorded-action ACPC predicts error drift}",
         "\\subsection{Planner-horizon ACPC predicts CEM selection regret}",
         "\\subsection{Do thresholds chosen on some tasks identify recovery on held-out tasks?}",
@@ -1038,10 +1227,14 @@ def check_visual_text_structure() -> None:
         "\\label{eq:acpc-rollout-objects}",
         "\\label{eq:weighted-rollout-map}",
         "\\label{eq:normalized-same-state-radius}",
+        "\\label{sec:acpc-ir-sr}",
         "\\label{eq:ir-raw}",
-        "\\label{eq:dr}",
+        "\\label{eq:sr}",
         "\\label{eq:ir-relative}",
-        "\\label{eq:ir-dr-score}",
+        "\\label{eq:ir-sr-score}",
+        "\\label{fig:acpc-ir-sr-overview}",
+        "\\label{fig:cross-stressor-ir-sr-comparison}",
+        "\\Cref{tab:cross-stressor-ir-sr-all-pairs}",
         "normalized margin $\\delta=0.10$",
     )
     for theory_object in required_body_theory_objects:
@@ -1053,6 +1246,7 @@ def check_visual_text_structure() -> None:
 
     required_appendix_protocol_objects = (
         "\\label{eq:different-state-distance}",
+        "\\label{tab:sr-labels}",
         "q35 of all off-diagonal Euclidean distances",
     )
     for protocol_object in required_appendix_protocol_objects:
@@ -1104,6 +1298,13 @@ def check_visual_text_structure() -> None:
             fail(f"{script.relative_to(ROOT)} does not verify its packaged source in isolation")
 
     table_targets = re.findall(r"\\input\{(tables/[^}]+)\}", main_tex)
+    if len(table_targets) != len(set(table_targets)):
+        fail(f"Paper1 contains duplicate table targets: {table_targets}")
+    if set(table_targets) != PAPER_TABLES:
+        fail(
+            "Paper1 table set changed: "
+            f"got {sorted(table_targets)}, want {sorted(PAPER_TABLES)}"
+        )
     paper_facing_tex = [ROOT / "paper1" / "main.tex"] + [
         ROOT / "paper1" / f"{target}.tex" for target in table_targets
     ]
@@ -1115,12 +1316,25 @@ def check_visual_text_structure() -> None:
         if re.search(r"\bstart(?:-boundary)? error\b", text, flags=re.IGNORECASE):
             fail(f"{path.relative_to(ROOT)} restored retired start-error terminology")
 
+    required_table_labels = {
+        "tables/table_cross_stressor_ir_sr_summary_v2": (
+            r"\label{tab:cross-stressor-ir-sr-summary}"
+        ),
+        "tables/table_cross_stressor_ir_sr_all_pairs_v2": (
+            r"\label{tab:cross-stressor-ir-sr-all-pairs}"
+        ),
+    }
+    for target, label in required_table_labels.items():
+        table_text = (ROOT / "paper1" / f"{target}.tex").read_text(encoding="utf-8")
+        if label not in table_text:
+            fail(f"{target}.tex is missing current table label: {label}")
+
     full_sweep_plot = (ROOT / "paper1" / "scripts" / "plot_full_sweep_diagnostics.py").read_text(encoding="utf-8")
     for token in ("1-SMPR", "smpr_fail", 'label=r"SMPR ($\\uparrow$)"'):
         if token in full_sweep_plot:
             fail(f"Figure 3 generator restored the failure-rate encoding: {token}")
-    if 'label=r"DR ($\\uparrow$)"' not in full_sweep_plot:
-        fail("Figure 3 generator must label direct DR as higher-is-better")
+    if 'label=r"SR ($\\uparrow$)"' not in full_sweep_plot:
+        fail("Figure 3 generator must label direct SR as higher-is-better")
     if not re.search(r"plt\.subplots\(1,\s*4,\s*figsize=\(6\.7,\s*2\.35\)", full_sweep_plot):
         fail("Figure 7 generator must retain the compact native-width four-across layout")
 
@@ -3402,6 +3616,14 @@ def check_radius_margin_certificate_outputs() -> None:
 def check_claim_aligned_three_pillar_evidence() -> None:
     """Validate the current three-seed P1, all-subset P2, and final-rule P3."""
 
+    for rel, expected_hash in LEGACY_METRIC_V1_ARTIFACT_HASHES.items():
+        got_hash = _sha256_file(ROOT / rel)
+        if got_hash != expected_hash:
+            fail(
+                f"immutable legacy metric-v1 artifact changed for {rel}: "
+                f"got {got_hash}, want {expected_hash}"
+            )
+
     p1 = _load_strict_json(
         ROOT / "paper1/results/future_drift_three_seed_summary_v1.json"
     )
@@ -3418,28 +3640,35 @@ def check_claim_aligned_three_pillar_evidence() -> None:
         if not math.isclose(float(p1[key]), expected, abs_tol=1e-12):
             fail(f"P1 three-seed statistic changed: {key}")
 
-    p2 = _load_strict_json(
-        ROOT / "paper1/results/cross_task_ir_dr_all_subsets_summary_v1.json"
+    p2_path = ROOT / "paper1/results/cross_task_ir_sr_all_subsets_summary_v2.json"
+    p2_params_path = (
+        ROOT / "paper1/results/cross_task_ir_sr_all_subsets_params_v2.json"
     )
-    p2_params = _load_strict_json(
-        ROOT / "paper1/results/cross_task_ir_dr_all_subsets_params_v1.json"
-    )
+    p2_rows_path = ROOT / "paper1/results/cross_task_ir_sr_all_subsets_v2.csv"
+    p2 = _load_strict_json(p2_path)
+    p2_params = _load_strict_json(p2_params_path)
+    with p2_rows_path.open(newline="", encoding="utf-8") as stream:
+        p2_fields = set(csv.DictReader(stream).fieldnames or ())
+    if "sr_threshold" not in p2_fields or "dr_threshold" in p2_fields:
+        fail("P2 detail rows do not use the current SR threshold key")
     if p2_params.get("diagnostic_fields") != {
         "ir_relative_q90": "horizon-v2 q90 IR relative to the no-augmentation checkpoint",
-        "dr_delta010": "horizon-v2 q90 DR with strict normalized margin 0.10",
+        "sr_delta010": "horizon-v2 q90 SR with strict normalized margin 0.10",
     }:
-        fail("P2 is not bound to the canonical horizon-v2 IR/DR definition")
+        fail("P2 is not bound to the canonical horizon-v2 IR/SR definition")
     three_source_thresholds = {
         (
             split["selected_thresholds"]["ir_threshold"],
-            split["selected_thresholds"]["dr_threshold"],
+            split["selected_thresholds"]["sr_threshold"],
         )
         for split in p2_params["splits"]
         if split["source_coverage"] == 3
     }
     if three_source_thresholds != {(0.3, 0.95)}:
         fail(f"P2 three-source thresholds changed: {three_source_thresholds}")
-    if p2.get("schema_version") != "paper1-cross-task-ir-dr-rule-summary-1.0":
+    if p2_params.get("schema_version") != "paper1-cross-task-ir-sr-rule-params-2.0":
+        fail("P2 all-subset parameter schema changed")
+    if p2.get("schema_version") != "paper1-cross-task-ir-sr-rule-summary-2.0":
         fail("P2 all-subset schema changed")
     if (
         p2.get("partition_count") != 14
@@ -3463,6 +3692,22 @@ def check_claim_aligned_three_pillar_evidence() -> None:
             fail(f"P2 recall changed for {source_count} source tasks")
         if not math.isclose(row["mean_abs_start_error"], expected_onset, abs_tol=1e-12):
             fail(f"P2 onset error changed for {source_count} source tasks")
+
+    _assert_json_numeric_equivalence(
+        ROOT / "paper1/results/cross_task_ir_dr_all_subsets_summary_v1.json",
+        p2_path,
+        label="P2 summary",
+    )
+    _assert_json_numeric_equivalence(
+        ROOT / "paper1/results/cross_task_ir_dr_all_subsets_params_v1.json",
+        p2_params_path,
+        label="P2 parameters",
+    )
+    _assert_csv_value_equivalence(
+        ROOT / "paper1/results/cross_task_ir_dr_all_subsets_v1.csv",
+        p2_rows_path,
+        label="P2 detail rows",
+    )
 
     calibration = _load_strict_json(
         ROOT / "paper1/results/frozen_diagnostic_protocol_calibration.json"
@@ -3505,21 +3750,41 @@ def check_claim_aligned_three_pillar_evidence() -> None:
 
     for script_name in (
         "plot_full_sweep_diagnostics.py",
+        "plot_pldm_sweep_diagnostics.py",
         "cross_task_selective_rule.py",
         "build_acpc_submission_assets.py",
-        "build_cross_stressor_ir_dr_comparison.py",
+        "build_cross_stressor_ir_sr_comparison.py",
+        "build_linearization_horizon_artifact.py",
     ):
         script = (ROOT / "paper1/scripts" / script_name).read_text(encoding="utf-8")
-        if "to_ir_dr" not in script or "smpr_delta010" in script:
-            fail(f"paper-facing script bypasses the IR/DR compatibility boundary: {script_name}")
+        if "to_ir_sr" not in script or "smpr_delta010" in script:
+            fail(f"paper-facing script bypasses the IR/SR compatibility boundary: {script_name}")
 
-    p3 = _load_strict_json(
+    p3_path = (
         ROOT
         / "paper1/results/external_validation/"
-        "cross_stressor_three_source_ir_dr_v1.json"
+        "cross_stressor_three_source_ir_sr_v2.json"
     )
-    if p3.get("schema_version") != "paper1-cross-stressor-ir-dr-comparison-1.0":
-        fail("P3 cross-stressor IR/DR schema changed")
+    p3_rows_path = (
+        ROOT
+        / "paper1/results/external_validation/"
+        "cross_stressor_three_source_ir_sr_v2.csv"
+    )
+    p3 = _load_strict_json(p3_path)
+    with p3_rows_path.open(newline="", encoding="utf-8") as stream:
+        p3_fields = set(csv.DictReader(stream).fieldnames or ())
+    required_p3_fields = {
+        "sr_threshold",
+        "base_sr",
+        "endpoint_sr",
+        "delta_ir_sr_score",
+    }
+    if not required_p3_fields.issubset(p3_fields):
+        fail(f"P3 detail rows are missing current IR/SR keys: {required_p3_fields - p3_fields}")
+    if {"dr_threshold", "base_dr", "endpoint_dr", "delta_ir_dr_score"} & p3_fields:
+        fail("P3 detail rows expose a retired metric key")
+    if p3.get("schema_version") != "paper1-cross-stressor-ir-sr-comparison-2.0":
+        fail("P3 cross-stressor IR/SR schema changed")
     if p3.get("threshold_search_on_blur_or_resize") is not False:
         fail("P3 must not select thresholds on blur or resize")
     overall = p3["overall"]
@@ -3529,12 +3794,12 @@ def check_claim_aligned_three_pillar_evidence() -> None:
         ("balanced_accuracy", 0.8888888888888888),
         ("precision", 0.8823529411764706),
         ("recall", 1.0),
-        ("spearman_delta_behavior_vs_delta_ir_dr_score", 0.8352554296598855),
+        ("spearman_delta_behavior_vs_delta_ir_sr_score", 0.8352554296598855),
     ):
         if not math.isclose(overall[field], expected, abs_tol=1e-12):
             fail(f"P3 final selective-score transfer changed: {field}")
     if any(
-        thresholds != {"ir_threshold": 0.3, "dr_threshold": 0.95}
+        thresholds != {"ir_threshold": 0.3, "sr_threshold": 0.95}
         for thresholds in p3.get("task_thresholds", {}).values()
     ) or set(p3.get("task_thresholds", {})) != EXPECTED_TASKS:
         fail("P3 does not use the four canonical three-source task thresholds")
@@ -3545,6 +3810,21 @@ def check_claim_aligned_three_pillar_evidence() -> None:
             abs_tol=1e-12,
         ):
             fail(f"P3 {stressor} balanced accuracy changed")
+
+    _assert_json_numeric_equivalence(
+        ROOT
+        / "paper1/results/external_validation/"
+        "cross_stressor_three_source_ir_dr_v1.json",
+        p3_path,
+        label="P3 summary",
+    )
+    _assert_csv_value_equivalence(
+        ROOT
+        / "paper1/results/external_validation/"
+        "cross_stressor_three_source_ir_dr_v1.csv",
+        p3_rows_path,
+        label="P3 detail rows",
+    )
 
     main_text = (ROOT / "paper1/main.tex").read_text(encoding="utf-8")
     lowered = main_text.lower()
@@ -3585,18 +3865,18 @@ def check_claim_aligned_three_pillar_evidence() -> None:
         if token in lowered:
             fail(f"retired paper-facing token restored: {token}")
     for token in (
-        "eq:dr",
+        "eq:sr",
         "fig_future_drift_three_seed_v1.pdf",
-        "fig_cross_stressor_ir_dr_comparison_v1.pdf",
-        "tables/table_cross_task_ir_dr_all_subsets_v1",
-        "tables/table_cross_stressor_ir_dr_all_pairs_v1",
+        "fig_cross_stressor_ir_sr_comparison_v2.pdf",
+        "tables/table_cross_task_ir_sr_all_subsets_v2",
+        "tables/table_cross_stressor_ir_sr_all_pairs_v2",
     ):
         if token not in main_text:
             fail(f"current Paper1 mainline is missing: {token}")
 
     for rel in (
         "assets/paper1_figs/fig_future_drift_three_seed_v1.pdf",
-        "assets/paper1_figs/fig_cross_stressor_ir_dr_comparison_v1.pdf",
+        "assets/paper1_figs/fig_cross_stressor_ir_sr_comparison_v2.pdf",
     ):
         if (ROOT / rel).stat().st_size < 5_000:
             fail(f"current Paper1 figure looks too small: {rel}")
@@ -3988,7 +4268,7 @@ def main() -> int:
         ("artifacts", check_artifacts),
         ("paired multi-severity protocol", check_paired_multiseverity_protocol),
         ("public-v1 remediation artifacts", check_public_v1_remediation_artifacts),
-        ("current IR/DR diagnostic evidence", check_claim_aligned_three_pillar_evidence),
+        ("current IR/SR diagnostic evidence", check_claim_aligned_three_pillar_evidence),
         ("forbidden text", check_forbidden_text),
         ("appendix internal heading gate", check_appendix_internal_heading_gate),
         ("visual and text structure", check_visual_text_structure),

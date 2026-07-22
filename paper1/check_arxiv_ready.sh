@@ -29,6 +29,28 @@ fail() {
   exit 1
 }
 
+PREVIOUS_LONG_NAME='Distinction'' Rate'
+RETIRED_LONG_NAME='Distinguishability'' Rate'
+CURRENT_LONG_NAME='Separation Rate'
+RETIRED_ABBREVIATION='D''R'
+
+contains_retired_abbreviation() {
+  grep -Eq "(^|[^[:alnum:]_])${RETIRED_ABBREVIATION}([^[:alnum:]_]|$)" "$1"
+}
+
+check_current_metric_source() {
+  local metric_source="$1"
+  [[ -f "$metric_source" ]] || fail "missing current metric source: $metric_source"
+  for retired_name in "$PREVIOUS_LONG_NAME" "$RETIRED_LONG_NAME"; do
+    if grep -Fq "$retired_name" "$metric_source"; then
+      fail "$metric_source contains retired metric name: $retired_name"
+    fi
+  done
+  if contains_retired_abbreviation "$metric_source"; then
+    fail "$metric_source contains the standalone retired metric abbreviation"
+  fi
+}
+
 # Hard blockers that should not reach arXiv.
 if grep -q "Author names to be supplied" arxiv_metadata.tex && [[ "$ALLOW_AUTHOR_PLACEHOLDER" != "1" ]]; then
   fail "arxiv_metadata.tex still contains the arXiv author placeholder. Replace \\arxivauthors with the real author list."
@@ -57,6 +79,24 @@ fi
 if grep -q "complete code and data" main.tex arxiv_metadata.tex arxiv_release_notes.tex; then
   fail "main.tex over-claims the release package as 'complete code and data'. Use code/artifacts/scripts/pointers wording."
 fi
+
+for metric_source in \
+  main.tex \
+  scripts/plot_acpc_ir_sr_overview.py \
+  scripts/plot_full_sweep_diagnostics.py \
+  scripts/plot_pldm_sweep_diagnostics.py \
+  scripts/cross_task_selective_rule.py \
+  scripts/build_acpc_submission_assets.py \
+  scripts/build_cross_stressor_ir_sr_comparison.py \
+  scripts/build_linearization_horizon_artifact.py; do
+  check_current_metric_source "$metric_source"
+done
+
+for metric_source in main.tex scripts/plot_acpc_ir_sr_overview.py; do
+  if ! grep -Fq "$CURRENT_LONG_NAME" "$metric_source"; then
+    fail "$metric_source is missing current metric name: $CURRENT_LONG_NAME"
+  fi
+done
 
 if ! grep -q "https://github.com/Anguo-star/acpc-diagnostics" arxiv_metadata.tex; then
   fail "main.tex does not contain the intended public repository URL https://github.com/Anguo-star/acpc-diagnostics."
@@ -90,6 +130,10 @@ python scripts/collect_tex_figures.py \
   --table-out-dir "$BUNDLE_SRC/tables"
 compgen -G "$BUNDLE_SRC/tables/*.tex" >/dev/null || fail "main.tex has no collected table inputs"
 
+while IFS= read -r -d '' metric_source; do
+  check_current_metric_source "$metric_source"
+done < <(find "$BUNDLE_SRC" -type f -name '*.tex' -print0)
+
 tar -czf "$BUNDLE_TAR_TMP" -C "$BUNDLE_SRC" .
 
 if tar -tzf "$BUNDLE_TAR_TMP" | grep -E '(^|/)(PLAN|CODEX|ARXIV_V1|FINAL_SUBMISSION_AUDIT|arxiv_release_notes\.tex|\.git|.*\.log|.*\.aux|.*\.out|.*\.toc|.*\.fls|.*\.fdb_latexmk|.*\.synctex\.gz|main\.pdf)$'; then
@@ -115,6 +159,15 @@ fi
 if grep -En "Citation .* undefined|Reference .* undefined|There were undefined references|Undefined control sequence|Fatal error|No file main.bbl|Overfull|Underfull" "$BUNDLE_VERIFY/main.log" >/tmp/paper1_arxiv_bundle_grep.log 2>/dev/null; then
   cat /tmp/paper1_arxiv_bundle_grep.log
   fail "isolated arXiv source bundle has unresolved references or layout diagnostics"
+fi
+
+if command -v pdftotext >/dev/null 2>&1; then
+  ARXIV_PDF_TEXT=/tmp/paper1_arxiv_pdf_text.txt
+  pdftotext "$BUNDLE_VERIFY/main.pdf" "$ARXIV_PDF_TEXT"
+  check_current_metric_source "$ARXIV_PDF_TEXT"
+  if ! grep -Fq "$CURRENT_LONG_NAME" "$ARXIV_PDF_TEXT"; then
+    fail "isolated arXiv PDF is missing current metric name: $CURRENT_LONG_NAME"
+  fi
 fi
 
 mv -f -- "$BUNDLE_TAR_TMP" "$BUNDLE_TAR"
