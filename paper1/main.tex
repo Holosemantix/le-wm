@@ -102,13 +102,14 @@
 \maketitle
 
 \begin{abstract}
-World models support planning by predicting the outcomes of candidate
-actions. JEPA world models make these predictions in representation space
-rather than pixel space, but this alone does not make them selective: a
-visual perturbation can leave the state unchanged yet alter the encoded
-history and every prediction built on it, while indiscriminate invariance
-can erase state distinctions that determine the appropriate action.
-Bisimulation makes this selectivity precise: two observations should be
+Joint-embedding predictive architectures (JEPAs) learn world models that
+predict in a compact latent space rather than in pixels, reducing the
+pressure to model nuisance appearance. Yet this reduced pressure is not a
+guarantee: a visual perturbation that leaves the
+task state unchanged can still alter the encoded history and every
+prediction built on it, while indiscriminate invariance can erase state
+distinctions that determine the appropriate action.
+Bisimulation makes the required selectivity precise: two observations should be
 treated as the same state only when their action-conditioned consequences
 agree. Following this intuition, we introduce Action-Conditioned Predictive
 Consistency (ACPC), a diagnostic that rolls a clean history and a visually
@@ -120,8 +121,8 @@ screen: the Invariance Radius captures how far views of the same state
 spread after prediction, and the Distinction Rate checks that different
 states remain distinguishable. Experiments on four visual control tasks and
 two model families show that pairwise ACPC predicts these changes in
-practice and that the joint screen transfers to new tasks and visual shifts
-without recalibration.\ifdefined\blindsubmission\else\
+practice and that the ACPC-based screen transfers to new tasks and visual
+shifts.\ifdefined\blindsubmission\else\
 Code is available \href{\paperpubliccodeurl}{\textcolor{blue}{here}}.\fi
 
 \smallskip
@@ -138,8 +139,8 @@ Code is available \href{\paperpubliccodeurl}{\textcolor{blue}{here}}.\fi
 
 World models support control by predicting how candidate actions change the
 environment~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. Joint-embedding
-predictive architectures (JEPAs) make these predictions in representation
-space rather than reconstructing pixels
+predictive architectures (JEPAs) instead formulate prediction in
+representation space rather than reconstructing pixels
 ~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa}. This can reduce pressure
 to preserve nuisance image detail
 ~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures},
@@ -148,9 +149,10 @@ reduced resolution can leave the underlying state unchanged while altering
 the encoded history and every prediction made from it.
 A robust model should ignore appearance changes that preserve the state, but
 it must retain state distinctions that can change the appropriate action.
-Bisimulation formalizes this requirement: two observations represent the
-same state only if, under every action, their rewards and transition
-distributions agree~\cite{gelada2019deepmdp,zhang2021dbc}. It locates the
+Bisimulation formalizes this requirement: two observations may represent the
+same abstract state only if, under every action, they have equal rewards and
+induce the same transition probabilities over bisimulation equivalence
+classes~\cite{gelada2019deepmdp,zhang2021dbc}. It locates the
 test of sameness in action-conditioned consequences rather than in
 appearance---the yardstick our diagnostic adopts---although we do not test
 reward or transition equivalence.
@@ -295,8 +297,9 @@ training, does a same-state visual discrepancy contract or grow as the
 predictor rolls it forward?
 
 \paragraph{Robust visual world models and selective invariance.}
-DrQ, DrQ-v2, and SODA improve visual control through training-time
-augmentation~\cite{kostrikov2020drq,yarats2022drqv2,hansen2021soda}.
+DrQ and DrQ-v2 improve visual control through training-time augmentation,
+while SODA uses augmentation in an auxiliary representation-learning
+objective~\cite{kostrikov2020drq,yarats2022drqv2,hansen2021soda}.
 ViGMO and VIBR learn invariances in latent or value space
 ~\cite{vigmo,dupuis2023vibr}, while ReOI changes observations at test time to
 reduce distractor sensitivity in visual model-predictive control
@@ -318,9 +321,10 @@ change training; it audits a frozen predictor using paired views and shared
 actions.
 
 Control-aware representation learning also explains why robustness cannot
-mean removing every difference. Bisimulation-based methods ground behavioral
-similarity in reward and action-conditioned transition structure
-~\cite{gelada2019deepmdp,zhang2021dbc,bsmpc,toso2026bisimjepa}, while
+mean removing every difference. Classical bisimulation grounds behavioral
+similarity in rewards and action-conditioned transition structure
+~\cite{gelada2019deepmdp,zhang2021dbc,bsmpc}, while reward-free variants may
+retain only the transition term~\cite{toso2026bisimjepa}. In contrast,
 value-equivalent and value-aware formulations organize learning around
 downstream value or planning quantities
 ~\cite{grimm2020valueequivalence,voelcker2025calibratedvalueaware}. These
@@ -337,8 +341,9 @@ world-model evaluation should match its claimed decision-making use, including
 interventions, long rollouts, planning, and policy evaluation or optimization
 ~\cite{yu2026worldmodelevaluation}.
 
-Recent diagnostics test different parts of learned dynamics. ATM compares
-action information in encoded and predicted transitions~\cite{chen2026atm};
+Recent methods probe or enforce different aspects of learned dynamics. ATM
+compares action information in encoded and predicted
+transitions~\cite{chen2026atm};
 Delta-JEPA decodes actions from latent differences~\cite{zhang2026deltajepa};
 ACID tests cycle action consistency with inverse dynamics~\cite{seo2026acid};
 Future-Compatible asks whether generated futures agree with their stated

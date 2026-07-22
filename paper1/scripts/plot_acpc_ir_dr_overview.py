@@ -47,6 +47,11 @@ LIGHT = "#D8DEE4"
 PANEL = "#F8FAFC"
 WHITE = "#FFFFFF"
 
+# Keep the three input cards at their existing rendered extent.  These values
+# match the current AnnotationBbox footprint in the fixed panel-(a) geometry.
+INPUT_CARD_WIDTH = 0.74144
+INPUT_CARD_HEIGHT = 0.21200
+
 STYLE = {
     "font.family": "serif",
     "font.serif": ["DejaVu Serif", "Times New Roman", "Times"],
@@ -110,15 +115,52 @@ def _add_image(
 ) -> None:
     image = np.asarray(Image.open(path).convert("RGB"))
     artist = AnnotationBbox(
-        OffsetImage(image, zoom=zoom),
+        OffsetImage(
+            image,
+            zoom=zoom,
+            interpolation="lanczos",
+            resample=True,
+        ),
         center,
         xycoords=ax.transAxes,
         frameon=True,
-        bboxprops={"edgecolor": edge, "linewidth": 1.15, "facecolor": WHITE},
+        bboxprops={
+            "edgecolor": "#B7C0C9",
+            "linewidth": 0.72,
+            "facecolor": WHITE,
+        },
         pad=0.015,
         zorder=5,
     )
     ax.add_artist(artist)
+
+    # A short upper-right accent identifies the input without competing with
+    # the lower-left stack used to denote additional logged histories.
+    half_width = 0.5 * INPUT_CARD_WIDTH
+    half_height = 0.5 * INPUT_CARD_HEIGHT
+    right = center[0] + half_width
+    top = center[1] + half_height
+    accent_fraction = 0.27
+    ax.plot(
+        [right - accent_fraction * INPUT_CARD_WIDTH, right],
+        [top, top],
+        color=edge,
+        linewidth=1.20,
+        solid_capstyle="butt",
+        transform=ax.transAxes,
+        clip_on=False,
+        zorder=7,
+    )
+    ax.plot(
+        [right, right],
+        [top - accent_fraction * INPUT_CARD_HEIGHT, top],
+        color=edge,
+        linewidth=1.20,
+        solid_capstyle="butt",
+        transform=ax.transAxes,
+        clip_on=False,
+        zorder=7,
+    )
 
 
 def _draw_hidden_input_stack(
@@ -126,21 +168,25 @@ def _draw_hidden_input_stack(
     center: tuple[float, float],
 ) -> None:
     """Place a restrained stack of cards behind the shown different input."""
-    width, height = 0.62, 0.182
-    offsets = (0.105, 0.070, 0.035)
-    for layer, offset in enumerate(offsets, start=1):
+    width, height = INPUT_CARD_WIDTH, INPUT_CARD_HEIGHT
+    layers = (
+        (0.090, "#F3F5F7"),
+        (0.060, "#EFF2F4"),
+        (0.030, "#EBEEF1"),
+    )
+    for layer, (offset, face) in enumerate(layers, start=1):
         card = FancyBboxPatch(
             (
                 center[0] - 0.5 * width - offset,
-                center[1] - 0.5 * height - 0.24 * offset,
+                center[1] - 0.5 * height - 0.285 * offset,
             ),
             width,
             height,
-            boxstyle="round,pad=0.002,rounding_size=0.006",
-            facecolor="#EDEFF2",
-            edgecolor="#8E99A3",
-            linewidth=0.75,
-            alpha=0.95,
+            boxstyle="round,pad=0.001,rounding_size=0.004",
+            facecolor=face,
+            edgecolor="#B7C0C9",
+            linewidth=0.68,
+            alpha=1.0,
             transform=ax.transAxes,
             clip_on=False,
             zorder=layer,
@@ -547,7 +593,7 @@ def _draw_row_label(ax: plt.Axes, label: str, color: str) -> None:
     ax.set_ylim(0, 1)
     ax.axis("off")
     ax.text(
-        0.62,
+        0.98,
         0.50,
         label,
         ha="center",
@@ -648,7 +694,7 @@ def _draw_metric_row(
         ha="left",
         va="center",
         rotation=90,
-        fontsize=5.80,
+        fontsize=5.90,
         color=color,
         fontweight="bold",
     )
@@ -657,6 +703,7 @@ def _draw_metric_row(
         (IR_COL_X, "IR", ir_trend, ir_sub, True),
         (DR_COL_X, "DR", dr_trend, dr_sub, False),
     ):
+        metric_color = ORANGE if name == "IR" else PURPLE
         # Arrow length mirrors the reported magnitude for this cell.
         half_gap = wide_gap if trend == "HIGH" else tight_gap
         _draw_pair_glyph(
@@ -667,23 +714,43 @@ def _draw_metric_row(
             half_gap=half_gap,
             marker_scale=0.78,
         )
+        tag_center_x = col_x - 0.047
+        tag_center_y = center_y + 0.0005
+        tag_width, tag_height = 0.076, 0.039
+        tag = FancyBboxPatch(
+            (
+                tag_center_x - 0.5 * tag_width,
+                tag_center_y - 0.5 * tag_height,
+            ),
+            tag_width,
+            tag_height,
+            boxstyle="round,pad=0.002,rounding_size=0.009",
+            facecolor=metric_color,
+            edgecolor="none",
+            linewidth=0.0,
+            transform=ax.transAxes,
+            clip_on=False,
+            zorder=4,
+        )
+        ax.add_patch(tag)
         ax.text(
-            col_x - 0.010,
+            tag_center_x,
             center_y - 0.002,
             name,
-            ha="right",
+            ha="center",
             va="center",
-            fontsize=6.55,
-            color=INK,
+            fontsize=5.45,
+            color=WHITE,
             fontweight="bold",
+            zorder=5,
         )
         ax.text(
-            col_x + 0.002,
+            col_x + 0.006,
             center_y - 0.002,
             trend,
             ha="left",
             va="center",
-            fontsize=6.55,
+            fontsize=6.35,
             color=color,
             fontweight="bold",
         )
@@ -774,7 +841,7 @@ def _draw_metric_block(
         ha="center",
         va="center",
         fontsize=6.30,
-        color=INK,
+        color=ORANGE,
         fontweight="bold",
     )
     ax.text(
@@ -784,7 +851,7 @@ def _draw_metric_block(
         ha="center",
         va="center",
         fontsize=6.30,
-        color=INK,
+        color=PURPLE,
         fontweight="bold",
     )
 
@@ -818,11 +885,12 @@ def _figure_arrow(
     target_ax: plt.Axes,
     *,
     label: str | None,
+    source_inset: float = 0.016,
 ) -> None:
     source = source_ax.get_position()
     target = target_ax.get_position()
     y = 0.50 * (source.y0 + source.y1)
-    start = (source.x1 - 0.016, y)
+    start = (source.x1 - source_inset, y)
     end = (target.x0 + 0.016, y)
     fig.add_artist(
         FancyArrowPatch(
@@ -913,7 +981,7 @@ def plot(out_pdf: Path, preview_png: Path, input_dir: Path) -> None:
         pass_encoder_ax = fig.add_subplot(middle[2, 1])
         pass_rollout_ax = fig.add_subplot(middle[2, 3])
         header_pos = header_ax.get_position()
-        legend_fig_y = fail_encoder_ax.get_position().y1 + 0.048
+        legend_fig_y = fail_encoder_ax.get_position().y1 + 0.058
         _draw_middle_header(
             header_ax,
             legend_y=(legend_fig_y - header_pos.y0) / header_pos.height,
@@ -1036,7 +1104,13 @@ def plot(out_pdf: Path, preview_png: Path, input_dir: Path) -> None:
         )
 
         _figure_arrow(fig, input_ax, middle_bg, label="Encoder")
-        _figure_arrow(fig, middle_bg, metric_ax, label=None)
+        _figure_arrow(
+            fig,
+            middle_bg,
+            metric_ax,
+            label=None,
+            source_inset=0.002,
+        )
 
         pdf_metadata = {
             "Title": "Figure 1: three-block ACPC, IR, and DR overview",
@@ -1052,6 +1126,7 @@ def plot(out_pdf: Path, preview_png: Path, input_dir: Path) -> None:
         }
         fig.savefig(
             out_pdf,
+            dpi=320,
             facecolor=WHITE,
             bbox_inches="tight",
             pad_inches=0.02,

@@ -6,7 +6,23 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PAPER="$ROOT/paper1"
 ALLOW_AUTHOR_PLACEHOLDER="${ALLOW_AUTHOR_PLACEHOLDER:-0}"
+BUNDLE_TAR="/tmp/paper1_arxiv_v1_src.tar.gz"
+BUNDLE_TAR_TMP=""
+BUNDLE_SRC=""
+BUNDLE_VERIFY=""
 cd "$PAPER"
+
+cleanup() {
+  for bundle_dir in "$BUNDLE_SRC" "$BUNDLE_VERIFY"; do
+    if [[ -n "$bundle_dir" && -d "$bundle_dir" ]]; then
+      rm -rf -- "$bundle_dir"
+    fi
+  done
+  if [[ -n "$BUNDLE_TAR_TMP" && -f "$BUNDLE_TAR_TMP" ]]; then
+    rm -f -- "$BUNDLE_TAR_TMP"
+  fi
+}
+trap cleanup EXIT
 
 fail() {
   echo "ERROR: $*" >&2
@@ -55,42 +71,36 @@ bash build.sh --clean
 
 [[ -f main.bbl ]] || fail "main.bbl was not generated; arXiv source package should include main.bbl matching main.tex."
 
-# Prepare a minimal arXiv source bundle in /tmp and audit obvious internal files.
-rm -rf /tmp/paper1_arxiv_src
-mkdir -p /tmp/paper1_arxiv_src/figures /tmp/paper1_arxiv_src/tables
-cp main.tex arxiv_metadata.tex arxiv_release_notes.tex references.bib main.bbl /tmp/paper1_arxiv_src/
+# Prepare a minimal arXiv source bundle in isolated temporary directories.
+# arxiv_release_notes.tex is intentionally excluded: main.tex does not input it,
+# and internal revision notes do not belong in the submission source archive.
+BUNDLE_SRC="$(mktemp -d /tmp/paper1_arxiv_src.XXXXXX)"
+BUNDLE_VERIFY="$(mktemp -d /tmp/paper1_arxiv_verify.XXXXXX)"
+BUNDLE_TAR_TMP="$(mktemp /tmp/paper1_arxiv_v1_src.XXXXXX.tar.gz)"
+rm -f -- "$BUNDLE_TAR"
+mkdir -p "$BUNDLE_SRC/figures" "$BUNDLE_SRC/tables"
+cp main.tex arxiv_metadata.tex references.bib main.bbl "$BUNDLE_SRC/"
 
 # Copy exactly the figures referenced by main.tex. The helper expands simple
 # \input{...} files and resolves the configured \graphicspath entries.
-python scripts/collect_tex_figures.py --tex main.tex --base-dir . --out-dir /tmp/paper1_arxiv_src/figures
-mapfile -t referenced_tables < <(
-  sed -n 's/^[[:space:]]*\\input{\(tables\/[^}]*\)}.*/\1/p' main.tex
-)
-[[ "${#referenced_tables[@]}" -gt 0 ]] || fail "main.tex has no collected table inputs"
-for table in "${referenced_tables[@]}"; do
-  if [[ -f "$table" ]]; then
-    table_source="$table"
-  elif [[ -f "${table}.tex" ]]; then
-    table_source="${table}.tex"
-  else
-    fail "referenced table is missing: $table[.tex]"
-  fi
-  cp "$table_source" /tmp/paper1_arxiv_src/tables/
-done
+python scripts/collect_tex_figures.py \
+  --tex main.tex \
+  --base-dir . \
+  --out-dir "$BUNDLE_SRC/figures" \
+  --table-out-dir "$BUNDLE_SRC/tables"
+compgen -G "$BUNDLE_SRC/tables/*.tex" >/dev/null || fail "main.tex has no collected table inputs"
 
-tar -czf /tmp/paper1_arxiv_v1_src.tar.gz -C /tmp/paper1_arxiv_src .
+tar -czf "$BUNDLE_TAR_TMP" -C "$BUNDLE_SRC" .
 
-if tar -tzf /tmp/paper1_arxiv_v1_src.tar.gz | grep -E '(^|/)(PLAN|CODEX|ARXIV_V1|FINAL_SUBMISSION_AUDIT|\.git|.*\.log|.*\.aux|.*\.out|.*\.toc|.*\.fls|.*\.fdb_latexmk|.*\.synctex\.gz|main\.pdf)$'; then
+if tar -tzf "$BUNDLE_TAR_TMP" | grep -E '(^|/)(PLAN|CODEX|ARXIV_V1|FINAL_SUBMISSION_AUDIT|arxiv_release_notes\.tex|\.git|.*\.log|.*\.aux|.*\.out|.*\.toc|.*\.fls|.*\.fdb_latexmk|.*\.synctex\.gz|main\.pdf)$'; then
   fail "arXiv source tarball contains internal planning/build/output files."
 fi
 
 # Verify the artifact that will actually be uploaded, not only the repository
 # checkout from which it was assembled.
-rm -rf /tmp/paper1_arxiv_verify
-mkdir -p /tmp/paper1_arxiv_verify
-tar -xzf /tmp/paper1_arxiv_v1_src.tar.gz -C /tmp/paper1_arxiv_verify
+tar -xzf "$BUNDLE_TAR_TMP" -C "$BUNDLE_VERIFY"
 if ! (
-  cd /tmp/paper1_arxiv_verify
+  cd "$BUNDLE_VERIFY"
   if command -v latexmk >/dev/null 2>&1; then
     latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
   else
@@ -102,10 +112,13 @@ if ! (
   fail "isolated arXiv source bundle did not compile"
 fi
 
-if grep -En "Citation .* undefined|Reference .* undefined|There were undefined references|Undefined control sequence|Fatal error|No file main.bbl|Overfull|Underfull" /tmp/paper1_arxiv_verify/main.log >/tmp/paper1_arxiv_bundle_grep.log 2>/dev/null; then
+if grep -En "Citation .* undefined|Reference .* undefined|There were undefined references|Undefined control sequence|Fatal error|No file main.bbl|Overfull|Underfull" "$BUNDLE_VERIFY/main.log" >/tmp/paper1_arxiv_bundle_grep.log 2>/dev/null; then
   cat /tmp/paper1_arxiv_bundle_grep.log
   fail "isolated arXiv source bundle has unresolved references or layout diagnostics"
 fi
 
+mv -f -- "$BUNDLE_TAR_TMP" "$BUNDLE_TAR"
+BUNDLE_TAR_TMP=""
+
 echo "OK: Paper 1 arXiv readiness checks passed."
-echo "Source bundle: /tmp/paper1_arxiv_v1_src.tar.gz"
+echo "Source bundle: $BUNDLE_TAR"

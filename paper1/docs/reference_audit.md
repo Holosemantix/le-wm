@@ -1,5 +1,32 @@
 # Reference Audit
 
+## 2026-07-22 final reference consolidation
+
+The current `paper1/main.tex` and `paper1/references.bib` are aligned at 59
+unique citation keys: every cited key has one BibTeX entry, every remaining
+entry is cited, and the rebuilt bibliography has no BibTeX warnings. A
+four-pass audit checked each entry's official source, title, author order,
+publication metadata, persistent identifier/URL, and the claim supported in
+the manuscript.
+
+Seventeen entries that were no longer cited were removed from the active
+bibliography: `alain2017linearprobes`, `bardes2022vicreg`, `garcia1989mpc`,
+`garrido2023rankme`, `huang2026vjepa`, `jing2022dimcollapse`,
+`kornblith2019cka`, `maes2026stableworldmodel`, `murlabadia2026vjepa21`,
+`njepa2025`, `roy2007effrank`, `sun2022knnood`, `tamkin2023featuredropout`,
+`teoh2025nextlatent`, `usjepa2025`, `wang2020alignuniform`, and
+`zhang2022rethinkaug`.
+
+The same pass tightened the manuscript's exact-bisimulation definition,
+separated reward-free Bisim-JEPA from reward-bearing classical formulations,
+distinguished representation-space JEPA prediction from action-conditioned
+control prediction, and described SODA's augmentation as an auxiliary
+representation-learning objective. It also corrected author diacritics,
+added ReOI's arXiv DOI, and removed workshop-acceptance notes that lacked an
+independent public program. The dated material below is retained only as a
+historical audit trail; the 59-entry active bibliography is the current source
+of truth.
+
 ## 2026-07-11 concurrent-work remediation
 
 Six concurrent papers named in the remediation plan were checked directly
@@ -68,7 +95,8 @@ latent action decoding, decision-time cycle consistency, generated-future
 compatibility, and kinematic-failure diagnostics. No metadata or claim-text
 change was required.
 
-Scope: all 51 citation keys used in `paper1/main.tex`. Unused BibTeX entries were removed from `paper1/references.bib`, so every remaining entry is cited.
+Historical snapshot scope: the 51-key bibliography as audited at that time.
+This table is superseded by the 2026-07-22 consolidation above.
 
 | Key | Official source checked | Metadata conclusion | Text-use conclusion |
 |---|---|---|---|
