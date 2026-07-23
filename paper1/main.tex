@@ -200,9 +200,10 @@ bounds hold for each evaluated pair and require no distributional or
 smoothness assumptions. Experiments across four visual control tasks and two
 model families (LeWM~\cite{maes2026lewm} and
 PLDM~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting})
-show that ACPC is informative about prediction-error drift and CEM selection
-regret. Together, IR and SR help identify checkpoints that perform well under
-visual perturbations across tasks and perturbation types.
+show that ACPC is informative about prediction-error change and selection
+regret for the cross-entropy method (CEM)~\cite{kroese2006cem}. Together, IR
+and SR help identify checkpoints that perform well under visual perturbations
+across tasks and perturbation types.
 
 The contributions are:
 \begin{enumerate}[leftmargin=1.4em]
@@ -316,44 +317,43 @@ model error, or attack sensitivity. ACPC asks how a task-preserving visual
 perturbation propagates through a shared-action rollout without requiring the
 true future.
 
+\clearpage
 \section{Action-Conditioned Predictive Consistency as a Diagnostic}\label{sec:acpc}
 
-A state-preserving visual change can still move the encoded history. The
-predictor may amplify or contract this shift before the planner computes a
-cost. We trace the effect at three levels. The local-geometry case study in
-\Cref{sec:exp-local-geometry} compares perturbation clouds with nearby clean
-histories. It is descriptive because learned-space neighbors follow their own
-recorded actions and endpoint views omit intermediate predictions. Pairwise
-ACPC instead holds the actions fixed throughout a clean--perturbed rollout and
-yields exact bounds on prediction-error and candidate-cost changes. Finally,
-IR summarizes same-history sensitivity across logged histories, while SR
-checks that selected state-coordinate distinctions remain separated.
-\Cref{fig:acpc-ir-sr-overview} contrasts fragile and robust checkpoints
-through the paired rollout and the two summaries. All three analyses are
-post-hoc measurements of a frozen model; none requires retraining.
+A visual perturbation can change the trajectory predicted by a world model.
+ACPC measures this change by rolling a clean history and its perturbed version
+forward under the same action sequence and comparing the two trajectories. We
+first define this pairwise measurement. We then
+show that it bounds perturbation-induced changes in prediction error and
+candidate cost, which leads to conditions for preserving a planner's selected
+candidate. To summarize ACPC across a checkpoint, IR captures
+clean--perturbed pairs with high sensitivity, while SR checks that different
+states remain separated and prevents a collapsed representation from
+appearing robust. Finally, we combine IR and SR into an empirical checkpoint
+screen.
 
 \subsection{Pairwise ACPC}\label{sec:acpc-def}
 
-ACPC asks a direct question: if only the visual appearance of a history
-changes, how much does the model's predicted future change under a fixed
-action sequence? Let $h$ be the clean observation--action history consumed by
-the encoder of the checkpoint under evaluation, and let $\tilde h$ be a
-visually perturbed view of the same underlying state trajectory. The frozen
-encoder gives $z=E_\theta(h)$ and $\tilde z=E_\theta(\tilde h)$. Both branches receive the same action sequence
-$\mathbf a=(a_0,\ldots,a_{H-1})$. For its length-$k$ prefix, define
+Given a clean history and its perturbed version, ACPC compares the rollouts
+predicted from them under identical actions. Let $h$ denote the clean history
+and let $\tilde h$ be the result of applying the evaluated visual perturbation
+to $h$. The frozen encoder maps them to $z=E_\theta(h)$ and
+$\tilde z=E_\theta(\tilde h)$. Both representations are then rolled forward
+under the action sequence $\mathbf a=(a_0,\ldots,a_{H-1})$. Let $F_\theta$
+denote the frozen action-conditioned predictor. After the first $k$ actions,
+the two predicted representations are
 \begin{equation}
 \hat z_k=F_\theta^k(z,\mathbf a_{0:k-1}),
 \qquad
 \hat{\tilde z}_k=F_\theta^k(\tilde z,\mathbf a_{0:k-1}).
 \label{eq:acpc-rollout-objects}
 \end{equation}
-Here $F_\theta$ is the action-conditioned predictor and $H$ is the number of
-autoregressive future steps. The planner does not read raw predictor outputs:
-it scores candidates in the projected embedding space in which planner
-costs are computed. The
-map $\Pi$ denotes that projection; our implementation stores the projected
-embeddings directly, so $\Pi$ requires no extra computation.
-With nonnegative weights $\sum_{k=1}^H\alpha_k=1$, stack the whole rollout as
+Here $H$ is the number of autoregressive future steps. ACPC compares
+predictions in the projected latent space used to evaluate planner costs. Let
+$\Pi$ map each predicted representation into this space. To combine all $H$
+predicted steps into one trajectory-level distance, we assign nonnegative
+weights $\alpha_k$, with $\sum_{k=1}^H\alpha_k=1$, and define the weighted
+rollout vector
 \begin{equation}
 \bar G_{\mathbf a}(z)
 =
@@ -377,30 +377,26 @@ two weighted predicted rollouts:
 \right)^{1/2}.
 \label{eq:acpc-h}
 \end{equation}
-Encoder shift $\|z-\tilde z\|_2$ measures the effect of the visual change
-before prediction. ACPC measures its effect on the predicted trajectory after
-both histories have been propagated under the same actions. Holding the
-actions fixed isolates sensitivity to the visual perturbation; it does not
-establish whether the model responds correctly to other actions. Unless
-stated otherwise we use uniform weights $\alpha_k=1/H$ and
-the fixed protocol horizon $H=8$, the longest horizon for which every logged
-evaluation window contains a complete observed future
-(\Cref{sec:appendix-A}). The planner analyses in \Cref{sec:exp-planner}
-instead use $H=5$, matching the five-action planning horizon of the evaluated
-CEM configuration.
+Low ACPC means that the two predicted trajectories remain close; high ACPC
+means that they separate. Encoder shift $\|z-\tilde z\|_2$ measures the
+difference before prediction, whereas ACPC measures it after rollout. Using
+the same action sequence removes action differences from the comparison.
+ACPC measures rollout consistency, not prediction accuracy.
 
-\subsection{Common-future error drift}
+We use uniform weights $\alpha_k=1/H$ and $H=8$, the longest horizon available
+for every logged window (\Cref{sec:appendix-A}). The planner analysis uses
+$H=5$ to match the CEM planning horizon (\Cref{sec:exp-planner}).
 
-ACPC can be computed without observing the true future. When a logged future
-is available, however, the same quantity bounds how much the visual
-perturbation can change prediction error. Let
-$Y_{\mathbf a}^H$ be one actually observed future under the same recorded
-action sequence, projected, stacked, and weighted exactly as in
-\Cref{eq:weighted-rollout-map}. This target is not produced by either prediction
-branch and is used only for evaluation. Comparing both branches with this one
-future isolates the error change caused by the visual perturbation.
+\subsection{Prediction-Error Bounds}
 
-\begin{proposition}[Common-future error-drift bound]\label{prop:target-free-error-drift}
+ACPC itself does not require the observed future. To connect it to prediction
+error, let $Y_{\mathbf a}^H$ denote the observed future under the same action
+sequence, represented in the same weighted space as the predicted rollouts
+(\Cref{eq:weighted-rollout-map}). Both rollout errors are measured against
+this single target. Their difference cannot exceed the distance between the
+two predictions, which is ACPC.
+
+\begin{proposition}[Prediction-error change bound]\label{prop:target-free-error-drift}
 Define
 \[
 e_h=\|\bar G_{\mathbf a}(E_\theta(h))-Y_{\mathbf a}^H\|_2,
@@ -413,66 +409,73 @@ Then, for every paired sample,
 \le \mathrm{ACPC}_H(h,\tilde h,\mathbf a).
 \label{eq:target-free-error-drift}
 \end{equation}
-The adverse increase $(e_{\tilde h}-e_h)_+$, where $(x)_+=\max(x,0)$, obeys
-the same bound.
+In particular, the increase in error caused by the perturbation,
+$(e_{\tilde h}-e_h)_+$, is also bounded by ACPC.
 \end{proposition}
-The proof---a direct application of the reverse triangle inequality in the
-weighted projected-rollout space, with both errors measured against the same
-$Y_{\mathbf a}^H$---is spelled out in
-Appendix~\ref{sec:appendix-acpc-proofs}.
+This result follows directly from the reverse triangle inequality; the proof
+is given in Appendix~\ref{sec:appendix-acpc-proofs}. The bound concerns the
+change in error, not absolute prediction accuracy. Both rollouts can be
+inaccurate even when ACPC is small. In the experiment, the observed future is
+used to compute the error change $d=|e_{\tilde h}-e_h|$, not ACPC itself
+(\Cref{sec:exp-target-aligned}).
 
-The proposition bounds the difference between two errors, not either
-prediction's absolute error: both predictions may be inaccurate even when
-ACPC is small. The prediction experiment in \Cref{sec:exp-target-aligned}
-uses a logged future only to evaluate whether ACPC is informative about the
-bounded quantity, which we call the \emph{error drift}
-$d=|e_{\tilde h}-e_h|$.
+\subsection{Selection Stability from Planning-Cost Bounds}
 
-\subsection{Candidate-cost drift and planner stability}
+A planner ranks candidate action sequences by their predicted costs. Changing
+the input can change each candidate's predicted endpoint and therefore its
+cost. If these cost changes are too small to close the gaps between
+candidates, the selected candidate remains unchanged. We now formalize this
+idea.
 
-We next connect ACPC to planning. A visual perturbation moves each candidate's
-predicted endpoint and therefore may change its cost. If no candidate can
-move far enough to cross the clean cost gap, the selected candidate remains
-unchanged. This is the radius--margin argument formalized below. For candidate
-action sequence $\mathbf a^j$, let
+For each candidate action sequence $\mathbf a^j$, we roll both inputs forward
+under that sequence. Let
 \[
 x_j=\Pi(F_\theta^H(E_\theta(h),\mathbf a^j)),
 \qquad
 \tilde x_j=\Pi(F_\theta^H(E_\theta(\tilde h),\mathbf a^j))
 \]
 be the final clean and perturbed predicted representations. Their displacement
-$r_j=\|x_j-\tilde x_j\|_2$ is the final-step component of the candidate-specific
-$\mathrm{ACPC}_H(h,\tilde h,\mathbf a^j)$. If $\alpha_H>0$, then
-$r_j\leq\mathrm{ACPC}_H(h,\tilde h,\mathbf a^j)/\sqrt{\alpha_H}$; the planner
-experiments in \Cref{sec:exp-planner} record $r_j$ directly.
+$r_j=\|x_j-\tilde x_j\|_2$ is one component of the candidate-specific ACPC.
+Whenever $\alpha_H>0$,
+\[
+r_j\leq
+\frac{\mathrm{ACPC}_H(h,\tilde h,\mathbf a^j)}{\sqrt{\alpha_H}}.
+\]
 
-\begin{proposition}[Squared goal-cost drift and fixed-pool stability]\label{prop:exact-cost-certificate}
-Suppose the planner scores candidate $j$ against fixed goal embedding $g$ by
-$C_j=\|x_j-g\|_2^2$ and $\tilde C_j=\|\tilde x_j-g\|_2^2$. Define
+\begin{proposition}[Planning-cost bounds]\label{prop:exact-cost-certificate}
+Suppose the planner scores candidate $j$ by its squared distance to a fixed
+goal embedding $g$:
+\[
+C_j=\|x_j-g\|_2^2,
+\qquad
+\tilde C_j=\|\tilde x_j-g\|_2^2.
+\]
+Define the candidate-specific cost-change bound
 \begin{equation}
 b_j=r_j\bigl(\|x_j-g\|_2+\|\tilde x_j-g\|_2\bigr).
 \label{eq:exact-cost-bound}
 \end{equation}
-Then every candidate satisfies $|\tilde C_j-C_j|\leq b_j$.
+Then $|\tilde C_j-C_j|\leq b_j$.
 
-Let $w$ and $\tilde w$ be the clean and perturbed winners of the same pool.
-The clean-reference selection regret obeys
+Let $w$ and $\tilde w$ be the winners under the clean and perturbed inputs. If
+the winner changes, the perturbed winner's excess cost under the clean
+prediction satisfies
 \begin{equation}
 0\leq C_{\tilde w}-C_w\leq b_{\tilde w}+b_w.
 \label{eq:fixed-pool-regret-bound}
 \end{equation}
 \end{proposition}
 
-The quantity $b_j$ is a candidate-specific upper bound on the movement of the
-squared goal cost, and the regret inequality bounds the extra clean-history
-model cost of choosing the perturbed winner; both use the evaluated
-endpoints, not a global Lipschitz approximation. Subtracting the allowed
-movements from each clean candidate gap yields selection certificates: if
-every remainder is positive, the clean winner---and, under the analogous
-elite-wise condition, the exact top-$k$ elite set---is preserved
-(\Cref{prop:fixed-pool-certificates}). Combining $b_j$ with the final-step
-conversion $r_j\le\mathrm{ACPC}_H(h,\tilde h,\mathbf a^j)/\sqrt{\alpha_H}$
-gives the explicit chain
+The bound $b_j$ is computed from the evaluated endpoints and requires no
+global Lipschitz constant. If the clean winner $w$ leads every competitor $j$
+by more than $b_w+b_j$, the perturbation cannot reverse their order. The same
+argument preserves the top-$k$ elite set when every clean
+elite--non-elite gap exceeds the corresponding pair of bounds.
+Appendix~\ref{sec:appendix-acpc-proofs} gives the exact conditions
+(\Cref{prop:fixed-pool-certificates}).
+
+Because $r_j$ is bounded by candidate-specific ACPC, substituting its bound
+into $b_j$ gives
 \begin{equation}
 |\tilde C_j-C_j|
 \;\le\; b_j
@@ -481,55 +484,46 @@ gives the explicit chain
 \bigl(\|x_j-g\|_2+\|\tilde x_j-g\|_2\bigr),
 \label{eq:acpc-cost-chain}
 \end{equation}
-Thus candidate-specific ACPC bounds each candidate's cost change. The regret
-bound and the sufficient conditions for preserving the winner or elite set
-are given in
-\Cref{eq:fixed-pool-regret-bound,eq:top1-certificate-main,eq:elite-certificate-main}.
-Proofs and equality cases are in
-Appendix~\ref{sec:appendix-acpc-proofs}. Because every candidate must be
-evaluated under both histories, these certificates support post-hoc analysis
-and are not an online screening method.
+Thus, ACPC bounds how much each candidate's cost can change, while the clean
+cost gaps determine whether that change can alter the planner's selection.
+These certificates require evaluating every candidate under both inputs, so
+they support post-hoc analysis rather than online screening.
 
-The elite-set condition can also be applied iteratively. CEM repeatedly fits
-its next proposal to the current elite set~\cite{kroese2006cem}. If the clean
-and perturbed runs start from the same proposal and use common random numbers,
-preserving the elite set at every iteration keeps their pools and proposals
-aligned and makes their returned actions identical
-(\Cref{cor:adaptive-cem-alignment}). The guarantee stops at the first
-iteration whose elite condition fails, and it concerns candidate selection
-and model cost, not simulator return. Formal statements and proofs are in
-Appendix~\ref{sec:appendix-acpc-proofs}.
+CEM plans in rounds. In each round, it scores a set of candidate action
+sequences, keeps the best group (the elite set), and uses that group to
+generate the candidates for the next round~\cite{kroese2006cem}. We compare a
+clean and perturbed run that start from the same proposal and use the same
+random samples. If the perturbation does not change the elite set in any
+round, both runs generate the same candidates in the next round and
+eventually return the same action
+(\Cref{cor:adaptive-cem-alignment}). If the elite set changes, the guarantee
+no longer applies. This result concerns the planner's model-based choice, not
+its return in the environment.
 
-\subsection{IR and SR for checkpoint screening}\label{sec:acpc-ir-sr}
+\subsection{Checkpoint-Level IR and SR}\label{sec:acpc-ir-sr}
 
-The bounds above evaluate individual history pairs and planner candidates.
-Checkpoint screening instead requires a summary over many logged histories,
-and the resulting summaries do not estimate the candidate-wise planner
-certificate. Low same-history distance alone is not enough: a collapsed or
-excessively contracted representation can make every paired rollout look
-stable. We therefore ask two questions, mirroring the two sides of
-bisimulation-style equivalence (\Cref{sec:related}). The \emph{Invariance Radius} (IR)
-measures upper-tail same-history sensitivity under the chosen visual shift.
-The \emph{Separation Rate} (SR) checks how often nearby histories with
-different state-coordinate labels remain farther apart than IR plus a fixed
-margin. Lower IR and higher SR are favorable, and a checkpoint must satisfy
-both.
+Pairwise ACPC measures one clean--perturbed pair under one action sequence.
+Evaluating a checkpoint requires summarizing this measurement across many
+histories. The \emph{Invariance Radius} (IR) measures how sensitive these
+paired rollouts are to the visual perturbation; lower IR is better. Low IR
+alone is not enough because a collapsed representation would make every
+rollout look similar. The \emph{Separation Rate} (SR) therefore checks whether
+different states remain distinguishable after rollout; higher SR is better.
+A favorable checkpoint should have both low IR and high SR.
 
-Evaluation uses a fixed set of \emph{anchors}. Each anchor consists of one
-logged history window, its $H$-step observed future, and its recorded actions.
-For anchor $i$, denote its length-$H$ recorded action sequence by
-$\mathbf a_i=(a_{i,0},\ldots,a_{i,H-1})$.
-We first normalize ACPC separately for each anchor and then aggregate across
-anchors. Throughout this
-section, $Q_q$ denotes the empirical $q$-quantile, $n$ is the number of
-anchors, and $M$ is the number of perturbation draws per anchor. Distances
-for anchor $i$ are normalized by its clean-motion scale $s_i$: the median of
-its $H$ consecutive observed clean-frame displacements in the projected space
-(\Cref{eq:clean-transition-scale}, \Cref{sec:appendix-A}). Thus $s_i$ is the
-anchor's typical one-step clean motion; dividing by it expresses rollout
-distances in units of ordinary motion and uses no task outcome. With a small
-numerical stabilizer $\varepsilon_{\mathrm{norm}}$ (value in
-\Cref{sec:appendix-A}) and perturbation draw $m$, define
+To compute IR, we select $n$ logged history windows as anchors. Anchor $i$
+provides a clean history $h_i$ and its recorded action sequence
+$\mathbf a_i=(a_{i,0},\ldots,a_{i,H-1})$. We apply the visual perturbation $M$
+times to obtain $\tilde h_i^{(1)},\ldots,\tilde h_i^{(M)}$, and compute ACPC
+for each clean--perturbed pair under the same recorded actions.
+
+Raw latent distances can have different scales across histories. We therefore
+divide each ACPC value by the anchor's typical one-step clean motion, denoted
+by $s_i$. Specifically, $s_i$ is the median projected displacement between
+consecutive clean observations in the anchor window
+(\Cref{eq:clean-transition-scale,sec:appendix-A}). This expresses ACPC
+relative to the amount of motion normally seen in that history. With a small
+numerical stabilizer $\varepsilon_{\mathrm{norm}}$, define
 \begin{equation}
 R_i^{(m)}
 =
@@ -540,27 +534,30 @@ R_i^{(m)}
 \bar R_i=\frac{1}{M}\sum_{m=1}^{M}R_i^{(m)}.
 \label{eq:normalized-same-state-radius}
 \end{equation}
-The raw Invariance Radius is
+The average $\bar R_i$ gives one normalized sensitivity value for each anchor.
+Let $Q_q$ denote the empirical $q$-quantile across anchors. The raw IR is
 \begin{equation}
 \mathrm{IR}^{\mathrm{raw}}_q(\theta)
 =Q_q\!\left(\{\bar R_i\}_{i=1}^{n}\right).
 \label{eq:ir-raw}
 \end{equation}
-IR is one number per checkpoint. It reports a high quantile of normalized
-ACPC and therefore emphasizes histories with relatively high sensitivity to
-the evaluated shift. We use q90 because a mean can hide a small set of
-high-radius anchors; the reported reduction is stable across
-$H\in\{1,2,4,8\}$ and quantiles q80--q95
-(\Cref{tab:horizon-quantile-sensitivity}). This summary does not guarantee
-the tail behavior of planner candidates.
+IR is one value for the checkpoint. We use $q=0.90$ so that IR reflects
+anchors with relatively high sensitivity, which a mean could hide. The result
+is stable for $q$ between $0.80$ and $0.95$ and for the tested rollout
+horizons (\Cref{tab:horizon-quantile-sensitivity}).
 
-To compute SR, the protocol selects, for each eligible anchor, the nearest
-history inside a fixed standardized-state neighborhood whose logged future
-differs in selected task-state coordinates. Both histories are rolled forward under the anchor's
-actions, so action differences cannot create the measured separation. The
-same clean-motion normalization used by IR puts the two distances on a common
-scale. Let $D_i^{\mathrm{diff}}$ be this normalized trajectory distance
-(\Cref{eq:different-state-distance}, \Cref{sec:appendix-A}). SR is
+IR checks whether perturbed views remain close to their clean counterparts. SR
+checks whether this invariance also preserves differences between states. For
+each eligible anchor, the protocol selects a nearby logged history with a
+different state-coordinate label. Both histories are rolled forward under the
+anchor's recorded actions, so their separation is not caused by different
+action sequences. Their trajectory distance is normalized by the same
+clean-motion scale used for IR and is denoted by $D_i^{\mathrm{diff}}$
+(\Cref{eq:different-state-distance,sec:appendix-A}).
+
+Let $\mathcal I$ be the set of anchors for which such a comparison is
+available. SR is the fraction whose different-state distance exceeds raw IR
+by a margin $\delta$:
 \begin{equation}
 \mathrm{SR}_{q,\delta}(\theta)
 =
@@ -573,27 +570,23 @@ D_i^{\mathrm{diff}}
 \right],
 \label{eq:sr}
 \end{equation}
-where $\mathcal I$ contains anchors with an eligible neighbor carrying a
-different label.
-The reported protocol fixes $q=0.90$ and normalized margin $\delta=0.10$.
-SR is the fraction of tested different-label pairs whose rollout distance
-exceeds IR by more than this margin.
+We use $q=0.90$ and $\delta=0.10$. SR therefore reports how often a tested
+different-label pair remains beyond the checkpoint's perturbation radius plus
+the fixed margin.
 
-A constant representation makes both IR and every
-$D_i^{\mathrm{diff}}$ zero, so it fails SR. Conversely, a checkpoint can
-separate the tested labels while remaining visually sensitive, so SR alone
-does not replace IR. SR is limited to the state-coordinate labels used to
-construct these pairs.
-Appendix~\ref{sec:appendix-A} gives the exact pairing rules and eligible-pair
-counts.
+A collapsed representation makes IR small, but it also makes every
+$D_i^{\mathrm{diff}}$ zero and therefore fails SR. Conversely, a checkpoint
+can have high SR while remaining sensitive to visual perturbations, so IR is
+still needed. SR applies only to the state-coordinate labels used in the
+tested pairs. Appendix~\ref{sec:appendix-A} gives the exact pairing rules and
+eligible-pair counts.
 
-\subsection{Checkpoint-level threshold selection}\label{sec:checkpoint-threshold-selection}
+\subsection{Checkpoint Screening}\label{sec:checkpoint-threshold-selection}
 
-Raw IR in \Cref{eq:ir-raw} is the reference used inside SR. Because raw
-scales differ across tasks, checkpoint comparisons use relative IR. Let
-$\theta_0$ be the unaugmented checkpoint for the same task, training run, and
-model family. Its raw IR is strictly positive in
-every evaluated setting, so the following ratio is well defined:
+SR uses raw IR because it compares distances within the same checkpoint. To
+compare a trained checkpoint with its unaugmented reference, we use relative
+IR. Let $\theta_0$ denote the unaugmented checkpoint from the same task,
+training run, and model family. We define
 \begin{equation}
 \mathrm{IR}^{\mathrm{rel}}_{q}(\theta;\theta_0)
 =
@@ -601,16 +594,21 @@ every evaluated setting, so the following ratio is well defined:
 {\mathrm{IR}^{\mathrm{raw}}_{q}(\theta_0)}.
 \label{eq:ir-relative}
 \end{equation}
-Raw IR remains in the SR definition; relative IR equals one for the
-unaugmented reference. This normalization removes a common multiplicative
-scale factor but does not make raw distances comparable across tasks or model
-families.
+Relative IR equals $1$ for the reference checkpoint. Values below $1$
+indicate lower sensitivity than the reference, while values above $1$
+indicate higher sensitivity. This comparison is defined within the same task,
+training run, and model family; it does not make IR directly comparable
+across them.
 
-The checkpoint rule uses one threshold for each measure.
-For model family $\mathcal F$ and visual shift $\upsilon$ (e.g., Gaussian
-noise), let these thresholds be $t_{\mathrm{IR}}$ and $t_{\mathrm{SR}}$.
-Every quantity in the score is measured under the same shift. With a small constant
-$\varepsilon_{\mathrm{score}}$ (value in \Cref{sec:appendix-A}), define
+A checkpoint passes the screen only when relative IR is below its threshold
+and SR is above its threshold. We combine these two requirements into one
+score. Each term measures the checkpoint's normalized margin from one
+threshold, and the minimum selects the weaker of the two results.
+
+For model family $\mathcal F$ and visual shift $\upsilon$, let the thresholds
+be $t_{\mathrm{IR}}$ and $t_{\mathrm{SR}}$. All measurements in a score use
+the same shift. With a small numerical constant
+$\varepsilon_{\mathrm{score}}$, define
 \begin{equation}
 S_{\mathcal F,\upsilon}(\theta;\theta_0)
 =
@@ -622,73 +620,71 @@ S_{\mathcal F,\upsilon}(\theta;\theta_0)
 \right\}.
 \label{eq:ir-sr-score}
 \end{equation}
-The score satisfies $S\geq0$ exactly when both conditions pass: relative IR
-is at most $t_{\mathrm{IR}}$, and SR is at least $t_{\mathrm{SR}}$.
-Planning success on source tasks is used only to choose $t_{\mathrm{IR}}$ and
-$t_{\mathrm{SR}}$; success on held-out tasks is used only to evaluate the fixed rule. Thresholds are chosen separately for each model
-family. Once the thresholds are fixed, scoring a checkpoint uses no
-task-success label.
+The score is nonnegative exactly when both requirements pass. A negative
+score means that at least one requirement fails.
 
-For a comparison with reference checkpoint $\theta_0$, define the paired
-score change
+We choose the two thresholds using planning success on source tasks and apply
+them unchanged to held-out tasks. Thresholds are selected separately for each
+model family. Once fixed, the score requires no task-success labels.
+
+To compare checkpoint $\theta_1$ with its reference $\theta_0$, we report the
+change in screening score:
 $\Delta S_{\mathcal F,\upsilon}(\theta_1;\theta_0)
 =S_{\mathcal F,\upsilon}(\theta_1;\theta_0)
 -S_{\mathcal F,\upsilon}(\theta_0;\theta_0)$.
-A positive $\Delta S$ means only that $\theta_1$ scores better than its
-reference under the same thresholds; it assigns no absolute robustness label
-to either checkpoint.
+A positive $\Delta S$ means that $\theta_1$ receives a better joint IR--SR
+score than the reference. It does not label either checkpoint as robust.
 
-The pair-level experiments test the quantities linked by the two bounds
-(\Cref{sec:exp-target-aligned,sec:exp-planner}). The checkpoint experiments
-test whether the joint IR--SR rule identifies recovery across tasks, model
-families, and visual shifts
+The experiments evaluate the method at two levels. Pair-level experiments
+test whether ACPC reflects changes in prediction error and planner selection
+(\Cref{sec:exp-target-aligned,sec:exp-planner}). Checkpoint-level experiments
+test whether a fixed IR--SR screen transfers across tasks, model families, and
+visual shifts
 (\Cref{sec:exp-frozen-external,sec:exp-pldm-portability,sec:exp-cross-stressor}).
-This checkpoint-level result is an empirical screening claim, not a
-consequence of the pairwise inequalities.
+The checkpoint result is an empirical screening claim; it does not follow
+from the pairwise bounds.
 
 \section{Experiments}\label{sec:exp}
 
-We first state the evaluation protocol. A geometry case study and the full
-checkpoint sweep then establish the visual-sensitivity pattern. Next, we test
-pairwise ACPC against prediction-error drift and CEM selection regret.
-Finally, we evaluate the IR--SR rule on held-out tasks, PLDM, blur, and
-resize.
+After describing the evaluation protocol, we evaluate the diagnostic at two
+levels. At the pair level, we test whether ACPC reflects prediction-error
+change and CEM selection regret. At the checkpoint level, we examine how IR
+and SR vary across recovery and whether checkpoint screening transfers across
+tasks, PLDM, blur, and resize. We begin with a local-geometry case study to
+visualize the representation pattern behind these measurements.
 
-\subsection{Evaluation protocol}\label{sec:bg}
+\subsection{Evaluation Protocol}\label{sec:bg}
 
-\paragraph{Models, tasks, and planning evaluation.}
-LeWM~\cite{maes2026lewm} is the primary model family, and
+\paragraph{Models, Tasks, and Evaluation.}
+Most experiments use LeWM~\cite{maes2026lewm}. We also evaluate
 PLDM~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting}
-tests whether the diagnostic applies to a second joint-embedding dynamics
-architecture. We evaluate four control tasks: TwoRoom navigation, PushT
-planar manipulation, Reacher arm control, and OGBench-Cube (Cube) 3D
-manipulation. Following the standard LeWM latent-space MPC evaluation, CEM
-uses the frozen world model to optimize candidate sequences of five actions
-(plan horizon 5).
-We report \emph{planning success rate}, the percentage of evaluation episodes
+to test the diagnostic on a second world-model architecture. We use four
+control tasks: TwoRoom navigation, PushT planar manipulation, Reacher arm
+control, and OGBench-Cube (Cube) 3D manipulation. For planning evaluation,
+CEM uses the frozen world model to optimize five-step action sequences. We
+report the \emph{planning success rate}, defined as the percentage of episodes
 that reach the task goal.
 
-We use \emph{visual perturbation} for one sampled change to a history and
-\emph{visual shift} for the distribution from which that change is drawn. The
-main evaluation adds Gaussian noise with $\sigma=0.08$ to the observations
-while keeping the goal image clean. Additional evaluations use Gaussian blur
+We use \emph{visual perturbation} for one transformed history and
+\emph{visual shift} for the distribution of such transformations. The main
+experiments add Gaussian noise with $\sigma=0.08$ to the history observations
+while keeping the goal image clean. Additional experiments use Gaussian blur
 ($k=15$) and resize (scale $0.25$).
 
-For each model family and task, the Gaussian-noise training sweep contains nine
-checkpoints: one \emph{unaugmented checkpoint}, trained without noise
-augmentation, and eight checkpoints trained with full-sequence noise
-$\stdmax{}\in\{0.01,\ldots,0.08\}$. Each LeWM task--augmentation setting has
-three training runs (seeds 3072/3073/3074). Each run is evaluated with seeds
-42/43/44 and 100 episodes per evaluation seed. We use \emph{task--run cell}
-for one task and one training run.
+For each task and model family, the Gaussian-noise sweep contains nine
+training conditions: one without noise augmentation and eight with
+full-sequence Gaussian-noise augmentation at
+$\stdmax{}\in\{0.01,\ldots,0.08\}$. Both LeWM and PLDM have three independent
+training runs for each task--condition pair (seeds 3072/3073/3074). Each
+trained checkpoint is evaluated with seeds 42/43/44, using 100 episodes per
+evaluation seed. We use \emph{task--run cell} for one task and one training
+run.
 
 The training run is the unit of replication. The three evaluation seeds
 measure only within-run variability, so the reported means and dispersions
-across runs are descriptive rather than population estimates. The PLDM sweep
-has one run for each of its 36 task--augmentation settings, with the same
-evaluation seeds and episode count.
+across runs are descriptive rather than population estimates.
 
-\paragraph{Diagnostic measurements.}
+\paragraph{Diagnostic Protocol.}
 IR uses 100 logged anchors, five Gaussian-noise draws at the
 evaluation severity $\sigma=0.08$ (blur and resize diagnostics instead apply
 the corresponding shift), eight predicted steps,
@@ -700,7 +696,7 @@ Appendix~\ref{sec:appendix-A} gives the exact pairing,
 normalization, and threshold rules. Checkpoint comparisons use relative IR
 from \Cref{eq:ir-relative}.
 
-\paragraph{Threshold evaluation.}
+\paragraph{Threshold Protocol.}
 A checkpoint in the Gaussian-noise training sweep meets the
 \emph{success-rate criterion} if it
 recovers at least 80\% of the improvement from the unaugmented checkpoint to
@@ -724,7 +720,7 @@ decreases by no more than five points. We make no blur- or resize-specific
 adjustment. This analysis also does not benchmark alternative signals such as
 encoder shift or one-step ACPC.
 
-\subsection{Do visual perturbations remain local after prediction?}
+\subsection{Local Geometry of Perturbed Views}
 \label{sec:exp-local-geometry}
 
 We begin with a PushT case study showing how visual noise can make perturbed
@@ -798,7 +794,7 @@ higher SR are favorable. Dotted lines mark $t_{\mathrm{IR}}=0.3$ and $t_{\mathrm
 \label{fig:full-sweep-diagnostics}
 \end{figure}
 
-\subsection{How do IR and SR change across checkpoint recovery?}\label{sec:exp-gaussian-panel}
+\subsection{IR and SR across Checkpoint Recovery}\label{sec:exp-gaussian-panel}
 
 At evaluation noise $\sigma=0.08$, the unaugmented LeWM checkpoints lose
 $25.9\pm2.4$, $74.6\pm5.6$, $41.0\pm1.4$, and $22.1\pm2.8$ percentage points
@@ -833,7 +829,7 @@ planner-facing quantity
 (\Cref{sec:exp-target-aligned,sec:exp-planner}).
 \FloatBarrier
 
-\subsection{Recorded-action ACPC predicts error drift}\label{sec:exp-target-aligned}
+\subsection{ACPC and Prediction-Error Change}\label{sec:exp-target-aligned}
 
 Does ACPC help predict how much a visual perturbation changes multi-step
 prediction error? For each history pair, \Cref{prop:target-free-error-drift}
@@ -908,7 +904,7 @@ and selected controls
 ACPC carries information about the bounded error change that neither encoder
 shift, one-step ACPC, nor any same-horizon destroyed-action control provides.
 
-\subsection{Planner-horizon ACPC predicts CEM selection regret}\label{sec:exp-planner}
+\subsection{ACPC and CEM Selection Regret}\label{sec:exp-planner}
 
 A prediction change matters to planning only if it affects the plan that CEM
 selects. The fixed-pool bound motivates the quantity below, but adaptive CEM
@@ -968,7 +964,7 @@ perturbation-induced CEM selection change across tasks. It does not show that
 ACPC changes the selected action or improves environment performance.
 
 
-\subsection{Do thresholds chosen on some tasks identify recovery on held-out tasks?}
+\subsection{Checkpoint Screening across Tasks}
 \label{sec:exp-frozen-external}
 
 Because both the augmentation sweep and the threshold grid are discrete, we
@@ -995,48 +991,45 @@ with recovery (\Cref{fig:full-sweep-diagnostics}). Because $t_{\mathrm{IR}}=0.3$
 largest tested value, the upper edge of the useful range remains unresolved.
 \FloatBarrier
 
-\subsection{Does the diagnostic transfer to PLDM?}
+\subsection{Checkpoint Screening for PLDM}
 \label{sec:exp-pldm-portability}
 
 We apply the same ACPC, IR, and SR definitions to PLDM, which uses a
 different architecture and training recipe. The experiment repeats the
 nine-checkpoint Gaussian-noise training sweep, paired histories, eight-step
-rollouts, success-rate criterion, and threshold-selection procedure. PLDM has one
-training run per setting, so run-to-run variation is not measured. Threshold
-selection stays within PLDM: each test task uses the other three PLDM tasks
-as sources.
+rollouts, success-rate criterion, and threshold-selection procedure across
+three independent training runs. Threshold selection stays within PLDM: each
+test task uses the other three PLDM tasks as sources.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{fig_pldm_sweep_diagnostics.pdf}
-\caption{PLDM Gaussian-noise training sweep (one training run per setting).
-Success-rate error bars span the three evaluation seeds of that run. The
+\caption{PLDM Gaussian-noise training sweep over three independent training
+runs. Curves show run means, and success-rate error bars span the run range. The
 dashed gray line marks clean
 success of the unaugmented checkpoint, and the leftmost black point is its
 success at evaluation noise $\sigma=0.08$. Relative IR equals one at that
 checkpoint. Dotted lines mark $t_{\mathrm{IR}}=0.3$ and
-$t_{\mathrm{SR}}=0.95$. IR falls below its threshold near the recovery levels on TwoRoom, PushT, and Cube. On Reacher,
-relative IR remains above $t_{\mathrm{IR}}$, so no checkpoint passes the joint rule.}
+$t_{\mathrm{SR}}=0.95$. Across tasks, stronger augmentation generally lowers
+relative IR and raises SR, while planning recovery varies across training
+runs.}
 \label{fig:pldm-sweep-diagnostics}
 \end{figure}
 
-All four leave-one-task-out selections choose
-$(t_{\mathrm{IR}},t_{\mathrm{SR}})=(0.3,0.95)$. Acceptance starts at
-the observed recovery level on PushT and Cube and one level later on TwoRoom.
-On Reacher, the best noisy score exceeds the unaugmented score by only
-$1.3$ points; one checkpoint meets the relative success criterion, while the
-joint IR--SR rule accepts none, giving balanced accuracy $0.5$. Pooled over all 36 PLDM
-rows, the rule obtains balanced accuracy $0.836$, precision $0.789$, and
-recall $0.882$.
+Three of the four leave-one-task-out selections choose
+$(t_{\mathrm{IR}},t_{\mathrm{SR}})=(0.3,0.95)$; the split tested on TwoRoom
+chooses $(0.2,0.95)$. Across the 108 checkpoint decisions, balanced accuracy
+is $0.681$, with precision $0.667$ and recall $0.786$. Averaging the four
+task-level balanced accuracies gives $0.699$. Screening is strongest on
+TwoRoom ($0.875$) and less reliable on PushT ($0.571$), Reacher ($0.632$),
+and Cube ($0.717$).
 
-The accepted PLDM checkpoints have both low IR and high SR, matching the
-low-IR, high-SR pattern observed on LeWM. Applying the LeWM grid point after
-within-task PLDM normalization happens to give the same decisions, but this
-coincidence does not establish architecture-invariant thresholds. The result
-shows that the same two-part checkpoint rule can be applied to PLDM; one run
-per setting limits the evidence.
+The same low-IR, high-SR pattern appears across the PLDM sweeps, but its
+agreement with recovery is weaker than for LeWM. This result supports the
+use of IR and SR with a second architecture while showing that their
+checkpoint-screening accuracy is model- and task-dependent.
 
-\subsection{Does relative ordering persist under blur and resize?}
+\subsection{Checkpoint Comparison under Blur and Resize}
 \label{sec:exp-cross-stressor}
 
 Blur ($k=15$) and resize (scale $0.25$) each provide one fixed-severity check
@@ -1098,10 +1091,9 @@ Other limits concern the downstream claims. The planner experiment predicts
 a clean-model cost; it does not intervene on CEM or show improved simulator
 return. The adaptive-CEM certificate applies only while candidate pools
 remain aligned and stops at the first failed elite condition. The selected
-IR point lies at the upper edge of the evaluated grid. LeWM has three
-training runs per setting, PLDM has one, and blur and resize are each tested
-at one severity. Finally, the main recovery sweep varies one training
-intervention: Gaussian-noise augmentation.
+IR point lies at the upper edge of the evaluated grid. Blur and resize are
+each tested at one severity. Finally, the main recovery sweep varies one
+training intervention: Gaussian-noise augmentation.
 
 \paragraph{Future work.}
 Important next steps are direct task outcomes for ACPC-informed planner
@@ -1336,9 +1328,9 @@ evaluation seeds, trajectory count, paired-history construction, $H=8$ rollout
 statistic, and SR definition. For cross-task analysis, we divide raw IR by the
 value of the corresponding unaugmented PLDM checkpoint. We then select
 thresholds on the other three PLDM tasks. Success rates from the evaluation
-task never enter threshold selection. A second test applies the corresponding
-LeWM threshold pair after the same within-task PLDM normalization. We do not
-assume that model families share raw thresholds.
+task never enter threshold selection. Thresholds are selected separately
+within each model family; we do not assume that the families share raw
+thresholds.
 
 \paragraph{Success-rate criterion.}
 Within each task and training run, let $P_{\mathrm{base}}$ and
@@ -1505,20 +1497,6 @@ levels on the other tasks lie above it, so the tighter threshold rejects them
 and delays the accepted onset.
 
 \input{tables/table_cross_task_ir_sr_all_subsets_v2}
-
-On the PLDM sweep, the most visible single-run artifact is Reacher at
-$\stdmax{}=0.05$, where the clean and the noisy score drop together. The
-diagnostic tracks this dip: the two levels with the lowest clean scores
-($\stdmax{}=0.01$ and $0.05$) are exactly the two with the highest relative
-IR in \Cref{fig:pldm-sweep-diagnostics}(c), consistent with relative IR
-responding to checkpoint quality itself rather than only to the augmentation
-level.
-
-For PLDM, \Cref{tab:pldm-architecture-portability} lists the per-task
-balanced accuracies of the leave-task-out screen of
-\Cref{sec:exp-pldm-portability} next to the LeWM values; pooled over all 36
-PLDM decisions, balanced accuracy is $0.836$ with precision $0.789$ and
-recall $0.882$.
 
 \input{tables/table_pldm_architecture_portability_ir_sr_v2}
 

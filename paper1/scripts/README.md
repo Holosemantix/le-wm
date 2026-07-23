@@ -25,10 +25,54 @@ input frames. The next three rebuild the future-drift display, all 14 LeWM
 cross-task threshold partitions, and the IR--SR blur/resize comparison
 analysis. `build_acpc_submission_assets` writes the vector planner-evidence figure,
 compact planner/full-sweep tables, and the PLDM architecture-portability
-table. Its PLDM inputs are the complete 36-row frozen sweep at
+table. Its PLDM inputs are the complete 108-row, three-training-run sweep at
 `paper1/results/external_validation/pldm_frozen_rows_v2.csv`; the IR--SR
 comparison also reads the current LeWM cross-task threshold summary. These
 steps perform no model evaluation or training.
+
+To reproduce the two additional PLDM training families from local checkpoints,
+first build their behavior and checkpoint-bound manifests, then run the frozen
+GPU diagnostic pipeline:
+
+```bash
+python tools/build_canonical_evals_pldm.py \
+  --root /path/to/pldm/task/roots \
+  --training-seed 3073 \
+  --out assets/paper1_data/training_seed_eval_manifests/pldm_seed3073_evals_legacy.json
+python tools/build_canonical_evals_pldm.py \
+  --root /path/to/pldm/task/roots \
+  --training-seed 3074 \
+  --out assets/paper1_data/training_seed_eval_manifests/pldm_seed3074_evals_legacy.json
+python -m paper1.scripts.audit_pldm_checkpoint_loadability \
+  --canonical assets/paper1_data/training_seed_eval_manifests/pldm_seed3073_evals_legacy.json \
+  --model-root /path/to/pldm/task/roots/lewm-tworooms \
+  --model-root /path/to/pldm/task/roots/lewm-pusht \
+  --model-root /path/to/pldm/task/roots/lewm-reacher \
+  --model-root /path/to/pldm/task/roots/lewm-cube \
+  --out paper1/results/pldm_checkpoint_loadability_seed3073_v2.json
+python -m paper1.scripts.build_pldm_canonical_manifest_v2 \
+  --legacy assets/paper1_data/training_seed_eval_manifests/pldm_seed3073_evals_legacy.json \
+  --loadability paper1/results/pldm_checkpoint_loadability_seed3073_v2.json \
+  --out assets/paper1_data/training_seed_eval_manifests/pldm_seed3073_evals.json
+# Repeat the preceding audit/build pair with seed3074 paths.
+bash paper1/scripts/run_pldm_multiseed_gaussian_diagnostics.sh
+python -m paper1.scripts.build_pldm_multiseed_validation \
+  --predictions-3072 paper1/results/external_validation/pldm_frozen_predictions_blind_v2.csv \
+  --manifest-3072 assets/paper1_data/canonical_evals_pldm_v2.json \
+  --predictions-3073 paper1/results/pldm_multiseed_v2/seed3073/frozen_predictions_blind.csv \
+  --manifest-3073 assets/paper1_data/training_seed_eval_manifests/pldm_seed3073_evals_legacy.json \
+  --predictions-3074 paper1/results/pldm_multiseed_v2/seed3074/frozen_predictions_blind.csv \
+  --manifest-3074 assets/paper1_data/training_seed_eval_manifests/pldm_seed3074_evals_legacy.json \
+  --out paper1/results/external_validation/pldm_frozen_rows_v2.csv
+```
+
+`run_pldm_multiseed_gaussian_diagnostics.sh` defaults to seeds 3073/3074 and
+eight GPUs, but accepts `PAPER1_MODEL_BASE`, `PAPER1_DIAGNOSTIC_GPUS`, and
+`PAPER1_TRAINING_SEEDS`. It reuses the immutable metric protocol and refuses
+incomplete 36-checkpoint families. `build_pldm_multiseed_validation.py` then
+joins the frozen predictions with all three training runs to produce the
+108-row paper-facing CSV. Checkpoint paths in released manifests are
+machine-local provenance; portable reruns should regenerate them.
 
 Reader-facing builders canonicalize diagnostic fields through
 `ir_sr_compat.py`. It maps both immutable ATR/SMPR fields and released IR/DR-v1
@@ -178,7 +222,7 @@ v2 runner binds every reference by seed, task, stressor, and severity.
 
 Plot output notes:
 
-- `plot_pldm_sweep_diagnostics` renders the PLDM analogue of the main sweep figure from `pldm_frozen_rows_v2.csv`, with the same dotted common-threshold lines and no across-run shading (one run per setting).
+- `plot_pldm_sweep_diagnostics` renders the PLDM analogue of the main sweep figure from `pldm_frozen_rows_v2.csv`, with the same dotted common-threshold lines and run means/ranges over three independent training runs.
 - `plot_full_sweep_diagnostics` writes vector PDF figures by default: a main figure with separate behavior and ATR/SMPR axes per task, the diagnostic-region scatter, and a compact four-across appendix planner-guard figure; recovery shading is rendered as continuous majority-recovered ranges. The main sweep display divides ATR by each task$\times$seed no-noise value (base 1) while leaving SMPR on its original rate scale; frozen calibration uses the unrescaled ATR statistic.
 - `plot_cross_stressor_submission` reads the locked all-pairs CSV and writes the 24-pair LeWM submission scatter as a vector PDF; it does not rerun diagnostics or evaluation.
 - `plot_endpoint_atr_smpr` writes the two-panel endpoint dumbbell figure with base-to-noise-trained movement arrows.

@@ -43,6 +43,10 @@ BLIND_PATH = (
     ROOT / "paper1/results/external_validation/pldm_frozen_predictions_blind_v2.csv"
 )
 BLIND_SIDECAR_PATH = Path(f"{BLIND_PATH}.metadata.json")
+MULTISEED_ROOT = ROOT / "paper1/results/pldm_multiseed_v2"
+MULTISEED_MANIFEST_ROOT = (
+    ROOT / "assets/paper1_data/training_seed_eval_manifests"
+)
 TASKS = ("TwoRoom", "PushT", "Reacher", "Cube")
 RHO_GRID = (0.0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08)
 EXPECTED_GRID = {(task, rho) for task in TASKS for rho in RHO_GRID}
@@ -320,3 +324,54 @@ def test_pldm_pipeline_parsers_expose_no_gate_recalibration_controls() -> None:
             for forbidden in ("tau", "threshold", "calibration")
             for name in names
         )
+
+
+@pytest.mark.parametrize("training_seed", (3073, 3074))
+def test_new_pldm_training_families_are_complete_and_protocol_bound(
+    training_seed: int,
+) -> None:
+    protocol_sha = _sha256(PROTOCOL_PATH)
+    family_id = f"pldm_canonical_seed{training_seed}"
+    manifest = _strict_json(
+        MULTISEED_MANIFEST_ROOT / f"pldm_seed{training_seed}_evals.json"
+    )
+    manifest_metadata = manifest["_metadata"]
+    assert manifest_metadata["status"] == "complete"
+    assert manifest_metadata["status_counts"] == {"ok": 36}
+    assert manifest_metadata["training_family_id"] == family_id
+    assert manifest_metadata["training_seed"] == training_seed
+    assert len(manifest_metadata["checkpoint_rows"]) == 36
+
+    seed_root = MULTISEED_ROOT / f"seed{training_seed}"
+    for filename, schema in (
+        ("acpc_horizon_v2_checkpoint_bound.json", "paper1-acpc-horizon-v2-1.0"),
+        ("smpr_v2_checkpoint_bound.json", "paper1-smpr-v2-merged-1.0"),
+        ("diagnostic_input.json", "paper1-frozen-diagnostic-input-1.0"),
+    ):
+        artifact = _strict_json(seed_root / filename)
+        metadata = artifact["metadata"]
+        rows = artifact["rows"]
+        assert metadata["schema_version"] == schema
+        assert metadata["status"] == "complete"
+        assert metadata["status_counts"] == {"ok": 36}
+        assert metadata["training_family_id"] == family_id
+        assert metadata["training_seed"] == training_seed
+        assert metadata["protocol_sha256"] == protocol_sha
+        assert len(rows) == 36
+        assert {
+            (row["task"], float(row["training_rho"])) for row in rows
+        } == EXPECTED_GRID
+        assert {row["status"] for row in rows} == {"ok"}
+
+    blind_path = seed_root / "frozen_predictions_blind.csv"
+    sidecar = _strict_json(Path(f"{blind_path}.metadata.json"))
+    fields, rows = _read_csv(blind_path)
+    assert fields == sidecar["fields"] == list(BLIND_FIELDS)
+    assert sidecar["row_count"] == len(rows) == 36
+    assert sidecar["metadata"]["status"] == "complete"
+    assert sidecar["metadata"]["protocol_hash"] == protocol_sha
+    assert sidecar["metadata"]["source_hashes"]["blind_rows"] == _sha256(
+        blind_path
+    )
+    assert {row["training_family_id"] for row in rows} == {family_id}
+    assert {int(row["training_seed"]) for row in rows} == {training_seed}

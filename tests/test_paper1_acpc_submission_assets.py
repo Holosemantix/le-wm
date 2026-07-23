@@ -53,19 +53,21 @@ def test_pldm_table_uses_the_current_task_relative_protocol() -> None:
     rows_path = ROOT / "paper1/results/external_validation/pldm_frozen_rows_v2.csv"
     with rows_path.open(newline="", encoding="utf-8") as stream:
         rows = list(csv.DictReader(stream))
+    assert len(rows) == 108
+    assert {int(row["training_seed"]) for row in rows} == {3072, 3073, 3074}
     cross_task = json.loads(
         (
-            ROOT / "paper1/results/cross_task_ir_dr_all_subsets_summary_v1.json"
+            ROOT / "paper1/results/cross_task_ir_sr_all_subsets_summary_v2.json"
         ).read_text(encoding="utf-8")
     )
 
     table = build_pldm_table(rows, cross_task)
-    assert "leave-task-out IR--DR screen in two model families" in table
-    assert "TwoRoom & 0.935 & 0.938" in table
-    assert "PushT & 0.917 & 0.750" in table
-    assert "Reacher & 0.889 & 0.500" in table
-    assert "Cube & 0.858 & 0.875" in table
-    assert "within-task IR normalization yields identical PLDM decisions" in table
+    assert "leave-one-task-out IR--SR screen in two model families" in table
+    assert "three independent training runs" in table
+    assert "TwoRoom & 0.935 & 0.875" in table
+    assert "PushT & 0.917 & 0.571" in table
+    assert "Reacher & 0.889 & 0.632" in table
+    assert "Cube & 0.858 & 0.717" in table
 
 
 def test_submission_full_sweep_table_keeps_all_tasks_and_nine_levels() -> None:
@@ -86,4 +88,4 @@ def test_submission_full_sweep_table_keeps_all_tasks_and_nine_levels() -> None:
     assert "PushT & 7.2 & 86.8" in table
     assert "Reacher & 18.2 & 83.3" in table
     assert "Cube & 43.1 & 66.0" in table
-    assert "Relative IR & DR" in table
+    assert "Relative IR & SR" in table

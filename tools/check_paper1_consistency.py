@@ -414,11 +414,9 @@ LEGACY_REQUIRED_MAIN_TEXT_SNIPPETS = [
 # Public-v1 gates are structural and claim-oriented.  The longer list above is
 # retained only to document the pre-remediation wording contract.
 REQUIRED_MAIN_TEXT_SNIPPETS = [
-    "It evaluates a frozen checkpoint and is not a training objective.",
-    "SR applies only to the supplied coordinate labels.",
-    "schematic and do not enter any reported metric.",
+    "SR applies only to the state-coordinate labels used in the tested pairs.",
+    "Layouts are schematic: only within-panel proximity is meaningful, and positions enter no reported metric.",
     "does not certify robustness.",
-    "assigns no absolute robustness label",
     "The three evaluation seeds measure only within-run variability",
     "checkpoint rows are never treated as independent replicates.",
     "We make no blur- or resize-specific adjustment.",
@@ -514,7 +512,6 @@ FORBIDDEN_SNIPPETS = [
     "universal robustness predictor",
     "is a universal checkpoint selector",
     "general corruption transfer theorem",
-    "three independent PLDM training seeds",
     "flip|cert=0 proves",
     "kappa_relative_isotropic is bounded",
     "ATM reproduction",
@@ -1188,18 +1185,18 @@ def check_visual_text_structure() -> None:
 
     required_headings = (
         "\\subsection{Pairwise ACPC}",
-        "\\subsection{Common-future error drift}",
-        "\\subsection{Candidate-cost drift and planner stability}",
-        "\\subsection{IR and SR for checkpoint screening}",
-        "\\subsection{Checkpoint-level threshold selection}",
-        "\\subsection{Evaluation protocol}",
-        "\\subsection{Do visual perturbations remain local after prediction?}",
-        "\\subsection{How do IR and SR change across checkpoint recovery?}",
-        "\\subsection{Recorded-action ACPC predicts error drift}",
-        "\\subsection{Planner-horizon ACPC predicts CEM selection regret}",
-        "\\subsection{Do thresholds chosen on some tasks identify recovery on held-out tasks?}",
-        "\\subsection{Does the diagnostic transfer to PLDM?}",
-        "\\subsection{Does relative ordering persist under blur and resize?}",
+        "\\subsection{Prediction-Error Bounds}",
+        "\\subsection{Selection Stability from Planning-Cost Bounds}",
+        "\\subsection{Checkpoint-Level IR and SR}",
+        "\\subsection{Checkpoint Screening}",
+        "\\subsection{Evaluation Protocol}",
+        "\\subsection{Local Geometry of Perturbed Views}",
+        "\\subsection{IR and SR across Checkpoint Recovery}",
+        "\\subsection{ACPC and Prediction-Error Change}",
+        "\\subsection{ACPC and CEM Selection Regret}",
+        "\\subsection{Checkpoint Screening across Tasks}",
+        "\\subsection{Checkpoint Screening for PLDM}",
+        "\\subsection{Checkpoint Comparison under Blur and Resize}",
     )
     for heading in required_headings:
         if heading not in body:
@@ -1235,7 +1232,7 @@ def check_visual_text_structure() -> None:
         "\\label{fig:acpc-ir-sr-overview}",
         "\\label{fig:cross-stressor-ir-sr-comparison}",
         "\\Cref{tab:cross-stressor-ir-sr-all-pairs}",
-        "normalized margin $\\delta=0.10$",
+        "We use $q=0.90$ and $\\delta=0.10$.",
     )
     for theory_object in required_body_theory_objects:
         if theory_object not in body:
@@ -3940,21 +3937,23 @@ def check_public_v1_remediation_artifacts() -> None:
         ROOT / "paper1/results/external_validation/pldm_frozen_rows_v2.csv"
     ).open(newline="", encoding="utf-8") as stream:
         e2_rows = list(csv.DictReader(stream))
-    if len(e2_rows) != 36:
-        fail("E2 PLDM architecture audit must contain one complete 36-row family")
+    if len(e2_rows) != 108:
+        fail("E2 PLDM architecture audit must contain three complete 36-row families")
     if {row["model_family"] for row in e2_rows} != {"PLDM"}:
         fail("E2 architecture audit contains a non-PLDM row")
+    if {int(row["training_seed"]) for row in e2_rows} != {3072, 3073, 3074}:
+        fail("E2 PLDM architecture audit has incomplete training-seed coverage")
     if {row["task"] for row in e2_rows} != {"TwoRoom", "PushT", "Reacher", "Cube"}:
         fail("E2 PLDM architecture audit has incomplete task coverage")
     e2_table = (
-        ROOT / "paper1/tables/table_pldm_architecture_portability.tex"
+        ROOT / "paper1/tables/table_pldm_architecture_portability_ir_sr_v2.tex"
     ).read_text(encoding="utf-8")
     for expected in (
-        "TwoRoom & 0.935 & 0.938",
-        "PushT & 0.917 & 0.750",
-        "Reacher & 0.889 & 0.500",
-        "Cube & 0.858 & 0.875",
-        "after within-task ATR normalization",
+        "TwoRoom & 0.935 & 0.875",
+        "PushT & 0.917 & 0.571",
+        "Reacher & 0.889 & 0.632",
+        "Cube & 0.858 & 0.717",
+        "three independent training runs",
     ):
         if expected not in e2_table:
             fail(f"E2 PLDM architecture-portability table changed: {expected}")
