@@ -187,17 +187,15 @@ margin; higher is better. SR applies only to the supplied coordinate labels.
 \includegraphics[width=\linewidth]{fig_acpc_ir_sr_overview.pdf}
 \caption{\textbf{Overview of the Action-Conditioned Predictive Consistency
 (ACPC) diagnostic.}
-\textbf{(a)}~Inputs are logged PushT observations: a clean history, a
-Gaussian-perturbed view of the same history, and a nearby history with a
-different task state, shown for illustration and not necessarily the
-neighbor selected by the SR protocol. Stacked outlines indicate additional
-logged histories.
+\textbf{(a)}~Inputs are logged PushT observations: a clean history and a
+Gaussian-perturbed view of the same history.
 \textbf{(b)}~Schematic latent-space comparison of a fragile (top) and a
-robust (bottom) checkpoint. The frozen encoder embeds each input, and both
-branches are rolled out for $H$ steps under anchor $i$'s shared recorded
+robust (bottom) checkpoint. The frozen encoder embeds the paired inputs, and
+both branches are rolled out for $H$ steps under anchor $i$'s shared recorded
 action sequence $\mathbf a_i=(a_{i,0},\ldots,a_{i,H-1})$; ACPC measures the
-distance between the clean and perturbed predicted trajectories. Under the
-fragile checkpoint, the
+distance between the clean and perturbed predicted trajectories. Gray points
+represent other states in the logged data; the SR protocol selects eligible
+different-label comparisons from them. Under the fragile checkpoint, the
 perturbation-induced spread grows during the rollout and overlaps other
 states; under the robust checkpoint, the paired views remain close while
 different states remain separated. Each panel uses an independent schematic

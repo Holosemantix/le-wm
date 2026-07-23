@@ -48,8 +48,8 @@ python -m paper1.scripts.build_linearization_horizon_artifact \
 This path records a schema-migration provenance block and leaves all measured
 values unchanged.
 
-If the source PushT H5 is available, regenerate the three Figure 1 inputs and
-their metadata first with
+If the source PushT H5 is available, regenerate Figure 1's paired inputs and
+retained source metadata first with
 `python -m paper1.scripts.build_acpc_overview_inputs --h5 /path/to/pusht_expert_train.h5`.
 The planner input is the
 three-seed v4 summary: 24 validated seed-3074 reference shards under
