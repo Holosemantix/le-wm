@@ -413,19 +413,6 @@ def _draw_pair_panel(
         alpha=0.80,
         zorder=3,
     )
-    if rollout and not robust:
-        ax.text(
-            0.5 * (clean[0] + perturbed[0]) + 0.16,
-            0.5 * (clean[1] + perturbed[1]) + 0.21,
-            r"$\mathrm{ACPC}_H$",
-            ha="center",
-            va="center",
-            fontsize=6.0,
-            color=ORANGE,
-            fontweight="bold",
-            zorder=7,
-        )
-
     ax.scatter(
         [clean[0]],
         [clean[1]],

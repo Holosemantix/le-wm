@@ -104,26 +104,22 @@
 \begin{abstract}
 Joint-embedding predictive architectures (JEPAs) learn world models that
 predict in a compact latent space rather than in pixels, reducing the
-pressure to model nuisance appearance. Yet this reduced pressure is not a
-guarantee: a visual perturbation that leaves the
-task state unchanged can still alter the encoded history and every
-prediction built on it, while indiscriminate invariance can erase state
-distinctions that determine the appropriate action.
-Bisimulation makes the required selectivity precise: two observations should be
+pressure to model nuisance appearance. Yet this provides no guarantee against visual perturbations: they can
+still alter the encoded representation and affect subsequent
+action-conditioned predictions.
+Bisimulation captures this requirement precisely: two observations should be
 treated as the same state only when their action-conditioned consequences
-agree. Following this intuition, we introduce Action-Conditioned Predictive
-Consistency (ACPC), a diagnostic that encodes a clean history and a visually
-perturbed view of it, rolls both representations forward under the same action
-sequence, and measures the divergence between their predicted futures. We
-prove that this divergence
-bounds the perturbation-induced change in multi-step prediction error and
-planner cost. At the checkpoint level, two complementary measures form a
-screen: the Invariance Radius captures how far views of the same state
-spread after prediction, and the Separation Rate checks that different
-states remain distinguishable. Experiments on four visual control tasks and
-two model families show that pairwise ACPC predicts these changes in
-practice and that the ACPC-based screen transfers to new tasks and visual
-shifts.\ifdefined\blindsubmission\else\
+agree. Guided by this criterion, we introduce Action-Conditioned Predictive
+Consistency (ACPC), a diagnostic that measures how far a clean history and
+a visually perturbed view of it diverge after being rolled forward under the
+same action sequence. We prove that this divergence bounds the
+perturbation-induced change in multi-step prediction error and planner cost.
+Two complementary measures complete the diagnostic: the Invariance Radius
+quantifies how far a clean view and its perturbed counterpart spread after prediction, and the
+Separation Rate checks that different states remain distinguishable.
+Experiments on four visual control tasks and two model families show that
+pairwise ACPC predicts perturbation-induced prediction and cost changes, and
+that the ACPC-based screen transfers to new tasks and visual shifts.\ifdefined\blindsubmission\else\
 Code is available \href{\paperpubliccodeurl}{\textcolor{blue}{here}}.\fi
 
 \smallskip
@@ -138,49 +134,36 @@ Code is available \href{\paperpubliccodeurl}{\textcolor{blue}{here}}.\fi
 %% ===========================================================================
 \section{Introduction}\label{sec:intro}
 
-World models support control by predicting how candidate actions change the
-environment~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. Joint-embedding
-predictive architectures (JEPAs) instead formulate prediction in
-representation space rather than reconstructing pixels
-~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa}. This can reduce pressure
-to preserve nuisance image detail
-~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures},
-but latent prediction alone does not establish robustness. Noise, blur, or
-reduced resolution can leave the underlying state unchanged while altering
-the encoded history and every prediction made from it.
-A robust model should ignore appearance changes that preserve the state, but
-it must retain state distinctions that can change the appropriate action.
-Bisimulation formalizes this requirement: two observations may represent the
-same abstract state only if, under every action, they have equal rewards and
-induce the same transition probabilities over bisimulation equivalence
-classes~\cite{gelada2019deepmdp,zhang2021dbc}. It locates the
-test of sameness in action-conditioned consequences rather than in
-appearance---the yardstick our diagnostic adopts---although we do not test
-reward or transition equivalence.
+World models support control by predicting the outcomes of candidate
+actions~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. Joint-embedding
+predictive architectures (JEPAs) predict future representations rather than
+reconstruct future pixels, avoiding an explicit requirement to reproduce
+nuisance visual details
+~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}.
+Such representations should be insensitive to task-irrelevant visual
+perturbations while preserving distinctions between situations that require
+different actions.
+This requirement echoes the intuition behind bisimulation, which defines
+state equivalence through action-conditioned consequences rather than visual
+appearance~\cite{gelada2019deepmdp,zhang2021dbc}. However, encoder distances
+alone do not show how a perturbation propagates through prediction. Over a
+multi-step rollout, the predictor may amplify or contract the initial
+representation difference. Encoder-level and single-transition diagnostics
+do not directly measure this rollout-level effect. We therefore ask: when a
+clean history and its perturbed view are rolled forward under the same action
+sequence, how far apart are their predicted trajectories?
 
-What matters for control is how a visual discrepancy evolves under the
-actions considered by the planner. A planner does not act on an encoder
-output in isolation: it rolls that representation forward under candidate
-actions and ranks the predicted outcomes. A small encoder discrepancy may
-grow during this computation, while a larger one may contract before it
-reaches the planner. Encoder distance therefore cannot answer the central
-question: after applying the same actions, how far apart are the predicted
-futures of two views of the same history?
-
-Action-Conditioned Predictive Consistency (ACPC) answers this question, as
-summarized in \Cref{fig:acpc-ir-sr-overview}. ACPC encodes a clean history
-and a visually perturbed view of that history, rolls both forward under one
-action sequence, and measures the distance between their multi-step
-predictions. It evaluates a frozen checkpoint and is not a training
-objective.
-
-A low ACPC value is not sufficient: a constant representation would make
-every paired rollout identical. We therefore summarize each checkpoint with
-two complementary measures. The \emph{Invariance Radius} (IR) is a high
-quantile of normalized ACPC over logged histories; lower is better. The
-\emph{Separation Rate} (SR) is the fraction of nearby pairs with different
-state-coordinate labels whose rollout distance exceeds raw IR by a fixed
-margin; higher is better. SR applies only to the supplied coordinate labels.
+To measure this rollout-level effect, we introduce Action-Conditioned
+Predictive Consistency (ACPC), as illustrated in
+\Cref{fig:acpc-ir-sr-overview}. ACPC rolls a clean history and its perturbed
+view forward under the same action sequence and measures the distance between
+their predicted trajectories. Low ACPC alone, however, does not rule out
+representational collapse: a constant representation would make every paired
+rollout identical. We therefore summarize ACPC across histories with the
+\emph{Invariance Radius} (IR), where lower values indicate less sensitivity
+to visual perturbations. The \emph{Separation Rate} (SR) checks whether
+different states remain distinguishable after rollout, with higher values
+indicating better separation.
 
 \begin{figure}[t]
 \centering
@@ -192,15 +175,12 @@ Gaussian-perturbed view of the same history.
 \textbf{(b)}~Schematic latent-space comparison of a fragile (top) and a
 robust (bottom) checkpoint. The frozen encoder embeds the paired inputs, and
 both branches are rolled out for $H$ steps under anchor $i$'s shared recorded
-action sequence $\mathbf a_i=(a_{i,0},\ldots,a_{i,H-1})$; ACPC measures the
-distance between the clean and perturbed predicted trajectories. Gray points
-represent other states in the logged data; the SR protocol selects eligible
-different-label comparisons from them. Under the fragile checkpoint, the
+action sequence $\mathbf a_i$; ACPC measures the distance between the clean
+and perturbed predicted trajectories. Under the fragile checkpoint, the
 perturbation-induced spread grows during the rollout and overlaps other
-states; under the robust checkpoint, the paired views remain close while
-different states remain separated. Each panel uses an independent schematic
-2-D layout; only within-panel proximity is meaningful. Positions and
-neighborhoods are schematic and do not enter any reported metric.
+states (gray); under the robust checkpoint, the paired views stay close while
+different states remain separated. Layouts are schematic: only within-panel
+proximity is meaningful, and positions enter no reported metric.
 \textbf{(c)}~Checkpoint-level summary of each row. The Invariance Radius
 (IR) aggregates normalized ACPC over perturbation draws and anchors and is
 reported relative to the unaugmented checkpoint; the Separation Rate (SR)
@@ -210,177 +190,131 @@ if relative IR is low and SR is high; passing is specific to the evaluated
 visual shift and state-coordinate labels and does not certify robustness.}
 \label{fig:acpc-ir-sr-overview}
 \end{figure}
+\FloatBarrier
 
-ACPC also connects this measurement to downstream quantities. When a logged
-common future is available, an exact samplewise inequality bounds the
-perturbation-induced change in multi-step prediction error
-(\Cref{prop:target-free-error-drift}). For squared latent goal costs,
-candidate-specific ACPC bounds every candidate's cost movement. Together with
-the clean cost margins, these bounds give sufficient conditions for preserving
-the fixed-pool winner or elite set
-(\Cref{prop:exact-cost-certificate}). These results bound the effect of a
-visual perturbation. They are deterministic, samplewise bounds on the
-evaluated predictions and require no distributional or global smoothness
-assumptions. They do not assert that either prediction is accurate or that a
-certified planner obtains higher simulator return.
-
-We evaluate the diagnostic on four visual control tasks, using
-LeWM~\cite{maes2026lewm} as the primary JEPA world model and PLDM as a second
-model family (\Cref{sec:exp-pldm-portability}). At the pair level, on LeWM's
-unaugmented checkpoints, eight-step ACPC under recorded actions predicts
-perturbation-induced error drift with $51.3\pm3.5\%$ lower cross-validated
-MAE than the strongest same-horizon destroyed-action control
-(\Cref{sec:exp-target-aligned}). Planner-horizon ACPC improves cross-task
-prediction of CEM selection regret by $15.2\pm2.0\%$, with an improvement in
-all 12 task--run evaluations (\Cref{sec:exp-planner}). At the checkpoint
-level, a joint IR--SR rule selected on two or three tasks places the first
-accepted checkpoint within one augmentation level of recovery on the
-remaining tasks
-(\Cref{sec:exp-frozen-external}). Under blur and resize, the
-joint score agrees with the predefined success criterion on 22 of 24
-checkpoint pairs at the tested severities
-(\Cref{sec:exp-cross-stressor}). We apply the same procedure to PLDM, choosing
-thresholds only from PLDM tasks.
+We prove that ACPC bounds the perturbation-induced change in multi-step
+prediction error. When the same candidate action sequences are evaluated
+from both views, ACPC also yields bounds on changes in their predicted costs
+(\Cref{prop:target-free-error-drift,prop:exact-cost-certificate}). These
+bounds hold for each evaluated pair and require no distributional or
+smoothness assumptions. Experiments across four visual control tasks and two
+model families (LeWM~\cite{maes2026lewm} and
+PLDM~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting})
+show that ACPC is informative about prediction-error drift and CEM selection
+regret. Together, IR and SR help identify checkpoints that perform well under
+visual perturbations across tasks and perturbation types.
 
 The contributions are:
 \begin{enumerate}[leftmargin=1.4em]
-  \item \textbf{A paired-rollout diagnostic}
-  (\Cref{sec:acpc}). ACPC measures how a state-preserving visual
-  change affects a frozen model's prediction under fixed actions; IR
-  summarizes same-history sensitivity, and SR checks that selected
-  state-coordinate distinctions remain separated.
-  \item \textbf{Exact links to prediction and planning quantities}
+  \item We introduce \textbf{Action-Conditioned Predictive Consistency
+  (ACPC)}, which compares the predicted trajectories of a clean history and
+  its perturbed view under the same action sequence. IR summarizes
+  sensitivity across histories, while SR checks whether different states
+  remain distinguishable (\Cref{sec:acpc}).
+  \item We prove \textbf{samplewise bounds} on how much a visual perturbation
+  can change multi-step prediction error. When the same candidate action
+  sequences are evaluated from both views, we also bound changes in their
+  predicted costs
   (\Cref{prop:target-free-error-drift,prop:exact-cost-certificate}).
-  The inequalities bound how much a visual perturbation can change
-  multi-step prediction error and a planner candidate's squared latent goal
-  cost.
-  \item \textbf{Evaluation across tasks, shifts, and model families}
-  (\Cref{sec:exp}). We compare pair-level ACPC with same-horizon controls
-  whose action information is removed, choose joint IR--SR thresholds on
-  source tasks and evaluate them on held-out tasks, and report
-  fixed-severity checks under blur, resize, and PLDM.
+  \item We evaluate \textbf{ACPC, IR, and SR} across four control tasks, two
+  model families, and three visual perturbations. The results show that ACPC
+  provides predictive information about perturbation-induced changes in
+  multi-step prediction error and planning cost, while IR and SR help
+  identify trained models that maintain control performance
+  (\Cref{sec:exp}).
 \end{enumerate}
 \section{Related Work}\label{sec:related}
 
-ACPC lies at the intersection of predictive representation learning, robust
-visual control, and decision-aware model evaluation.
-
-\paragraph{Latent prediction and self-predictive RL.}
-DreamerV3 and TD-MPC2 use learned dynamics to predict the consequences of
-candidate actions~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. JEPAs replace
-pixel reconstruction with prediction in representation space
+\paragraph{World Models.}
+World models predict how an environment evolves under actions and use those
+predictions for control. DreamerV3~\cite{hafner2025dreamerv3} learns from
+imagined trajectories, while TD-MPC2~\cite{hansen2024tdmpc2} plans with
+learned latent dynamics. Joint-embedding predictive architectures (JEPAs)
+learn representations by predicting targets in representation space rather
+than reconstructing pixels
 ~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,assran2025vjepa2}.
-LeWM brings this design to an end-to-end world model stabilized by
-SIGReg~\cite{maes2026lewm}; its Gaussianity statistic is based on the
-Epps--Pulley test~\cite{eppspulley1983}. PLDM is a separate joint-embedding
-dynamics design
-~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting}.
-
-PBL and SPR are close training-time precedents. PBL predicts future latent
-observations from histories and action sequences, while SPR rolls an
-action-conditioned latent transition model toward moving-average targets and
-uses augmented views in its prediction loss
-~\cite{guo2020pbl,schwarzer2021spr}. Later work studies collapse in
-self-predictive learning and analyzes the action-conditioned objective
-~\cite{tang2023selfpredictive,khetarpal2025actionconditional}. These methods
-use self-prediction to learn a representation. ACPC instead freezes the
-encoder and predictor, then compares two predicted rollouts under the same
-actions; its core paired discrepancy does not require an observed future.
-
-Analyses of latent prediction show, under specific assumptions, how
-predictive learning can favor influential features over noisy ones
+LeWM~\cite{maes2026lewm}, our primary model family, combines this
+joint-embedding objective with action-conditioned latent prediction.
+PLDM~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting}
+provides a different joint-embedding dynamics architecture on which we also
+evaluate ACPC. Related training objectives predict future latent observations
+from histories and actions in PBL~\cite{guo2020pbl}, or match predicted and
+target representations under augmentation in SPR~\cite{schwarzer2021spr}.
+Subsequent work studies collapse in self-predictive
+learning~\cite{tang2023selfpredictive} and the importance of action
+conditioning~\cite{khetarpal2025actionconditional}. Theoretical analyses ask
+when latent prediction retains informative rather than nuisance features
 ~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}
-or recover latent state up to a linear transformation
-~\cite{klindt2026lejepaworldmodel}. seq-JEPA conditions prediction on known
-view transformations and studies the trade-off between invariance and
-equivariance~\cite{ghaemi2025seqjepa}. Our question is different: after
-training, does a same-state visual discrepancy contract or grow as the
-predictor rolls it forward?
+or recovers latent state up to a linear
+transformation~\cite{klindt2026lejepaworldmodel}.
+seq-JEPA~\cite{ghaemi2025seqjepa} further studies invariance and equivariance
+under known view transformations. These works explain how predictive
+representations and dynamics are learned; we evaluate how a trained predictor
+responds when its visual input is perturbed.
 
-\paragraph{Robust visual world models and selective invariance.}
-DrQ and DrQ-v2 improve visual control through training-time augmentation,
-while SODA uses augmentation in an auxiliary representation-learning
-objective~\cite{kostrikov2020drq,yarats2022drqv2,hansen2021soda}.
-ViGMO and VIBR learn invariances in latent or value space
-~\cite{vigmo,dupuis2023vibr}, while ReOI changes observations at test time to
-reduce distractor sensitivity in visual model-predictive control
-~\cite{chen2025reoi}.
+\paragraph{Robustness to Visual Perturbations.}
+Training-time augmentation improves visual control in
+DrQ~\cite{kostrikov2020drq} and DrQ-v2~\cite{yarats2022drqv2}, while
+SODA~\cite{hansen2021soda} uses augmentation in an auxiliary
+representation-learning objective. ViGMO~\cite{vigmo} and
+VIBR~\cite{dupuis2023vibr} learn invariance in latent or value space.
+ReOI~\cite{chen2025reoi} instead modifies observations at test time to reduce
+distractor sensitivity in visual model-predictive control. Other methods
+change world-model training. TPC~\cite{nguyen2021tpc} favors temporally
+predictable information, and DreamerPro~\cite{deng2022dreamerpro} replaces
+pixel reconstruction with prototype prediction. Task Informed
+Abstractions~\cite{fu2021tia} and Denoised
+MDPs~\cite{wang2022denoisedmdps} use task or reward information to separate
+useful state from distractors. Iso-Dream~\cite{pan2022isodream} separates
+controllable and noncontrollable dynamics, while other approaches combine
+temporal masking with bisimulation~\cite{sun2024latentrobustwm}, infer the
+actions of visually similar distractors~\cite{wang2024ad3}, or use task-aware
+reconstruction~\cite{hutson2024policyshaped}. These methods reflect a broader
+principle: robustness should remove irrelevant visual variation without
+discarding distinctions needed for control. Bisimulation formalizes
+behavioral similarity through rewards and action-conditioned transitions
+~\cite{gelada2019deepmdp,zhang2021dbc,bsmpc}, with reward-free variants based
+only on transitions~\cite{toso2026bisimjepa}. Value-equivalent and value-aware
+representations instead preserve information needed for value prediction or
+planning~\cite{grimm2020valueequivalence,voelcker2025calibratedvalueaware}.
+Most closely related, MWM~\cite{yan2026mwm} enforces action-conditioned
+rollout consistency during training. ACPC measures how clean and perturbed
+latent rollouts diverge in a frozen model under the same action sequence,
+without retraining it.
 
-Several methods modify world-model training itself. TPC favors temporally
-predictable information, and DreamerPro replaces pixel reconstruction with
-prototype prediction~\cite{nguyen2021tpc,deng2022dreamerpro}. Task Informed
-Abstractions and Denoised MDPs use task or reward structure to separate
-useful state from distractors~\cite{fu2021tia,wang2022denoisedmdps}.
-Iso-Dream models controllable and noncontrollable dynamics in separate
-branches, while still using predicted noncontrollable states for value
-estimation~\cite{pan2022isodream}. Other work combines temporal masking with
-bisimulation objectives, infers actions of visually similar distractors, or
-uses task-aware reconstruction to focus model capacity
-~\cite{sun2024latentrobustwm,wang2024ad3,hutson2024policyshaped}. These
-approaches train a more robust or better-factored world model. ACPC does not
-change training; it audits a frozen predictor using paired views and shared
-actions.
-
-Control-aware representation learning also explains why robustness cannot
-mean removing every difference. Classical bisimulation grounds behavioral
-similarity in rewards and action-conditioned transition structure
-~\cite{gelada2019deepmdp,zhang2021dbc,bsmpc}, while reward-free variants may
-retain only the transition term~\cite{toso2026bisimjepa}. In contrast,
-value-equivalent and value-aware formulations organize learning around
-downstream value or planning quantities
-~\cite{grimm2020valueequivalence,voelcker2025calibratedvalueaware}. These
-formulations motivate selective invariance, but our diagnostic is narrower:
-it compares specified visual perturbations and a finite set of logged
-coordinate labels, without testing reward or transition equivalence.
-
-\paragraph{Decision-aware diagnostics.}
-Objective-mismatch work shows that one-step model likelihood need not track
-downstream control performance~\cite{lambert2020objective}. A later survey
-organizes methods that align model learning with downstream decisions
-~\cite{wei2024objectivemismatch}. A recent position paper argues that a
-world-model evaluation should match its claimed decision-making use, including
-interventions, long rollouts, planning, and policy evaluation or optimization
-~\cite{yu2026worldmodelevaluation}.
-
-Recent methods probe or enforce different aspects of learned dynamics. ATM
-compares action information in encoded and predicted
-transitions~\cite{chen2026atm};
-Delta-JEPA decodes actions from latent differences~\cite{zhang2026deltajepa};
-ACID tests cycle action consistency with inverse dynamics~\cite{seo2026acid};
-Future-Compatible asks whether generated futures agree with their stated
-actions~\cite{ruan2026futurecompatible}; and World Models as Group Actions
-tests identity, inverse, and composition structure~\cite{wang2026groupactions}.
-MWM uses observation-level action-conditioned rollout consistency as a
-training objective~\cite{yan2026mwm}, while other work diagnoses kinematic
-failures in long rollouts~\cite{schaefer2026kinematic}. Frozen inverse-dynamics
-probes also test whether video-world-model latents retain action information
-under visual corruptions~\cite{yeom2026actionrelevant}. These tests examine
-action content or rollout validity; ACPC asks how a specified same-state
-visual change propagates through the predictor.
-
-Recent adversarial evaluations measure how visual attacks degrade closed-loop
-world-model agents. \mbox{WMAttack} searches over attack configurations,
-whereas ARB4WM separates policy-, value-, and latent-dynamics objectives for
-Dreamer-family agents~\cite{guo2026wmattack,zhang2026arb4wm}. ACPC instead
-uses matched task-preserving views and reports a checkpoint diagnostic rather
-than adversarial return degradation. Other concurrent work compares predicted
-rollouts with environment transitions or compares predicted and true plan costs
-~\cite{vakalis2026operator,you2026controlpredictability}. Those diagnostics
-measure model error; ACPC measures the change between two views and can be
-computed without a true future.
-
-\paragraph{Robustness certificates.}
-CARRL certifies Q-based action choices under bounded observation uncertainty,
-and CROP uses smoothing to certify per-state actions and finite-horizon reward
-bounds~\cite{lutjens2020certifiedrl,wu2022crop}. Our result is narrower: for an
-evaluated clean--perturbed pair and an aligned finite candidate pool, the
-stated margin conditions preserve the winner or the exact top-$k$ elite set.
-They do not certify the complete ranking, policy actions, or return.
-
-Together, these lines of work motivate a paired, planner-facing audit of a
-frozen model. ACPC measures the rollout change, IR summarizes upper-tail
-same-history sensitivity, and SR checks separation on protocol-selected
-pairs with different logged state-coordinate labels.
+\paragraph{Diagnostics for World Models.}
+Model accuracy and control performance do not always move together:
+one-step likelihood can be a poor guide to downstream
+performance~\cite{lambert2020objective}. This mismatch has motivated methods
+that connect model learning and evaluation to downstream
+decisions~\cite{wei2024objectivemismatch}. World-model evaluation should
+therefore reflect the intended use of the model, including long rollouts,
+planning, and policy evaluation~\cite{yu2026worldmodelevaluation}. One group
+of methods tests or enforces whether learned dynamics respect actions.
+ATM~\cite{chen2026atm} compares action information in encoded and predicted
+transitions, while Delta-JEPA~\cite{zhang2026deltajepa} decodes actions from
+latent differences. ACID~\cite{seo2026acid} adds inverse-dynamics cycle
+consistency to the planning cost. Future-Compatible~\cite{ruan2026futurecompatible}
+checks whether generated futures agree with their stated actions, and World
+Models as Group Actions~\cite{wang2026groupactions} tests identity, inverse,
+and composition structure. Related diagnostics expose kinematic failures in
+long rollouts~\cite{schaefer2026kinematic} or use frozen inverse-dynamics
+probes to test whether latents retain action information under visual
+corruptions~\cite{yeom2026actionrelevant}. A second group evaluates downstream
+failure. \mbox{WMAttack}~\cite{guo2026wmattack} searches for visual attacks on
+closed-loop world-model agents, while ARB4WM~\cite{zhang2026arb4wm} targets
+their policy, value, and latent dynamics. Other work compares predicted
+rollouts with environment transitions~\cite{vakalis2026operator} or compares
+predicted and true plan costs~\cite{you2026controlpredictability}. Finally,
+CARRL~\cite{lutjens2020certifiedrl} certifies Q-based action choices under
+bounded observation uncertainty, and CROP~\cite{wu2022crop} certifies
+per-state actions and finite-horizon reward bounds through smoothing. These
+certificates cover policy decisions or return, whereas our bounds preserve
+only the winner or elite set for an evaluated pair and fixed candidate pool.
+More broadly, existing diagnostics assess action content, rollout validity,
+model error, or attack sensitivity. ACPC asks how a task-preserving visual
+perturbation propagates through a shared-action rollout without requiring the
+true future.
 
 \section{Action-Conditioned Predictive Consistency as a Diagnostic}\label{sec:acpc}
 
@@ -661,7 +595,7 @@ $\theta_0$ be the unaugmented checkpoint for the same task, training run, and
 model family. Its raw IR is strictly positive in
 every evaluated setting, so the following ratio is well defined:
 \begin{equation}
-\widetilde{\mathrm{IR}}_{q}(\theta;\theta_0)
+\mathrm{IR}^{\mathrm{rel}}_{q}(\theta;\theta_0)
 =
 \frac{\mathrm{IR}^{\mathrm{raw}}_{q}(\theta)}
 {\mathrm{IR}^{\mathrm{raw}}_{q}(\theta_0)}.
@@ -681,7 +615,7 @@ $\varepsilon_{\mathrm{score}}$ (value in \Cref{sec:appendix-A}), define
 S_{\mathcal F,\upsilon}(\theta;\theta_0)
 =
 \min\!\left\{
-\frac{t_{\mathrm{IR}}-\widetilde{\mathrm{IR}}_{q}(\theta;\theta_0)}
+\frac{t_{\mathrm{IR}}-\mathrm{IR}^{\mathrm{rel}}_{q}(\theta;\theta_0)}
 {|t_{\mathrm{IR}}|+\varepsilon_{\mathrm{score}}},
 \frac{\mathrm{SR}_{q,\delta}(\theta)-t_{\mathrm{SR}}}
 {|t_{\mathrm{SR}}|+\varepsilon_{\mathrm{score}}}

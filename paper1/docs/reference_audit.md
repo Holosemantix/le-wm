@@ -121,7 +121,7 @@ This table is superseded by the 2026-07-22 consolidation above.
 | `roy2007effrank` | https://zenodo.org/records/40328 | Fixed: added 15th EUSIPCO wording, pages 606--610, DOI, and URL. | OK: cited for effective-rank diagnostic. |
 | `jing2022dimcollapse` | https://openreview.net/forum?id=YevsQ05DEN7 | Fixed: added official OpenReview URL. | OK: cited for dimensional-collapse context. |
 | `teoh2025nextlatent` | https://arxiv.org/abs/2511.05963 | Fixed: removed `Tim Pearce`, who is not in the official arXiv author list; added arXiv eprint, DOI, class, and URL. | OK: cited for next-latent compact world-model representation context. |
-| `eppspulley1983` | https://academic.oup.com/biomet/article-pdf/70/3/723/687464/70-3-723.pdf | Fixed: added DOI and official Biometrika URL. | OK: cited for the empirical-characteristic-function normality test behind SIGReg. |
+| `eppspulley1983` | https://academic.oup.com/biomet/article-pdf/70/3/723/687464/70-3-723.pdf | Removed from `references.bib`. | The SIGReg implementation detail was removed from Related Work, so this entry is no longer maintained by the manuscript. |
 | `bardes2022vicreg` | https://openreview.net/forum?id=xm6YD62D1Ub | Fixed: added official OpenReview URL. | OK: cited for anti-collapse SSL regularization context. |
 | `kornblith2019cka` | https://proceedings.mlr.press/v97/kornblith19a.html | Fixed: added ICML/PMLR volume, pages, publisher, and URL. | OK: cited for CKA representation similarity. |
 | `alain2017linearprobes` | https://openreview.net/forum?id=HJ4-rAVtl | OK: ICLR 2017 workshop / arXiv metadata retained. | OK: cited for linear-probe diagnostics. |
