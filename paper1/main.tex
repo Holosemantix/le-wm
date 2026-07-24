@@ -155,10 +155,11 @@ clean history and its perturbed view are rolled forward under the same action
 sequence, how far apart are their predicted trajectories?
 
 To measure this rollout-level effect, we introduce Action-Conditioned
-Predictive Consistency (ACPC), as illustrated in
-\Cref{fig:acpc-ir-sr-overview}. ACPC rolls a clean history and its perturbed
+Predictive Consistency (ACPC). ACPC rolls a clean history and its perturbed
 view forward under the same action sequence and measures the distance between
-their predicted trajectories. Low ACPC alone, however, does not rule out
+their predicted trajectories. \Cref{fig:acpc-ir-sr-overview} provides a
+conceptual overview of how this pairwise distance is summarized by IR and
+complemented by SR. Low ACPC alone, however, does not rule out
 representational collapse: a constant representation would make every paired
 rollout identical. We therefore summarize ACPC across histories with the
 \emph{Invariance Radius} (IR), where lower values indicate less sensitivity
@@ -169,26 +170,22 @@ indicating better separation.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{fig_acpc_ir_sr_overview.pdf}
-\caption{\textbf{Overview of the Action-Conditioned Predictive Consistency
-(ACPC) diagnostic.}
-\textbf{(a)}~Inputs are logged PushT observations: a clean history and a
-Gaussian-perturbed view of the same history.
-\textbf{(b)}~Schematic latent-space comparison of a fragile (top) and a
-robust (bottom) checkpoint. The frozen encoder embeds the paired inputs, and
-both branches are rolled out for $H$ steps under anchor $i$'s shared recorded
-action sequence $\mathbf a_i$; ACPC measures the distance between the clean
-and perturbed predicted trajectories. Under the fragile checkpoint, the
-perturbation-induced spread grows during the rollout and overlaps other
-states (gray); under the robust checkpoint, the paired views stay close while
-different states remain separated. Layouts are schematic: only within-panel
-proximity is meaningful, and positions enter no reported metric.
-\textbf{(c)}~Checkpoint-level summary of each row. The Invariance Radius
-(IR) aggregates normalized ACPC over perturbation draws and anchors and is
-reported relative to the unaugmented checkpoint; the Separation Rate (SR)
-is the fraction of selected different-label pairs whose rollout distance
-exceeds the raw IR by a fixed margin. A checkpoint passes the screen only
-if relative IR is low and SR is high; passing is specific to the evaluated
-visual shift and state-coordinate labels and does not certify robustness.}
+\caption{\textbf{Conceptual overview of ACPC, IR, and SR.}
+\textbf{(a)}~A logged clean history and a visually perturbed view of it form
+the paired inputs.
+\textbf{(b)}~A frozen world model encodes both views and rolls them forward
+for $H$ steps under the same recorded action sequence. ACPC measures the
+distance between the two predicted trajectories. In the fragile case,
+perturbation-induced spread grows and overlaps representations of other
+states (gray); in the robust case, the paired views remain close while other
+states stay separated. Layouts are schematic: only within-panel proximity is
+meaningful, and positions enter no reported metric.
+\textbf{(c)}~The Invariance Radius (IR) summarizes perturbation-induced
+rollout spread across histories, while the Separation Rate (SR) measures how
+often selected different-state rollouts remain separated beyond this spread.
+A checkpoint passes the diagnostic screen only if IR is low and SR is high;
+passing is specific to the evaluated visual shift and state labels and does
+not certify robustness.}
 \label{fig:acpc-ir-sr-overview}
 \end{figure}
 \FloatBarrier
