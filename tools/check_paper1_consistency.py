@@ -281,10 +281,6 @@ REQUIRED_ARTIFACTS = [
     / "paper1"
     / "tables"
     / "table_horizon_quantile_sensitivity_ir_sr_v2.tex",
-    ROOT
-    / "paper1"
-    / "tables"
-    / "table_pldm_architecture_portability_ir_sr_v2.tex",
     ROOT / "assets" / "paper1_figs" / "fig_acpc_ir_sr_overview.pdf",
     ROOT / "assets" / "paper1_figs" / "fig_acpc_ir_sr_overview.png",
     ROOT
@@ -446,7 +442,6 @@ PAPER_TABLES = {
     "tables/table_target_aligned_acpc",
     "tables/table_target_aligned_acpc_absolute",
     "tables/table_cross_task_ir_sr_all_subsets_v2",
-    "tables/table_pldm_architecture_portability_ir_sr_v2",
     "tables/table_cross_stressor_ir_sr_summary_v2",
     "tables/table_cross_stressor_ir_sr_all_pairs_v2",
 }
@@ -1195,7 +1190,7 @@ def check_visual_text_structure() -> None:
         "\\subsection{ACPC and Prediction-Error Change}",
         "\\subsection{ACPC and CEM Selection Regret}",
         "\\subsection{Checkpoint Screening across Tasks}",
-        "\\subsection{Checkpoint Screening for PLDM}",
+        "\\subsection{Diagnostic Behavior on PLDM}",
         "\\subsection{Checkpoint Comparison under Blur and Resize}",
     )
     for heading in required_headings:
@@ -3938,25 +3933,13 @@ def check_public_v1_remediation_artifacts() -> None:
     ).open(newline="", encoding="utf-8") as stream:
         e2_rows = list(csv.DictReader(stream))
     if len(e2_rows) != 108:
-        fail("E2 PLDM architecture audit must contain three complete 36-row families")
+        fail("PLDM diagnostic sweep must contain three complete 36-row families")
     if {row["model_family"] for row in e2_rows} != {"PLDM"}:
-        fail("E2 architecture audit contains a non-PLDM row")
+        fail("PLDM diagnostic sweep contains a non-PLDM row")
     if {int(row["training_seed"]) for row in e2_rows} != {3072, 3073, 3074}:
-        fail("E2 PLDM architecture audit has incomplete training-seed coverage")
+        fail("PLDM diagnostic sweep has incomplete training-seed coverage")
     if {row["task"] for row in e2_rows} != {"TwoRoom", "PushT", "Reacher", "Cube"}:
-        fail("E2 PLDM architecture audit has incomplete task coverage")
-    e2_table = (
-        ROOT / "paper1/tables/table_pldm_architecture_portability_ir_sr_v2.tex"
-    ).read_text(encoding="utf-8")
-    for expected in (
-        "TwoRoom & 0.935 & 0.875",
-        "PushT & 0.917 & 0.571",
-        "Reacher & 0.889 & 0.632",
-        "Cube & 0.858 & 0.717",
-        "three independent training runs",
-    ):
-        if expected not in e2_table:
-            fail(f"E2 PLDM architecture-portability table changed: {expected}")
+        fail("PLDM diagnostic sweep has incomplete task coverage")
 
     e3 = checked_external("paper1/results/external_validation/cross_stressor_fixed_rho_summary.json")
     e3_meta = e3["metadata"]

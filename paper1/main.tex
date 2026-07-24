@@ -117,9 +117,10 @@ perturbation-induced change in multi-step prediction error and planner cost.
 Two complementary measures complete the diagnostic: the Invariance Radius
 quantifies how far a clean view and its perturbed counterpart spread after prediction, and the
 Separation Rate checks that different states remain distinguishable.
-Experiments on four visual control tasks and two model families show that
-pairwise ACPC predicts perturbation-induced prediction and cost changes, and
-that the ACPC-based screen transfers to new tasks and visual shifts.\ifdefined\blindsubmission\else\
+Experiments on four visual control tasks show that pairwise ACPC predicts
+perturbation-induced prediction and cost changes. On LeWM, the ACPC-based
+screen transfers to new tasks and visual shifts, while PLDM exhibits similar
+diagnostic trends under a different architecture.\ifdefined\blindsubmission\else\
 Code is available \href{\paperpubliccodeurl}{\textcolor{blue}{here}}.\fi
 
 \smallskip
@@ -197,13 +198,14 @@ prediction error. When the same candidate action sequences are evaluated
 from both views, ACPC also yields bounds on changes in their predicted costs
 (\Cref{prop:target-free-error-drift,prop:exact-cost-certificate}). These
 bounds hold for each evaluated pair and require no distributional or
-smoothness assumptions. Experiments across four visual control tasks and two
-model families (LeWM~\cite{maes2026lewm} and
-PLDM~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting})
-show that ACPC is informative about prediction-error change and selection
-regret for the cross-entropy method (CEM)~\cite{kroese2006cem}. Together, IR
-and SR help identify checkpoints that perform well under visual perturbations
-across tasks and perturbation types.
+smoothness assumptions. Experiments on LeWM~\cite{maes2026lewm} show that
+ACPC is informative about prediction-error change and selection regret for
+the cross-entropy method (CEM)~\cite{kroese2006cem}. Together, IR and SR help
+identify checkpoints that perform well under visual perturbations across
+tasks and perturbation types. A
+PLDM~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting}
+sweep examines how the same diagnostic quantities behave under a different
+world-model architecture.
 
 The contributions are:
 \begin{enumerate}[leftmargin=1.4em]
@@ -217,12 +219,12 @@ The contributions are:
   sequences are evaluated from both views, we also bound changes in their
   predicted costs
   (\Cref{prop:target-free-error-drift,prop:exact-cost-certificate}).
-  \item We evaluate \textbf{ACPC, IR, and SR} across four control tasks, two
-  model families, and three visual perturbations. The results show that ACPC
-  provides predictive information about perturbation-induced changes in
-  multi-step prediction error and planning cost, while IR and SR help
-  identify trained models that maintain control performance
-  (\Cref{sec:exp}).
+  \item We evaluate \textbf{ACPC, IR, and SR} across four control tasks and
+  three visual perturbations, and examine their behavior on a second
+  world-model architecture. ACPC provides predictive information about
+  perturbation-induced changes in multi-step prediction error and planning
+  cost, while IR and SR help identify trained models that maintain control
+  performance (\Cref{sec:exp}).
 \end{enumerate}
 \section{Related Work}\label{sec:related}
 
@@ -638,9 +640,9 @@ score than the reference. It does not label either checkpoint as robust.
 The experiments evaluate the method at two levels. Pair-level experiments
 test whether ACPC reflects changes in prediction error and planner selection
 (\Cref{sec:exp-target-aligned,sec:exp-planner}). Checkpoint-level experiments
-test whether a fixed IR--SR screen transfers across tasks, model families, and
-visual shifts
-(\Cref{sec:exp-frozen-external,sec:exp-pldm-portability,sec:exp-cross-stressor}).
+test whether a fixed IR--SR screen transfers across LeWM tasks and visual
+shifts, and separately examine how IR and SR behave on PLDM
+(\Cref{sec:exp-frozen-external,sec:exp-pldm-diagnostics,sec:exp-cross-stressor}).
 The checkpoint result is an empirical screening claim; it does not follow
 from the pairwise bounds.
 
@@ -649,9 +651,10 @@ from the pairwise bounds.
 After describing the evaluation protocol, we evaluate the diagnostic at two
 levels. At the pair level, we test whether ACPC reflects prediction-error
 change and CEM selection regret. At the checkpoint level, we examine how IR
-and SR vary across recovery and whether checkpoint screening transfers across
-tasks, PLDM, blur, and resize. We begin with a local-geometry case study to
-visualize the representation pattern behind these measurements.
+and SR vary across LeWM recovery, whether checkpoint screening transfers
+across tasks and visual shifts, and whether similar diagnostic trends appear
+on PLDM. We begin with a local-geometry case study to visualize the
+representation pattern behind these measurements.
 
 \subsection{Evaluation Protocol}\label{sec:bg}
 
@@ -697,7 +700,7 @@ normalization, and threshold rules. Checkpoint comparisons use relative IR
 from \Cref{eq:ir-relative}.
 
 \paragraph{Threshold Protocol.}
-A checkpoint in the Gaussian-noise training sweep meets the
+A checkpoint in the LeWM Gaussian-noise training sweep meets the
 \emph{success-rate criterion} if it
 recovers at least 80\% of the improvement from the unaugmented checkpoint to
 the best checkpoint at evaluation noise $\sigma=0.08$, while losing no more
@@ -991,15 +994,13 @@ with recovery (\Cref{fig:full-sweep-diagnostics}). Because $t_{\mathrm{IR}}=0.3$
 largest tested value, the upper edge of the useful range remains unresolved.
 \FloatBarrier
 
-\subsection{Checkpoint Screening for PLDM}
-\label{sec:exp-pldm-portability}
+\subsection{Diagnostic Behavior on PLDM}
+\label{sec:exp-pldm-diagnostics}
 
 We apply the same ACPC, IR, and SR definitions to PLDM, which uses a
 different architecture and training recipe. The experiment repeats the
-nine-checkpoint Gaussian-noise training sweep, paired histories, eight-step
-rollouts, success-rate criterion, and threshold-selection procedure across
-three independent training runs. Threshold selection stays within PLDM: each
-test task uses the other three PLDM tasks as sources.
+nine-checkpoint Gaussian-noise training sweep, paired histories, and
+eight-step rollouts across three independent training runs.
 
 \begin{figure}[t]
 \centering
@@ -1009,25 +1010,14 @@ runs. Curves show run means, and success-rate error bars span the run range. The
 dashed gray line marks clean
 success of the unaugmented checkpoint, and the leftmost black point is its
 success at evaluation noise $\sigma=0.08$. Relative IR equals one at that
-checkpoint. Dotted lines mark $t_{\mathrm{IR}}=0.3$ and
-$t_{\mathrm{SR}}=0.95$. Across tasks, stronger augmentation generally lowers
-relative IR and raises SR, while planning recovery varies across training
-runs.}
+checkpoint. Across tasks, stronger augmentation generally lowers relative IR
+and raises SR, while planning performance varies across training runs.}
 \label{fig:pldm-sweep-diagnostics}
 \end{figure}
 
-Three of the four leave-one-task-out selections choose
-$(t_{\mathrm{IR}},t_{\mathrm{SR}})=(0.3,0.95)$; the split tested on TwoRoom
-chooses $(0.2,0.95)$. Across the 108 checkpoint decisions, balanced accuracy
-is $0.681$, with precision $0.667$ and recall $0.786$. Averaging the four
-task-level balanced accuracies gives $0.699$. Screening is strongest on
-TwoRoom ($0.875$) and less reliable on PushT ($0.571$), Reacher ($0.632$),
-and Cube ($0.717$).
-
-The same low-IR, high-SR pattern appears across the PLDM sweeps, but its
-agreement with recovery is weaker than for LeWM. This result supports the
-use of IR and SR with a second architecture while showing that their
-checkpoint-screening accuracy is model- and task-dependent.
+Across the PLDM sweeps, higher planning success under visual perturbation is
+generally accompanied by lower relative IR and higher SR, although the
+relationship varies across tasks and training runs.
 
 \subsection{Checkpoint Comparison under Blur and Resize}
 \label{sec:exp-cross-stressor}
@@ -1111,8 +1101,9 @@ while SR checks that nearby histories with different state-coordinate labels
 remain separated. In our experiments, recorded-action ACPC improves
 prediction of error drift and CEM selection regret, and joint IR--SR
 thresholds chosen on source tasks identify recovery on held-out tasks.
-Results on PLDM, blur, and resize provide initial evidence beyond the primary
-Gaussian-noise setting.
+PLDM exhibits similar diagnostic trends under a different architecture, while
+blur and resize provide initial evidence beyond the primary Gaussian-noise
+shift.
 \bibliographystyle{unsrt}
 \bibliography{references}
 
@@ -1325,12 +1316,9 @@ Gaussian-noise augmentation with $\stdmax{}\in\{0.01,\ldots,0.08\}$.
 \paragraph{PLDM protocol.}
 PLDM uses the same four tasks, nine-checkpoint Gaussian-noise training grid,
 evaluation seeds, trajectory count, paired-history construction, $H=8$ rollout
-statistic, and SR definition. For cross-task analysis, we divide raw IR by the
-value of the corresponding unaugmented PLDM checkpoint. We then select
-thresholds on the other three PLDM tasks. Success rates from the evaluation
-task never enter threshold selection. Thresholds are selected separately
-within each model family; we do not assume that the families share raw
-thresholds.
+statistic, and SR definition. For display, we divide raw IR by the value of
+the corresponding unaugmented PLDM checkpoint within the same task and
+training run.
 
 \paragraph{Success-rate criterion.}
 Within each task and training run, let $P_{\mathrm{base}}$ and
@@ -1368,9 +1356,9 @@ anchor's q50 clean observed-transition scale, including the transition from
 the final history observation to the first future observation. We then
 average multiple noise draws within each anchor and take q90 across anchors.
 This gives raw IR in \Cref{eq:ir-raw}, which SR uses as its same-history
-reference. For sweep plots and cross-task threshold selection within each model family, we
-divide raw IR by the corresponding unaugmented value as in
-\Cref{eq:ir-relative} before computing thresholds or run summaries. The
+reference. For sweep plots, we divide raw IR by the corresponding
+unaugmented value as in \Cref{eq:ir-relative}. Only the LeWM cross-task
+analysis uses these normalized values for threshold selection. The
 numerical stabilizers
 are $\varepsilon_{\mathrm{norm}}=10^{-8}$ in
 \Cref{eq:normalized-same-state-radius} and
@@ -1440,9 +1428,11 @@ Cube & \code{observation} (28) & Three median bits from the first two coordinate
 \end{table}
 
 \paragraph{Threshold grids.}
-For cross-task evaluation, candidate thresholds are
-$t_{\mathrm{IR}}\in\{0.05,0.075,0.10,0.15,0.20,0.30\}$ for task-relative IR
-and $t_{\mathrm{SR}}\in\{0.80,0.85,0.90,0.95\}$ for SR. Within each source-task subset,
+For the LeWM cross-task evaluation, candidate thresholds are
+$t_{\mathrm{IR}}\in\{0.05,\allowbreak 0.075,\allowbreak 0.10,\allowbreak
+0.15,\allowbreak 0.20,\allowbreak 0.30\}$ for task-relative IR and
+$t_{\mathrm{SR}}\in\{0.80,\allowbreak 0.85,\allowbreak 0.90,\allowbreak
+0.95\}$ for SR. Within each source-task subset,
 selection minimizes, in order, mean absolute recovery-onset mismatch,
 false-early count, and false-late count. It then maximizes balanced accuracy,
 prefers smaller $t_{\mathrm{IR}}$, and finally prefers larger
@@ -1497,8 +1487,6 @@ levels on the other tasks lie above it, so the tighter threshold rejects them
 and delays the accepted onset.
 
 \input{tables/table_cross_task_ir_sr_all_subsets_v2}
-
-\input{tables/table_pldm_architecture_portability_ir_sr_v2}
 
 \section{Cross-Stressor Pairs and Discordant Cases}
 \label{sec:appendix-cross-stressor}

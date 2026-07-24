@@ -7,7 +7,6 @@ from pathlib import Path
 from paper1.scripts.build_acpc_submission_assets import (
     build_absolute_table,
     build_increment_table,
-    build_pldm_table,
     build_sweep_table,
 )
 
@@ -47,27 +46,6 @@ def test_submission_planner_tables_are_bound_to_validated_three_seed_summary() -
         "227.04$\\pm$16.92 & 3.64$\\pm$0.68"
     ) in absolute
     assert "not an environment success rate" in absolute
-
-
-def test_pldm_table_uses_the_current_task_relative_protocol() -> None:
-    rows_path = ROOT / "paper1/results/external_validation/pldm_frozen_rows_v2.csv"
-    with rows_path.open(newline="", encoding="utf-8") as stream:
-        rows = list(csv.DictReader(stream))
-    assert len(rows) == 108
-    assert {int(row["training_seed"]) for row in rows} == {3072, 3073, 3074}
-    cross_task = json.loads(
-        (
-            ROOT / "paper1/results/cross_task_ir_sr_all_subsets_summary_v2.json"
-        ).read_text(encoding="utf-8")
-    )
-
-    table = build_pldm_table(rows, cross_task)
-    assert "leave-one-task-out IR--SR screen in two model families" in table
-    assert "three independent training runs" in table
-    assert "TwoRoom & 0.935 & 0.875" in table
-    assert "PushT & 0.917 & 0.571" in table
-    assert "Reacher & 0.889 & 0.632" in table
-    assert "Cube & 0.858 & 0.717" in table
 
 
 def test_submission_full_sweep_table_keeps_all_tasks_and_nine_levels() -> None:

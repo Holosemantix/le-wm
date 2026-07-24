@@ -2,7 +2,7 @@
 
 The diagnostic protocol was frozen on 10 July 2026 at 09:33 UTC using only the LeWM seed-3072 Gaussian calibration split. The immutable protocol file has SHA-256
 \codebrk{edcb801c3da388e673c9b55d706a558aa01da7a281fc151e52e1cda566045a21}.
-All held-out LeWM, PLDM, blur/resize, and failed target-view results were evaluated without threshold retuning.
+All held-out LeWM, blur/resize, and failed target-view results were evaluated without threshold retuning.
 
 This release reports three independently trained seeds for both LeWM and PLDM. Each checkpoint is evaluated with three additional seeds, which quantify conditional evaluation variability rather than training-run replication. Blur/resize results are a fixed-strength strongest-severity boundary test, not a corruption benchmark. The sharp certificate applies to one sampled ordered candidate pool, and the JVP analysis is local. Component and SMPR controls do not establish that a long horizon, correct-action conditioning, task labels, or four-task oracle semantics are empirically necessary.
 
