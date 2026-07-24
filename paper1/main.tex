@@ -997,7 +997,7 @@ largest tested value, the upper edge of the useful range remains unresolved.
 We apply the same ACPC, IR, and SR definitions to PLDM, which uses a
 different architecture and training recipe. The experiment repeats the
 nine-checkpoint Gaussian-noise training sweep, paired histories, and
-eight-step rollouts across three independent training runs.
+eight-step rollouts.
 
 \begin{figure}[t]
 \centering
@@ -1008,7 +1008,7 @@ dashed gray line marks clean
 success of the unaugmented checkpoint, and the leftmost black point is its
 success at evaluation noise $\sigma=0.08$. Relative IR equals one at that
 checkpoint. Across tasks, stronger augmentation generally lowers relative IR
-and raises SR, while planning performance varies across training runs.}
+and raises SR.}
 \label{fig:pldm-sweep-diagnostics}
 \end{figure}
 
@@ -1019,13 +1019,15 @@ strength of this relationship varies across tasks.
 \subsection{Checkpoint Comparison under Blur and Resize}
 \label{sec:exp-cross-stressor}
 
-Blur ($k=15$) and resize (scale $0.25$) each provide one fixed-severity check
-outside the Gaussian-noise shift used for threshold selection. For each of the
-24 checkpoint pairs in \Cref{sec:bg}, we recompute IR and SR under the new shift
-and compare the $\stdmax{}=0.08$ checkpoint with its unaugmented counterpart
-using $\Delta S$. A positive $\Delta S$ means that the augmented checkpoint
-gets a higher joint IR--SR score. This is a relative comparison, not an
-absolute pass decision. No blur or resize outcome enters threshold selection.
+To test whether the diagnostics remain informative beyond Gaussian noise, we
+evaluate one blur severity ($k=15$) and one resize severity (scale $0.25$).
+For each task, training run, and visual shift, we compare the unaugmented
+checkpoint with the checkpoint trained at $\stdmax{}=0.08$, giving
+$4\times3\times2=24$ pairs. We recompute IR and SR under the evaluated shift
+and use $\Delta S$ to compare the joint diagnostic scores of the two
+checkpoints. A positive $\Delta S$ favors the augmented checkpoint. The
+thresholds selected under Gaussian noise remain fixed, so this experiment
+evaluates relative checkpoint ordering rather than an absolute pass decision.
 
 \begin{figure}[!htb]
 \centering
