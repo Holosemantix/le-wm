@@ -962,9 +962,11 @@ Adding planner-horizon ACPC lowers cross-task test MAE by
 $15.2\pm2.0\%$ (mean $\pm$ sample standard deviation across training runs).
 The error decreases in all 12 task--run test cases
 (\Cref{fig:acpc-planner-evidence}). Since the two regressions differ only by
-the planner-horizon feature, this gain shows that the planner-horizon rollout
-carries additional cross-task predictive information. The comparison does not separate action conditioning
-from horizon length; it tests what the five-step ACPC feature adds.
+the planner-horizon feature, this gain shows that candidate-specific ACPC at
+CEM's five-step horizon carries additional cross-task predictive information
+beyond one-step ACPC and the clean cost gap. Action-sequence specificity for
+prediction-error drift is evaluated separately using same-horizon controls
+(\Cref{sec:exp-target-aligned}).
 Candidate-specific ACPC therefore helps predict the clean-model cost of a
 perturbation-induced CEM selection change across tasks. It does not show that
 ACPC changes the selected action or improves environment performance.
