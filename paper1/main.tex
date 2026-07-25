@@ -137,9 +137,9 @@ Code is available \href{\paperpubliccodeurl}{\textcolor{blue}{here}}.\fi
 
 World models support control by predicting the outcomes of candidate
 actions~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. Joint-embedding
-predictive architectures (JEPAs) predict future representations rather than
-reconstruct future pixels, avoiding an explicit requirement to reproduce
-nuisance visual details
+predictive architectures (JEPAs) predict target representations rather than
+reconstructing pixels, avoiding an explicit requirement to reproduce nuisance
+visual details
 ~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}.
 Such representations should be insensitive to task-irrelevant visual
 perturbations while preserving distinctions between situations that require
@@ -200,7 +200,7 @@ ACPC is informative about prediction-error change and selection regret for
 the cross-entropy method (CEM)~\cite{kroese2006cem}. Together, IR and SR help
 identify checkpoints that perform well under visual perturbations across
 tasks and perturbation types. A
-PLDM~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting}
+PLDM~\cite{sobal2025stresstesting}
 sweep examines how the same diagnostic quantities behave under a different
 world-model architecture.
 
@@ -235,17 +235,20 @@ than reconstructing pixels
 ~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,assran2025vjepa2}.
 LeWM~\cite{maes2026lewm}, our primary model family, combines this
 joint-embedding objective with action-conditioned latent prediction.
-PLDM~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting}
+PLDM~\cite{sobal2025stresstesting}
 provides a different joint-embedding dynamics architecture on which we also
-evaluate ACPC. Related training objectives predict future latent observations
-from histories and actions in PBL~\cite{guo2020pbl}, or match predicted and
-target representations under augmentation in SPR~\cite{schwarzer2021spr}.
+evaluate ACPC. Earlier work analyzes how joint-embedding predictive objectives
+can favor slow features~\cite{sobal2022jointembeddingpredictivearchitectures}.
+Related training objectives predict future latent observations from histories
+and actions in PBL~\cite{guo2020pbl}, or match predicted and target
+representations under augmentation in SPR~\cite{schwarzer2021spr}.
 Subsequent work studies collapse in self-predictive
-learning~\cite{tang2023selfpredictive} and the importance of action
+learning~\cite{tang2023selfpredictive} and the role of action
 conditioning~\cite{khetarpal2025actionconditional}. Theoretical analyses ask
-when latent prediction retains informative rather than nuisance features
+when latent prediction can disregard irrelevant features or favor predictable,
+high-influence features
 ~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}
-or recovers latent state up to a linear
+and when it can recover latent state up to a linear
 transformation~\cite{klindt2026lejepaworldmodel}.
 seq-JEPA~\cite{ghaemi2025seqjepa} further studies invariance and equivariance
 under known view transformations. These works explain how predictive
@@ -273,9 +276,10 @@ reconstruction~\cite{hutson2024policyshaped}. These methods reflect a broader
 principle: robustness should remove irrelevant visual variation without
 discarding distinctions needed for control. Bisimulation formalizes
 behavioral similarity through rewards and action-conditioned transitions
-~\cite{gelada2019deepmdp,zhang2021dbc,bsmpc}, with reward-free variants based
-only on transitions~\cite{toso2026bisimjepa}. Value-equivalent and value-aware
-representations instead preserve information needed for value prediction or
+~\cite{gelada2019deepmdp,zhang2021dbc,bsmpc}, including a reward-free
+formulation based only on transitions~\cite{toso2026bisimjepa}.
+Value-equivalent models and value-aware model-learning objectives instead
+focus on information needed for value prediction or
 planning~\cite{grimm2020valueequivalence,voelcker2025calibratedvalueaware}.
 Most closely related, MWM~\cite{yan2026mwm} enforces action-conditioned
 rollout consistency during training. ACPC measures how clean and perturbed
@@ -304,8 +308,9 @@ corruptions~\cite{yeom2026actionrelevant}. A second group evaluates downstream
 failure. \mbox{WMAttack}~\cite{guo2026wmattack} searches for visual attacks on
 closed-loop world-model agents, while ARB4WM~\cite{zhang2026arb4wm} targets
 their policy, value, and latent dynamics. Other work compares predicted
-rollouts with environment transitions~\cite{vakalis2026operator} or compares
-predicted and true plan costs~\cite{you2026controlpredictability}. Finally,
+multi-step latent transitions with those produced by the
+environment~\cite{vakalis2026operator}, or compares predicted and true plan
+costs~\cite{you2026controlpredictability}. Finally,
 CARRL~\cite{lutjens2020certifiedrl} certifies Q-based action choices under
 bounded observation uncertainty, and CROP~\cite{wu2022crop} certifies
 per-state actions and finite-horizon reward bounds through smoothing. These
@@ -657,7 +662,7 @@ representation pattern behind these measurements.
 
 \paragraph{Models, Tasks, and Evaluation.}
 Most experiments use LeWM~\cite{maes2026lewm}. We also evaluate
-PLDM~\cite{sobal2022jointembeddingpredictivearchitectures,sobal2025stresstesting}
+PLDM~\cite{sobal2025stresstesting}
 to test the diagnostic on a second world-model architecture. We use four
 control tasks: TwoRoom navigation, PushT planar manipulation, Reacher arm
 control, and OGBench-Cube (Cube) 3D manipulation. For planning evaluation,

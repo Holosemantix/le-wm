@@ -1,8 +1,28 @@
 # Reference Audit
 
+## 2026-07-25 citation-language re-audit
+
+The active manuscript and bibliography contain 58 unique citation keys. Every
+cited key has one BibTeX entry, every entry is cited, all 58 generated
+bibliography items are present, and BibTeX reports no warnings. A new four-pass
+audit rechecked primary-source metadata and URLs, author order, all 72
+citation-key uses in the manuscript, and the previous audit record.
+
+The re-audit found no fabricated papers, title mismatches, author-order errors,
+or invalid identifiers. It tightened several statements introduced during the
+2026-07-23 Introduction and Related Work rewrite: JEPA is described as
+predicting target rather than necessarily future representations; PLDM is
+attributed directly to its 2025 paper, with the 2022 slow-feature study cited
+separately; action conditioning is described as a topic of study rather than an
+unqualified benefit; value-equivalent models are distinguished from value-aware
+model-learning objectives; and the Bisim-JEPA, Operator-on-F, and noisy-feature
+statements now match the scope of their primary sources. The ReOI conference
+entry retains its arXiv eprint but no longer places the arXiv DOI in the DOI
+field of the ICRA record.
+
 ## 2026-07-22 final reference consolidation
 
-The current `paper1/main.tex` and `paper1/references.bib` are aligned at 59
+At that point, `paper1/main.tex` and `paper1/references.bib` were aligned at 59
 unique citation keys: every cited key has one BibTeX entry, every remaining
 entry is cited, and the rebuilt bibliography has no BibTeX warnings. A
 four-pass audit checked each entry's official source, title, author order,
@@ -24,8 +44,8 @@ control prediction, and described SODA's augmentation as an auxiliary
 representation-learning objective. It also corrected author diacritics,
 added ReOI's arXiv DOI, and removed workshop-acceptance notes that lacked an
 independent public program. The dated material below is retained only as a
-historical audit trail; the 59-entry active bibliography is the current source
-of truth.
+historical audit trail; the current source of truth is the 58-entry
+bibliography described in the 2026-07-25 audit above.
 
 ## 2026-07-11 concurrent-work remediation
 
@@ -70,7 +90,10 @@ Date: 2026-07-04
 
 2026-06-22 release-readiness pass: bibliography count rechecked after the submission-readiness review. `paper1/references.bib` contains 44 entries, and the README no longer hard-codes a count.
 
-2026-06-26 targeted fix: corrected `kostrikov2020drq` author order to match the official OpenReview record (`Kostrikov, Yarats, Fergus`) after the strict reviewer audit.
+2026-06-26 targeted check: recorded the arXiv author order for
+`kostrikov2020drq`. The arXiv and formal ICLR records use different ordering for
+the two equal contributors; the active bibliography follows the formal ICLR
+record (`Yarats, Kostrikov, Fergus`).
 
 2026-06-26 post-theory validation pass: added `littwin2024jepaavoidsnoisyfeatures` after the post-modification theory audit identified it as a directly relevant JEPA noisy-features theory paper.
 
@@ -108,8 +131,8 @@ This table is superseded by the 2026-07-22 consolidation above.
 | `maes2026lewm` | https://arxiv.org/abs/2603.19312 | Fixed: added arXiv eprint, DOI, class, and URL. | OK: LeWM two-loss end-to-end JEPA-from-pixels description matches the arXiv abstract. |
 | `maes2026stableworldmodel` | https://arxiv.org/abs/2605.21800 | Updated 2026-06-10: cite the newer arXiv platform paper *stable-worldmodel: A Platform for Reproducible World Modeling Research and Evaluation* rather than the earlier workshop v1 record. | OK: cited for the stable-worldmodel baseline suite and benchmark ecosystem. |
 | `wang2026groupactions` | https://arxiv.org/abs/2605.24578 | Added 2026-06-16: official arXiv metadata, DOI, class, and URL recorded. | OK: cited for group-action action-faithfulness, identity/inverse/composition consistency, and GAC/GAR metrics; main text explicitly separates it from same-action visual-perturbation ACPC diagnostics. |
-| `sobal2025stresstesting` | https://openreview.net/forum?id=jON7H6A9UU | OK: WRL@ICLR 2025 poster metadata and URL match OpenReview. | OK: cited for the latent-dynamics planning baseline family. |
-| `sobal2022jointembeddingpredictivearchitectures` | https://arxiv.org/abs/2211.10831 | OK: arXiv metadata, DOI, and URL match. | OK: cited for PLDM/JEPA slow-feature context. |
+| `sobal2025stresstesting` | https://proceedings.neurips.cc/paper_files/paper/2025/hash/3e7cf447f21cd11c846463affefce665-Abstract-Conference.html | Updated: the formal record is NeurIPS 2025, volume 38; the active bibliography follows its author names and order. | OK: cited as the paper that introduces and names PLDM. |
+| `sobal2022jointembeddingpredictivearchitectures` | https://arxiv.org/abs/2211.10831 | OK: arXiv metadata, DOI, and URL match. | OK: cited separately for the slow-feature analysis, not as the source that introduces PLDM. |
 | `njepa2025` | https://arxiv.org/abs/2507.15216 | Fixed: removed non-official title parenthetical; added arXiv eprint, DOI, class, and URL. | OK: cited as JEPA robustness/noise-related work, consistent with diffusion-noise schedule claims. |
 | `huang2026vjepa` | https://arxiv.org/abs/2601.14354 | Fixed: added arXiv eprint, DOI, class, and URL. | OK after 2026-06-10 recheck: cited only for noisy-environment experiments where VJEPA-style models filter high-variance nuisance distractors; removed the unsupported precise noisy-distractor wording. |
 | `usjepa2025` | https://arxiv.org/abs/2602.19322 | Fixed: added arXiv eprint, DOI, class, and URL. | OK: cited as JEPA robustness/domain-noise work for ultrasound representations. |
@@ -130,7 +153,7 @@ This table is superseded by the 2026-07-22 consolidation above.
 | `garcia1989mpc` | https://doi.org/10.1016/0005-1098(89)90002-2 | Fixed: added DOI and DOI URL. | OK: cited for MPC background. |
 | `wang2020alignuniform` | https://proceedings.mlr.press/v119/wang20k.html | Fixed: added ICML/PMLR volume, pages, publisher, and URL. | OK: cited for alignment/uniformity and augmentation-induced invariance. |
 | `garrido2023rankme` | https://proceedings.mlr.press/v202/garrido23a.html | Fixed: added ICML/PMLR volume, pages, publisher, URL, and protected `RankMe` casing. | OK: cited for rank as label-free representation-quality diagnostic motivation. |
-| `kostrikov2020drq` | https://openreview.net/forum?id=GY6-6sTvGaf | Fixed: added official OpenReview URL; 2026-06-26 author order corrected to `Kostrikov, Yarats, Fergus`. | OK: cited for DrQ/data augmentation in pixel RL. |
+| `kostrikov2020drq` | https://openreview.net/forum?id=GY6-6sTvGaf | Source-dependent ordering noted: the active bibliography follows the formal ICLR record (`Yarats, Kostrikov, Fergus`); the arXiv record reverses the two equal contributors. | OK: cited for DrQ/data augmentation in pixel RL. |
 | `yarats2022drqv2` | https://openreview.net/forum?id=_SJ-_yyes8 | Fixed: added official OpenReview URL. | OK: cited for DrQ-v2 visual continuous-control augmentation baseline. |
 | `hansen2021soda` | https://doi.org/10.1109/ICRA48506.2021.9561103 | Fixed: added ICRA pages 13611--13617, DOI, and DOI URL. | OK: cited for SODA/DMC-GB visual robustness through soft data augmentation. |
 | `ghaemi2025seqjepa` | https://openreview.net/forum?id=GKt3VRaCU1 | Fixed: retained NeurIPS 2025 OpenReview URL and avoided an unverified proceedings volume. | OK: cited for architectural handling of invariance/equivariance tension. |
