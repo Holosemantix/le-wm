@@ -973,11 +973,12 @@ ACPC changes the selected action or improves environment performance.
 \subsection{Checkpoint Screening across Tasks}
 \label{sec:exp-frozen-external}
 
-Because both the augmentation sweep and the threshold grid are discrete, we
-test for a useful shared threshold range rather than an exact universal
-boundary. A decision is correct when it matches the success-rate criterion
-of \Cref{sec:bg}. We also count the grid steps between the first accepted
-checkpoint and the first checkpoint that meets that criterion.
+Given the discrete sweep and finite-sample CEM evaluations, we test whether a
+fixed IR--SR operating point transfers across tasks rather than estimate an
+exact decision boundary. A decision is correct when it matches the
+success-rate criterion of \Cref{sec:bg}. We also count the grid steps between
+the first accepted checkpoint and the first checkpoint that meets that
+criterion.
 
 Across the 14 source/test splits, 13 choose
 $(t_{\mathrm{IR}},t_{\mathrm{SR}})=(0.3,0.95)$; only the Reacher-only split
