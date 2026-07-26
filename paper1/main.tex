@@ -200,13 +200,14 @@ from both views, ACPC also yields bounds on changes in their predicted costs
 (\Cref{prop:target-free-error-drift,prop:exact-cost-certificate}). These
 bounds hold for each evaluated pair and require no distributional or
 smoothness assumptions. Experiments on LeWM~\cite{maes2026lewm} show that
-ACPC is informative about prediction-error change and selection regret for
-the cross-entropy method (CEM)~\cite{kroese2006cem}. Together, IR and SR help
-identify checkpoints that perform well under visual perturbations across
-tasks and perturbation types. A
-PLDM~\cite{sobal2025stresstesting}
-sweep examines how the same diagnostic quantities behave under a different
-world-model architecture.
+ACPC is informative about prediction-error change and the extra predicted
+cost incurred when a visual perturbation causes the cross-entropy method
+(CEM)~\cite{kroese2006cem} to select a different plan. Together, IR and SR
+help identify checkpoints that perform well under visual perturbations across
+tasks and perturbation types. On PLDM~\cite{sobal2025stresstesting}, better
+planning performance under visual perturbation is also generally accompanied
+by lower IR and higher SR, showing the same qualitative diagnostic pattern
+under a second world-model architecture.
 
 The contributions are:
 \begin{enumerate}[leftmargin=1.4em]
@@ -656,11 +657,11 @@ from the pairwise bounds.
 
 After describing the evaluation protocol, we evaluate the diagnostic at two
 levels. At the pair level, we test whether ACPC reflects prediction-error
-change and CEM selection regret. At the checkpoint level, we examine how IR
-and SR vary across LeWM recovery, whether checkpoint screening transfers
-across tasks and visual shifts, and whether similar diagnostic trends appear
-on PLDM. We begin with a local-geometry case study to visualize the
-representation pattern behind these measurements.
+change and the cost of a CEM plan change. At the checkpoint level, we examine
+how IR and SR vary across LeWM recovery, whether checkpoint screening
+transfers across tasks and visual shifts, and whether similar diagnostic
+trends appear on PLDM. We begin with a local-geometry case study to visualize
+the representation pattern behind these measurements.
 
 \subsection{Evaluation Protocol}\label{sec:bg}
 
@@ -913,14 +914,10 @@ and selected controls
 ACPC carries information about the bounded error change that neither encoder
 shift, one-step ACPC, nor any same-horizon destroyed-action control provides.
 
-\subsection{ACPC and CEM Selection Regret}\label{sec:exp-planner}
+\subsection{ACPC and the Cost of CEM Plan Changes}\label{sec:exp-planner}
 
-A prediction change matters to planning only if it affects the plan that CEM
-selects. The fixed-pool bound motivates the quantity below, but adaptive CEM
-can generate different later pools once the two elite sets diverge. We
-therefore evaluate full paired CEM runs rather than treating the fixed-pool
-condition as a run-level certificate. Our downstream quantity is
-\emph{clean-reference selection regret}.
+A visual perturbation may cause CEM to select a different plan. We ask whether
+ACPC reflects how costly that change appears to the clean model.
 Let $\mathbf a$ and $\tilde{\mathbf a}$ be the final plans selected from the
 clean and perturbed histories, respectively. We measure
 $(C_h(\tilde{\mathbf a})-C_h(\mathbf a))_+$: the extra clean-history model
@@ -929,6 +926,10 @@ single-decision quantity as \emph{CEM selection regret}. It uses the model's
 squared latent goal cost; it is neither cumulative regret nor simulator
 return.
 
+The fixed-pool bound motivates this comparison. However, adaptive CEM can
+generate different later pools once the two elite sets diverge. We therefore
+evaluate full paired CEM runs rather than treating the fixed-pool condition as
+a run-level certificate.
 The paired CEM branches follow \Cref{sec:appendix-planner-protocol}: same
 initial proposal, common random numbers, each branch updating from its own
 elites. For every candidate, we compute one- and five-step ACPC along its
@@ -949,14 +950,14 @@ gives the CEM budget and sample counts.
   trim=0 14pt 0 0,
   clip
 ]{fig_acpc_planner_evidence.pdf}
-\caption{Adding planner-horizon ACPC improves prediction of adaptive-CEM
-selection regret on tasks excluded from regression fitting. Each colored line
-connects the baseline and expanded-model errors for one test task in one
-training run; the thick black line is the equal-task average across the three
-runs. The added feature is candidate-specific ACPC q90 at the planner's
-five-step prediction horizon. The baseline already contains severity,
-training condition, one-step ACPC q90, and the clean best--second-best cost
-gap. MAE is computed on
+\caption{Adding planner-horizon ACPC improves prediction of the extra model
+cost associated with changes in the plan selected by adaptive CEM. Each
+colored line connects the baseline and expanded-model errors for one test task
+excluded from regression fitting in one training run; the thick black line is
+the equal-task average across the three runs. The added feature is
+candidate-specific ACPC q90 at the planner's five-step prediction horizon. The
+baseline already contains severity, training condition, one-step ACPC q90, and
+the clean best--second-best cost gap. MAE is computed on
 $\log(1+\text{selection regret})$.}
 \label{fig:acpc-planner-evidence}
 \end{figure}
@@ -1020,13 +1021,16 @@ dashed gray line marks clean
 success of the unaugmented checkpoint, and the leftmost black point is its
 success at evaluation noise $\sigma=0.08$. Relative IR equals one at that
 checkpoint. Across tasks, stronger augmentation generally lowers relative IR
-and raises SR.}
+and raises SR, while planning success under evaluation noise also generally
+improves from the unaugmented checkpoint.}
 \label{fig:pldm-sweep-diagnostics}
 \end{figure}
 
-Across the PLDM sweeps, higher planning success under visual perturbation is
-generally accompanied by lower relative IR and higher SR, although the
-strength of this relationship varies across tasks.
+Across all four PLDM tasks, the augmented checkpoints generally have lower
+relative IR and higher SR than the unaugmented checkpoint. Planning success
+under evaluation noise also generally improves from the unaugmented
+checkpoint. These results reproduce the qualitative low-IR, high-SR pattern
+under a second world-model architecture.
 
 \subsection{Checkpoint Comparison under Blur and Resize}
 \label{sec:exp-cross-stressor}
@@ -1071,11 +1075,11 @@ ordering, not as a binary robustness decision.
 For individual clean--perturbed pairs, multi-step ACPC captures changes in
 prediction error more accurately than encoder distance, one-step ACPC, or
 controls that remove the recorded action sequence. At the planning horizon,
-ACPC also captures changes in the cost of the trajectory selected by CEM more
-accurately than one-step ACPC or the clean CEM margin. Together, these results
-support the central claim behind our analysis: rolling paired observations
-forward under the same action sequence reveals downstream effects that
-encoder-only and one-step comparisons can miss.
+ACPC also helps predict the extra model cost incurred when a perturbation
+changes the plan selected by CEM, beyond one-step ACPC or the clean CEM
+margin. Together, these results support the central claim behind our analysis:
+rolling paired observations forward under the same action sequence reveals
+downstream effects that encoder-only and one-step comparisons can miss.
 
 Across checkpoints, planning success under Gaussian noise generally improves
 as relative IR decreases and SR increases. Thresholds chosen using a subset of
@@ -1119,12 +1123,12 @@ sequence. We show that this divergence bounds changes in multi-step prediction
 error and predicted planning costs. IR summarizes perturbation sensitivity
 across a checkpoint, while SR checks whether different states remain
 distinguishable after rollout. Experiments show that multi-step ACPC captures
-changes in prediction error and CEM selection cost that encoder-only and
-one-step comparisons miss. Across checkpoints, lower IR and higher SR
-generally align with better planning performance under visual perturbations,
-and thresholds selected on some tasks identify recovery on the remaining
-tasks. Similar diagnostic trends appear in PLDM, while the blur and resize
-results extend the evidence beyond Gaussian noise.
+changes in prediction error and the extra predicted cost of CEM plan changes
+that encoder-only and one-step comparisons miss. Across checkpoints, lower IR
+and higher SR generally align with better planning performance under visual
+perturbations, and thresholds selected on some tasks identify recovery on the
+remaining tasks. PLDM shows the same qualitative low-IR, high-SR pattern,
+while the blur and resize results extend the evidence beyond Gaussian noise.
 \bibliographystyle{unsrt}
 \bibliography{references}
 
