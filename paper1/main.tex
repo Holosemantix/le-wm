@@ -114,9 +114,10 @@ Consistency (ACPC), a diagnostic that measures how far a clean history and
 a visually perturbed view of it diverge after being rolled forward under the
 same action sequence. We prove that this divergence bounds the
 perturbation-induced change in multi-step prediction error and planner cost.
-Two complementary measures complete the diagnostic: the Invariance Radius
-quantifies how far a clean view and its perturbed counterpart spread after prediction, and the
-Separation Rate checks that different states remain distinguishable.
+Building on pairwise ACPC, we define two complementary measures: the
+Invariance Radius (IR) summarizes clean--perturbed rollout spread, while the
+Separation Rate (SR) checks whether different states remain distinguishable
+after rollout.
 Experiments on four visual control tasks show that pairwise ACPC predicts
 perturbation-induced prediction and cost changes. On LeWM, the IR--SR screen
 transfers across tasks, and the joint diagnostic remains
@@ -125,7 +126,7 @@ under a different architecture.\ifdefined\blindsubmission\else\
 Code is available \href{\paperpubliccodeurl}{\textcolor{blue}{here}}.\fi
 
 \smallskip
-\noindent\textbf{Keywords:} visual world models; predictive consistency; action-conditioned rollouts; visual invariance; checkpoint diagnostics.
+\noindent\textbf{Keywords:} visual world models; predictive consistency; action-conditioned rollouts; visual invariance; visual robustness.
 \end{abstract}
 
 \smallskip
@@ -142,6 +143,8 @@ predictive architectures (JEPAs) predict target representations rather than
 reconstructing pixels, avoiding an explicit requirement to reproduce nuisance
 visual details
 ~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}.
+Yet this design alone does not determine which visual differences matter for
+control.
 Such representations should be insensitive to task-irrelevant visual
 perturbations while preserving distinctions between situations that require
 different actions.
