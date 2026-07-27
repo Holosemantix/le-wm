@@ -401,9 +401,10 @@ $H=5$ to match the CEM planning horizon (\Cref{sec:exp-planner}).
 ACPC itself does not require the observed future. To connect it to prediction
 error, let $Y_{\mathbf a}^H$ denote the observed future under the same action
 sequence, represented in the same weighted space as the predicted rollouts
-(\Cref{eq:weighted-rollout-map}). Both rollout errors are measured against
-this single target. Their difference cannot exceed the distance between the
-two predictions, which is ACPC.
+(\Cref{eq:weighted-rollout-map}). Since the perturbed history is created by
+applying a visual perturbation to the clean history, both predicted rollouts
+are compared with the same observed future. Their difference in error cannot
+exceed the distance between the two predictions, which is ACPC.
 
 \begin{proposition}[Prediction-error change bound]\label{prop:target-free-error-drift}
 Define
@@ -495,8 +496,8 @@ into $b_j$ gives
 \end{equation}
 Thus, ACPC bounds how much each candidate's cost can change, while the clean
 cost gaps determine whether that change can alter the planner's selection.
-These certificates require evaluating every candidate under both inputs, so
-they support post-hoc analysis rather than online screening.
+Checking these bounds requires evaluating every candidate under both inputs.
+We therefore use them to analyze planner behavior after the runs are complete.
 
 CEM plans in rounds. In each round, it scores a set of candidate action
 sequences, keeps the best group (the elite set), and uses that group to
@@ -632,9 +633,10 @@ S_{\mathcal F,\upsilon}(\theta;\theta_0)
 The score is nonnegative exactly when both requirements pass. A negative
 score means that at least one requirement fails.
 
-We choose the two thresholds using planning success on source tasks and apply
-them unchanged to held-out tasks. Thresholds are selected separately for each
-model family. Once fixed, the score requires no task-success labels.
+We choose the two thresholds using planning success on a set of source tasks
+and apply them unchanged to the remaining tasks. Thresholds are selected
+separately for each model family. Once fixed, the score requires no
+task-success labels.
 
 To compare checkpoint $\theta_1$ with its reference $\theta_0$, we report the
 change in screening score:
@@ -647,21 +649,25 @@ score than the reference. It does not label either checkpoint as robust.
 The experiments evaluate the method at two levels. Pair-level experiments
 test whether ACPC reflects changes in prediction error and planner selection
 (\Cref{sec:exp-target-aligned,sec:exp-planner}). Checkpoint-level experiments
-test whether a fixed IR--SR screen transfers across LeWM tasks and visual
-shifts, and separately examine how IR and SR behave on PLDM
-(\Cref{sec:exp-frozen-external,sec:exp-pldm-diagnostics,sec:exp-cross-stressor}).
-The checkpoint result is an empirical screening claim; it does not follow
-from the pairwise bounds.
+first select an IR--SR screen on some LeWM tasks and test it on the remaining
+tasks under Gaussian noise. We then ask whether changes in the joint IR--SR
+score agree with changes in planning success under blur and resize, and
+whether PLDM shows the same low-IR, high-SR pattern
+(\Cref{sec:exp-frozen-external,sec:exp-cross-stressor,sec:exp-pldm-diagnostics}).
+These checkpoint-level findings are empirical; they do not follow from the
+pairwise bounds.
 
 \section{Experiments}\label{sec:exp}
 
 After describing the evaluation protocol, we evaluate the diagnostic at two
 levels. At the pair level, we test whether ACPC reflects prediction-error
 change and the cost of a CEM plan change. At the checkpoint level, we examine
-how IR and SR vary across LeWM recovery, whether checkpoint screening
-transfers across tasks and visual shifts, and whether similar diagnostic
-trends appear on PLDM. We begin with a local-geometry case study to visualize
-the representation pattern behind these measurements.
+how IR and SR vary across LeWM recovery and whether a screen selected on some
+tasks identifies recovery on the remaining tasks under Gaussian noise. We
+then compare diagnostic and performance changes under blur and resize and
+test whether the same low-IR, high-SR pattern appears on PLDM. We begin with a
+local-geometry case study to visualize the representation pattern behind
+these measurements.
 
 \subsection{Evaluation Protocol}\label{sec:bg}
 
@@ -734,15 +740,15 @@ remains aligned with relative checkpoint performance under new visual shifts.
 \label{sec:exp-local-geometry}
 
 We begin with a PushT case study showing how visual noise can make perturbed
-views of one history overlap with other histories. For one clean history and
-its perturbed views, the sampled visual radius $r$ measures the spread of the
-perturbation cloud; nearest-clean spacing $\mathrm{NN}$ is the distance to the
-nearest other clean history. The ratio $r/\mathrm{NN}$ asks whether visual
-variation overwhelms local between-history spacing, while a symmetric
-two-ball test counts fully disjoint clouds. These quantities are descriptive:
-neighbors are chosen in learned space, each clean rollout follows its own
-recorded actions, and a collapsed representation makes every radius small.
-They motivate the controlled ACPC comparison but do not replace it.
+views of one history overlap with other histories. The ratio
+$r/\mathrm{NN}$ compares the spread of a history's perturbed views with its
+distance to the nearest other clean history. The disjoint-ball fraction
+measures how often neighboring perturbation clouds remain separate. These
+measurements provide only a local geometric picture. Neighbors are selected
+in the learned space, and each clean history is rolled forward under its own
+recorded actions. Representation collapse can also make every radius small.
+The measurements motivate the controlled ACPC comparison but do not replace
+it.
 
 Using a fixed PushT case study, we compare a matched pair of LeWM
 checkpoints: one unaugmented and one trained with full-sequence Gaussian-noise
@@ -831,11 +837,11 @@ of different-label distances.
 
 IR tracks the recovery region, while SR verifies that the sampled
 state-coordinate distinctions remain outside the contracted radius. A
-first-order estimate of the composed encoder--rollout Jacobian offers one
-mechanism for the IR reduction
-(\Cref{sec:appendix-local-sensitivity}). The next two experiments test
-whether ACPC uses recorded-action information and whether it tracks a
-planner-facing quantity
+local sensitivity analysis suggests that checkpoints with lower IR amplify
+input perturbations less through the encoder and rollout
+(\Cref{sec:appendix-local-sensitivity}). The next two experiments test whether
+ACPC depends on the recorded actions and whether it reflects the cost of a
+CEM plan change
 (\Cref{sec:exp-target-aligned,sec:exp-planner}).
 \FloatBarrier
 
@@ -873,13 +879,12 @@ $\|z-\tilde z\|_2$.
   different trajectory), or \emph{shuffled} actions (the anchor's own actions
   in permuted temporal order). Each control performs the same eight-step
   rollout, so it carries rollout length without the recorded action sequence.
-  ``Strongest'' is an oracle choice: in each task--run cell we report
-  whichever of the three controls attains the lowest test MAE, which makes
-  the comparison conservative.
+  For each task--run cell, we report the control with the lowest test MAE
+  among the three, making this a conservative comparison.
   \item \textbf{Base+ACPC$_8$} instead adds eight-step ACPC under the
-  recorded actions---the only feature whose action sequence is the one that
-  generated the logged future, and hence the feature matching the right-hand
-  side of \Cref{prop:target-free-error-drift}.
+  recorded actions---the same actions associated with the observed future,
+  and hence the feature matching the right-hand side of
+  \Cref{prop:target-free-error-drift}.
 \end{itemize}
 All eight-step features use uniform weights $\alpha_k=1/8$ in
 \Cref{eq:acpc-h}. If Base+ACPC$_8$ improves on Base, multi-step information
@@ -907,9 +912,8 @@ task-level relative MAE reductions equally and report the mean $\pm$ sample
 standard deviation across the three training runs: the
 reduction is $55.9\pm4.7\%$ relative to Base and $51.3\pm3.5\%$ relative to
 Base+Control$_8$. These results concern prediction of the error drift; they
-do not compare the absolute forecast accuracy of one-step and eight-step
-world models. \Cref{sec:appendix-p1-controls} reports the task-level values
-and selected controls
+do not compare absolute prediction accuracy across rollout horizons.
+\Cref{sec:appendix-p1-controls} reports the task-level values and selected controls
 (\Cref{tab:target-aligned-acpc,tab:target-aligned-acpc-absolute}). Eight-step
 ACPC carries information about the bounded error change that neither encoder
 shift, one-step ACPC, nor any same-horizon destroyed-action control provides.
@@ -932,14 +936,15 @@ evaluate full paired CEM runs rather than treating the fixed-pool condition as
 a run-level certificate.
 The paired CEM branches follow \Cref{sec:appendix-planner-protocol}: same
 initial proposal, common random numbers, each branch updating from its own
-elites. For every candidate, we compute one- and five-step ACPC along its
-action sequence and take the pool q90; five steps match the planner's
-prediction horizon. We compare two ridge regressions. The baseline uses perturbation
-severity, training condition, candidate-level one-step ACPC q90, and the clean
-gap between the best and second-best candidates. The expanded model adds
-candidate-level five-step ACPC q90. Within each training run, both regressions
-are fitted on three tasks and tested on the remaining task, rotating which
-task is excluded from fitting. We evaluate MAE on
+elites. For each candidate pool, we compute one- and five-step ACPC for every
+action sequence and use the 90th percentile as the pool summary. The
+five-step value matches the planner's prediction horizon. We compare two
+ridge regressions. The baseline uses perturbation severity, training
+condition, candidate-level one-step ACPC q90, and the clean gap between the
+best and second-best candidates. The expanded model adds candidate-level
+five-step ACPC q90. Within each training run, both regressions are fitted on
+three tasks and tested on the remaining task, rotating which task is excluded
+from fitting. We evaluate MAE on
 $\log(1+\text{selection regret})$; Appendix~\ref{sec:appendix-planner-protocol}
 gives the CEM budget and sample counts.
 
@@ -954,10 +959,11 @@ gives the CEM budget and sample counts.
 cost associated with changes in the plan selected by adaptive CEM. Each
 colored line connects the baseline and expanded-model errors for one test task
 excluded from regression fitting in one training run; the thick black line is
-the equal-task average across the three runs. The added feature is
-candidate-specific ACPC q90 at the planner's five-step prediction horizon. The
-baseline already contains severity, training condition, one-step ACPC q90, and
-the clean best--second-best cost gap. MAE is computed on
+the equal-task average across the three runs. The added feature is the 90th
+percentile of candidate-specific ACPC at the planner's five-step prediction
+horizon. The baseline already contains severity, training condition, the
+corresponding one-step ACPC percentile, and the clean best--second-best cost
+gap. MAE is computed on
 $\log(1+\text{selection regret})$.}
 \label{fig:acpc-planner-evidence}
 \end{figure}
@@ -968,23 +974,24 @@ The error decreases in all 12 task--run test cases
 (\Cref{fig:acpc-planner-evidence}). Since the two regressions differ only by
 the planner-horizon feature, this gain shows that candidate-specific ACPC at
 CEM's five-step horizon carries additional cross-task predictive information
-beyond one-step ACPC and the clean cost gap. Action-sequence specificity for
-prediction-error drift is evaluated separately using same-horizon controls
-(\Cref{sec:exp-target-aligned}).
+beyond one-step ACPC and the clean cost gap. The prediction-error experiment
+separately shows that recorded actions add information beyond same-horizon
+controls (\Cref{sec:exp-target-aligned}).
 Candidate-specific ACPC therefore helps predict the clean-model cost of a
-perturbation-induced CEM selection change across tasks. It does not show that
-ACPC changes the selected action or improves environment performance.
+perturbation-induced CEM selection change across tasks. The experiment does
+not test whether using ACPC during planning improves task success.
 
 
 \subsection{Checkpoint Screening across Tasks}
 \label{sec:exp-frozen-external}
 
-Given the discrete sweep and finite-sample CEM evaluations, we test whether a
-fixed IR--SR operating point transfers across tasks rather than estimate an
-exact decision boundary. A decision is correct when it matches the
-success-rate criterion of \Cref{sec:bg}. We also count the grid steps between
-the first accepted checkpoint and the first checkpoint that meets that
-criterion.
+We test whether thresholds chosen on some tasks identify checkpoint recovery
+on the remaining tasks. Because the training sweep is discrete and planning
+success is estimated from a finite number of episodes, we do not attempt to
+estimate an exact decision boundary. A decision is correct when it matches
+the success-rate criterion of \Cref{sec:bg}. We also count the grid steps
+between the first accepted checkpoint and the first checkpoint that meets
+that criterion.
 
 Across the 14 source/test splits, 13 choose
 $(t_{\mathrm{IR}},t_{\mathrm{SR}})=(0.3,0.95)$; only the Reacher-only split
@@ -1058,15 +1065,13 @@ but is not an absolute pass decision.}
 \label{fig:cross-stressor-ir-sr-comparison}
 \end{figure}
 
-Across the 24 pairs, the sign of $\Delta S$ agrees with the predefined
-pairwise criterion in 22 cases (balanced accuracy $0.889$), and its magnitude
-tracks the change in planning success (Spearman $\rho=0.835$). The two nominal
-disagreements are boundary cases: both $\Delta S$ and planning success
-increase, but the observed success gain is four percentage points, just below
-the prespecified five-point cutoff. They therefore arise from thresholding a
-finite-sample estimate rather than from opposing diagnostic and behavioral
-trends. We interpret these results as evidence for relative checkpoint
-ordering, not as a binary robustness decision.
+In 22 of the 24 comparisons, the sign of $\Delta S$ agrees with whether the
+augmented checkpoint meets the prespecified success criterion (balanced
+accuracy $0.889$). Across all pairs, larger $\Delta S$ is associated with
+larger gains in planning success (Spearman $\rho=0.835$). In the remaining
+two cases, both $\Delta S$ and planning success improve, but the four-point
+success gain falls just below the five-point criterion. We therefore treat
+them as boundary cases rather than opposing diagnostic and behavioral trends.
 \FloatBarrier
 
 \section{Discussion and limitations}\label{sec:disc}
@@ -1584,7 +1589,7 @@ levels.
 
 \input{tables/table_cross_stressor_ir_sr_summary_v2}
 
-Both nominal disagreements lie at the boundary of the success-rate criterion:
+The remaining two cases lie at the boundary of the success-rate criterion:
 PushT run 3072 under resize and PushT run 3074 under blur each improve success
 rate by four percentage points, one point below the prespecified five-point
 cutoff, while their IR--SR scores also increase. Thus, the diagnostic and
