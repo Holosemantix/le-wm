@@ -100,6 +100,15 @@
 
 \begin{document}
 \maketitle
+\ifdefined\blindsubmission\else
+  \begingroup
+  \renewcommand{\thefootnote}{}
+  \makeatletter
+  \def\Hy@footnote@currentHref{paper.authornotes}
+  \makeatother
+  \footnotetext{\arxivauthornotes}
+  \endgroup
+\fi
 
 \begin{abstract}
 Joint-embedding predictive architectures (JEPAs) learn world models that
