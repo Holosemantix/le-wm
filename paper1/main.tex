@@ -95,7 +95,7 @@
 \date{July 2026}
 \hypersetup{
   pdftitle={Diagnosing JEPA World Models with Action-Conditioned Predictive Consistency},
-  pdfkeywords={JEPA world models, predictive consistency, action-conditioned rollouts, visual invariance, checkpoint diagnostics}
+  pdfkeywords={JEPA world models, predictive consistency, action-conditioned rollouts, visual invariance, visual robustness}
 }
 
 \begin{document}
@@ -529,8 +529,9 @@ for each clean--perturbed pair under the same recorded actions.
 
 Raw latent distances can have different scales across histories. We therefore
 divide each ACPC value by the anchor's typical one-step clean motion, denoted
-by $s_i$. Specifically, $s_i$ is the median projected displacement between
-consecutive clean observations in the anchor window
+by $s_i$. Starting from the final clean history frame, we measure the
+projected displacement at each of the next $H$ observed transitions and take
+the median
 (\Cref{eq:clean-transition-scale,sec:appendix-A}). This expresses ACPC
 relative to the amount of motion normally seen in that history. With a small
 numerical stabilizer $\varepsilon_{\mathrm{norm}}$, define
@@ -587,9 +588,10 @@ the fixed margin.
 A collapsed representation makes IR small, but it also makes every
 $D_i^{\mathrm{diff}}$ zero and therefore fails SR. Conversely, a checkpoint
 can have high SR while remaining sensitive to visual perturbations, so IR is
-still needed. SR applies only to the state-coordinate labels used in the
-tested pairs. Appendix~\ref{sec:appendix-A} gives the exact pairing rules and
-eligible-pair counts.
+still needed. Choosing these pairs requires state labels from the dataset. SR
+therefore applies only to the labels used in the tested pairs.
+Appendix~\ref{sec:appendix-A} gives the exact pairing rules and eligible-pair
+counts.
 
 \subsection{Checkpoint Screening}\label{sec:checkpoint-threshold-selection}
 
@@ -635,8 +637,9 @@ score means that at least one requirement fails.
 
 We choose the two thresholds using planning success on a set of source tasks
 and apply them unchanged to the remaining tasks. Thresholds are selected
-separately for each model family. Once fixed, the score requires no
-task-success labels.
+separately for each model family. After the thresholds are chosen, planning
+success is no longer used to score a checkpoint. SR still uses the state
+labels defined above.
 
 To compare checkpoint $\theta_1$ with its reference $\theta_0$, we report the
 change in screening score:
@@ -1109,10 +1112,12 @@ costs; it does not modify CEM. Our planner experiment therefore measures
 whether ACPC reflects the extra predicted cost of a perturbation-induced plan
 change, rather than whether ACPC-guided planning improves task success. The
 adaptive-CEM guarantee applies only while its bound verifies that both runs
-select the same elite candidates. Our checkpoint experiments cover
-Gaussian-noise augmentation and one severity each of blur and resize. The
-chosen IR threshold is also at the edge of the tested range, so larger values
-remain to be evaluated.
+select the same elite candidates. The full IR--SR screen requires an
+unaugmented reference checkpoint. Unlike pairwise ACPC, it also uses observed
+future frames to normalize IR and dataset state labels to construct SR pairs.
+Our checkpoint experiments cover Gaussian-noise augmentation and one severity
+each of blur and resize. The chosen IR threshold is also at the edge of the
+tested range, so larger values remain to be evaluated.
 
 \paragraph{Future work.}
 Future work can test whether using ACPC during planning improves task success.
