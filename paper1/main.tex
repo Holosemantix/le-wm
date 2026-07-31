@@ -847,6 +847,16 @@ medians are largely stable across augmentation levels, so the rise in SR
 mainly reflects contraction of the same-history radius rather than expansion
 of different-label distances.
 
+\paragraph{Evaluating SR under representation collapse.}
+To test whether SR detects a loss of state separation, we train LeWM on
+TwoRoom with four SIGReg weights, keeping all other settings fixed. Without
+SIGReg, the representation collapses: the median latent distance shrinks from
+$17.2$--$18.7$ to $0.006$, and clean success falls from $96.3$--$99.3\%$ to
+$33.3\%$. Although this model has the lowest raw IR ($0.048$), its SR falls
+to $0.066$, compared with $0.967$--$0.984$ for nonzero SIGReg. Thus, SR
+exposes a loss of state separation that raw IR does not capture
+(\Cref{tab:sigreg-collapse-control}).
+
 IR tracks the recovery region, while SR verifies that the sampled
 state-coordinate distinctions remain outside the contracted radius. A
 local sensitivity analysis suggests that checkpoints with lower IR amplify
@@ -1031,7 +1041,7 @@ different architecture and training recipe. The experiment repeats the
 nine-checkpoint Gaussian-noise training sweep, paired histories, and
 eight-step rollouts.
 
-\begin{figure}[t]
+\begin{figure}[!htb]
 \centering
 \includegraphics[width=\linewidth]{fig_pldm_sweep_diagnostics.pdf}
 \caption{PLDM Gaussian-noise training sweep over three independent training
@@ -1492,7 +1502,7 @@ anchor seed 9101. Because the logged endpoints, labels, and neighborhoods are
 fixed before checkpoint evaluation, the selected pairs and eligible-anchor
 counts are identical across checkpoints and training runs.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{Endpoint-state labels used to construct SR pairs. The state is taken
 at the eighth observed future step, and its coordinates are standardized using
@@ -1512,6 +1522,60 @@ Reacher & \code{observation} (6) & Three-bit label from median splits of the two
 Cube & \code{observation} (28) & Three-bit label from median splits of the first two standardized coordinates and $\|r\|_2$, where $r=\bar o_{0:3}-\bar o_{25:28}$. & 100 / 0 \\
 \bottomrule
 \end{tabularx}
+\end{table}
+
+\paragraph{Evaluating SR under representation collapse.}
+\label{sec:appendix-sigreg-collapse}
+We evaluate whether SR detects representation collapse using a controlled
+TwoRoom ablation. We train LeWM with SIGReg weights
+$\{0,0.01,0.02,0.03\}$ while keeping the architecture, data, training seed,
+and optimization settings fixed. We measure clean planning success over three
+evaluation seeds. IR and SR use the same rollout construction and aggregation
+as the main experiments, with Gaussian noise at $\sigma=0.005$.
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\caption{\textbf{SR under representation collapse on TwoRoom.}
+Clean success is the mean and standard deviation across evaluation seeds
+42, 43, and 44, with 100 episodes per seed. IR and SR are computed from
+100 logged histories, five perturbation draws, an eight-step rollout, and
+Gaussian noise with $\sigma=0.005$. Median latent distance is the median
+pairwise $\ell_2$ distance between clean representations at the eighth
+observed future step. Removing SIGReg collapses latent spread and produces the
+lowest raw IR, while SR and clean success fall sharply.}
+\label{tab:sigreg-collapse-control}
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+SIGReg weight
+& Clean success (\%)
+& Median latent distance
+& Raw IR
+& SR \\
+\midrule
+$0$
+& $33.3 \pm 3.7$
+& $0.006$
+& $0.048$
+& $0.066$ \\
+$0.01$
+& $96.3 \pm 1.7$
+& $17.174$
+& $1.026$
+& $0.967$ \\
+$0.02$
+& $99.3 \pm 0.5$
+& $17.633$
+& $0.144$
+& $0.984$ \\
+$0.03$
+& $98.0 \pm 2.2$
+& $18.686$
+& $0.138$
+& $0.984$ \\
+\bottomrule
+\end{tabular}
 \end{table}
 
 \paragraph{Threshold grids.}
