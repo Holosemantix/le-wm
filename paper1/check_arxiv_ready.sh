@@ -10,6 +10,7 @@ BUNDLE_TAR="/tmp/paper1_arxiv_v1_src.tar.gz"
 BUNDLE_TAR_TMP=""
 BUNDLE_SRC=""
 BUNDLE_VERIFY=""
+source "$PAPER/scripts/require_texlive_2025.sh"
 cd "$PAPER"
 
 cleanup() {

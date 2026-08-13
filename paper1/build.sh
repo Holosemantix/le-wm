@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
-# Build the paper1 PDF. Requires pdflatex + bibtex (texlive-latex-recommended +
-# texlive-bibtex-extra is enough). Use --clean to remove intermediates.
+# Build the Paper 1 PDF with the pinned TeX Live 2025 toolchain.
+# Use --clean to remove intermediates.
 set -e
-cd "$(dirname "$0")"
-
-if ! command -v latexmk >/dev/null 2>&1 && ! command -v pdflatex >/dev/null 2>&1; then
-  if [[ -d "$HOME/.TinyTeX/bin/x86_64-linux" ]]; then
-    export PATH="$HOME/.TinyTeX/bin/x86_64-linux:$PATH"
-  fi
-fi
+PAPER="$(cd "$(dirname "$0")" && pwd)"
+source "$PAPER/scripts/require_texlive_2025.sh"
+cd "$PAPER"
 
 if [[ "$1" == "--clean" || "$1" == "-c" ]]; then
   rm -f main.aux main.bbl main.blg main.log main.out main.toc \

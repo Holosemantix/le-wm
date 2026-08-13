@@ -13,7 +13,7 @@ paper1/
 ├── main.tex          # the paper (article class)
 ├── references.bib    # bibliography entries; final source audit is tracked in reference_audit.md
 ├── figures/          # symlink → ../assets/paper1_figs/
-├── build.sh          # `bash build.sh` (uses latexmk if available, else pdflatex + bibtex)
+├── build.sh          # `bash build.sh` (requires the pinned TeX Live 2025 toolchain)
 ├── .gitignore        # ignores LaTeX intermediates; main.pdf is tracked intentionally
 ├── docs/README.md    # this file
 └── docs/main_blind.tex
@@ -21,9 +21,14 @@ paper1/
 
 ## Build
 
-Requires `texlive-latex-recommended` + `texlive-bibtex-extra` (or any TeX distribution with `pdflatex`, `bibtex`, and the packages listed in `main.tex`).
+Paper builds require TeX Live 2025. By default the build and readiness scripts
+use `/opt/texlive/2025/bin/x86_64-linux`; set `PAPER1_TEXLIVE_BIN` when the
+same pinned snapshot is installed elsewhere. The arXiv-matching installation
+uses the `2025-08-03` tlnet snapshot and the `scheme-full` runtime without
+documentation or package sources.
 
 ```bash
+export PAPER1_TEXLIVE_BIN=/opt/texlive/2025/bin/x86_64-linux
 bash build.sh           # builds main.pdf
 bash build.sh --clean   # remove intermediates first
 ```

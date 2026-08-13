@@ -5,6 +5,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 PAPER="$ROOT/paper1"
+source "$PAPER/scripts/require_texlive_2025.sh"
 cd "$PAPER"
 
 fail() {

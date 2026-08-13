@@ -23,8 +23,7 @@
 \usepackage{float}
 \usepackage{placeins}
 \usepackage{lscape}
-% TinyTeX in this environment lacks pdflscape; add the PDF rotation attribute
-% that makes lscape pages open upright in standard PDF viewers.
+% Add PDF rotation metadata so lscape pages open upright in standard viewers.
 \makeatletter
 \g@addto@macro\landscape{\clearpage\pdfpageattr{/Rotate 90}}
 \g@addto@macro\endlandscape{\clearpage\pdfpageattr{}}
@@ -1164,6 +1163,9 @@ while the blur and resize results extend the evidence beyond Gaussian noise.
 %% ===========================================================================
 \FloatBarrier
 \appendix
+% TeX Live 2025's cleveref first aid records appendix sections as sections
+% unless the section counter is explicitly aliased after \appendix.
+\crefalias{section}{appendix}
 \section{Proofs and Fixed-Pool Analysis}\label{sec:appendix-acpc-proofs}
 
 \paragraph{Proof of \Cref{prop:target-free-error-drift}.}
