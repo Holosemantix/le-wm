@@ -1,0 +1,83 @@
+\providecommand{\vTwoNumberMacros}{paper1_v2_high_severity_draft/tables/multiseverity_numbers}
+\input{\vTwoNumberMacros}
+
+\subsection{IR and SR across a Wider Severity Range}
+\label{sec:exp-multiseverity-extension}
+
+The original narrow Gaussian experiment evaluates a moderate visual shift,
+$\sigma_{\mathrm{eval}}=\vTwoEvalZeroEight$, where every checkpoint passing the
+IR condition also passes SR. Does the SR condition become more active when the
+evaluated shift becomes more severe? We address this question in a separate
+experiment rather than extending the original threshold-selection sweep. For each of
+\vTwoTaskCount{} tasks and \vTwoRunCount{} training runs, we train checkpoints with
+$\sigma_{\max}\in\vTwoTrainSigmaSet$ and evaluate them at
+$\sigma_{\mathrm{eval}}\in\vTwoEvalSigmaSet$. The eight-step rollout
+protocol, state-pair catalog, and thresholds
+$(t_{\mathrm{IR}},t_{\mathrm{SR}})=(\vTwoIRThreshold,\vTwoSRThreshold)$ are
+unchanged.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.82\linewidth]{fig_sr_guard_activation_by_severity.pdf}
+\caption{\textbf{IR and SR become restrictive at different evaluation severities.}
+Both curves use the same denominator of \vTwoCheckpointCount{}
+task--training-run--training-strength rows
+($\vTwoTaskCount\times\vTwoRunCount\times\vTwoTrainLevelCount$) at each
+severity. The blue curve counts rows passing IR; the orange curve counts rows
+passing both conditions, and the shaded gap is the additional SR veto. The
+IR-pass counts are \vTwoIRPassAtZeroEight{}, \vTwoIRPassAtZeroSixteen{},
+\vTwoIRPassAtZeroThirtyTwo{}, and \vTwoIRPassAtZeroSixtyFour{} as
+$\sigma_{\mathrm{eval}}$ increases; SR vetoes \vTwoVetoAtZeroEight{},
+\vTwoVetoAtZeroSixteen{}, \vTwoVetoAtZeroThirtyTwo{}, and
+\vTwoVetoAtZeroSixtyFour{} of those rows, leaving
+\vTwoJointPassAtZeroEight{}, \vTwoJointPassAtZeroSixteen{},
+\vTwoJointPassAtZeroThirtyTwo{}, and \vTwoJointPassAtZeroSixtyFour{} joint
+passes. Counts are descriptive: the same checkpoints recur across severity
+slices, so the points are not independent; the task breakdown is in
+\Cref{sec:appendix-multiseverity}. This decomposition shows when each condition
+is active; it does not measure checkpoint-selection accuracy.}
+\label{fig:sr-guard-activation}
+\end{figure}
+
+The low-severity failures in \Cref{fig:sr-guard-activation} are the same
+\vTwoVetoAtZeroEight{} TwoRoom checkpoints: \vTwoLowVetoAtOne{} trained with
+$\sigma_{\max}=\vTwoTrainOne$ and \vTwoLowVetoAtOneFive{} with
+$\sigma_{\max}=\vTwoTrainOneFive$. These training levels are absent from the
+original narrow grid, so the low-severity vetoes do not contradict that result.
+At higher evaluation severities, failures extend to PushT and one Reacher
+checkpoint; the full breakdown is reported in
+\Cref{sec:appendix-multiseverity}.
+
+We next ask whether the continuous diagnostics vary with same-checkpoint
+planning-performance retention, not merely whether they cross a threshold.
+For each checkpoint, we define
+retained planning performance as success under noise minus success on clean
+observations for that same checkpoint. Within each task and training run, we
+remove the additive training-strength and evaluation-severity trends from both
+the diagnostics and retained performance, then compute rank associations over
+the remaining $\vTwoTrainLevelCount\times\vTwoEvalLevelCount$ interaction.
+Training runs are averaged within each
+task before the \vTwoTaskCount{} tasks receive equal weight.
+
+The direct equal-task mean Spearman correlations are similar in magnitude:
+$\vTwoIRDirect$ for lower relative IR, $\vTwoSRDirect$ for higher SR, and
+$\vTwoExposureDirect$ for the simple exposure ratio
+$-\sigma_{\mathrm{eval}}/\sigma_{\max}$. We do not interpret the small
+differences among these direct summaries as evidence of diagnostic superiority.
+After rank-residualizing the diagnostics and retained performance against the
+exposure ratio, the correlations remain positive at $\vTwoIRAdjusted$ for
+lower relative IR and $\vTwoSRAdjusted$ for higher SR. The corresponding task
+means are positive for all four tasks; ranges and a retention-ratio sensitivity
+analysis appear in \Cref{sec:appendix-multiseverity}.
+
+These results clarify SR's regime-dependent role. In the original
+moderate-severity sweep, IR tracks recovery while SR checks whether the tested
+state-coordinate distinctions remain outside the contracted radius.
+In the broader experiment, the SR-veto fraction among IR-passing rows is higher
+in the harder slices, and the continuous SR values remain associated with
+same-checkpoint retention beyond a simple exposure ratio. This evidence
+does not show that the two-condition screen selects better checkpoints. It also
+does not replace nominal model evaluation: a checkpoint can preserve its
+relative performance under noise while performing poorly on both clean and
+noisy inputs.
+\FloatBarrier

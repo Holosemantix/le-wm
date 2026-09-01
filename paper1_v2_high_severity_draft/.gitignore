@@ -1,0 +1,4 @@
+build/
+full_build/*
+!full_build/full_main.pdf
+scripts/__pycache__/

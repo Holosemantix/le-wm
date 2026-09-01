@@ -1,0 +1,62 @@
+\section{Additional Multi-Severity Analysis}
+\label{sec:appendix-multiseverity}
+
+\providecommand{\vTwoNumberMacros}{paper1_v2_high_severity_draft/tables/multiseverity_numbers}
+\input{\vTwoNumberMacros}
+\providecommand{\vTwoAssociationTable}{tables/table_multiseverity_associations}
+
+This section gives the aggregation and sensitivity details behind
+\Cref{sec:exp-multiseverity-extension}. The broad-severity experiment is
+analyzed separately from the original narrow sweep. It keeps the original
+thresholds and pair construction fixed and uses continuous retention rather
+than defining a new performance band.
+
+The same \vTwoVetoAtZeroEight{} TwoRoom checkpoints account for all SR failures at
+$\sigma_{\mathrm{eval}}=\vTwoEvalZeroEight$ and
+$\vTwoEvalZeroSixteen$: one has $\sigma_{\max}=\vTwoTrainOne$ and two have
+$\sigma_{\max}=\vTwoTrainOneFive$. At
+$\sigma_{\mathrm{eval}}=\vTwoEvalZeroThirtyTwo$, the failures comprise
+\vTwoVetoThirtyTwoTwoRoom{} TwoRoom, \vTwoVetoThirtyTwoPushT{} PushT, and
+\vTwoVetoThirtyTwoReacher{} Reacher checkpoints; at
+$\vTwoEvalZeroSixtyFour$, they comprise
+\vTwoVetoSixtyFourTwoRoom{} TwoRoom and \vTwoVetoSixtyFourPushT{} PushT
+checkpoints. No Cube checkpoint passes IR while failing SR. At the higher
+severities, the failures span TwoRoom, PushT, and Reacher, although some
+checkpoint rows recur across severity slices and the conditional denominator
+also changes with severity.
+
+For each task and training run, the grid contains eight training-noise maxima
+and four evaluation severities. Let $x_{ij}$ denote any diagnostic or behavioral
+quantity at training level $i$ and evaluation severity $j$. We remove the two
+additive main effects using
+\[
+\widetilde{x}_{ij}
+=x_{ij}-\overline{x}_{i\cdot}-\overline{x}_{\cdot j}
++\overline{x}_{\cdot\cdot}.
+\]
+Spearman correlations are computed over the \vTwoFactorialCellCount{} centered
+cells within a single task and training run. We then average the
+\vTwoRunCount{} training-run correlations within each task and weight the
+\vTwoTaskCount{} tasks equally. The task ranges in
+\Cref{tab:multiseverity-associations} summarize heterogeneity; they are not
+confidence intervals. Double-centering leaves
+$(\vTwoTrainLevelCount-1)(\vTwoEvalLevelCount-1)=\vTwoInteractionDf$
+interaction degrees of freedom and imposes row- and column-sum constraints, so
+the \vTwoFactorialCellCount{} cells are not treated as independent observations.
+
+\input{\vTwoAssociationTable}
+\FloatBarrier
+
+Using stress success divided by same-checkpoint clean success instead of their
+percentage-point difference gives the same qualitative result. The equal-task
+mean direct correlations are $\vTwoIRRatioDirect$ for lower relative IR and
+$\vTwoSRRatioDirect$ for higher SR; after accounting for the exposure ratio
+they are $\vTwoIRRatioAdjusted$ and $\vTwoSRRatioAdjusted$, respectively.
+Every clean-success estimate is nonzero (minimum
+$\vTwoMinimumCleanSuccess\%$), but ratios can still amplify changes for weak
+checkpoints; we therefore keep the percentage-point difference as the primary
+outcome and treat the ratio only as a sensitivity check. These are descriptive
+factorial associations. The \vTwoRowCount{} rows are not independent
+replicates, and the four evaluation-severity rows for a checkpoint share the
+same clean-performance estimate; therefore we do not attach row-level
+$p$-values or confidence intervals.

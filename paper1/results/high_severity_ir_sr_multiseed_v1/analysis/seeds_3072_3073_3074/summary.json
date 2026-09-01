@@ -1,0 +1,683 @@
+{
+  "artifact_hashes": {
+    "ir_sr_rows_joined.csv": "1dd4f2a7d2efe493dc3bdbdea6d7baa6272993d5fc703b00e70ef8fd67b60d27",
+    "task_cell_summary.csv": "3f1c19e7e93c08a99db906ff8a84ff3690211a9deec2fdc53829a445e3cf9b66",
+    "task_seed_decisions.csv": "64f30403f4838fe37c2a7aa24760b0b16b50a247212d4406a30af8d4e88083f2",
+    "task_seed_rank_associations.csv": "42a69dd4f4560e943b1f054c37522472a1ff1a40e9bb32f8f5fce1daa91abc8f"
+  },
+  "artifact_role": "multiseed_high_severity_ir_sr_replication",
+  "base_contract_sha256": "47763c20e86de86a73a2452f12de2c1ebf6c09a2a92cf83ccbfa5a0a6adcd222",
+  "behavior_cross_check": {
+    "behavior_artifact": "paper1/results/high_severity_multiseed_behavior_v1/behavior_rows.csv",
+    "behavior_artifact_sha256": "905c47640e2347a6b396782a7ddff33b7b28dc75ba924b69395fac2045660716",
+    "behavior_artifact_training_seeds": [
+      3072,
+      3073,
+      3074
+    ],
+    "cross_checked_rows": 384,
+    "tolerance_percentage_points": 0.001
+  },
+  "contract_path": "paper1/config/high_severity_ir_sr_multiseed_v1.json",
+  "contract_sha256": "6fb08da3b808fac1c0a1ddfc0370a83fc08630385beb8760c548b5e6f3eced5b",
+  "decision_agreement_across_seeds": {
+    "equal_task_mean": 0.8984375,
+    "per_task": {
+      "Cube": {
+        "agreeing_cell_count": 32,
+        "agreement": 1.0,
+        "cell_count": 32
+      },
+      "PushT": {
+        "agreeing_cell_count": 28,
+        "agreement": 0.875,
+        "cell_count": 32
+      },
+      "Reacher": {
+        "agreeing_cell_count": 31,
+        "agreement": 0.96875,
+        "cell_count": 32
+      },
+      "TwoRoom": {
+        "agreeing_cell_count": 24,
+        "agreement": 0.75,
+        "cell_count": 32
+      }
+    },
+    "task_maximum": 1.0,
+    "task_minimum": 0.75,
+    "unit": "checkpoint cells out of 32 per task"
+  },
+  "decision_summary": {
+    "ir_and_sr_pass_count": {
+      "defined_task_count": 4,
+      "equal_task_mean": 24.416666666666668,
+      "per_task": {
+        "Cube": {
+          "defined_seed_count": 3,
+          "seed_maximum": 29.0,
+          "seed_mean": 29.0,
+          "seed_minimum": 29.0
+        },
+        "PushT": {
+          "defined_seed_count": 3,
+          "seed_maximum": 22.0,
+          "seed_mean": 20.666666666666668,
+          "seed_minimum": 19.0
+        },
+        "Reacher": {
+          "defined_seed_count": 3,
+          "seed_maximum": 28.0,
+          "seed_mean": 27.666666666666668,
+          "seed_minimum": 27.0
+        },
+        "TwoRoom": {
+          "defined_seed_count": 3,
+          "seed_maximum": 23.0,
+          "seed_mean": 20.333333333333332,
+          "seed_minimum": 17.0
+        }
+      },
+      "task_maximum": 29.0,
+      "task_minimum": 20.333333333333332,
+      "unit": "checkpoints out of 32 per task x training seed"
+    },
+    "ir_only_pass_count": {
+      "defined_task_count": 4,
+      "equal_task_mean": 26.666666666666664,
+      "per_task": {
+        "Cube": {
+          "defined_seed_count": 3,
+          "seed_maximum": 29.0,
+          "seed_mean": 29.0,
+          "seed_minimum": 29.0
+        },
+        "PushT": {
+          "defined_seed_count": 3,
+          "seed_maximum": 26.0,
+          "seed_mean": 24.333333333333332,
+          "seed_minimum": 23.0
+        },
+        "Reacher": {
+          "defined_seed_count": 3,
+          "seed_maximum": 28.0,
+          "seed_mean": 28.0,
+          "seed_minimum": 28.0
+        },
+        "TwoRoom": {
+          "defined_seed_count": 3,
+          "seed_maximum": 26.0,
+          "seed_mean": 25.333333333333332,
+          "seed_minimum": 25.0
+        }
+      },
+      "task_maximum": 29.0,
+      "task_minimum": 24.333333333333332,
+      "unit": "checkpoints out of 32 per task x training seed"
+    },
+    "natural_sr_veto_count": {
+      "defined_task_count": 4,
+      "equal_task_mean": 2.25,
+      "per_task": {
+        "Cube": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.0,
+          "seed_mean": 0.0,
+          "seed_minimum": 0.0
+        },
+        "PushT": {
+          "defined_seed_count": 3,
+          "seed_maximum": 5.0,
+          "seed_mean": 3.6666666666666665,
+          "seed_minimum": 2.0
+        },
+        "Reacher": {
+          "defined_seed_count": 3,
+          "seed_maximum": 1.0,
+          "seed_mean": 0.3333333333333333,
+          "seed_minimum": 0.0
+        },
+        "TwoRoom": {
+          "defined_seed_count": 3,
+          "seed_maximum": 8.0,
+          "seed_mean": 5.0,
+          "seed_minimum": 3.0
+        }
+      },
+      "task_maximum": 5.0,
+      "task_minimum": 0.0,
+      "unit": "checkpoints out of 32 per task x training seed"
+    }
+  },
+  "decision_summary_by_sigma_eval": {
+    "by_sigma_eval": {
+      "0.08": {
+        "ir_pass_count": 96,
+        "joint_pass_count": 93,
+        "natural_sr_veto_count": 3,
+        "row_instance_count": 96,
+        "veto_over_ir_pass_fraction": 0.03125
+      },
+      "0.16": {
+        "ir_pass_count": 96,
+        "joint_pass_count": 93,
+        "natural_sr_veto_count": 3,
+        "row_instance_count": 96,
+        "veto_over_ir_pass_fraction": 0.03125
+      },
+      "0.32": {
+        "ir_pass_count": 82,
+        "joint_pass_count": 72,
+        "natural_sr_veto_count": 10,
+        "row_instance_count": 96,
+        "veto_over_ir_pass_fraction": 0.12195121951219512
+      },
+      "0.64": {
+        "ir_pass_count": 46,
+        "joint_pass_count": 35,
+        "natural_sr_veto_count": 11,
+        "row_instance_count": 96,
+        "veto_over_ir_pass_fraction": 0.2391304347826087
+      }
+    },
+    "descriptive_only": true,
+    "independence_note": "row instances and checkpoint cells are not independent replicates",
+    "unit": "row instances: task x training seed x training sigma_max at fixed sigma_eval; each row carries behavior/diagnostic means over evaluation seeds 42/43/44"
+  },
+  "design": {
+    "aggregation": "average across training seeds within a task, then weight tasks equally; report the task minimum and maximum",
+    "centering": "double-centering within each task x training_seed block over the 8 training sigma_max by 4 evaluation sigma factorial: x - row mean - column mean + block grand mean",
+    "exposure_adjusted_rank_association": "Spearman partial correlation: rank-transform the diagnostic, the outcome, and the exposure comparator within the block, then correlate the ordinary-least-squares residuals of the first two on the third",
+    "exposure_comparator": "-sigma_eval/sigma_max, retained from the frozen multi-seed behavior artifact as a metadata comparator only",
+    "interaction_residual_df_per_block": 21,
+    "measures": [
+      "pairwise ACPC",
+      "raw IR",
+      "relative IR",
+      "SR",
+      "same-state rollout spread",
+      "different-state separation"
+    ],
+    "primary_outcome": "retention in percentage points: stress success minus same-checkpoint clean success",
+    "rank_association": "Spearman rank correlation computed within each task x training_seed block over its 32 double-centered cells",
+    "sensitivity_outcome": "retention ratio: stress success divided by same-checkpoint clean success"
+  },
+  "evaluation_sigma": [
+    0.08,
+    0.16,
+    0.32,
+    0.64
+  ],
+  "exposure_comparator_summary": {
+    "retention_pp__direct_spearman": {
+      "adjustment": "none; no exposure self-adjusted partial correlation",
+      "defined_task_count": 4,
+      "diagnostic": "exposure_good",
+      "diagnostic_description": "contract exposure comparator retained as a metadata proxy",
+      "equal_task_mean": 0.7865621480426441,
+      "exposure_comparator": "-sigma_eval/sigma_max",
+      "outcome_role": "primary",
+      "per_task": {
+        "Cube": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.7968836064237539,
+          "seed_mean": 0.7642837827864125,
+          "seed_minimum": 0.7382697947214076
+        },
+        "PushT": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.9299853372434018,
+          "seed_mean": 0.887218963831867,
+          "seed_minimum": 0.8093841642228737
+        },
+        "Reacher": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.8640029325513197,
+          "seed_mean": 0.8327223851417399,
+          "seed_minimum": 0.7932551319648092
+        },
+        "TwoRoom": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.7434017595307918,
+          "seed_mean": 0.6620234604105572,
+          "seed_minimum": 0.5509530791788856
+        }
+      },
+      "per_task_seed": {
+        "Cube": {
+          "3072": 0.7968836064237539,
+          "3073": 0.7576979472140761,
+          "3074": 0.7382697947214076
+        },
+        "PushT": {
+          "3072": 0.9299853372434018,
+          "3073": 0.9222873900293255,
+          "3074": 0.8093841642228737
+        },
+        "Reacher": {
+          "3072": 0.8640029325513197,
+          "3073": 0.7932551319648092,
+          "3074": 0.8409090909090908
+        },
+        "TwoRoom": {
+          "3072": 0.691715542521994,
+          "3073": 0.7434017595307918,
+          "3074": 0.5509530791788856
+        }
+      },
+      "task_maximum": 0.887218963831867,
+      "task_minimum": 0.6620234604105572,
+      "unit": "one direct Spearman per task x training_seed block over 32 centered cells"
+    },
+    "retention_ratio__direct_spearman": {
+      "adjustment": "none; no exposure self-adjusted partial correlation",
+      "defined_task_count": 4,
+      "diagnostic": "exposure_good",
+      "diagnostic_description": "contract exposure comparator retained as a metadata proxy",
+      "equal_task_mean": 0.7414772727272727,
+      "exposure_comparator": "-sigma_eval/sigma_max",
+      "outcome_role": "sensitivity",
+      "per_task": {
+        "Cube": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.7653958944281525,
+          "seed_mean": 0.7413245356793743,
+          "seed_minimum": 0.7104105571847507
+        },
+        "PushT": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.8321114369501466,
+          "seed_mean": 0.7653958944281524,
+          "seed_minimum": 0.6957478005865102
+        },
+        "Reacher": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.8585043988269794,
+          "seed_mean": 0.8091397849462365,
+          "seed_minimum": 0.750733137829912
+        },
+        "TwoRoom": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.7448680351906158,
+          "seed_mean": 0.6500488758553274,
+          "seed_minimum": 0.5366568914956011
+        }
+      },
+      "per_task_seed": {
+        "Cube": {
+          "3072": 0.7653958944281525,
+          "3073": 0.7481671554252199,
+          "3074": 0.7104105571847507
+        },
+        "PushT": {
+          "3072": 0.7683284457478005,
+          "3073": 0.8321114369501466,
+          "3074": 0.6957478005865102
+        },
+        "Reacher": {
+          "3072": 0.8585043988269794,
+          "3073": 0.750733137829912,
+          "3074": 0.8181818181818181
+        },
+        "TwoRoom": {
+          "3072": 0.6686217008797654,
+          "3073": 0.7448680351906158,
+          "3074": 0.5366568914956011
+        }
+      },
+      "task_maximum": 0.8091397849462365,
+      "task_minimum": 0.6500488758553274,
+      "unit": "one direct Spearman per task x training_seed block over 32 centered cells"
+    }
+  },
+  "model_family": "LeWM",
+  "rank_association_summary": {
+    "retention_pp__neg_ir_relative_q90__direct_spearman": {
+      "defined_task_count": 4,
+      "equal_task_mean": 0.795773617334022,
+      "outcome_role": "primary",
+      "per_task": {
+        "Cube": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.8901924989173565,
+          "seed_mean": 0.8627132376645341,
+          "seed_minimum": 0.8434750733137828
+        },
+        "PushT": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.749266862170088,
+          "seed_mean": 0.6709433040078201,
+          "seed_minimum": 0.6081378299120235
+        },
+        "Reacher": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.9288856304985335,
+          "seed_mean": 0.9090909090909088,
+          "seed_minimum": 0.8724340175953078
+        },
+        "TwoRoom": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.8203812316715542,
+          "seed_mean": 0.7403470185728249,
+          "seed_minimum": 0.6044721407624634
+        }
+      },
+      "task_maximum": 0.9090909090909088,
+      "task_minimum": 0.6709433040078201
+    },
+    "retention_pp__neg_ir_relative_q90__exposure_adjusted_partial_spearman": {
+      "defined_task_count": 4,
+      "equal_task_mean": 0.4580402117810835,
+      "outcome_role": "primary",
+      "per_task": {
+        "Cube": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.6596597363454039,
+          "seed_mean": 0.6257022402795154,
+          "seed_minimum": 0.5680159252573379
+        },
+        "PushT": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.14532025323461334,
+          "seed_mean": 0.06987347880396792,
+          "seed_minimum": -0.04309250386944548
+        },
+        "Reacher": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.7256211869318563,
+          "seed_mean": 0.6669053542811305,
+          "seed_minimum": 0.5969033425854425
+        },
+        "TwoRoom": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.5480092947462347,
+          "seed_mean": 0.4696797737597203,
+          "seed_minimum": 0.3203094457380896
+        }
+      },
+      "task_maximum": 0.6669053542811305,
+      "task_minimum": 0.06987347880396792
+    },
+    "retention_pp__sr__direct_spearman": {
+      "defined_task_count": 4,
+      "equal_task_mean": 0.8258193385083723,
+      "outcome_role": "primary",
+      "per_task": {
+        "Cube": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.9248188009114572,
+          "seed_mean": 0.8839828915072235,
+          "seed_minimum": 0.8583133416490316
+        },
+        "PushT": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.7884897360703812,
+          "seed_mean": 0.7630602958881662,
+          "seed_minimum": 0.7298387096774193
+        },
+        "Reacher": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.9517785751779226,
+          "seed_mean": 0.9002679878868358,
+          "seed_minimum": 0.8520352608075143
+        },
+        "TwoRoom": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.8353803990046116,
+          "seed_mean": 0.7559661787512635,
+          "seed_minimum": 0.6136363636363635
+        }
+      },
+      "task_maximum": 0.9002679878868358,
+      "task_minimum": 0.7559661787512635
+    },
+    "retention_pp__sr__exposure_adjusted_partial_spearman": {
+      "defined_task_count": 4,
+      "equal_task_mean": 0.5317383413269015,
+      "outcome_role": "primary",
+      "per_task": {
+        "Cube": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.7768735362498282,
+          "seed_mean": 0.6941413275784386,
+          "seed_minimum": 0.6510309724990907
+        },
+        "PushT": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.30066880739714885,
+          "seed_mean": 0.22531103333214045,
+          "seed_minimum": 0.10411898490383262
+        },
+        "Reacher": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.8238737368806109,
+          "seed_mean": 0.6444199413409089,
+          "seed_minimum": 0.5509612870461611
+        },
+        "TwoRoom": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.6526588666636953,
+          "seed_mean": 0.5630810630561177,
+          "seed_minimum": 0.3868682020596132
+        }
+      },
+      "task_maximum": 0.6941413275784386,
+      "task_minimum": 0.22531103333214045
+    },
+    "retention_ratio__neg_ir_relative_q90__direct_spearman": {
+      "defined_task_count": 4,
+      "equal_task_mean": 0.8127443792766372,
+      "outcome_role": "sensitivity",
+      "per_task": {
+        "Cube": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.8621700879765395,
+          "seed_mean": 0.8432306940371456,
+          "seed_minimum": 0.8335777126099706
+        },
+        "PushT": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.846774193548387,
+          "seed_mean": 0.7795698924731181,
+          "seed_minimum": 0.6462609970674486
+        },
+        "Reacher": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.9197214076246333,
+          "seed_mean": 0.9007820136852392,
+          "seed_minimum": 0.8662023460410555
+        },
+        "TwoRoom": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.8005865102639296,
+          "seed_mean": 0.727394916911046,
+          "seed_minimum": 0.593108504398827
+        }
+      },
+      "task_maximum": 0.9007820136852392,
+      "task_minimum": 0.727394916911046
+    },
+    "retention_ratio__neg_ir_relative_q90__exposure_adjusted_partial_spearman": {
+      "defined_task_count": 4,
+      "equal_task_mean": 0.5600185945715107,
+      "outcome_role": "sensitivity",
+      "per_task": {
+        "Cube": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.636843168981607,
+          "seed_mean": 0.604733636203779,
+          "seed_minimum": 0.5554285964117192
+        },
+        "PushT": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.6937893574281346,
+          "seed_mean": 0.5037071814142845,
+          "seed_minimum": 0.2398451048550921
+        },
+        "Reacher": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.7321384204017298,
+          "seed_mean": 0.6744588396973666,
+          "seed_minimum": 0.6283453844439473
+        },
+        "TwoRoom": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.5698020261087938,
+          "seed_mean": 0.4571747209706127,
+          "seed_minimum": 0.3174795613010355
+        }
+      },
+      "task_maximum": 0.6744588396973666,
+      "task_minimum": 0.4571747209706127
+    },
+    "retention_ratio__sr__direct_spearman": {
+      "defined_task_count": 4,
+      "equal_task_mean": 0.8385040910369173,
+      "outcome_role": "sensitivity",
+      "per_task": {
+        "Cube": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.8951666409899091,
+          "seed_mean": 0.8637799143845952,
+          "seed_minimum": 0.8356485625543922
+        },
+        "PushT": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.9099908493875121,
+          "seed_mean": 0.8354661580069811,
+          "seed_minimum": 0.7258064516129031
+        },
+        "Reacher": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.942794342817353,
+          "seed_mean": 0.905647382397671,
+          "seed_minimum": 0.8749542209110088
+        },
+        "TwoRoom": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.8223648167510836,
+          "seed_mean": 0.7491229093584217,
+          "seed_minimum": 0.6037390029325512
+        }
+      },
+      "task_maximum": 0.905647382397671,
+      "task_minimum": 0.7491229093584217
+    },
+    "retention_ratio__sr__exposure_adjusted_partial_spearman": {
+      "defined_task_count": 4,
+      "equal_task_mean": 0.6257218878887507,
+      "outcome_role": "sensitivity",
+      "per_task": {
+        "Cube": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.7216774880202754,
+          "seed_mean": 0.6651943613156605,
+          "seed_minimum": 0.62939193563963
+        },
+        "PushT": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.7881800593615926,
+          "seed_mean": 0.5888508384602796,
+          "seed_minimum": 0.34502536180260573
+        },
+        "Reacher": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.8159120808247279,
+          "seed_mean": 0.6915953874490302,
+          "seed_minimum": 0.5785471441258592
+        },
+        "TwoRoom": {
+          "defined_seed_count": 3,
+          "seed_maximum": 0.6680434717018817,
+          "seed_mean": 0.5572469643300326,
+          "seed_minimum": 0.38254681990515915
+        }
+      },
+      "task_maximum": 0.6915953874490302,
+      "task_minimum": 0.5572469643300326
+    }
+  },
+  "reader_facing_definitions": {
+    "task_cell_summary.csv": {
+      "aggregation": "mean and sample SD (ddof=1) across the requested complete training seeds 3072,3073,3074; no pooling across factorial cells",
+      "checkpoint_independence": "cells are not independent replicates",
+      "columns": {
+        "clean_success_mean": "mean of per-training-seed clean planning success means (%)",
+        "clean_success_sd": "sample SD of those per-training-seed clean success means (%)",
+        "ir_pass_count": "count of contributing training seeds whose fixed IR-only decision passes",
+        "joint_pass_count": "count of contributing training seeds whose fixed IR-and-SR decision passes",
+        "n_training_seeds": "number of complete training-seed rows contributing to the cell",
+        "natural_sr_veto_count": "count of contributing training seeds whose IR passes while SR fails; IR pass count minus joint pass count",
+        "relative_ir_mean": "mean of per-training-seed relative IR values",
+        "relative_ir_sd": "sample SD of per-training-seed relative IR values",
+        "retention_pp_mean": "mean of stress minus clean success (percentage points) across training seeds",
+        "retention_pp_sd": "sample SD of per-training-seed stress minus clean success (percentage points)",
+        "sr_mean": "mean of per-training-seed SR values",
+        "sr_sd": "sample SD of per-training-seed SR values",
+        "stress_success_mean": "mean of per-training-seed stress planning success means (%)",
+        "stress_success_sd": "sample SD of those per-training-seed stress success means (%)"
+      },
+      "decision_counts_are_descriptive": true,
+      "row_unit": "one task x sigma_max x sigma_eval cell (4 x 8 x 4 = 128 rows)",
+      "source_rows": "For each training seed, use the already evaluation-seed-averaged clean/stress values and paired seed-level IR/SR values in its 128-row table; then aggregate those seed values."
+    }
+  },
+  "row_count": 384,
+  "rows_per_seed": 128,
+  "schema_version": "paper1-high-severity-multiseed-ir-sr-analysis-1.1",
+  "scope": {
+    "descriptive_only": true,
+    "no_argmax_or_optimum_analysis": true,
+    "no_best_sigma_or_oracle_selector": true,
+    "no_posthoc_performance_band": true,
+    "notes": [
+      "Checkpoint rows are never treated as independent replicates.",
+      "The four stress rows of one checkpoint share the same three-seed clean estimate.",
+      "No p-values, confidence intervals, or pooled regressions over the 128 rows of a seed are reported.",
+      "The task-cell summary is descriptive mean/sample-SD aggregation across complete training seeds.",
+      "No argmax, best sigma, optimum, oracle selector, or post-hoc performance band is computed or emitted."
+    ],
+    "pooled_cell_inference": false,
+    "population_inference": false,
+    "posthoc_selector": false,
+    "threshold_or_pair_rule_retuning": false
+  },
+  "seed_row_source_hashes": {
+    "3072": "35bcb2e4978470d6b36d7a962ea71cb312c651c3353c2ab5dfece1e8df2e915c",
+    "3073": "833c84180eb28e8f53c0698949e19813f9c8555e47d662ac313eb4b90a6916d1",
+    "3074": "01b88c65f4f9bfc27043b631baf9dfb92315fecc8f84a0c0711e3b70a160e5d8"
+  },
+  "seed_row_sources": {
+    "3072": "paper1/results/high_severity_ir_sr_v2/analysis_all_severities.csv",
+    "3073": "paper1/results/high_severity_ir_sr_multiseed_v1/seed3073/ir_sr_rows.csv",
+    "3074": "paper1/results/high_severity_ir_sr_multiseed_v1/seed3074/ir_sr_rows.csv"
+  },
+  "status": "complete",
+  "task_cell_summary_path": "paper1/results/high_severity_ir_sr_multiseed_v1/analysis/seeds_3072_3073_3074/task_cell_summary.csv",
+  "task_cell_summary_row_count": 128,
+  "tasks": [
+    "TwoRoom",
+    "PushT",
+    "Reacher",
+    "Cube"
+  ],
+  "thresholds": {
+    "ir_relative_max": 0.3,
+    "sr_min": 0.95
+  },
+  "training_seeds": [
+    3072,
+    3073,
+    3074
+  ],
+  "training_sigma_max": [
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.7,
+    1.0,
+    1.5
+  ]
+}

@@ -1,0 +1,22 @@
+\begin{table}[H]
+\centering
+\caption{Recovery ranges in the original Gaussian-noise training sweep
+(nine checkpoints per task: no augmentation plus eight noise levels;
+\Cref{fig:full-sweep-diagnostics} shows every level). The final column lists
+the contiguous training-noise ranges that meet the prespecified success-rate
+criterion in \Cref{sec:bg}. It summarizes an accepted range rather than
+selecting a single training strength.}
+\label{tab:full-sweep-compact}
+\footnotesize
+\setlength{\tabcolsep}{7pt}
+\begin{tabular}{lrr}
+\toprule
+Task & Unaugmented success (\%) & Training levels meeting criterion \\
+\midrule
+TwoRoom & 68.8 & 0.01--0.08 \\
+PushT & 7.2 & 0.03--0.08 \\
+Reacher & 18.2 & 0.03--0.08 \\
+Cube & 43.1 & 0.03--0.07 \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,49 @@
+task,training_seed,outcome,outcome_role,diagnostic,diagnostic_description,n_cells,interaction_residual_df,direct_spearman,exposure_adjusted_partial_spearman
+TwoRoom,3072,retention_pp,primary,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.7961876832844574,0.5480092947462347
+TwoRoom,3072,retention_pp,primary,sr,SR (higher preserves more different-state separation),32,21,0.8188817736128156,0.6526588666636953
+TwoRoom,3072,retention_ratio,sensitivity,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.7884897360703812,0.5698020261087938
+TwoRoom,3072,retention_ratio,sensitivity,sr,SR (higher preserves more different-state separation),32,21,0.8212649083916305,0.6680434717018817
+TwoRoom,3073,retention_pp,primary,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.8203812316715542,0.5407205807948368
+TwoRoom,3073,retention_pp,primary,sr,SR (higher preserves more different-state separation),32,21,0.8353803990046116,0.6497161204450446
+TwoRoom,3073,retention_ratio,sensitivity,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.8005865102639296,0.4842425755020086
+TwoRoom,3073,retention_ratio,sensitivity,sr,SR (higher preserves more different-state separation),32,21,0.8223648167510836,0.621150601383057
+TwoRoom,3074,retention_pp,primary,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.6044721407624634,0.3203094457380896
+TwoRoom,3074,retention_pp,primary,sr,SR (higher preserves more different-state separation),32,21,0.6136363636363635,0.3868682020596132
+TwoRoom,3074,retention_ratio,sensitivity,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.593108504398827,0.3174795613010355
+TwoRoom,3074,retention_ratio,sensitivity,sr,SR (higher preserves more different-state separation),32,21,0.6037390029325512,0.38254681990515915
+PushT,3072,retention_pp,primary,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.6554252199413488,0.10739268704673591
+PushT,3072,retention_pp,primary,sr,SR (higher preserves more different-state separation),32,21,0.7708524419166979,0.30066880739714885
+PushT,3072,retention_ratio,sensitivity,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.845674486803519,0.6937893574281346
+PushT,3072,retention_ratio,sensitivity,sr,SR (higher preserves more different-state separation),32,21,0.9099908493875121,0.7881800593615926
+PushT,3073,retention_pp,primary,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.749266862170088,0.14532025323461334
+PushT,3073,retention_pp,primary,sr,SR (higher preserves more different-state separation),32,21,0.7884897360703812,0.2711453076954399
+PushT,3073,retention_ratio,sensitivity,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.846774193548387,0.5774870819596267
+PushT,3073,retention_ratio,sensitivity,sr,SR (higher preserves more different-state separation),32,21,0.8706011730205279,0.6333470942166404
+PushT,3074,retention_pp,primary,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.6081378299120235,-0.04309250386944548
+PushT,3074,retention_pp,primary,sr,SR (higher preserves more different-state separation),32,21,0.7298387096774193,0.10411898490383262
+PushT,3074,retention_ratio,sensitivity,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.6462609970674486,0.2398451048550921
+PushT,3074,retention_ratio,sensitivity,sr,SR (higher preserves more different-state separation),32,21,0.7258064516129031,0.34502536180260573
+Reacher,3072,retention_pp,primary,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.9288856304985335,0.6781915333260928
+Reacher,3072,retention_pp,primary,sr,SR (higher preserves more different-state separation),32,21,0.8969901276750702,0.5584248000959546
+Reacher,3072,retention_ratio,sensitivity,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.9164222873900291,0.6283453844439473
+Reacher,3072,retention_ratio,sensitivity,sr,SR (higher preserves more different-state separation),32,21,0.8991935834646508,0.5785471441258592
+Reacher,3073,retention_pp,primary,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.8724340175953078,0.5969033425854425
+Reacher,3073,retention_pp,primary,sr,SR (higher preserves more different-state separation),32,21,0.8520352608075143,0.5509612870461611
+Reacher,3073,retention_ratio,sensitivity,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.8662023460410555,0.6628927142464226
+Reacher,3073,retention_ratio,sensitivity,sr,SR (higher preserves more different-state separation),32,21,0.8749542209110088,0.6803269373965035
+Reacher,3074,retention_pp,primary,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.9259530791788856,0.7256211869318563
+Reacher,3074,retention_pp,primary,sr,SR (higher preserves more different-state separation),32,21,0.9517785751779226,0.8238737368806109
+Reacher,3074,retention_ratio,sensitivity,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.9197214076246333,0.7321384204017298
+Reacher,3074,retention_ratio,sensitivity,sr,SR (higher preserves more different-state separation),32,21,0.942794342817353,0.8159120808247279
+Cube,3072,retention_pp,primary,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.8901924989173565,0.6596597363454039
+Cube,3072,retention_pp,primary,sr,SR (higher preserves more different-state separation),32,21,0.9248188009114572,0.7768735362498282
+Cube,3072,retention_ratio,sensitivity,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.8621700879765395,0.6219291432180107
+Cube,3072,retention_ratio,sensitivity,sr,SR (higher preserves more different-state separation),32,21,0.8951666409899091,0.7216774880202754
+Cube,3073,retention_pp,primary,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.8434750733137828,0.5680159252573379
+Cube,3073,retention_pp,primary,sr,SR (higher preserves more different-state separation),32,21,0.8688165319611817,0.6545194739863966
+Cube,3073,retention_ratio,sensitivity,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.8339442815249266,0.5554285964117192
+Cube,3073,retention_ratio,sensitivity,sr,SR (higher preserves more different-state separation),32,21,0.8605245396094843,0.6445136602870758
+Cube,3074,retention_pp,primary,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.8544721407624631,0.6494310592358044
+Cube,3074,retention_pp,primary,sr,SR (higher preserves more different-state separation),32,21,0.8583133416490316,0.6510309724990907
+Cube,3074,retention_ratio,sensitivity,neg_ir_relative_q90,negated relative IR (higher is more invariant),32,21,0.8335777126099706,0.636843168981607
+Cube,3074,retention_ratio,sensitivity,sr,SR (higher preserves more different-state separation),32,21,0.8356485625543922,0.62939193563963

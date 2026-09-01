@@ -1,0 +1,26 @@
+\begin{table}[!htb]
+\centering
+\caption{Descriptive Spearman associations with same-checkpoint retention
+(success under noise minus clean success) in the separate broad-severity
+experiment. Within each task and training run, all quantities are
+double-centered over the $8\times4$ training--evaluation severity grid.
+Training-run correlations are then averaged within each task, and tasks receive
+equal weight. The adjusted column reports partial Spearman correlation after
+residualizing the rank-transformed diagnostic and outcome against the
+rank-transformed exposure ratio
+$-\sigma_{\mathrm{eval}}/\sigma_{\max}$ within each task--run block.
+Ranges contain the four task means, not confidence intervals. The exposure
+ratio is a simple metadata comparator, not an exhaustive baseline, and these
+associations do not establish checkpoint-selection accuracy.}
+\label{tab:multiseverity-associations}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Quantity (favorable direction) & Direct $\rho$ & Task range & Adjusted $\rho$ & Task range \\
+\midrule
+$-\sigma_{\mathrm{eval}}/\sigma_{\max}$ & 0.787 & [0.662, 0.887] & -- & -- \\
+$-\mathrm{IR}^{\mathrm{rel}}$ & 0.796 & [0.671, 0.909] & 0.458 & [0.070, 0.667] \\
+SR & 0.826 & [0.756, 0.900] & 0.532 & [0.225, 0.694] \\
+\bottomrule
+\end{tabular}
+\end{table}
