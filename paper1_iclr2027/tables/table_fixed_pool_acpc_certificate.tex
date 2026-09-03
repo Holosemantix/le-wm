@@ -1,0 +1,29 @@
+\begin{table}[!htb]
+\centering
+\caption{Empirical coverage of the candidate-specific planning-cost
+certificates on the fixed first-round CEM pool. Each entry is the equal-weight
+mean over 12 task--training-run blocks, with 100 histories and the same 64
+candidates per clean--perturbed pair. ``Top-1 cert.'' and ``Elite cert.'' are
+the fractions satisfying \Cref{eq:top1-certificate-main} and
+\Cref{eq:elite-certificate-main}, respectively; ``Same top-1'' is the
+observed fraction whose lowest-cost candidate is unchanged. The zero false
+certificates and zero cost-bound violations are deterministic implementation
+checks. These results concern one fixed candidate pool, not subsequent adaptive
+CEM iterations or simulator return.}
+\label{tab:fixed-pool-acpc-certificate}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lcccc}
+\toprule
+Checkpoint & Probe $\sigma$ & Top-1 cert. (\%) & Elite cert. (\%) & Same top-1 (\%) \\
+\midrule
+Unaugmented & 0.02 & 2.3 & 0.0 & 67.4 \\
+Unaugmented & 0.05 & 0.0 & 0.0 & 20.3 \\
+Unaugmented & 0.08 & 0.0 & 0.0 & 8.7 \\
+\midrule
+Augmented ($\sigma_{\max}=0.08$) & 0.02 & 69.5 & 30.4 & 98.2 \\
+Augmented ($\sigma_{\max}=0.08$) & 0.05 & 46.5 & 14.0 & 96.3 \\
+Augmented ($\sigma_{\max}=0.08$) & 0.08 & 34.8 & 8.8 & 93.3 \\
+\bottomrule
+\end{tabular}
+\end{table}

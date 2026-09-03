@@ -1,0 +1,20 @@
+\begin{table}[!htb]
+\centering
+\caption{Fixed-threshold decision decomposition in the separate
+broad-severity experiment. Each row partitions the same 96 trained checkpoints
+at one evaluation severity. ``IR pass, SR fail'' is the additional rejection
+shown in \Cref{fig:sr-guard-activation}. The reverse disagreement appears at
+the two higher severities, so neither condition subsumes the other.}
+\label{tab:multiseverity-decision-decomposition}
+\small
+\begin{tabular}{ccccc}
+\toprule
+$\sigma_{\mathrm{eval}}$ & Pass both & IR pass, SR fail & IR fail, SR pass & Fail both \\
+\midrule
+0.08 & 93 & 3 & 0 & 0 \\
+0.16 & 93 & 3 & 0 & 0 \\
+0.32 & 72 & 10 & 5 & 9 \\
+0.64 & 35 & 11 & 5 & 45 \\
+\bottomrule
+\end{tabular}
+\end{table}
