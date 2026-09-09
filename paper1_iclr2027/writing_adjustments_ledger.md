@@ -1,6 +1,6 @@
 # ICLR 2027 主文写作调整清单
 
-核对日期：2026-09-04。行号对应本目录当前的 `main.tex`。
+最近更新：2026-09-08。各日期记录中的行号对应当次版本的 `main.tex`。
 
 ## 核对原则
 
@@ -13,6 +13,33 @@
   改写整段来换取篇幅。
 - 下表明确标出仍包含人工合并、压缩或新增衔接的地方。这些位置应作为后续逐句
   复核的重点。
+
+## 2026-09-08 Introduction 贡献标题更新
+
+本次由 sol medium 实施写作，主进程审核；仅修改 Introduction 末尾的贡献段
+（`main.tex` 120--135）。保留 `We make three contributions.`、First/Second/Third
+及紧凑单段排版。
+
+| 位置 | 新拟、恢复或压缩的表述 | 范围说明 |
+|---|---|---|
+| 第一项 | 恢复完整名称 `Action-Conditioned Predictive Consistency (ACPC)` 和 `we introduce`，用 `which compares` 承接比较说明；`predicted clean and perturbed rollouts under the same actions` 调整为 `clean and perturbed rollout predictions under shared actions`，`while SR` 改为 `and SR` | 全称与提出方法的句式来自 v2；比较对象、共享动作、IR/SR 说明和引用不变。后两处为本次轻量措辞调整。 |
+| 第二项 | 使用已确认标题 `bounds on prediction-error and planning-cost changes`；条件压缩为 `over multi-step rollouts with identical candidate action sequences across views` | 这是本次重新组织及压缩的表述；保留变化量、multi-step、samplewise、same candidates/two views、无 distributional/smoothness assumptions 以及原有命题引用。 |
+| 第三项：筛选方法 | 新增 `we develop ACPC-based checkpoint screening using IR and SR`，其中 `ACPC-based checkpoint screening` 为已确认的粗体标题；用 `and evaluate all three diagnostics` 衔接原有实验范围 | ACPC 是基础度量，实际 screen 使用 IR 和 SR；不新增第三个筛选阈值，不声称筛选优于基线或保证控制性能。`all three diagnostics` 指 ACPC、IR、SR，避免重复列举。 |
+| 第三项：实验范围 | `across four control tasks, three visual perturbations, and a second world-model architecture` 压为 `on four tasks, three visual perturbations, and two architectures` | 删去上下文已明确的 control/world-model 修饰，主架构加第二架构改称两种架构；覆盖范围不变。 |
+| 第三项：CEM 句 | 将 `the extra predicted cost when a visual perturbation makes ... select a different plan` 压为 `extra predicted cost of perturbation-induced plan changes in ...` | 这是本次句子压缩；保留扰动引起的换计划及额外 predicted cost，不改成环境回报或控制性能改善。CEM 全称、引用及后续 IR/SR 非等价与连续关联句均保留。 |
+
+为遵守九页限制，最终没有在贡献段重复加入 source-task 阈值校准与 held-out-task
+应用的程序说明；这些原有内容完整保留在 Checkpoint Screening 小节。
+本次未删除任何原有实验结论；实验范围句与新增筛选句合并，CEM 句仅作上述压缩。
+未修改摘要、其他章节、数值、图表、参考文献源文件或
+模板间距、字号及页边距。
+
+重建核验：pdfLaTeX 与 BibTeX 均为 TeX Live 2025；执行完整
+pdfLaTeX → BibTeX → pdfLaTeX → pdfLaTeX 流程并检查交叉引用已稳定。
+Conclusion 仍在第 9 页结束，完整 PDF 24 页。重建的 41 条 bibliography entries
+与原 `main.bbl` 逐字节一致；无 undefined citation/reference、BibTeX warning、
+overfull/underfull hbox 或需要再次编译的提示。保留了原编译就存在的 3 条
+underfull vbox 提示，未为消除这些提示调整模板。
 
 ## 2026-09-04 定向恢复与压缩记录
 

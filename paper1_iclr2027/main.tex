@@ -117,21 +117,22 @@ selected different-state rollouts remain separated beyond this spread.
 \label{fig:acpc-ir-sr-overview}
 \end{figure}
 
-We make three contributions. First, \textbf{ACPC} compares predicted
-clean and perturbed rollouts under the same actions; IR
-summarizes sensitivity, while SR checks state separation (\Cref{sec:acpc}).
-Second, we prove \textbf{samplewise bounds} on changes in multi-step prediction
-error and, when the same candidate action sequences are evaluated from both
-views, their predicted costs
+We make three contributions. First, we introduce
+\textbf{Action-Conditioned Predictive Consistency (ACPC)}, which compares
+clean and perturbed rollout predictions under shared actions; IR summarizes
+sensitivity and SR checks state separation (\Cref{sec:acpc}). Second, we
+prove samplewise \textbf{bounds on prediction-error and planning-cost changes}
+over multi-step rollouts with identical candidate action sequences across views
 (\Cref{prop:target-free-error-drift,prop:exact-cost-certificate}). These bounds
-require no distributional or smoothness assumptions. Third, we evaluate
-\textbf{ACPC, IR, and SR} across four control tasks, three visual perturbations,
-and a second world-model architecture. On LeWM~\cite{maes2026lewm}, ACPC is
-informative about prediction-error change and the extra predicted cost when a
-visual perturbation makes the cross-entropy method (CEM)~\cite{kroese2006cem}
-select a different plan. Across checkpoints, IR and SR provide non-equivalent
-views of perturbation sensitivity and tested state separation; their continuous
-values covary with retained control performance (\Cref{sec:exp}).
+require no distributional or smoothness assumptions. Third, we develop
+\textbf{ACPC-based checkpoint screening} using IR and SR and evaluate all three
+diagnostics on four tasks, three visual perturbations, and two architectures.
+On LeWM~\cite{maes2026lewm}, ACPC is informative
+about prediction-error change and extra predicted cost of perturbation-induced
+plan changes in the cross-entropy method (CEM)~\cite{kroese2006cem}. Across
+checkpoints, IR and SR provide non-equivalent views of perturbation sensitivity
+and tested state separation; their continuous values covary with retained
+control performance (\Cref{sec:exp}).
 
 \section{Related Work}\label{sec:related}
 
