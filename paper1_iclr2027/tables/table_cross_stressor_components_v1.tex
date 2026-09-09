@@ -1,23 +1,23 @@
 \begin{table}[H]
 \centering
-\caption{Descriptive cross-stressor component summary. IR improvement is $1-\mathrm{IR}_{\rm rel}$ because the base value is 1; SR change is endpoint SR minus base SR. Spearman values correlate each component change with planning-success change. Binary agreement compares a positive component change with the prespecified positive behavior label. ``IR pass / veto'' reports absolute endpoint IR passes and the subset rejected by SR. The final cell gives the 2.5th--97.5th percentiles from exact enumeration of all $4^4=256$ ordered task-cluster resamples, using linear interpolation. This is a sensitivity distribution, not a new-task population CI; the 24 paired rows are not IID.}
+\caption{Descriptive cross-stressor component summary. IR improvement is $1-\mathrm{IR}_{\rm rel}$ because the base value is 1; SR change is endpoint SR minus base SR. Spearman values correlate each component change with planning-success change. Binary agreement compares a positive component change with the prespecified positive behavior label. The final cell gives the 2.5th--97.5th percentiles from exact enumeration of all $4^4=256$ ordered task-cluster resamples, using linear interpolation. This is a sensitivity distribution, not a new-task population CI; the 24 paired rows are not IID.}
 \label{tab:cross-stressor-components-v1}
 \scriptsize
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{lrrrrrl}
+\begin{tabular}{lrrrrl}
 \toprule
-Scope & $n$ & $\rho_{\rm IR}$ & $\rho_{\rm SR}$ & \shortstack{binary agreement\\IR / SR} & IR pass / veto & \shortstack{cluster-resampling\\sensitivity} \\
+Scope & $n$ & $\rho_{\rm IR}$ & $\rho_{\rm SR}$ & \shortstack{binary agreement\\IR / SR} & \shortstack{cluster-resampling\\sensitivity} \\
 \midrule
-Pooled & 24 & 0.854 & 0.913 & 0.917 / 0.917 & 6 / 0 & \shortstack{IR: [0.263, 0.950]\\SR: [0.352, 0.929]} \\
-Blur & 12 & 0.874 & 0.953 & 0.917 / 0.917 & 3 / 0 & -- \\
-Resize & 12 & 0.748 & 0.846 & 0.917 / 0.917 & 3 / 0 & -- \\
+Pooled & 24 & 0.854 & 0.913 & 0.917 / 0.917 & \shortstack{IR: [0.263, 0.950]\\SR: [0.352, 0.929]} \\
+Blur & 12 & 0.874 & 0.953 & 0.917 / 0.917 & -- \\
+Resize & 12 & 0.748 & 0.846 & 0.917 / 0.917 & -- \\
 \midrule
-TwoRoom & 6 & 0.543 & 0.543 & 1.000 / 1.000 & 0 / 0 & -- \\
-PushT & 6 & 0.464 & 0.603 & 0.667 / 0.667 & 0 / 0 & -- \\
-Reacher & 6 & 0.886 & 0.886 & 1.000 / 1.000 & 6 / 0 & -- \\
-Cube & 6 & -0.086 & -0.543 & 1.000 / 1.000 & 0 / 0 & -- \\
+TwoRoom & 6 & 0.543 & 0.543 & 1.000 / 1.000 & -- \\
+PushT & 6 & 0.464 & 0.603 & 0.667 / 0.667 & -- \\
+Reacher & 6 & 0.886 & 0.886 & 1.000 / 1.000 & -- \\
+Cube & 6 & -0.086 & -0.543 & 1.000 / 1.000 & -- \\
 \midrule
-LOTO range & 18 & [0.720, 0.911] & [0.846, 0.901] & -- & -- & -- \\
+LOTO range & 18 & [0.720, 0.911] & [0.846, 0.901] & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}

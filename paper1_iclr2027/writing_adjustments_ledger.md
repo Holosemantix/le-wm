@@ -14,6 +14,291 @@
 - 下表明确标出仍包含人工合并、压缩或新增衔接的地方。这些位置应作为后续逐句
   复核的重点。
 
+## 2026-09-09 Figure 8 改为仅显示均值柱状图
+
+按用户要求，去掉所有逐 seed 散点及 `one point per seed` 图例。保留三次运行
+均值柱高、坐标范围、颜色和其他图中文字。生成脚本
+`paper1/scripts/build_cross_stressor_component_analysis.py` 增加可选
+`show_points` 参数（默认 True，历史输出不受影响）；本次仅调用
+`plot(_read_csv(DEFAULT_ROWS), ..., show_points=False)`，输出到 ICLR 图目录，
+不重算统计、不覆盖原始数据或旧版 assets。同步删除 caption 的
+`dots show individual runs` 及引导句的 `and per-run`，没有新增论述。
+
+TeX Live 2025 完整重建，已检查新版柱状图；主文 9 页、全文 25 页。
+已同步 `main.pdf`，未提交或推送。
+
+## 2026-09-09 恢复跨扰动图并补齐附录引导引用
+
+v2 原图 `fig_cross_stressor_ir_sr_comparison_v2.pdf` 使用旧联合分数 ΔS，
+不直接恢复。改为引用已有 `fig_cross_stressor_components_v1.pdf`：分别展示
+规划成功率变化、IR improvement 和 SR change，与当前分量分析一致。
+图资产与原 assets 版本逐字节一致，生成脚本使用同一份 24 对分量数据并同时
+输出汇总表；未重新计算或改动数据/图像。图恢复到 Appendix G，现为 Figure 8。
+
+由 sol medium 增加以下说明与 caption；主进程在 caption 中补全
+`the checkpoint trained at`，避免将 checkpoint 与数值直接比较：
+
+- `Figure 8 shows the corresponding per-task and per-run changes.`
+- `Changes from the unaugmented checkpoint to the checkpoint trained at
+  $\stdmax{}=0.08$ under blur and resize. Panels show (a) planning-success change
+  in percentage points, (b) IR improvement $1-\mathrm{IR}^{\mathrm{rel}}_q$,
+  and (c) SR change. Bars are means across three training runs, dots show
+  individual runs, and positive values indicate improvement.`
+- `Table 11 compares recorded-action ACPC with encoder-only, one-step rollout,
+  and action-destroying controls.`
+
+正文使用 LaTeX 自动引用；4.8 原有 Table 10 / Appendix G 引用中补入 Figure 8。
+没有恢复旧联合分数或固定阈值筛选说明。TeX Live 2025 完整重建并检查附录图表
+排版；主文仍 9 页、全文 25 页。已同步 `main.pdf`，未提交或推送。
+
+## 2026-09-09 合并 4.8 总结句与结果段
+
+按用户意见，仅删除 `These results show that both IR and SR remain informative`
+前的空行，将总结句并入前面的结果段，全部措辞不变。TeX Live 2025 完整
+重建成功，主文仍 9 页、全文 25 页，无未定义引用或 overfull box；已同步
+`main.pdf`，未提交或推送。
+
+## 2026-09-09 聚焦 4.8 的跨扰动诊断问题
+
+用户确认将 4.8 限定为指标变化与行为变化的关联，而非固定阈值迁移检验。
+由 sol medium 修改正文：删除 Gaussian 阈值固定/未校准说明和末尾 6/24
+通过筛选段。Table 10 同步删除 `IR pass / veto` 列及 caption 中对应一句；
+其余数值、逐任务异质性、cluster-resampling sensitivity 和 Table 11 均保留。
+已有内部逐对数据、计算脚本与未引用的历史表文件不删除、不重算。
+
+正文新写/调整句子如下，供人工检查：
+
+- `Treating a positive component change as a positive prediction, IR improvement
+  and SR change each match the prespecified behavioral criterion in 22 of the 24
+  comparisons.`
+- `The criterion labels a pair positive when stress success increases by at least
+  five percentage points and clean success decreases by no more than five
+  percentage points.`（把 Appendix G 的既有标签定义明确写入主文。）
+- `Their pooled Spearman correlations with planning-success change are $0.854$
+  and $0.913$, respectively; both remain positive after omitting any one task`
+  （保留 Table 10 / Appendix G 引用；具体 LOTO ranges 仍在表内。）
+- `These results show that both IR and SR remain informative under the tested
+  blur and resize shifts.`
+
+不新增固定阈值筛选、所有任务内均正相关或联合筛选优越性的主张。
+TeX Live 2025 四步重建成功，已查看 PDF 第 9、22 页。主文 9 页、全文 25 页，
+bibliography 逐字节不变，无未定义引用、BibTeX warning 或 overfull box。
+已同步 `main.pdf`，未提交或推送。
+
+## 2026-09-09 精简 4.4 对照选择说明
+
+采用用户确认的句子：`Base+Control$_8$ reports the lowest test MAE among the
+three action controls for each task and training run.` 将其放到三种动作对照
+介绍之后，删除原段末 `For each task--run cell, ... making this a conservative
+comparison.`。保留按测试 MAE 选择对照的事实，去掉评价性尾句；其他措辞、
+实验数据和协议不变。本次不涉及 Related Work 的 `Finally`。
+
+TeX Live 2025 完整四步重建成功：主文 9 页、全文 25 页，无未定义引用、
+BibTeX warning 或 overfull box。已同步 `main.pdf`，未提交或推送。
+
+## 2026-09-09 合并 4.3 结果段并明确 4.4 的实验意义
+
+按用户批准，由 sol medium 实施。4.3 仅删除结果与总结之间的空行，保留
+独立开头，全部句子逐字不变。4.4 保留协议、图和所有数值，新增/改写如下：
+
+- 开头：`We test whether eight-step ACPC under the recorded actions provides
+  additional information about how much a visual perturbation changes the world
+  model's multi-step prediction error, $d=|e_{\tilde h}-e_h|$.`
+- 原 ridge 拟合句前添加 `To estimate $d$,`，明确回归预测对象。
+- 动作对照介绍后添加：`These controls test whether the recorded action
+  information matters.`
+- 原结果句在 `lowest cross-validated MAE` 后添加 `for estimating $d$`。
+- 删除原末尾关于不比较跨时域 absolute prediction accuracy 的重复说明，
+  换为：`Thus, eight-step ACPC under the recorded actions provides additional
+  information about prediction-error change beyond the simple diagnostics and
+  destroyed-action controls tested here.`
+
+上述改动区分预测误差变化量与估计该变化量的 MAE，不声称世界模型自身预测
+精度提高。TeX Live 2025 完整四步重建成功，已查看第 7 页：4.4 正文与图完整
+位于同页；主文仍 9 页、全文 25 页。bibliography 逐字节不变，无未定义引用、
+BibTeX warning 或 overfull box。已同步 `main.pdf`，未提交或推送。
+
+## 2026-09-09 调整 4.3 的问题与联合考察结论
+
+按用户确认，由 sol medium 将 4.3 调整为实验问题、SR 额外筛除的证据、
+IR 与 SR 联合考察的意义。仅新增或改写以下两句：
+
+- 开头：`We use the broad-severity experiment to test whether checkpoints that
+  pass IR also preserve separation between the selected different-state rollouts.`
+- 收尾（采用用户确认原文）：`These results support considering IR and SR together:
+  low sensitivity to visual perturbations should be accompanied by preserved
+  separation between the selected different-state rollouts.`
+
+SR 额外筛除数量原句保留，在句末补 Figure 3 / Appendix D 引用。反方向通过
+数量句与原末段 continuous-retention 分析逐字移至 Appendix D；0.458、0.532、
+PushT 的 0.070 及解释边界全部保留。Figure 3 环境、尺寸、caption 不变，
+没有改动实验数值或声称联合筛选已被证明具有更高行为预测准确率。
+
+TeX Live 2025 完整四步重建成功，已查看 PDF 第 6、7 页并核对附录移入文本。
+主文仍为 9 页；附录内容移入后全文由 24 页变为 25 页，未调整模板间距。
+bibliography 与修改前逐字节一致（44 条），无未定义引用、BibTeX warning
+或 overfull box。`main.pdf` 已同步，未提交或推送。
+
+## 2026-09-09 删除 4.5 末尾重复的固定池范围说明
+
+按用户确认，将 `Appendix I reports the full fixed-pool analysis; it does not
+certify later adaptive rounds.` 缩为 `Appendix I reports the full fixed-pool
+analysis.`（正文使用原有附录交叉引用）。仅删除分号后的重复说明，不新增表述。
+4.5 前文关于 fixed-pool 与 adaptive CEM 的区别、理论条件及附录内容均不变。
+
+已完成 TeX Live 2025 四步重建并查看 PDF 第 8 页。主文仍为 9 页、全文 24 页，
+bibliography 与修改前逐字节一致，无未定义引用、BibTeX warning 或 overfull
+box；`main.pdf` 已同步，未提交或推送。
+
+## 2026-09-09 合并 4.7 短段并补回 4.8 表格引用
+
+4.7 将 PLDM 实验介绍与趋势总结两句合为一段，原句措辞不变，在总结句末增加
+`tab:pldm-all-levels` 引用，将原表格放到整段之后；表格内容及浮动参数不变。
+4.8 在相关性结果段末增加 `tab:cross-stressor-components-v1` 和
+`sec:appendix-cross-stressor` 引用，指向 Table 10 / Appendix G。
+没有新增解释句、改写结论或改动任何数值；Table 11 仍保留在附录。
+
+TeX Live 2025 完整四步重建成功，已查看 PDF 第 8、9 页：4.7 两句同段并正确
+引用 Table 1，4.8 正确显示 Table 10 / Appendix G。主文仍为 9 页、全文 24 页，
+bibliography 与修改前逐字节一致；无未定义引用、BibTeX warning 或 overfull
+box。`main.pdf` 已同步，未提交或推送。
+
+## 2026-09-09 删除 PLDM 小节的重复范围说明
+
+按用户意见，删除 4.7 末句 `We do not transfer thresholds between model families,
+so this result does not establish a shared calibrated decision boundary.`。
+前一句 `A similar descriptive low-IR, high-SR pattern therefore appears in the
+evaluated PLDM sweeps.` 逐字保留，没有另写收尾或增加跨模型阈值通用的主张。
+开头关于不同 architecture / training recipe 的介绍、表格、实验协议和其他
+内容不变。本次仅删句，无自行改写。
+
+TeX Live 2025 完整四步重建并查看 PDF 第 9 页；主文仍为 9 页、全文 24 页，
+bibliography 与修改前逐字节一致，无未定义引用、BibTeX warning 或 overfull
+box。`main.pdf` 已同步，未提交或推送。
+
+## 2026-09-09 定向删重与实施细节移入附录
+
+用户批准后，由 sol medium 先实施三处定向调整：
+
+- 删除 Discussion 的 `What is supported.` 段，所述结果仍完整保留于 4.4、4.5
+  和 Conclusion；不改 Scope and limitations 正文。
+- 4.5 删除 paired CEM 的初始 proposal、共享随机数、各自更新 elites 清单；
+  Appendix I 已有完整说明，主文保留到该附录的引用，以及比较动机、指标定义、
+  全部基线、回归划分与结果。
+- 4.4 将具体噪声取值、两次扰动采样和零扰动 identity checks 的整句原样移入
+  Appendix E；保留主文的八步时域、完整 recorded future、16 个轨迹组、
+  15 组训练/1 组测试及同组样本不跨集合的说明。
+
+不修改摘要、Related Work、理论、实验数值、参考文献或模板排版参数。
+
+本次非原样移动的文字仅为：4.4 原段句末增加 Appendix E 引用；4.5 原有
+`gives the CEM budget and sample counts` 增加 `protocol,`；Appendix E 将原有
+重复的未增强 checkpoint / 噪声列表说明整理为 `The prediction-error analysis
+uses only the unaugmented checkpoints.`，随后接入从主文原样搬来的采样细节句。
+
+前三处调整后的 TeX Live 2025 完整四步重建已达到主文 9 页、全文 24 页，
+Conclusion 完整落在第 9 页，因此未实施备选的 4.8 LOTO 范围删减，也未调整
+图幅、浮动方式、模板间距或其他段落。
+
+核验：已查看 PDF 第 7、8、9 页，并核对 Appendix E 中采样细节的实际输出。
+摘要、Related Work、理论、4.8、Scope and limitations 及 Conclusion 逐字未改；
+采样句仅移动且全文仍只出现一次。全部引用保留，bibliography 逐字节一致，
+共 44 篇；无 undefined citation/reference、BibTeX warning 或 overfull box，
+保留 underfull vbox 提示。`main.pdf` 已同步重建结果，未提交或推送。
+
+## 2026-09-09 实质精简 PLDM 的介绍
+
+用户指出上一版虽合为一句，仍重复“学习动力学—再使用动力学”。由 sol medium
+改为单一主谓结构，保留 goal-conditioned planning、action-conditioned latent
+dynamics、reward-free offline data 和 VICReg-inspired regularization，删除
+重复的 `uses the learned dynamics` 及可由 latent dynamics 涵盖的泛称
+`representations`。VICReg 的防坍塌作用已由紧邻前句说明，不在 PLDM 句内重复。
+仅此一句变化，LeWM 和其他内容不改。
+
+最终采用：`For goal-conditioned planning, PLDM learns action-conditioned latent
+dynamics from reward-free offline data with VICReg-inspired regularization.`
+保留 `sobal2025stresstesting` 引用；不计引用命令、按空白分词，23 → 15 词。
+
+已用 TeX Live 2025 完整四步重建并查看 PDF 第 2 页；bibliography 与修改前
+逐字节一致，无未定义引用、BibTeX warning 或 overfull box。主文仍为 10 页、
+全文 25 页，`main.pdf` 已同步；未提交或推送。
+
+## 2026-09-09 突出 LeWM 的 JEPA 属性与简洁训练目标
+
+用户要求 LeWM 的介绍重点从像素输入和网络组件转到方法简洁性。由 sol medium
+只调整 LeWM 一句，明确其 action-conditioned latent prediction / JEPA 属性，
+以及 prediction loss 加 SIGReg 的两项目标，SIGReg 是唯一的防坍塌正则项。
+原先 `from raw pixels` 仅描述输入，并不意味着预测像素；本次省去该输入细节，
+避免分散读者对 latent prediction 的注意力。
+
+依据 LeWM 原论文 Section 3 的 Training Objective：
+https://arxiv.org/html/2603.19312v1 ，目标为 prediction loss + weighted SIGReg，
+并明确不使用 stop-gradient、EMA 或额外稳定化 heuristics。正文不展开这些清单，
+也不把“唯一防坍塌正则项”误写成“全部训练只用 SIGReg”。PLDM、其他正文、
+引用和参考文献条目均不改。
+
+最终采用的一句（省略展示引文命令）：`LeWM is an end-to-end JEPA world model
+for action-conditioned latent prediction with a simple two-term objective: a next-step
+latent prediction loss and LeJEPA's SIGReg as the sole anti-collapse regularizer.`
+
+已用 TeX Live 2025 完整四步重建并查看 PDF 第 2 页；仅上述一句正文变化，
+所有引用保留，bibliography 与修改前逐字节一致，无未定义引用、BibTeX warning
+或 overfull box。主文仍为 10 页、全文 25 页，`main.pdf` 已同步；未提交或推送。
+
+## 2026-09-09 将 PLDM 与 LeWM 的介绍分别合为一句
+
+用户要求进一步精简，由 sol medium 分别合并 PLDM 和 LeWM 的工作介绍与
+训练目标说明。只涉及这两个文本块；保留 VICReg → PLDM → LeWM/SIGReg →
+VISReg 顺序，其他正文、全部引用、参考文献条目及排版参数不改。
+
+最终两句（引文命令省略展示，正文保留原引用）：
+
+- `PLDM learns representations and action-conditioned latent dynamics from reward-free
+  offline trajectories, using VICReg-inspired anti-collapse regularization, then uses
+  the learned dynamics for goal-conditioned planning.` 将独立的 training objective
+  句合并为学习方式说明；保留数据来源、表示与动作条件动力学、正则化和规划。
+- `LeWM supports stable end-to-end training of a visual encoder and action-conditioned
+  latent predictor from raw pixels using next-step prediction and LeJEPA's anti-collapse
+  regularizer SIGReg.` 删除 `presents a simple approach` 等引导，以及 Gaussian
+  分布目标的展开解释；保留稳定端到端训练、像素输入、encoder/predictor、下一步
+  预测、SIGReg 的 LeJEPA 来源与防坍塌作用，去掉末尾 `which` 从句。
+
+核验：TeX Live 2025 完整四步重建并查看 PDF 第 2 页；这两个介绍块以外的正文
+逐字不变，所有 citation keys 保留，bibliography 与修改前逐字节一致。无未定义
+引用、BibTeX warning 或 overfull box。主文仍为 10 页、全文 25 页，`main.pdf`
+已同步；未提交或推送。
+
+## 2026-09-09 将 LeWM 原文移至 PLDM 之后
+
+用户确认后，将 LeWM/SIGReg 的两句原文整体移到 PLDM 之后、VISReg 之前，
+局部顺序为 VICReg → PLDM → LeWM/SIGReg → VISReg。两句及其引用逐字保留；
+没有新写过渡句，没有改动其他正文、参考文献条目、实验数据或排版参数。
+
+已程序核对：本轮 TeX 差异仅为该文本块的原样移动。TeX Live 2025 完整四步
+重建成功，并查看 PDF 第 2 页；bibliography 与修改前逐字节一致，无未定义
+引用、BibTeX warning 或 overfull box。主文仍为 10 页、全文 25 页，`main.pdf`
+已同步，未提交或推送。
+
+## 2026-09-09 调整 VICReg 与 PLDM 的介绍顺序
+
+按用户确认，由 sol medium 将 VICReg 的简短方法介绍放到 PLDM 前面，先解释
+方差与协方差正则化的作用，再介绍 PLDM 及其 VICReg-inspired objective。
+PLDM 已确认的 reward-free offline learning / goal-conditioned planning 描述
+逐字保留。LeWM/SIGReg 和 VISReg 原句不改，其他正文和参考文献条目不改。
+本次不实施此前讨论的压页、图表浮动或段落删减方案。
+
+本次自行调整的两处表述：
+
+- 在 PLDM 前独立介绍：`VICReg prevents collapse with variance regularization
+  and reduces feature redundancy with covariance regularization.` 保留 VICReg 引用。
+- PLDM 工作介绍之后改为：`PLDM's training objective includes VICReg-inspired
+  anti-collapse regularization.` 不将 VICReg-inspired 正则化误称为其全部训练目标。
+
+已用 TeX Live 2025 完整四步重建并查看 PDF 第 2 页。参考文献与本次修改前
+逐字节一致，无 undefined citation/reference、BibTeX warning 或 overfull box；
+主文仍为 10 页、全文 25 页。`main.pdf` 已同步，未提交或推送。
+用户随后提出的 LeWM 整块后移，此记录对应版本尚未实施。
+
 ## 2026-09-09 补回跨任务 screening 的结果引用
 
 用户确认后，由 sol medium 合并 Checkpoint Screening across Tasks 中原有的

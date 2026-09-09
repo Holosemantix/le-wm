@@ -144,17 +144,15 @@ learned latent dynamics. Joint-embedding predictive architectures (JEPAs)
 learn representations by predicting targets in representation space rather
 than reconstructing pixels
 ~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,assran2025vjepa2}.
-LeWM~\cite{maes2026lewm} presents a simple approach to stable end-to-end
-training of a visual encoder and an action-conditioned latent predictor from
-raw pixels. Its objective pairs next-step latent prediction with LeJEPA's
-SIGReg~\cite{balestriero2025lejepa}, which encourages a Gaussian latent
-distribution to prevent collapse.
-PLDM~\cite{sobal2025stresstesting} learns representations and
-action-conditioned latent dynamics from reward-free offline trajectories,
-then uses the learned dynamics for goal-conditioned planning.
-PLDM uses a VICReg-inspired anti-collapse objective~\cite{bardes2022vicreg},
-whose variance and covariance terms maintain feature variation and decorrelate
-features, respectively.
+VICReg~\cite{bardes2022vicreg} prevents collapse with variance regularization
+and reduces feature redundancy with covariance regularization.
+For goal-conditioned planning, PLDM~\cite{sobal2025stresstesting} learns
+action-conditioned latent dynamics from reward-free offline data with
+VICReg-inspired regularization.
+LeWM~\cite{maes2026lewm} is an end-to-end JEPA world model for
+action-conditioned latent prediction with a simple two-term objective: a
+next-step latent prediction loss and LeJEPA's SIGReg~\cite{balestriero2025lejepa}
+as the sole anti-collapse regularizer.
 Separately, VISReg~\cite{wu2026visreg} retains variance regularization but
 replaces VICReg's covariance regularization with Sliced-Wasserstein-based
 sketching.
@@ -519,8 +517,8 @@ $t_{\mathrm{SR}}=0.95$.
 \subsection{IR and SR under Broader Evaluation Severities}
 \label{sec:exp-multiseverity-extension}
 
-We test whether this redundancy persists in the separate broad-severity
-experiment.
+We use the broad-severity experiment to test whether checkpoints that pass IR
+also preserve separation between the selected different-state rollouts.
 
 \begin{figure}[htbp]
 \centering
@@ -540,41 +538,29 @@ $\sigma_{\mathrm{eval}}=\vTwoEvalZeroEight$ and
 $\vTwoEvalZeroSixteen$, increasing to
 \vTwoVetoAtZeroThirtyTwo{}/\vTwoIRPassAtZeroThirtyTwo{} and
 \vTwoVetoAtZeroSixtyFour{}/\vTwoIRPassAtZeroSixtyFour{} at the two harder
-severities. The conditions also disagree in the other direction: at both
-$\sigma_{\mathrm{eval}}=0.32$ and $0.64$,
-\vTwoSROnlyPassAtZeroThirtyTwo{} and \vTwoSROnlyPassAtZeroSixtyFour{} rows,
-respectively, pass SR but fail relative IR.
-
-We next relate the continuous diagnostics to same-checkpoint retention,
-defined as success under noise minus clean success. After accounting for the
-simple exposure ratio $-\sigma_{\mathrm{eval}}/\sigma_{\max}$, the correlations
-remain positive when tasks are weighted equally: \vTwoIRAdjusted{} for IR and
-\vTwoSRAdjusted{} for SR.
-The adjusted IR
-association is near zero on PushT (\vTwoIRAdjustedPushT{}), so the result is not
-uniform across tasks. These associations do not establish
-better checkpoint selection or replace evaluation of nominal model quality.
+severities (\Cref{fig:sr-guard-activation};
+Appendix~\ref{sec:appendix-multiseverity}).
+These results support considering IR and SR together: low sensitivity to visual perturbations should be accompanied by preserved separation between the selected different-state rollouts.
 
 \subsection{ACPC and Prediction-Error Change}\label{sec:exp-target-aligned}
 
-We test whether ACPC helps predict how much a visual perturbation changes
+We test whether eight-step ACPC under the recorded actions provides additional
+information about how much a visual perturbation changes the world model's
 multi-step prediction error, $d=|e_{\tilde h}-e_h|$. We evaluate at the protocol horizon
 $H=8$, the longest horizon with a complete logged common future for every
 anchor. The analysis uses the unaugmented checkpoint of each task and training
 run. Trajectories are partitioned into 16 disjoint groups.
-Each history pair contributes rows at Gaussian-noise standard deviations
-$\sigma\in\{0.02,0.05,0.08\}$ with two perturbation draws; zero-severity probes
-serve only as identity checks. A ridge model is
-fitted on 15 groups and evaluated on the remaining group,
+To estimate $d$, a ridge model is fitted on 15 groups and evaluated on the remaining group,
 rotating through all 16, and all rows from one trajectory group stay
-together.
+together (Appendix~\ref{sec:appendix-p1-controls}).
 
 Every ridge model contains the probe severity, encoder-history distance, and
 one-step ACPC under the recorded action. Base+Control$_8$ adds the strongest
 destroyed-action control: eight-step ACPC recomputed with zeroed, swapped, or
-temporally shuffled actions. Base+ACPC$_8$ instead adds eight-step ACPC under
-the recorded actions. For each task--run cell, we report the control with the
-lowest test MAE among the three, making this a conservative comparison.
+temporally shuffled actions. Base+Control$_8$ reports the lowest test MAE
+among the three action controls for each task and training run.
+These controls test whether the recorded action information matters.
+Base+ACPC$_8$ instead adds eight-step ACPC under the recorded actions.
 
 \begin{figure}[H]
 \centering
@@ -584,12 +570,12 @@ unaugmented checkpoints; lower is better.}
 \label{fig:future-drift-runs}
 \end{figure}
 
-Base+ACPC$_8$ attains the lowest cross-validated MAE in all 12 task--run cells
+Base+ACPC$_8$ attains the lowest cross-validated MAE for estimating $d$ in all 12 task--run cells
 (\Cref{fig:future-drift-runs}). It reduces held-out MAE by $55.9\pm4.7\%$
 relative to Base and by $51.3\pm3.5\%$ relative to Base+Control$_8$ (mean
-$\pm$ sample standard deviation across the three runs). These results concern
-prediction of the error drift; they do not compare absolute prediction
-accuracy across rollout horizons.
+$\pm$ sample standard deviation across the three runs). Thus, eight-step ACPC
+under the recorded actions provides additional information about prediction-error
+change beyond the simple diagnostics and destroyed-action controls tested here.
 
 \subsection{ACPC and the Cost of CEM Plan Changes}\label{sec:exp-planner}
 
@@ -607,9 +593,7 @@ The fixed-pool bound motivates this comparison. However, adaptive CEM can
 generate different later pools once the two elite sets diverge. We therefore
 evaluate full paired CEM runs rather than treating the fixed-pool condition as
 a run-level certificate.
-The paired CEM branches follow \Cref{sec:appendix-planner-protocol}: same
-initial proposal, common random numbers, each branch updating from its own
-elites. For each candidate pool, we compute one- and five-step ACPC for every
+For each candidate pool, we compute one- and five-step ACPC for every
 action sequence and use the 90th percentile as the pool summary. The baseline uses perturbation severity, training
 condition, candidate-level one-step ACPC q90, and the clean gap between the
 best and second-best candidates. The expanded model adds candidate-level
@@ -617,7 +601,7 @@ five-step ACPC q90. Within each training run, both regressions are fitted on
 three tasks and tested on the remaining task, rotating which task is excluded
 from fitting. We evaluate MAE on
 $\log(1+\text{selection regret})$; Appendix~\ref{sec:appendix-planner-protocol}
-gives the CEM budget and sample counts.
+gives the CEM protocol, budget, and sample counts.
 
 \begin{figure}[htbp]
 \centering
@@ -636,7 +620,7 @@ the top-1 sufficient condition covers
 checkpoints across probe severities, versus
 \vTwoBaseTopCertHigh--\vTwoBaseTopCertLow\% for unaugmented checkpoints.
 Appendix~\ref{sec:appendix-planner-protocol} reports the full fixed-pool
-analysis; it does not certify later adaptive rounds.
+analysis.
 
 
 \subsection{Checkpoint Screening across Tasks}
@@ -655,13 +639,10 @@ Full results for all 14 choices of source tasks appear in
 
 We apply the same ACPC, IR, and SR definitions to PLDM, which uses a
 different architecture and training recipe.
+A similar descriptive low-IR, high-SR pattern
+therefore appears in the evaluated PLDM sweeps (\Cref{tab:pldm-all-levels}).
 
 \input{tables/table_pldm_all_levels}
-
-A similar descriptive low-IR, high-SR pattern
-therefore appears in the evaluated PLDM sweeps. We do not transfer thresholds
-between model families, so this result does not establish a shared calibrated
-decision boundary.
 
 \subsection{Checkpoint Comparison under Blur and Resize}
 \label{sec:exp-cross-stressor}
@@ -676,29 +657,21 @@ and report the components separately. Because relative IR equals one for the
 reference checkpoint, we define IR improvement as
 $1-\mathrm{IR}^{\mathrm{rel}}_q$ at the augmented endpoint. SR change is the
 endpoint SR minus reference SR. Positive values favor the augmented
-checkpoint for both components. The thresholds selected under Gaussian noise
-remain fixed; no blur- or resize-specific calibration is performed.
+checkpoint for both components.
 
 Treating a positive component change as a positive prediction, IR improvement
-and SR change each match the prespecified binary behavioral label in 22 of the
-24 comparisons. Their pooled Spearman correlations with planning-success
-change are $0.854$ and $0.913$, respectively; after omitting one task at a
-time, the ranges are $[0.720,0.911]$ for IR and $[0.846,0.901]$ for SR.
-
-Only 6 of the 24 augmented endpoints pass the fixed IR
-threshold, and all six also pass SR. Thus, SR changes no pass/fail decision
-beyond IR in this experiment. We therefore treat the component associations
-as descriptive rather than evidence that SR improves the Boolean screen.
+and SR change each match the prespecified behavioral criterion in 22 of the 24
+comparisons. The criterion labels a pair positive when stress success increases
+by at least five percentage points and clean success decreases by no more than
+five percentage points. Their pooled Spearman correlations with planning-success
+change are $0.854$ and $0.913$,
+respectively; both remain positive after omitting any one task
+(\Cref{fig:cross-stressor-components,tab:cross-stressor-components-v1},
+Appendix~\ref{sec:appendix-cross-stressor}).
+These results show that both IR and SR remain informative under the tested
+blur and resize shifts.
 
 \section{Discussion and limitations}\label{sec:disc}
-
-\paragraph{What is supported.}
-For individual clean--perturbed pairs, multi-step ACPC captures changes in
-prediction error more accurately than encoder distance, one-step ACPC, or
-controls that remove the recorded action sequence. At the planning horizon,
-ACPC also helps predict the extra model cost incurred when a perturbation
-changes the plan selected by CEM, beyond one-step ACPC or the clean CEM
-margin.
 
 \paragraph{Scope and limitations.}
 ACPC diagnoses how visual perturbations affect predicted rollouts and planning
@@ -1192,8 +1165,10 @@ by CEM and relates it to selection regret. We therefore treat the planning
 analysis as separate evidence rather than infer it from the prediction-error
 result (\Cref{sec:exp-planner}).
 
-The prediction-error analysis uses only the unaugmented checkpoints and
-Gaussian-noise levels $\sigma\in\{0.02,0.05,0.08\}$.
+The prediction-error analysis uses only the unaugmented checkpoints.
+Each history pair contributes rows at Gaussian-noise standard deviations
+$\sigma\in\{0.02,0.05,0.08\}$ with two perturbation draws; zero-severity probes
+serve only as identity checks.
 \Cref{tab:target-aligned-acpc} reports the relative reduction in
 cross-validated MAE for each training run.
 \Cref{tab:target-aligned-acpc-absolute} reports the corresponding MAE values
@@ -1237,6 +1212,18 @@ A pair is labeled behaviorally positive when the augmented checkpoint improves
 success under the evaluated shift by at least five percentage points while
 losing no more than five clean-success points relative to its unaugmented
 counterpart.
+\Cref{fig:cross-stressor-components} shows the corresponding per-task changes.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{fig_cross_stressor_components_v1.pdf}
+\caption{Changes from the unaugmented checkpoint to the checkpoint trained at $\stdmax{}=0.08$ under
+blur and resize. Panels show (a) planning-success change in percentage points,
+(b) IR improvement $1-\mathrm{IR}^{\mathrm{rel}}_q$, and (c) SR change. Bars
+are means across three training runs, and positive
+values indicate improvement.}
+\label{fig:cross-stressor-components}
+\end{figure}
 
 \input{tables/table_cross_stressor_components_v1}
 
@@ -1244,6 +1231,8 @@ The two label disagreements are PushT run 3072 under resize and run 3074 under
 blur. Each gains four success points, one below the prespecified five-point
 cutoff, while both diagnostic components move in the favorable direction.
 
+\Cref{tab:cross-stressor-diagnostic-ablation} compares recorded-action ACPC
+with encoder-only, one-step rollout, and action-destroying controls.
 \input{tables/table_cross_stressor_diagnostic_ablation}
 
 \FloatBarrier

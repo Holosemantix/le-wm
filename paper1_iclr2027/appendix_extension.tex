@@ -35,6 +35,10 @@ read within the scope of the tested pair catalog.
 \input{\vTwoDecisionTable}
 \FloatBarrier
 
+The conditions also disagree in the other direction: at both
+$\sigma_{\mathrm{eval}}=0.32$ and $0.64$,
+\vTwoSROnlyPassAtZeroThirtyTwo{} and \vTwoSROnlyPassAtZeroSixtyFour{} rows,
+respectively, pass SR but fail relative IR.
 The reverse disagreement in
 \Cref{tab:multiseverity-decision-decomposition} is expected to be possible
 because the conditions use different references. Relative IR divides the raw
@@ -64,6 +68,16 @@ the \vTwoFactorialCellCount{} cells are not treated as independent observations.
 
 \input{\vTwoAssociationTable}
 \FloatBarrier
+
+We next relate the continuous diagnostics to same-checkpoint retention,
+defined as success under noise minus clean success. After accounting for the
+simple exposure ratio $-\sigma_{\mathrm{eval}}/\sigma_{\max}$, the correlations
+remain positive when tasks are weighted equally: \vTwoIRAdjusted{} for IR and
+\vTwoSRAdjusted{} for SR.
+The adjusted IR
+association is near zero on PushT (\vTwoIRAdjustedPushT{}), so the result is not
+uniform across tasks. These associations do not establish
+better checkpoint selection or replace evaluation of nominal model quality.
 
 On PushT, the exposure comparator's direct task-level correlation exceeds both
 diagnostics. This is why we use it as an explicit design-metadata comparator
