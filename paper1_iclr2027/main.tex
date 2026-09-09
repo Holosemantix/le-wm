@@ -146,11 +146,18 @@ than reconstructing pixels
 ~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,assran2025vjepa2}.
 LeWM~\cite{maes2026lewm} presents a simple approach to stable end-to-end
 training of a visual encoder and an action-conditioned latent predictor from
-raw pixels. Its objective pairs next-step latent prediction with a regularizer
-that encourages a Gaussian latent distribution to prevent collapse.
+raw pixels. Its objective pairs next-step latent prediction with LeJEPA's
+SIGReg~\cite{balestriero2025lejepa}, which encourages a Gaussian latent
+distribution to prevent collapse.
 PLDM~\cite{sobal2025stresstesting} learns representations and
 action-conditioned latent dynamics from reward-free offline trajectories,
 then uses the learned dynamics for goal-conditioned planning.
+PLDM uses a VICReg-inspired anti-collapse objective~\cite{bardes2022vicreg},
+whose variance and covariance terms maintain feature variation and decorrelate
+features, respectively.
+Separately, VISReg~\cite{wu2026visreg} retains variance regularization but
+replaces VICReg's covariance regularization with Sliced-Wasserstein-based
+sketching.
 Related work studies collapse in self-predictive
 learning~\cite{tang2023selfpredictive} and the role of action
 conditioning~\cite{khetarpal2025actionconditional}.
@@ -637,10 +644,11 @@ analysis; it does not certify later adaptive rounds.
 
 We test whether thresholds chosen on some tasks identify checkpoint recovery
 on the remaining tasks.
-
 For the two- and three-source settings, the first accepted checkpoint is within $0.5$
 grid steps of recovery on average and never differs by more than one step
 (balanced accuracy $0.900$, precision/recall $0.913/0.953$).
+Full results for all 14 choices of source tasks appear in
+\Cref{tab:cross-task-all-subsets} in Appendix~\ref{sec:appendix-cross-task}.
 
 \subsection{Diagnostic Behavior on PLDM}
 \label{sec:exp-pldm-diagnostics}

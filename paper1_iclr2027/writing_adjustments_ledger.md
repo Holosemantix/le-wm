@@ -14,6 +14,66 @@
 - 下表明确标出仍包含人工合并、压缩或新增衔接的地方。这些位置应作为后续逐句
   复核的重点。
 
+## 2026-09-09 补回跨任务 screening 的结果引用
+
+用户确认后，由 sol medium 合并 Checkpoint Screening across Tasks 中原有的
+两个短段，保留实验目的句、two- and three-source settings 的适用范围及全部
+数值，补回 `tab:cross-task-all-subsets` 和 `sec:appendix-cross-task` 交叉引用。
+新增的来源说明为本次自行写作：`Full results for all 14 choices of source tasks
+appear in Table 9 in Appendix F.`（表号和附录号使用交叉引用生成）；原有两句
+逐字保留。
+
+按用户要求，不在主文重复 single-source limitation；Appendix F 原有的全部
+14 种任务划分结果、Reacher-only 阈值偏紧和接受偏晚的解释均保持不动。
+保留该独立小节与附录表格的位置，不把多源任务的汇总结果泛化到所有划分。
+新增三篇参考文献沿用上一条记录中已核实的发表类型、作者、年份与官方链接，
+本次不再改写其条目或 Related Work。摘要、其他正文、实验数据和排版参数不改。
+
+核验：TeX Live 2025 完整四步重建已完成，已查看 PDF 第 8 页，新增引用正确
+显示为 Table 9 / Appendix F。bibliography 与本轮修改前逐字节一致，共 44 篇；
+无 undefined citation/reference、BibTeX warning 或 overfull box，保留 underfull
+vbox 提示。主文仍为 10 页、全文 25 页，`main.pdf` 已同步；未提交或推送。
+
+## 2026-09-09 补充 VICReg、LeJEPA/SIGReg 与 VISReg
+
+用户确认补充后，由 sol medium 只修改 Related Work 的 World Models 段，
+主进程核对原论文与公开发表记录，并新增三个 BibTeX 条目。其他已有文献不改。
+
+| 位置 | 最终采用表述 | 新拟措辞与边界 |
+|---|---|---|
+| LeWM objective | `Its objective pairs next-step latent prediction with LeJEPA's SIGReg, which encourages a Gaussian latent distribution to prevent collapse.` | 对原有 objective 句作最小调整，点明 SIGReg 的 LeJEPA 来源；保留已确认的 LeWM 主介绍。引用 `balestriero2025lejepa`。 |
+| PLDM objective | `PLDM uses a VICReg-inspired anti-collapse objective, whose variance and covariance terms maintain feature variation and decorrelate features, respectively.` | 本次由 sol medium 新拟，补充 PLDM 与 VICReg 的关系。PLDM 原论文 Section 3.3 明确称 VICReg-inspired；不声称采用未经修改的 VICReg，也不声称这是其全部训练目标。引用 `bardes2022vicreg`。 |
+| VISReg | `Separately, VISReg retains variance regularization but replaces VICReg's covariance regularization with Sliced-Wasserstein-based sketching.` | 本次由 sol medium 新拟，`Separately` 为新增衔接；将 VISReg 作为相关正则化研究介绍，不暗示 LeWM/PLDM 使用了它。保留的是 variance regularization 思路，不声称方差项公式完全相同。引用 `wu2026visreg`。 |
+
+发表记录核对（2026-09-09 UTC）：
+
+- VICReg：Adrien Bardes、Jean Ponce、Yann LeCun；正式发表于 ICLR 2022，
+  使用 `@inproceedings`、2022 年和会议官网链接到的 OpenReview 条目，
+  不按 2021 年 arXiv 预印本著录。依据
+  https://iclr.cc/virtual/2022/poster/6481 和 https://arxiv.org/abs/2105.04906。
+  OpenReview 正文访问出现浏览器验证，但其条目 URL 已由 ICLR 官网直接确认。
+- LeJEPA：Randall Balestriero、Yann LeCun；作者官方仓库仍推荐 arXiv:2511.08544，
+  2025 年。未找到可确认的正式会议/期刊发表记录，按已确认预印本著录；这不等于
+  判断其没有投稿。依据 https://arxiv.org/abs/2511.08544 和
+  https://github.com/galilai-group/lejepa 的 Citation。
+- VISReg：Haiyu Wu、Randall Balestriero、Morgan Levine；作者项目页标为 arXiv，
+  对应 arXiv:2606.02572、2026 年。按预印本著录，不将作者示例中的
+  `@inproceedings` / `booktitle = arXiv` 误当成会议发表。依据
+  https://arxiv.org/abs/2606.02572 和 https://haiyuwu.github.io/visreg/。
+
+本轮不将 anti-collapse regularization 写成视觉鲁棒性或状态分离保证，不增加
+ACPC 自我介绍。完整重建采用 TeX Live 2025 的 pdfLaTeX → BibTeX →
+pdfLaTeX → pdfLaTeX；参考文献 41 → 44 篇，主文仍为 10 页、全文 25 页。
+无 undefined citation/reference、BibTeX warning 或 overfull box，存在 underfull
+vbox 提示；不改模板、图幅或浮动参数。已查看 PDF 第 2、3 页并核对三个
+新增 bibliography 条目的实际输出，`main.pdf` 已同步。比较确认 World Models
+段之外的 TeX 逐字不变、全部旧 BibTeX 条目逐字不变，没有删除旧引用。
+
+用户另外提出的 Checkpoint Screening across Tasks 问题本轮只核查，尚未改动：
+完整数据仍在 Appendix F / Table 9，主文两短段确实缺少该表与附录的引用。
+建议保留主文核心结果、补回证据入口及简短的单一源任务局限；是否合并小节或
+调整位置待用户确认，不擅自移入附录。
+
 ## 2026-09-09 Conclusion 收束调整
 
 用户确认后，由 sol medium 将已审阅的三句替换到 Conclusion 后半段。
