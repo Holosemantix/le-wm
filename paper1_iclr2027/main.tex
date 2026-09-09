@@ -138,60 +138,76 @@ control performance (\Cref{sec:exp}).
 
 \paragraph{World Models.}
 World models predict how an environment evolves under actions and use those
-predictions for control.
-DreamerV3~\cite{hafner2025dreamerv3} learns from imagined trajectories, while
-TD-MPC2~\cite{hansen2024tdmpc2} plans with latent dynamics. Joint-embedding
-predictive architectures (JEPAs) predict in representation space rather than in pixels
+predictions for control. DreamerV3~\cite{hafner2025dreamerv3} learns from
+imagined trajectories, while TD-MPC2~\cite{hansen2024tdmpc2} plans with
+learned latent dynamics. Joint-embedding predictive architectures (JEPAs)
+learn representations by predicting targets in representation space rather
+than reconstructing pixels
 ~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,assran2025vjepa2}.
-We evaluate ACPC on LeWM~\cite{maes2026lewm}, which uses action-conditioned
-latent prediction, and on PLDM~\cite{sobal2025stresstesting}, a different
-joint-embedding dynamics architecture. Work on self-predictive learning studies
-collapse~\cite{tang2023selfpredictive}, action conditioning
-~\cite{khetarpal2025actionconditional}, and which features latent prediction retains
+LeWM~\cite{maes2026lewm} presents a simple approach to stable end-to-end
+training of a visual encoder and an action-conditioned latent predictor from
+raw pixels. Its objective pairs next-step latent prediction with a regularizer
+that encourages a Gaussian latent distribution to prevent collapse.
+PLDM~\cite{sobal2025stresstesting} learns representations and
+action-conditioned latent dynamics from reward-free offline trajectories,
+then uses the learned dynamics for goal-conditioned planning.
+Related work studies collapse in self-predictive
+learning~\cite{tang2023selfpredictive} and the role of action
+conditioning~\cite{khetarpal2025actionconditional}.
+Theoretical analyses ask which features latent prediction retains
 ~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}.
 seq-JEPA~\cite{ghaemi2025seqjepa} further studies invariance and equivariance
-under known view transformations. These works explain how predictive
-representations and dynamics are learned; we evaluate how a trained predictor
-responds when its visual input is perturbed.
+under known view transformations.
 
 \paragraph{Robustness to Visual Perturbations.}
 Training-time augmentation improves visual control in
 DrQ~\cite{kostrikov2020drq} and DrQ-v2~\cite{yarats2022drqv2}, while
 SODA~\cite{hansen2021soda} uses augmentation in an auxiliary
-representation-learning objective. ReOI~\cite{chen2025reoi} modifies
-observations at test time to reduce distractor sensitivity. Other training methods use prototype
-prediction~\cite{deng2022dreamerpro}, retain information that is controllable
-and reward-relevant~\cite{wang2022denoisedmdps},
-or combine temporal masking with
-bisimulation~\cite{sun2024latentrobustwm}. Bisimulation formalizes behavioral
-similarity through rewards and action-conditioned transitions
+representation-learning objective.
+ReOI~\cite{chen2025reoi} instead modifies observations at test time to reduce
+distractor sensitivity.
+Other methods change world-model training.
+DreamerPro~\cite{deng2022dreamerpro} uses prototype prediction, Denoised
+MDPs~\cite{wang2022denoisedmdps} retain information that is controllable and
+reward-relevant, and another approach combines temporal masking with
+bisimulation~\cite{sun2024latentrobustwm}.
+MWM~\cite{yan2026mwm} enforces action-conditioned rollout consistency during
+training.
+These methods reflect a broader principle: robustness should remove
+irrelevant visual variation without discarding distinctions needed for
+control.
+Bisimulation formalizes behavioral similarity through rewards and
+action-conditioned transitions
 ~\cite{gelada2019deepmdp,zhang2021dbc,bsmpc}, including a reward-free
 formulation based only on transitions~\cite{toso2026bisimjepa}.
-Most closely related, MWM~\cite{yan2026mwm} enforces action-conditioned
-rollout consistency during training; ACPC measures clean--perturbed rollout
-divergence in a frozen model under the same actions.
 
 \paragraph{Diagnostics for World Models.}
 Model accuracy and control performance do not always move together:
 one-step likelihood can be a poor guide to downstream
-performance~\cite{lambert2020objective}. World-model evaluation should
-therefore reflect its intended use, including long rollouts, planning, and policy evaluation
-~\cite{wei2024objectivemismatch,yu2026worldmodelevaluation}.
+performance~\cite{lambert2020objective}.
+This mismatch has motivated methods that connect model learning and evaluation
+to downstream decisions~\cite{wei2024objectivemismatch}.
+World-model evaluation should therefore reflect the intended use of the
+model, including long rollouts, planning, and policy
+evaluation~\cite{yu2026worldmodelevaluation}.
+One group of diagnostics examines action information in learned transitions
+and the validity of long rollouts.
 ATM~\cite{chen2026atm} compares action information in encoded and predicted
-transitions. CARRL~\cite{lutjens2020certifiedrl} certifies Q-based action
-choices under bounded observation uncertainty, while CROP~\cite{wu2022crop}
-certifies per-state actions and finite-horizon reward bounds through smoothing.
-These certificates cover policy decisions or return; our bounds preserve only
-the winner or elite set for an evaluated pair and fixed candidate pool. Other
-diagnostics assess action content under visual
-corruptions~\cite{yeom2026actionrelevant}, rollout validity
-~\cite{schaefer2026kinematic}, model error
-~\cite{vakalis2026operator,you2026controlpredictability}.
-\mbox{WMAttack}~\cite{guo2026wmattack} searches for visual attacks on world-model
-agents, while ARB4WM~\cite{zhang2026arb4wm} targets their policy, value, and
-latent dynamics. ACPC instead measures how a task-preserving visual
-perturbation propagates through a shared-action rollout without requiring the
-true future.
+transitions.
+Frozen inverse-dynamics probes test whether latents retain action information
+under visual corruptions~\cite{yeom2026actionrelevant}, while other diagnostics
+expose kinematic failures in long rollouts~\cite{schaefer2026kinematic}.
+A second group measures prediction errors or tests world-model agents with
+visual attacks.
+Some methods compare predicted multi-step latent transitions with those
+produced by the environment~\cite{vakalis2026operator}, or compare predicted
+and true plan costs~\cite{you2026controlpredictability}.
+\mbox{WMAttack}~\cite{guo2026wmattack} searches for visual attacks on
+closed-loop world-model agents, while ARB4WM~\cite{zhang2026arb4wm} targets
+their policy, value, and latent dynamics.
+Finally, CARRL~\cite{lutjens2020certifiedrl} certifies Q-based action choices
+under bounded observation uncertainty, while CROP~\cite{wu2022crop} certifies
+per-state actions and finite-horizon reward bounds through smoothing.
 
 \section{Action-Conditioned Predictive Consistency as a Diagnostic}\label{sec:acpc}
 
@@ -482,8 +498,7 @@ are scaled per task. Lower IR and higher SR are favorable.}
 \subsection{IR and SR across Checkpoint Recovery}\label{sec:exp-gaussian-panel}
 
 Gaussian-noise augmentation recovers performance over a range of training
-levels whose location differs by task. \Cref{fig:full-sweep-diagnostics}
-compares success rate with IR and SR across the complete sweep. On
+levels whose location differs by task (\Cref{fig:full-sweep-diagnostics}). On
 Reacher, augmentation also raises clean success from $59.2\%$ to $76$--$82\%$.
 Its recovery under noisy evaluation therefore cannot be attributed to
 robustness alone; the checkpoints also improve on clean observations.
@@ -498,8 +513,7 @@ $t_{\mathrm{SR}}=0.95$.
 \label{sec:exp-multiseverity-extension}
 
 We test whether this redundancy persists in the separate broad-severity
-experiment, without changing the
-rollout protocol, state-pair catalog, or thresholds.
+experiment.
 
 \begin{figure}[htbp]
 \centering
@@ -536,9 +550,8 @@ better checkpoint selection or replace evaluation of nominal model quality.
 
 \subsection{ACPC and Prediction-Error Change}\label{sec:exp-target-aligned}
 
-Does ACPC help predict how much a visual perturbation changes multi-step
-prediction error? We test whether measured ACPC is informative about the
-bounded quantity $d=|e_{\tilde h}-e_h|$. We evaluate at the protocol horizon
+We test whether ACPC helps predict how much a visual perturbation changes
+multi-step prediction error, $d=|e_{\tilde h}-e_h|$. We evaluate at the protocol horizon
 $H=8$, the longest horizon with a complete logged common future for every
 anchor. The analysis uses the unaugmented checkpoint of each task and training
 run. Trajectories are partitioned into 16 disjoint groups.
@@ -701,18 +714,12 @@ be evaluated.
 ACPC measures how much a clean observation and its visually perturbed
 counterpart diverge after both are rolled forward under the same action
 sequence. We show that this divergence bounds changes in multi-step prediction
-error and predicted planning costs. IR summarizes perturbation sensitivity
-across a checkpoint, while SR checks whether different states remain
-distinguishable after rollout. Across checkpoints, the
-original moderate-severity sweep and the separate broad-severity experiment
-reveal complementary regimes: SR is nonbinding among IR-accepted checkpoints
-in the original sweep, but the fixed conditions produce disagreements in both
-directions in the two harder Gaussian-severity slices. PLDM shows the same
-qualitative
-low-IR, high-SR pattern, while blur and resize extend the evidence beyond
-Gaussian noise. These results support using IR and SR as separate views of
-rollout sensitivity and tested state separation, rather than as a universal
-performance certificate\label{sec:main-text-end}.
+error and predicted planning costs. IR and SR serve complementary diagnostic
+roles: IR measures clean--perturbed rollout spread, while SR checks whether
+different states remain distinguishable after rollout. On LeWM, the IR--SR
+checkpoint screen transfers across tasks, and both diagnostics remain
+informative under blur and resize. Across the evaluated checkpoints, LeWM and
+PLDM show similar trends in both IR and SR\label{sec:main-text-end}.
 
 \clearpage
 \subsection*{AI use statement}

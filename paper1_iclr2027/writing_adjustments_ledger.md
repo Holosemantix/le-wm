@@ -14,6 +14,82 @@
 - 下表明确标出仍包含人工合并、压缩或新增衔接的地方。这些位置应作为后续逐句
   复核的重点。
 
+## 2026-09-09 Conclusion 收束调整
+
+用户确认后，由 sol medium 将已审阅的三句替换到 Conclusion 后半段。
+前两句 ACPC 定义与 prediction-error / planning-cost bounds 总结逐字保留。
+
+| 位置 | 最终采用表述 | 来源与调整披露 |
+|---|---|---|
+| IR/SR 的作用 | `IR and SR serve complementary diagnostic roles: IR measures clean--perturbed rollout spread, while SR checks whether different states remain distinguishable after rollout.` | 由 sol medium 根据现有摘要与方法定义作概括，替换原先两个 sweep/severity regime 的详细复述。保留 IR 与 SR 的不同职责，不声称统计独立或 SR 已被证明提高筛选效果。 |
+| LeWM 的结果 | `On LeWM, the IR--SR checkpoint screen transfers across tasks, and both diagnostics remain informative under blur and resize.` | 恢复摘要已有结果，并作轻量措辞衔接；明确 cross-task screening 与 blur/resize 结果属于 LeWM，不扩展到 PLDM。 |
+| 跨模型结果 | `Across the evaluated checkpoints, LeWM and PLDM show similar trends in both IR and SR.` | 本次由 sol medium 新拟，明确相似趋势的两种模型与评估范围；不声称跨模型阈值迁移。 |
+
+删除 Conclusion 中 `nonbinding`、`fixed conditions`、`harder Gaussian-severity
+slices` 等实验细节复述，以及 `rather than as a universal performance certificate`
+的否定式收尾。相关实验结果、负面结果和证书适用边界仍完整保留在 Results、
+理论、附录与 Discussion 中；没有修改摘要、实验数据、其他章节或任何排版参数。
+
+核验：与本次修改前的 source diff 仅涉及 Conclusion 后半段；已完成 TeX Live
+2025 的 pdfLaTeX → BibTeX → pdfLaTeX → pdfLaTeX 重建，并查看第 10 页。
+Conclusion 正文由 11 行缩为 7 行；主文仍为 10 页，全文 25 页。`main.pdf`
+已同步；bibliography 与修改前逐字节一致，无 undefined citation/reference、
+BibTeX warning 或 overfull box，保留 underfull vbox 提示。按用户指示未继续压页。
+
+## 2026-09-09 Experiments 三处定向去重
+
+用户确认先精简 4.2 的图内容说明、4.3 的重复协议清单、4.4 的重复提问；
+由 sol medium 实施，主进程核对 baseline diff，仅这三处实验正文变化。
+
+| 位置 | 最终调整 | 保留的信息与改写披露 |
+|---|---|---|
+| 4.2 开场 | 将 Figure 2 引用接到 `Gaussian-noise augmentation recovers performance over a range of training levels whose location differs by task` 原句末尾，删除独立的 `compares success rate with IR and SR across the complete sweep` 图内容说明 | 只调整引用位置并删除与图注重复的说明；任务间恢复范围差异、Reacher clean-performance 数值及解释全部保留。 |
+| 4.3 开场 | 保留 `We test whether this redundancy persists in the separate broad-severity experiment.`，删除 `without changing the rollout protocol, state-pair catalog, or thresholds` | 删除的清单已在 Evaluation Protocol 中说明；保留承接上一节 SR 冗余结果的实验动机。没有修改实际实验协议。 |
+| 4.4 开场 | 两个重复提问合为 `We test whether ACPC helps predict how much a visual perturbation changes multi-step prediction error, $d=|e_{\tilde h}-e_h|$.` | 本次由 sol medium 作局部句子合并；保留原问题及完整的 error-change 定义，删除重复的 `measured ACPC is informative about` 和 `the bounded quantity` 同位语。ACPC 对该量的 bound 仍完整保留于 Section 3。Horizon、trajectory grouping、perturbation draws、controls 和结果均未改。 |
+
+TeX Live 2025 完整重建并查看 PDF 第 6、7 页。按实际排版行统计，4.2 首段
+5 → 4 行、4.3 开场 2 → 1 行、4.4 首段 8 → 7 行，合计回收 3 行。
+当前 Conclusion 仍在第 10 页，全文 25 页；按用户指示未继续处理页数。
+`main.pdf` 已同步重建结果；bibliography 与修改前逐字节一致，无 undefined
+citation/reference、BibTeX warning 或 overfull box，保留 underfull vbox 提示。
+没有更改图幅、浮动方式、模板间距、摘要、Related Work 或 Conclusion。
+Conclusion 的新表述本轮仅供用户审阅，未实施。
+
+## 2026-09-09 Related Work 叙述恢复
+
+本次采用用户确认的三段样例及随后确认的 LeWM/PLDM 表述，由 sol medium
+实施、主进程审核。只调整 Related Work；以下记录更新该节的当前状态，早期
+条目中的措辞和行号保留作历史记录。
+
+| 位置 | 恢复、删除或自行调整 | 来源与核查说明 |
+|---|---|---|
+| World Models：JEPA | 恢复 `learn representations by predicting targets in representation space rather than reconstructing pixels` | v2 原句恢复，保留原有四个 JEPA 引用。 |
+| World Models：LeWM | 使用用户确认的两句：`LeWM presents a simple approach to stable end-to-end training of a visual encoder and an action-conditioned latent predictor from raw pixels.` 和 `Its objective pairs next-step latent prediction with a regularizer that encourages a Gaussian latent distribution to prevent collapse.` | 本次由 sol medium 根据原论文新拟，并经用户逐句确认；不是 v2 原句。依据 https://arxiv.org/html/2603.19312v1 的 Abstract 与 Section 3，保留 `maes2026lewm` 引用。 |
+| World Models：PLDM | 使用用户确认的 `PLDM learns representations and action-conditioned latent dynamics from reward-free offline trajectories, then uses the learned dynamics for goal-conditioned planning.` | 本次由 sol medium 根据原论文新拟，并经用户确认；依据 https://arxiv.org/html/2502.14819v3 的 Section 3.3，保留 `sobal2025stresstesting` 引用。不再笼统称作另一种 architecture。 |
+| World Models：预测学习研究 | 用 `Related work` 取代失去时间指代的 `Subsequent work`；将 `Theoretical analyses ask which features latent prediction retains` 单独成句 | 前者为最小衔接调整；后者组合 v2 的理论研究引导与当前稿的 feature-retention 表述。不恢复较难懂的 `high-influence features`，不增加新的理论结论。 |
+| Robustness：方法介绍 | 恢复 v2 的 `Other methods change world-model training.`；将 DreamerPro、Denoised MDPs 和 temporal masking 的原有功能合并介绍；MWM 移入训练方法组 | 分类句为原句恢复。方法并列句是本次组合，`another approach` 为删减后新增连接；功能与引用保留。删除 `Most closely related`，不对文献接近程度作排序。 |
+| Robustness：共同原则 | 恢复 `These methods reflect a broader principle: robustness should remove irrelevant visual variation without discarding distinctions needed for control.` | v2 原句恢复，用于承接随后 bisimulation 的介绍。ReOI 的 `instead` 也恢复自 v2，区分训练增强与测试时处理。 |
+| Diagnostics：分类与具体描述 | 按 action information / rollout validity、prediction errors / visual attacks、certificates 的顺序组织；恢复 mismatch 到 downstream decisions 的原句及具体的 inverse-dynamics、kinematic failures、predicted/environment-produced transitions 和 predicted/true plan costs 描述 | 具体方法说明以 v2 为来源，保留各自原引用；不是把所有方法概括为同一功能，也不声称所有既有诊断都依赖真实未来。 |
+| Diagnostics：新拟引导句 | `One group of diagnostics examines action information in learned transitions and the validity of long rollouts.`；`A second group measures prediction errors or tests world-model agents with visual attacks.` | 两句为 sol medium 本次新拟，已在用户确认的样例中披露。 |
+| 三段中的本文介绍 | 删除 `We evaluate ACPC on...`、第一段末的本文定位、第二段 `ACPC measures...`、第三段 `our bounds...` 对比及末尾 `ACPC instead measures...` | 按用户确认方案删除重复自述，不新增全节 ACPC 收尾句。MWM、CARRL、CROP 的方法介绍和引用仍保留；本文 fixed-pool/paired-input 的理论条件与边界仍完整保留在方法、证明和 Discussion 中。 |
+
+本次不改摘要、Introduction、理论推导、实验结论、数值、caption、图文件、图幅、
+浮动方式、bibliography 源文件或模板间距。新增文字优先用于恢复文献之间的
+关系，不通过进一步删引用回收空间。
+
+重建状态：已执行 TeX Live 2025 的 pdfLaTeX → BibTeX → pdfLaTeX →
+pdfLaTeX 完整流程，并同步到 `main.pdf`。Related Work 的 37 个 citation keys
+集合不变；完整 bibliography 仍为原 41 条，重建的 `main.bbl` 与修改前逐字节
+一致。无 undefined citation/reference、BibTeX warning 或 overfull box；有
+underfull vbox 提示。
+
+按 PDF 实际文字行统计（包含行内小标题，不含节标题和段间距）：World Models
+由 12 行变为 14 行，Robustness 由 11 行变为 12 行，Diagnostics 由 13 行变为
+16 行，合计增加 6 行。分页连带变化使 Conclusion 落到第 10 页，含 11 行正文
+及节标题；当前主文为 10 页、全文 25 页，尚不满足九页限制。用户随后明确要求
+先不处理页数，因此停止浮动位置试排，未改任何图表位置或已批准表述。
+Experiments 本轮仅进行只读冗余识别，尚未实施删改。
+
 ## 2026-09-09 图幅与浮动位置调整
 
 以更新后的 PDF 为准重新分配主文图幅，未改任何正文、caption、数据或图文件。
