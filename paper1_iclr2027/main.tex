@@ -104,7 +104,7 @@ indicating better separation.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.80\linewidth]{fig_acpc_ir_sr_overview.pdf}
+\includegraphics[width=1.00\linewidth]{fig_acpc_ir_sr_overview.pdf}
 \caption{\textbf{Conceptual overview of ACPC, IR, and SR.}
 \textbf{(a)}~A logged clean history and a visually perturbed view of it form
 the paired inputs. \textbf{(b)}~A frozen world model encodes both views and
@@ -471,7 +471,7 @@ on clean observations.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.74\linewidth]{fig_full_sweep_diagnostics.pdf}
+\includegraphics[width=0.94\linewidth]{fig_full_sweep_diagnostics.pdf}
 \caption{Checkpoint-level planning performance and diagnostics across the
 complete Gaussian-noise training sweep. Points are across-run means;
 success-rate error bars span the three training runs, and success-rate axes
@@ -501,9 +501,9 @@ We test whether this redundancy persists in the separate broad-severity
 experiment, without changing the
 rollout protocol, state-pair catalog, or thresholds.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.54\linewidth]{fig_sr_guard_activation_by_severity.pdf}
+\includegraphics[width=0.46\linewidth]{fig_sr_guard_activation_by_severity.pdf}
 \caption{\textbf{SR provides a distinct fixed-threshold constraint beyond
 relative IR.}
 Among checkpoints satisfying
@@ -599,9 +599,9 @@ from fitting. We evaluate MAE on
 $\log(1+\text{selection regret})$; Appendix~\ref{sec:appendix-planner-protocol}
 gives the CEM budget and sample counts.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.64\linewidth]{fig_acpc_planner_evidence.pdf}
+\includegraphics[width=0.54\linewidth]{fig_acpc_planner_evidence.pdf}
 \caption{Adding planner-horizon ACPC improves prediction of the extra model
 cost associated with changes in the plan selected by adaptive CEM.}
 \label{fig:acpc-planner-evidence}
