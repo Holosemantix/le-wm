@@ -69,11 +69,11 @@ Code is available \href{\paperpubliccodeurl}{\textcolor{blue}{here}}.\fi
 \section{Introduction}\label{sec:intro}
 
 World models support control by predicting the outcomes of candidate
-actions~\cite{hafner2025dreamerv3,hansen2024tdmpc2}. Joint-embedding
+actions~\citep{hafner2025dreamerv3,hansen2024tdmpc2}. Joint-embedding
 predictive architectures (JEPAs) predict target representations rather than
 reconstructing pixels, avoiding an explicit requirement to reproduce nuisance
 visual details
-~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}.
+~\citep{lecun2022path,assran2023ijepa,bardes2024vjepa,vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}.
 Yet this design alone does not determine which visual differences matter for
 control.
 Such representations should be insensitive to task-irrelevant visual
@@ -81,7 +81,7 @@ perturbations while preserving distinctions between situations that require
 different actions.
 This requirement echoes the intuition behind bisimulation, which defines
 state equivalence through action-conditioned consequences rather than visual
-appearance~\cite{gelada2019deepmdp,zhang2021dbc}. However, encoder distances
+appearance~\citep{gelada2019deepmdp,zhang2021dbc}. However, encoder distances
 alone do not show how a perturbation propagates through prediction. Over a
 multi-step rollout, the predictor may amplify or contract the initial
 representation difference. Encoder-level and single-transition diagnostics
@@ -127,9 +127,9 @@ over multi-step rollouts with identical candidate action sequences across views
 require no distributional or smoothness assumptions. Third, we develop
 \textbf{ACPC-based checkpoint screening} using IR and SR and evaluate all three
 diagnostics on four tasks, three visual perturbations, and two architectures.
-On LeWM~\cite{maes2026lewm}, ACPC is informative
+On LeWM~\citep{maes2026lewm}, ACPC is informative
 about prediction-error change and extra predicted cost of perturbation-induced
-plan changes in the cross-entropy method (CEM)~\cite{kroese2006cem}. Across
+plan changes in the cross-entropy method (CEM)~\citep{kroese2006cem}. Across
 checkpoints, IR and SR provide non-equivalent views of perturbation sensitivity
 and tested state separation; their continuous values covary with retained
 control performance (\Cref{sec:exp}).
@@ -138,80 +138,80 @@ control performance (\Cref{sec:exp}).
 
 \paragraph{World Models.}
 World models predict how an environment evolves under actions and use those
-predictions for control. DreamerV3~\cite{hafner2025dreamerv3} learns from
-imagined trajectories, while TD-MPC2~\cite{hansen2024tdmpc2} plans with
+predictions for control. DreamerV3~\citep{hafner2025dreamerv3} learns from
+imagined trajectories, while TD-MPC2~\citep{hansen2024tdmpc2} plans with
 learned latent dynamics. Joint-embedding predictive architectures (JEPAs)
 learn representations by predicting targets in representation space rather
 than reconstructing pixels
-~\cite{lecun2022path,assran2023ijepa,bardes2024vjepa,assran2025vjepa2}.
-VICReg~\cite{bardes2022vicreg} prevents collapse with variance regularization
+~\citep{lecun2022path,assran2023ijepa,bardes2024vjepa,assran2025vjepa2}.
+VICReg~\citep{bardes2022vicreg} prevents collapse with variance regularization
 and reduces feature redundancy with covariance regularization.
-For goal-conditioned planning, PLDM~\cite{sobal2025stresstesting} learns
+For goal-conditioned planning, PLDM~\citep{sobal2025stresstesting} learns
 action-conditioned latent dynamics from reward-free offline data with
 VICReg-inspired regularization.
-LeWM~\cite{maes2026lewm} is an end-to-end JEPA world model for
+LeWM~\citep{maes2026lewm} is an end-to-end JEPA world model for
 action-conditioned latent prediction with a simple two-term objective: a
-next-step latent prediction loss and LeJEPA's SIGReg~\cite{balestriero2025lejepa}
+next-step latent prediction loss and LeJEPA's SIGReg~\citep{balestriero2025lejepa}
 as the sole anti-collapse regularizer.
-Separately, VISReg~\cite{wu2026visreg} retains variance regularization but
+Separately, VISReg~\citep{wu2026visreg} retains variance regularization but
 replaces VICReg's covariance regularization with Sliced-Wasserstein-based
 sketching.
 Related work studies collapse in self-predictive
-learning~\cite{tang2023selfpredictive} and the role of action
-conditioning~\cite{khetarpal2025actionconditional}.
+learning~\citep{tang2023selfpredictive} and the role of action
+conditioning~\citep{khetarpal2025actionconditional}.
 Theoretical analyses ask which features latent prediction retains
-~\cite{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}.
-seq-JEPA~\cite{ghaemi2025seqjepa} further studies invariance and equivariance
+~\citep{vanassel2025jointembeddingreconstruction,littwin2024jepaavoidsnoisyfeatures}.
+seq-JEPA~\citep{ghaemi2025seqjepa} further studies invariance and equivariance
 under known view transformations.
 
 \paragraph{Robustness to Visual Perturbations.}
 Training-time augmentation improves visual control in
-DrQ~\cite{kostrikov2020drq} and DrQ-v2~\cite{yarats2022drqv2}, while
-SODA~\cite{hansen2021soda} uses augmentation in an auxiliary
+DrQ~\citep{kostrikov2020drq} and DrQ-v2~\citep{yarats2022drqv2}, while
+SODA~\citep{hansen2021soda} uses augmentation in an auxiliary
 representation-learning objective.
-ReOI~\cite{chen2025reoi} instead modifies observations at test time to reduce
+ReOI~\citep{chen2025reoi} instead modifies observations at test time to reduce
 distractor sensitivity.
 Other methods change world-model training.
-DreamerPro~\cite{deng2022dreamerpro} uses prototype prediction, Denoised
-MDPs~\cite{wang2022denoisedmdps} retain information that is controllable and
+DreamerPro~\citep{deng2022dreamerpro} uses prototype prediction, Denoised
+MDPs~\citep{wang2022denoisedmdps} retain information that is controllable and
 reward-relevant, and another approach combines temporal masking with
-bisimulation~\cite{sun2024latentrobustwm}.
-MWM~\cite{yan2026mwm} enforces action-conditioned rollout consistency during
+bisimulation~\citep{sun2024latentrobustwm}.
+MWM~\citep{yan2026mwm} enforces action-conditioned rollout consistency during
 training.
 These methods reflect a broader principle: robustness should remove
 irrelevant visual variation without discarding distinctions needed for
 control.
 Bisimulation formalizes behavioral similarity through rewards and
 action-conditioned transitions
-~\cite{gelada2019deepmdp,zhang2021dbc,bsmpc}, including a reward-free
-formulation based only on transitions~\cite{toso2026bisimjepa}.
+~\citep{gelada2019deepmdp,zhang2021dbc,bsmpc}, including a reward-free
+formulation based only on transitions~\citep{toso2026bisimjepa}.
 
 \paragraph{Diagnostics for World Models.}
 Model accuracy and control performance do not always move together:
 one-step likelihood can be a poor guide to downstream
-performance~\cite{lambert2020objective}.
+performance~\citep{lambert2020objective}.
 This mismatch has motivated methods that connect model learning and evaluation
-to downstream decisions~\cite{wei2024objectivemismatch}.
+to downstream decisions~\citep{wei2024objectivemismatch}.
 World-model evaluation should therefore reflect the intended use of the
 model, including long rollouts, planning, and policy
-evaluation~\cite{yu2026worldmodelevaluation}.
+evaluation~\citep{yu2026worldmodelevaluation}.
 One group of diagnostics examines action information in learned transitions
 and the validity of long rollouts.
-ATM~\cite{chen2026atm} compares action information in encoded and predicted
+ATM~\citep{chen2026atm} compares action information in encoded and predicted
 transitions.
 Frozen inverse-dynamics probes test whether latents retain action information
-under visual corruptions~\cite{yeom2026actionrelevant}, while other diagnostics
-expose kinematic failures in long rollouts~\cite{schaefer2026kinematic}.
+under visual corruptions~\citep{yeom2026actionrelevant}, while other diagnostics
+expose kinematic failures in long rollouts~\citep{schaefer2026kinematic}.
 A second group measures prediction errors or tests world-model agents with
 visual attacks.
 Some methods compare predicted multi-step latent transitions with those
-produced by the environment~\cite{vakalis2026operator}, or compare predicted
-and true plan costs~\cite{you2026controlpredictability}.
-\mbox{WMAttack}~\cite{guo2026wmattack} searches for visual attacks on
-closed-loop world-model agents, while ARB4WM~\cite{zhang2026arb4wm} targets
+produced by the environment~\citep{vakalis2026operator}, or compare predicted
+and true plan costs~\citep{you2026controlpredictability}.
+\mbox{WMAttack}~\citep{guo2026wmattack} searches for visual attacks on
+closed-loop world-model agents, while ARB4WM~\citep{zhang2026arb4wm} targets
 their policy, value, and latent dynamics.
-Finally, CARRL~\cite{lutjens2020certifiedrl} certifies Q-based action choices
-under bounded observation uncertainty, while CROP~\cite{wu2022crop} certifies
+Finally, CARRL~\citep{lutjens2020certifiedrl} certifies Q-based action choices
+under bounded observation uncertainty, while CROP~\citep{wu2022crop} certifies
 per-state actions and finite-horizon reward bounds through smoothing.
 
 \section{Action-Conditioned Predictive Consistency as a Diagnostic}\label{sec:acpc}
@@ -1265,13 +1265,13 @@ Therefore, for small $\sigma$,
 The squared Frobenius norm of the composed Jacobian thus measures how strongly
 the encoder--rollout path locally amplifies Gaussian observation noise.
 Jacobian Frobenius norms have previously been used to measure and regularize
-local representation sensitivity~\cite{rifai2011contractive}. We estimate
+local representation sensitivity~\citep{rifai2011contractive}. We estimate
 \[
 \|J_GJ_E\|_F^2
 =\operatorname{tr}\!\left[(J_GJ_E)^\top(J_GJ_E)\right]
 \]
 with Rademacher probes and the Hutchinson
-estimator~\cite{hutchinson1989stochastic}. Jacobian--vector products compute
+estimator~\citep{hutchinson1989stochastic}. Jacobian--vector products compute
 these estimates without constructing the full Jacobian. In every task, both
 the finite-difference and Jacobian-based estimates are lower for the
 noise-augmented checkpoint (\Cref{fig:local-gaussian-sensitivity}). This result
