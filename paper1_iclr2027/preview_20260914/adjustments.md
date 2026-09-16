@@ -1,5 +1,16 @@
 # 候选稿修改记录（2026-09-14）
 
+## 2026-09-16：Related Work 段尾定位恢复（用户确认）
+
+- 在 CARRL/CROP 后恢复原段尾两句，仅将 `Existing diagnostics` 改为
+  `Some existing diagnostics`；第二句 ACPC 描述完整沿用原文。
+- 删除 Vakalis/You 后此前加入的 `Pairwise ACPC instead ... without
+  requiring the true future`，仅在全节末尾保留一次 ACPC 定位。
+- 第三章引导、其他引用介绍及实验不动。本条取代此前段尾删除/段中定位方案。
+- 已完成 TeX Live 2025 全流程重建并查看第 3 页：段尾两句与下一章排版正常。
+  全文 24 页，主文 10 页；无未定义引用或 Overfull，余两处 Underfull vbox。
+  正式稿未改。
+
 ## 2026-09-16：逐项合入后构建与差异核对
 
 - 已用 TeX Live 2025 完成 pdfLaTeX → BibTeX → pdfLaTeX → pdfLaTeX。

@@ -193,8 +193,6 @@ changes in physical dynamics rather than merely preserve kinematic patterns.
 Some methods compare predicted multi-step latent transitions with those
 produced by the environment~\citep{vakalis2026operator}, or compare predicted
 and true plan costs~\citep{you2026controlpredictability}.
-Pairwise ACPC instead compares clean and perturbed predictions under the same
-action sequence, without requiring the true future.
 Other work evaluates robustness through visual attacks.
 \mbox{WMAttack}~\citep{guo2026wmattack} automatically searches for attacks on
 closed-loop world-model agents, while ARB4WM~\citep{zhang2026arb4wm} evaluates
@@ -203,6 +201,7 @@ Complementary reinforcement learning work provides formal robustness certificate
 CARRL~\citep{lutjens2020certifiedrl} certifies Q-based action choices under
 bounded observation perturbations, while CROP~\citep{wu2022crop} certifies
 per-state actions and lower bounds on finite-horizon cumulative reward.
+Some existing diagnostics evaluate multi-step prediction fidelity, planning-cost accuracy, or robustness under visual attacks. ACPC instead measures perturbation-induced predictive drift through clean--perturbed rollout comparison and relates this drift to changes in prediction error and planner cost.
 
 
 
