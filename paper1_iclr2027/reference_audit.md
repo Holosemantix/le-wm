@@ -1,5 +1,46 @@
 # ICLR 2027 reference audit
 
+## Current integration check — 2026-09-16
+
+The approved `preview_20260914/writing_preview.tex` has been promoted unchanged
+to `main.tex`; the preview remains available. A full TeX Live 2025 build
+(LaTeX, BibTeX, LaTeX twice) generated `build/main.pdf` and synchronized
+`main.pdf`. The build script now performs that synchronization automatically.
+
+- The current auxiliary file cites 44 unique keys and the rendered bibliography
+  contains 44 entries. The main and preview `.bbl` files are identical.
+- `references.bib` contains 61 entries; 17 inventory entries are not rendered.
+- Both the pre-promotion main bibliography and the preview already contained
+  44 entries. The discrepancy with the 41-entry report below is a stale audit
+  record, not a new citation loss caused by promotion.
+- VICReg (`bardes2022vicreg`), LeJEPA (`balestriero2025lejepa`), and VISReg
+  (`wu2026visreg`) are present in the current bibliography. They are not
+  covered by the historical 41-entry scope below.
+- Main text ends on page 9; statements and references begin on page 10;
+  Appendix A, now titled **Proofs**, begins on page 13. The PDF has 24 pages.
+- The final LaTeX pass has no undefined citations/references, duplicate-label
+  warnings, overfull boxes, or rerun request. BibTeX completed successfully.
+- PLDM details are in Appendix C, blur/resize details in Appendix G, and
+  Appendix I is **Adaptive-CEM Selection Regret**. Historical statements below
+  about a retained fixed-pool certificate analysis do not describe this version.
+
+### Verification boundary and remaining author checks
+
+This update verifies source/build integration, citation coverage, and output
+consistency. It does **not** constitute a new publisher-level metadata audit
+or a new scientific validation of every citation-to-claim relationship.
+The historical audit below is retained for provenance, not re-certified.
+Its publication-status checks and the recorded page-range discrepancy still
+require author review; the three additional works above also need to be
+included in any renewed external-source audit. No bibliography metadata,
+experimental data, or approved manuscript wording was changed in this promotion.
+
+## Historical audit — 2026-09-04 (superseded counts and layout)
+
+The remainder records the earlier version only. References to "current",
+"final", 41 entries, and fixed-pool sections below refer to that historical
+snapshot and must not be read as the status of the promoted manuscript.
+
 Checked on 2026-09-04 against the current `main.tex`, `references.bib`, the
 rendered `build/main.bbl`, earlier manuscript versions, and primary publisher,
 proceedings, project, and arXiv records.

@@ -14,4 +14,5 @@ mkdir -p build
 "$PAPER_TEX_BIN/pdflatex" -interaction=nonstopmode -halt-on-error \
   -file-line-error -output-directory=build main.tex
 
-echo "Built $SCRIPT_DIR/build/main.pdf with $PAPER_TEX_BIN"
+cp build/main.pdf main.pdf
+echo "Built $SCRIPT_DIR/build/main.pdf and synchronized $SCRIPT_DIR/main.pdf with $PAPER_TEX_BIN"
