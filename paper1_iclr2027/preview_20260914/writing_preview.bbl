@@ -1,4 +1,4 @@
-\begin{thebibliography}{43}
+\begin{thebibliography}{44}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -326,6 +326,13 @@ Haiyu Wu, Randall Balestriero, and Morgan Levine.
   training.
 \newblock arXiv preprint arXiv:2606.02572, 2026.
 \newblock URL \url{https://arxiv.org/abs/2606.02572}.
+
+\bibitem[Yan et~al.(2026)Yan, Xiang, Zhang, and Tang]{yan2026mwm}
+Han Yan, Zishang Xiang, Zeyu Zhang, and Hao Tang.
+\newblock {MWM}: Mobile world models for action-conditioned consistent
+  prediction.
+\newblock arXiv preprint arXiv:2603.07799, 2026.
+\newblock URL \url{https://arxiv.org/abs/2603.07799}.
 
 \bibitem[Yarats et~al.(2021)Yarats, Kostrikov, and Fergus]{kostrikov2020drq}
 Denis Yarats, Ilya Kostrikov, and Rob Fergus.
