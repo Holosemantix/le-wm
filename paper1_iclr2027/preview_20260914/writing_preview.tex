@@ -687,6 +687,12 @@ neither diagnostic changes monotonically with $\sigma_{\max}$. Across the
 Every checkpoint that passes the IR threshold also passes the SR threshold
 $\tau_{\mathrm{SR}}=0.95$.
 
+The evaluated PLDM sweeps show a similar qualitative pattern: better control
+performance is associated with lower IR and higher SR
+(Appendix~\ref{sec:appendix-A}). Both diagnostics also remain informative
+under the tested blur and resize shifts
+(Appendix~\ref{sec:appendix-cross-stressor}).
+
 \subsection{IR and SR at Broader Evaluation Noise Levels}
 \label{sec:exp-multiseverity-extension}
 
@@ -815,41 +821,6 @@ recall $0.953$; balanced accuracy averages the correct-classification rates
 for checkpoints that do and do not meet the success-rate criterion. Full
 results are reported in \Cref{tab:cross-task-all-subsets} in
 Appendix~\ref{sec:appendix-cross-task}.
-
-\subsection{Diagnostic Behavior on PLDM}
-\label{sec:exp-pldm-diagnostics}
-
-To test whether the diagnostics are specific to LeWM, we apply the same ACPC,
-IR, and SR definitions to PLDM, which uses a different architecture and
-training recipe. The evaluated PLDM sweeps show a similar qualitative pattern:
-better control performance is associated with lower IR and higher SR
-(\Cref{tab:pldm-all-levels}).
-
-\input{tables/table_pldm_all_levels}
-
-\subsection{Diagnostics under Blur and Resize}
-\label{sec:exp-cross-stressor}
-
-We test whether IR and SR remain informative under visual shifts not used for
-training. For each task and training run, we compare the unaugmented checkpoint
-with the checkpoint trained at $\stdmax{}=0.08$ under blur ($k=15$) and resize
-(scale $0.25$), giving $4\times3\times2=24$ comparisons. IR and SR are
-recomputed under each shift.
-
-For each pair, IR improvement is
-$1-\mathrm{IR}^{\mathrm{rel}}_q$, and SR improvement is the SR of the augmented
-checkpoint minus that of the unaugmented checkpoint. Positive values therefore
-mean lower perturbation sensitivity and better state separation, respectively.
-We ask whether these diagnostic improvements agree with control performance:
-a pair is considered improved if planning success under the shift increases by
-at least five percentage points while clean success drops by no more than five.
-
-IR and SR each agree with this criterion in 22 of the 24 comparisons. Their
-Spearman correlations with the change in planning success are $0.854$ and
-$0.913$, respectively, and remain positive when any one task is omitted
-(\Cref{fig:cross-stressor-components,tab:cross-stressor-components-v1};
-Appendix~\ref{sec:appendix-cross-stressor}). Thus, both diagnostics remain
-informative under the tested blur and resize shifts.
 
 \section{Discussion and limitations}\label{sec:disc}
 
@@ -1041,7 +1012,7 @@ pairwise ACPC in \Cref{sec:acpc-def}.
 \section{Evaluation and Diagnostic Protocol}\label{sec:appendix-A}
 
 This appendix specifies the fixed evaluation and diagnostic protocol used in
-the main tables.
+the reported results.
 
 \paragraph{Evaluation grid.}
 We evaluate LeWM on PushT, TwoRoom, Reacher, and Cube. Each checkpoint is
@@ -1059,12 +1030,21 @@ diagnostics use the same clean--perturbed pairing, eight-step rollout horizon,
 and SR definition. In the PLDM plots, raw IR is divided by the value of the
 unaugmented PLDM checkpoint from the same task and training run.
 
+\paragraph{PLDM results.}\label{sec:exp-pldm-diagnostics}
+To test whether the diagnostics are specific to LeWM, we apply the same ACPC,
+IR, and SR definitions to PLDM, which uses a different architecture and
+training recipe. The evaluated PLDM sweeps show a similar qualitative pattern:
+better control performance is associated with lower IR and higher SR
+(\Cref{tab:pldm-all-levels}).
+
+\input{tables/table_pldm_all_levels}
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{fig_pldm_sweep_diagnostics.pdf}
 \caption{Complete PLDM Gaussian-noise training sweep over three runs. Curves
-show three-run means and success bars span the across-run range. The main-text
-summary includes every augmented level rather than selecting a recovery
+show three-run means and success bars span the across-run range. The summary in
+\Cref{tab:pldm-all-levels} includes every augmented level rather than selecting a recovery
 subset.}
 \label{fig:pldm-sweep-diagnostics}
 \end{figure}
@@ -1274,13 +1254,30 @@ levels.
 \section{Cross-Stressor Pairs and Boundary Cases}
 \label{sec:appendix-cross-stressor}
 
-This section reports IR and SR separately for the 24 matched blur/resize
-checkpoint pairs. Component-wise reporting avoids assigning a continuous joint
-score to diagnostics with different roles.
-A pair is labeled behaviorally positive when the augmented checkpoint improves
-success under the evaluated shift by at least five percentage points while
-losing no more than five clean-success points relative to its unaugmented
-counterpart.
+\label{sec:exp-cross-stressor}
+
+We test whether IR and SR remain informative under visual shifts not used for
+training. For each task and training run, we compare the unaugmented checkpoint
+with the checkpoint trained at $\stdmax{}=0.08$ under blur ($k=15$) and resize
+(scale $0.25$), giving $4\times3\times2=24$ comparisons. IR and SR are
+recomputed under each shift.
+
+For each pair, IR improvement is
+$1-\mathrm{IR}^{\mathrm{rel}}_q$, and SR improvement is the SR of the augmented
+checkpoint minus that of the unaugmented checkpoint. Positive values therefore
+mean lower perturbation sensitivity and better state separation, respectively.
+We ask whether these diagnostic improvements agree with control performance:
+a pair is considered improved if planning success under the shift increases by
+at least five percentage points while clean success drops by no more than five.
+
+IR and SR each agree with this criterion in 22 of the 24 comparisons. Their
+Spearman correlations with the change in planning success are $0.854$ and
+$0.913$, respectively, and remain positive when any one task is omitted
+(\Cref{fig:cross-stressor-components,tab:cross-stressor-components-v1}). Thus, both diagnostics remain
+informative under the tested blur and resize shifts.
+
+Component-wise reporting avoids assigning a continuous joint score to
+diagnostics with different roles.
 \Cref{fig:cross-stressor-components} shows the corresponding per-task changes.
 
 \begin{figure}[htbp]

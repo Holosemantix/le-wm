@@ -1,5 +1,23 @@
 # 候选稿修改记录（2026-09-14）
 
+## 2026-09-16：PLDM 与 Blur/Resize 主文精简（用户确认）
+
+- 删除主文独立的 PLDM 和 Blur/Resize 小节，在 4.2 LeWM 主结果末尾保留
+  用户确认的两句短段，分别指向 Appendix C 和 G，不改 4.2 标题。
+- PLDM 完整原段与 table_pldm_all_levels 输入移到 Appendix C 既有 PLDM
+  protocol 后，新增 PLDM results 段标题；保留已有完整 sweep 图。
+  原图注 main-text summary 改为明确引用该表，避免移动后指代失效。
+- Blur/Resize 三段原文移至 Appendix G，替换原附录重复的配对数量和行为
+  标准介绍；保留 component-wise reporting 的解释、图表、两个边界案例及
+  ablation。移除搬迁后指向自身 Appendix G 的冗余引用，图表引用保留。
+- 原小节标签移到对应附录位置，保留潜在引用入口。主文新增 Appendix C/G
+  引用；摘要、贡献点、Discussion、Conclusion 不改，数据和图表内容不变。
+- Appendix C 开头的 main tables 改为 reported results，以匹配表格搬迁。
+- TeX Live 2025 全流程重建：主文回到 9 页，全文 24 页。已查看第 9、15、
+  21 页并核对主文短段及附录引用；无未定义引用、重编译提示或 Overfull，
+  有 4 处 Underfull vbox。未调整模板间距，正式 main.tex/main.pdf 哈希不变。
+- 本轮未提交或推送。
+
 ## 2026-09-16：Related Work 段尾定位恢复（用户确认）
 
 - 在 CARRL/CROP 后恢复原段尾两句，仅将 `Existing diagnostics` 改为
