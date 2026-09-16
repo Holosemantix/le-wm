@@ -747,7 +747,7 @@ information depends on the recorded action sequence.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.74\linewidth]{fig_future_drift_three_seed_v1.pdf}
+\includegraphics[width=0.90\linewidth]{fig_future_drift_three_seed_v1.pdf}
 \caption{Cross-validated MAE for predicting the error drift $d$ on the
 unaugmented checkpoints; lower is better.}
 \label{fig:future-drift-runs}
@@ -789,7 +789,7 @@ budget, and sample counts.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.54\linewidth]{fig_acpc_planner_evidence.pdf}
+\includegraphics[width=0.64\linewidth]{fig_acpc_planner_evidence.pdf}
 \caption{Adding planner-horizon ACPC improves prediction of the extra model
 cost associated with changes in the plan selected by adaptive CEM.}
 \label{fig:acpc-planner-evidence}
@@ -853,11 +853,11 @@ PLDM show similar trends in both IR and SR\label{sec:main-text-end}.
 
 \clearpage
 \subsection*{AI use statement}
-Generative AI tools were used to assist with code generation and debugging,
-language editing, and auxiliary checks of experimental results. The authors
-specified the research questions, methods, and experimental protocols;
-independently verified all AI-assisted code, proofs, numerical results, and
-manuscript claims; and take full responsibility for the submission.
+Generative AI tools were used to assist with language editing and polishing,
+information retrieval, code generation, and visualization and analysis of
+experimental results. The authors reviewed all AI-assisted outputs and
+checked the code and analyses for correctness. The authors take full
+responsibility for the final content of the submission.
 
 \subsection*{Reproducibility statement}
 The appendix specifies tasks, perturbations, checkpoints, seeds, sampling,
@@ -1280,6 +1280,13 @@ Component-wise reporting avoids assigning a continuous joint score to
 diagnostics with different roles.
 \Cref{fig:cross-stressor-components} shows the corresponding per-task changes.
 
+The two label disagreements are PushT run 3072 under resize and run 3074 under
+blur. Each gains four success points, one below the prespecified five-point
+cutoff, while both diagnostic components move in the favorable direction.
+
+\Cref{tab:cross-stressor-diagnostic-ablation} compares recorded-action ACPC
+with encoder-only, one-step rollout, and action-destroying controls.
+
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{fig_cross_stressor_components_v1.pdf}
@@ -1293,12 +1300,6 @@ values indicate improvement.}
 
 \input{tables/table_cross_stressor_components_v1}
 
-The two label disagreements are PushT run 3072 under resize and run 3074 under
-blur. Each gains four success points, one below the prespecified five-point
-cutoff, while both diagnostic components move in the favorable direction.
-
-\Cref{tab:cross-stressor-diagnostic-ablation} compares recorded-action ACPC
-with encoder-only, one-step rollout, and action-destroying controls.
 \input{tables/table_cross_stressor_diagnostic_ablation}
 
 \FloatBarrier
