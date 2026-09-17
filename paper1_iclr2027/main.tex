@@ -666,7 +666,7 @@ percentage points relative to the unaugmented checkpoint.
 \includegraphics[width=0.94\linewidth]{fig_full_sweep_diagnostics.pdf}
 \caption{Checkpoint-level planning performance and diagnostics across the
 complete Gaussian-noise training sweep. Points are across-run means;
-success-rate error bars span the three training runs, and success-rate axes
+error bars span the three training runs, and success-rate axes
 are scaled per task. Lower IR and higher SR are favorable.}
 \label{fig:full-sweep-diagnostics}
 \end{figure}
@@ -773,7 +773,7 @@ Let $\mathbf a$ and $\tilde{\mathbf a}$ denote the final plans selected from
 the clean and perturbed histories. We measure
 $(C_h(\tilde{\mathbf a})-C_h(\mathbf a))_+$,
 the extra cost assigned by the clean model to the perturbed-history plan, and
-refer to it as \emph{CEM selection regret}. This is a single-decision model
+refer to it as \emph{CEM selection regret}, where $(x)_+=\max(x,0)$. This is a single-decision model
 cost, not cumulative regret or simulator return.
 
 We fit two ridge regression models to predict
@@ -1050,18 +1050,18 @@ subset.}
 \end{figure}
 
 \paragraph{Success-rate criterion.}
-For each task and training run, let $P_{\mathrm{base}}$ be the
+For each task and training run, let $S_0$ be the
 noisy-observation success rate of the unaugmented checkpoint, and let
-$P_{\mathrm{upper}}$ be the highest noisy-observation success rate observed in
+$S_{\max}$ be the highest noisy-observation success rate observed in
 the fixed nine-checkpoint sweep. A checkpoint meets the success-rate criterion if its
 noisy-observation success rate is at least
 \[
-P_{\mathrm{base}}+0.8(P_{\mathrm{upper}}-P_{\mathrm{base}})
+S_0+0.8(S_{\max}-S_0)
 \]
 and its clean-observation success rate is no more than five percentage points
 below that of the unaugmented checkpoint. At the task level, we call an
 augmentation level recovered only when this criterion holds in at least two
-of the three training runs. $P_{\mathrm{upper}}$ is used only to scale this
+of the three training runs. $S_{\max}$ is used only to scale this
 recovery label; every level meeting the criterion remains part of the reported
 range.
 
@@ -1085,11 +1085,13 @@ including the transition from the final history observation to the first
 future observation.
 
 For each anchor, we generate multiple perturbation draws using the visual
-shift being evaluated. The Gaussian-noise experiments use $\sigma=0.08$; the
+shift being evaluated, with five draws for Gaussian noise. For the Gaussian-noise
+experiments in \Cref{sec:exp-gaussian-panel}, we use $\sigma=0.08$; the
 blur and resize experiments apply their corresponding shifts. For every draw,
 we compute eight-step ACPC with uniform weights $\alpha_k=1/H$ and normalize it
 by $s_i+\varepsilon_{\mathrm{norm}}$. We average the normalized values across
-draws for each anchor and then take q90 across anchors. The result is raw IR in
+draws for each anchor and then take the 90th percentile (q90) across anchors.
+The result is raw IR in
 \Cref{eq:ir-raw}.
 
 SR compares different-state distances with raw IR from the same checkpoint.
@@ -1098,6 +1100,16 @@ unaugmented checkpoint, as defined in \Cref{eq:ir-relative}. Only the LeWM
 cross-task analysis uses relative IR for threshold selection. We use
 $\varepsilon_{\mathrm{norm}}=10^{-8}$ in
 \Cref{eq:normalized-same-state-radius}.
+
+Across all 108 LeWM checkpoints from the four tasks in the main Gaussian-noise
+sweep, zero clean-motion scale occurred only in PushT, at one of the 100
+anchors per checkpoint. For this anchor, the denominator reduces to
+$\varepsilon_{\mathrm{norm}}$. Excluding it changed relative IR by at most
+$0.034$, with only one checkpoint crossing each of the two fixed IR thresholds
+examined ($0.1$ and $0.3$). These crossings occurred near the threshold
+boundaries. The 90th-percentile aggregation prevents this single extreme value
+from directly determining IR.
+
 \Cref{tab:horizon-quantile-sensitivity} reports the results for the tested
 rollout horizons and summary quantiles.
 
@@ -1127,6 +1139,8 @@ D_i^{\mathrm{diff}}
 \end{equation}
 The pair counts as separated when $D_i^{\mathrm{diff}}$ is greater than raw
 q90 IR plus the fixed margin $0.10$.
+Prediction errors in the neighbor's rollout under the anchor's actions may
+increase the measured separation.
 
 For pairing, the endpoint state is taken after the eight observed future steps
 and therefore records the state reached under that trajectory's own actions.
@@ -1250,6 +1264,16 @@ levels.
 
 \input{tables/table_cross_task_ir_sr_all_subsets_v2}
 
+\paragraph{Sensitivity to the recovery criterion.}
+CEM's random sampling introduces variation in measured success rates.
+We therefore use a recovery fraction of 0.8 to allow some deviation from the
+highest observed success rate. We also test fractions of 0.7 and 0.9,
+reselecting thresholds on source tasks for each fraction while keeping the
+clean-performance constraint unchanged. Balanced accuracy is similar at 0.7
+and 0.8 and lower at 0.9 (\Cref{tab:recovery-fraction-sensitivity}).
+
+\input{tables/table_recovery_fraction_sensitivity}
+
 \FloatBarrier
 \section{Cross-Stressor Pairs and Boundary Cases}
 \label{sec:appendix-cross-stressor}
@@ -1371,10 +1395,10 @@ five-step prediction horizon. The paired runs start from the same proposal and
 use the same random samples, but each run updates its proposal using its own
 elite candidates.
 
-The implementation averages the squared embedding error across the $d$
-embedding coordinates:
+The planner uses the squared distance between the predicted endpoint and the
+goal embedding:
 \[
-C_j=\frac{\|x_j-g\|_2^2}{d}.
+C_j=\|x_j-g\|_2^2.
 \]
 
 For each CEM run, we compute ACPC for every candidate under that candidate's
@@ -1388,11 +1412,19 @@ when both plans are evaluated from the clean history:
 \]
 
 Within each training run, we fit ridge regressions on three tasks and evaluate
-them on the remaining task, rotating through all four choices. MAE is computed
-on $\log(1+\text{selection regret})$ and averaged equally across the four
-evaluation tasks. The relative MAE reduction is computed separately for each
+them on the remaining task, rotating through all four choices.
+Each regression feature is standardized using the mean and standard deviation
+computed from the three training tasks. The same values are used to standardize
+features from the remaining test task. The target is
+$\log(1+\text{selection regret})$, without further standardization. MAE is
+computed on this scale and averaged equally across the four test tasks.
+The relative MAE reduction is computed separately for each
 training run before reporting the mean and sample standard deviation across
 the three runs. This experiment evaluates whether ACPC reflects the model-cost
 effect of a CEM selection change; it does not evaluate simulator return.
+
+\Cref{tab:regression-target-scales} summarizes the target values predicted in
+\Cref{sec:exp-target-aligned,sec:exp-planner}.
+\input{tables/table_regression_target_scales}
 
 \end{document}

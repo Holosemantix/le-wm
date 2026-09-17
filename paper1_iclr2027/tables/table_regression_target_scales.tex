@@ -1,0 +1,24 @@
+\begin{table}[H]
+\centering
+\caption{Summary statistics of the regression targets. The targets are
+prediction-error change $d$ in \Cref{sec:exp-target-aligned} and
+$\log(1+\text{selection regret})$ in \Cref{sec:exp-planner}.
+Each task includes 288 and 1,800 samples, respectively, pooled across the
+three training runs. SD denotes the standard deviation of target values,
+not uncertainty in the mean.}
+\label{tab:regression-target-scales}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+& \multicolumn{2}{c}{Prediction-error change $d$}
+& \multicolumn{2}{c}{$\log(1+\text{selection regret})$} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Task & Mean & SD & Mean & SD \\
+\midrule
+TwoRoom & 8.756 & 6.518 & 2.123 & 2.188 \\
+PushT & 6.725 & 5.653 & 2.170 & 2.077 \\
+Reacher & 8.335 & 5.666 & 2.080 & 2.312 \\
+Cube & 9.772 & 6.900 & 2.189 & 2.243 \\
+\bottomrule
+\end{tabular}
+\end{table}

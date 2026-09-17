@@ -22,7 +22,7 @@ DEFAULT_REGION_FIG = ROOT / "assets" / "paper1_figs" / "fig_full_sweep_diagnosti
 DEFAULT_PLANNER_FIG = ROOT / "assets" / "paper1_figs" / "fig_full_sweep_planner_guard.pdf"
 
 # Common threshold pair selected by 13 of the 14 cross-task partitions
-# (paper Sec. "A common threshold range across tasks"); drawn as dotted
+# (paper appendix "Cross-Task Threshold Partitions"); drawn as dotted
 # reference lines on every diagnostic panel.
 COMMON_TI = 0.30
 COMMON_T_SR = 0.95
@@ -168,6 +168,8 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             ir_relative = _mean_by_rho(trs, "ir_relative_q90")
             sr = _mean_by_rho(trs, "sr_delta010")
             score_lo, score_hi = _range_by_rho(trs, "obs_sigma_008_score")
+            ir_lo, ir_hi = _range_by_rho(trs, "ir_relative_q90")
+            sr_lo, sr_hi = _range_by_rho(trs, "sr_delta010")
 
             clean_base = safe_mean(
                 [fnum(tr.get("base_clean_score")) for tr in trs]
@@ -188,18 +190,26 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
                 capsize=1.6,
                 zorder=2,
             )
-            diagnostic_ax.plot(
+            diagnostic_ax.errorbar(
                 x,
                 ir_relative,
+                yerr=[[m - l for m, l in zip(ir_relative, ir_lo)],
+                      [h - m for m, h in zip(ir_relative, ir_hi)]],
+                elinewidth=0.7,
+                capsize=1.3,
                 color="#d95f02",
                 marker="s",
                 lw=1.35,
                 ms=3.4,
                 zorder=2,
             )
-            diagnostic_ax.plot(
+            diagnostic_ax.errorbar(
                 x,
                 sr,
+                yerr=[[m - l for m, l in zip(sr, sr_lo)],
+                      [h - m for m, h in zip(sr, sr_hi)]],
+                elinewidth=0.7,
+                capsize=1.3,
                 color="#7570b3",
                 marker="^",
                 lw=1.35,
@@ -287,7 +297,7 @@ def plot_dynamics(rows: list[dict[str, str]], out_fig: Path) -> None:
             handletextpad=0.35,
             bbox_to_anchor=(0.5, 1.0),
         )
-        fig.savefig(out_fig, dpi=230)
+        fig.savefig(out_fig, dpi=230, bbox_inches="tight", pad_inches=0.02)
         plt.close(fig)
 
 
