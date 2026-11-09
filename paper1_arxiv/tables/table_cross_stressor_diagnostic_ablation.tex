@@ -1,0 +1,19 @@
+\begin{table}[H]
+\centering
+\caption{Diagnostic ablation on 24 paired blur/resize endpoints. Each metric predicts improvement when its endpoint-to-reference ratio is below one; no threshold is fitted or transferred. Spearman correlation relates diagnostic improvement, defined as one minus this ratio, to planning-success change. Correct/24 and BA compare the predicted sign with the prespecified behavioral label. The LOTO range recomputes pooled Spearman after omitting each task; the 24 pairs are clustered within four tasks.}
+\label{tab:cross-stressor-diagnostic-ablation}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc}
+\toprule
+Diagnostic & Spearman & Correct / 24 & BA & LOTO Spearman range \\
+\midrule
+Encoder only & 0.859 & 20 & 0.778 & [0.725, 0.901] \\
+One-step rollout & 0.738 & 20 & 0.778 & [0.454, 0.877] \\
+Zero actions & 0.805 & 21 & 0.833 & [0.626, 0.877] \\
+Cross-anchor action shuffle & 0.780 & 21 & 0.833 & [0.586, 0.869] \\
+Temporal action shuffle & 0.844 & 22 & 0.889 & [0.678, 0.923] \\
+Recorded-action ACPC & 0.854 & 22 & 0.889 & [0.720, 0.911] \\
+\bottomrule
+\end{tabular}
+\end{table}
