@@ -1,0 +1,61 @@
+\documentclass{article}
+\usepackage{iclr2027_conference,times}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,bm}
+\usepackage{booktabs,multirow,tabularx,array}
+\usepackage{graphicx,float,placeins,lscape}
+\usepackage{xcolor,listings}
+\usepackage{url}
+\usepackage{xr-hyper}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+
+\newtheorem{proposition}{Proposition}
+\graphicspath{{figures/}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\codebrk}[1]{\texttt{\small\seqsplit{#1}}}
+\newcommand{\stdmax}{\ensuremath{\sigma_{\max}}}
+\newcommand{\vTwoNumberMacros}{tables/multiseverity_numbers}
+\newcommand{\vTwoAssociationTable}{tables/table_multiseverity_associations}
+\newcommand{\vTwoDecisionTable}{tables/table_multiseverity_decisions}
+\newcommand{\vTwoSRLabelReference}{\Cref{tab:sr-labels}}
+\newcommand{\blindsubmission}{}
+\input{\vTwoNumberMacros}
+
+\title{Diagnosing JEPA World Models with Action-Conditioned Predictive Consistency}
+\author{Anonymous Authors}
+\hypersetup{
+  pdftitle={Diagnosing JEPA World Models with Action-Conditioned Predictive Consistency},
+  pdfauthor={}
+}
+
+
+% Import section/figure labels without importing another PDF's bibliography.
+\newcommand{\acpcExternalDocument}[1]{%
+  \IfFileExists{build/#1.aux}{%
+    \externaldocument[][nocite]{build/#1}[#1.pdf]%
+  }{%
+    \externaldocument[][nocite]{#1}[#1.pdf]%
+  }%
+}
+% Keep appendix figure, table, equation and proposition numbers consistent.
+\makeatletter
+\newcommand{\acpcSaveMainCounters}{%
+  \begingroup
+  \edef\@currentlabel{\arabic{figure}}\label{acpc:main-figures}%
+  \edef\@currentlabel{\arabic{table}}\label{acpc:main-tables}%
+  \edef\@currentlabel{\arabic{equation}}\label{acpc:main-equations}%
+  \edef\@currentlabel{\arabic{proposition}}\label{acpc:main-propositions}%
+  \endgroup
+}
+\makeatother
+\newcommand{\acpcRestoreMainCounters}{%
+  \setcounter{figure}{\getrefnumber{acpc:main-figures}}%
+  \setcounter{table}{\getrefnumber{acpc:main-tables}}%
+  \setcounter{equation}{\getrefnumber{acpc:main-equations}}%
+  \setcounter{proposition}{\getrefnumber{acpc:main-propositions}}%
+}

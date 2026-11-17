@@ -1,6 +1,22 @@
 # ICLR 2027 reference audit
 
-## Current integration check — 2026-09-16
+## Current split-build check
+
+- `main.pdf`: 13 pages, 41 cited references; the conclusion ends on page 9.
+- `supplementary.pdf`: 14 pages, 3 cited references; appendix labels and
+  figure/table/equation/proposition numbering continue from the main paper.
+- `full.pdf`: 25 pages, all 44 cited references. Its extracted text matches
+  a clean build of the pre-split source after whitespace normalization, and
+  its `.bbl` matches that build byte-for-byte.
+- All pre-existing label numbers match the pre-split build. Final compilation
+  has no unresolved references/citations, duplicate-label warnings, overfull
+  boxes or rerun requests. Separate bibliographies contain only their own
+  citations; external labels are imported without importing bibliography keys.
+- No manuscript claims, abstract wording, existing declarations, experimental
+  figures/results, or bibliography metadata were revised for this split.
+  This is a source/build check, not a new literature or scientific audit.
+
+## Historical integration check — 2026-09-16
 
 The approved `preview_20260914/writing_preview.tex` has been promoted unchanged
 to `main.tex`; the preview remains available. A full TeX Live 2025 build
